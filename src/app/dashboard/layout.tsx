@@ -1,5 +1,6 @@
+'use client';
+
 import React from 'react';
-import Sidebar from '../components/Sidebar';
 
 export default function DashboardLayout({
   children,
@@ -7,11 +8,8 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen bg-gray-50">
-      <div className="w-64 hidden md:block">
-        <Sidebar />
-      </div>
-      <div className="flex-1 overflow-auto">
+    <div className="min-h-screen bg-gray-50">
+      <div className="w-full">
         <main>{children}</main>
       </div>
     </div>
