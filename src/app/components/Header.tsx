@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '../context/AuthContext';
 
 type HeaderProps = {
   title: string;
@@ -14,6 +15,11 @@ type HeaderProps = {
 
 const Header = ({ title, user }: HeaderProps) => {
   const pathname = usePathname();
+  const { logout } = useAuth();
+  
+  const handleLogout = async () => {
+    await logout();
+  };
   
   const navigation = [
     {
@@ -139,12 +145,12 @@ const Header = ({ title, user }: HeaderProps) => {
                 >
                   Ayarlar
                 </a>
-                <a
-                  href="#"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 >
                   Çıkış Yap
-                </a>
+                </button>
               </div>
             </div>
           </div>

@@ -1,25 +1,35 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import AccountCard from '../components/AccountCard';
 import DoughnutChart from '../components/DoughnutChart';
-import ProductSummary from '../components/ProductSummary';
 import PriceList from '../components/PriceList';
 
 export default function Dashboard() {
-  // Kullanıcı bilgileri
-  const user = {
-    name: 'Özkan ADIGÜZEL',
-    imageUrl: 'https://via.placeholder.com/40'
-  };
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
 
-  // Hesap kartı verileri
+  useEffect(() => {
+    // Eğer kullanıcı yoksa ve yükleme tamamlandıysa, login sayfasına yönlendir
+    if (!user && !isLoading) {
+      router.push('/');
+    }
+  }, [user, isLoading, router]);
+
+  // Yükleme durumunda veya kullanıcı yoksa, içeriği gösterme
+  if (isLoading || !user) {
+    return <div className="min-h-screen flex items-center justify-center">Yükleniyor...</div>;
+  }
+
+  // Hesap kartı verileri - kullanıcı bilgilerinden alınıyor
   const accountData = {
-    balance: 8023.68,
-    debt: 8023.68,
-    credit: 0,
-    debtCredit: 8023.68
+    balance: parseFloat(user.credit) - parseFloat(user.debit),
+    debt: parseFloat(user.debit),
+    credit: parseFloat(user.credit),
+    debtCredit: parseFloat(user.credit) + parseFloat(user.debit)
   };
 
   // Sipariş ürün adet raporu verileri
@@ -49,31 +59,6 @@ export default function Dashboard() {
       },
     ],
   };
-
-  // Ürün özeti verileri
-  const productSummaryData = [
-    {
-      id: '1',
-      name: 'HAZIR-SUYOLU KAHVE',
-      quantity: 2,
-      totalArea: 3.36,
-      image: 'https://via.placeholder.com/80'
-    },
-    {
-      id: '2',
-      name: 'SONSUZ GRİ',
-      quantity: 2,
-      totalArea: 4.40,
-      image: 'https://via.placeholder.com/80'
-    },
-    {
-      id: '3',
-      name: 'BA02-S405 GRİ',
-      quantity: 2,
-      totalArea: 3.20,
-      image: 'https://via.placeholder.com/80'
-    }
-  ];
 
   // Fiyat listesi verileri
   const priceListData = [
@@ -109,9 +94,40 @@ export default function Dashboard() {
     },
   ];
 
+  // Ürün özeti verileri
+  const productSummaryData = [
+    {
+      id: '1',
+      image: 'https://via.placeholder.com/64',
+      name: 'SOHO Serisi - Gri',
+      quantity: 3,
+      totalArea: 5.5
+    },
+    {
+      id: '2',
+      image: 'https://via.placeholder.com/64',
+      name: 'SATEN Serisi - Bej',
+      quantity: 2,
+      totalArea: 3.8
+    },
+    {
+      id: '3',
+      image: 'https://via.placeholder.com/64',
+      name: 'BIANCA Serisi - Beyaz',
+      quantity: 4,
+      totalArea: 8.6
+    }
+  ];
+
+  // Header bileşeni için kullanıcı bilgileri
+  const userInfo = {
+    name: `${user.name} ${user.surname}`,
+    imageUrl: user.avatar || 'https://via.placeholder.com/40'
+  };
+
   return (
     <div className="min-h-screen">
-      <Header title="Dashboard" user={user} />
+      <Header title="Dashboard" user={userInfo} />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -119,12 +135,12 @@ export default function Dashboard() {
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="flex items-center">
               <div className="h-14 w-14 rounded-full bg-blue-900 flex items-center justify-center text-white text-xl font-bold">
-                ÖA
+                {user.name[0]}{user.surname[0]}
               </div>
               <div className="ml-4">
-                <h2 className="text-lg font-medium text-gray-800">{user.name}</h2>
-                <p className="text-gray-500 text-sm">özkan</p>
-                <p className="text-gray-500 text-sm">Paşa Home</p>
+                <h2 className="text-lg font-medium text-gray-800">{user.name} {user.surname}</h2>
+                <p className="text-gray-500 text-sm">{user.username}</p>
+                <p className="text-gray-500 text-sm">{user.email}</p>
               </div>
             </div>
           </div>
