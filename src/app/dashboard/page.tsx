@@ -4,7 +4,6 @@ import React, { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
-import AccountCard from '../components/AccountCard';
 import DoughnutChart from '../components/DoughnutChart';
 import PriceList from '../components/PriceList';
 
@@ -130,7 +129,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen">
       <Header title="Dashboard" user={userInfo} />
-      
+      {/* Mobilde finansal özet kutusu */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           {/* Kullanıcı bilgileri kartı */}
@@ -147,15 +146,6 @@ export default function Dashboard() {
             </div>
           </div>
           
-          {/* Hesap kartı */}
-          <div className="md:col-span-2">
-            <AccountCard 
-              balance={accountData.balance}
-              debt={accountData.debt}
-              credit={accountData.credit}
-              debtCredit={accountData.debtCredit}
-            />
-          </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
