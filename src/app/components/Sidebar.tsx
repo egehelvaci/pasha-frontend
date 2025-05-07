@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
+import { useState, useEffect } from 'react';
 
 interface NavItem {
   name: string;
@@ -12,6 +13,15 @@ interface NavItem {
 
 const Sidebar = () => {
   const pathname = usePathname();
+  const [openProducts, setOpenProducts] = useState(false);
+
+  useEffect(() => {
+    if (pathname.startsWith('/dashboard/urunler')) {
+      setOpenProducts(true);
+    } else {
+      setOpenProducts(false);
+    }
+  }, [pathname]);
 
   const navigation: NavItem[] = [
     {
@@ -96,6 +106,32 @@ const Sidebar = () => {
       </div>
       <nav className="flex-1 p-2 space-y-1">
         {navigation.map((item) => {
+          if (item.name === 'Ürünler') {
+            const isActive = pathname.startsWith('/dashboard/urunler');
+            return (
+              <div key={item.name}>
+                <button
+                  onClick={() => setOpenProducts((prev) => !prev)}
+                  className={`flex items-center w-full px-2 py-3 text-sm font-medium rounded-md transition ${
+                    isActive ? 'bg-blue-800 text-white' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  <span className="mr-3">{item.icon}</span>
+                  {item.name}
+                  <svg className={`ml-auto w-4 h-4 transition-transform ${openProducts ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                </button>
+                {openProducts && (
+                  <div className="ml-8 mt-1 space-y-1">
+                    <Link href="/dashboard/urunler/liste" className="block px-2 py-2 rounded hover:bg-gray-100 text-sm font-medium text-gray-700">Ürün Listesi</Link>
+                    <Link href="/dashboard/urunler/ekle" className="block px-2 py-2 rounded hover:bg-gray-100 text-sm font-medium text-gray-700">Ürün Ekle</Link>
+                    <Link href="/dashboard/urunler/koleksiyonlar" className="block px-2 py-2 rounded hover:bg-gray-100 text-sm font-medium text-gray-700">Koleksiyon Listesi</Link>
+                    <Link href="/dashboard/urunler/koleksiyon-ekle" className="block px-2 py-2 rounded hover:bg-gray-100 text-sm font-medium text-gray-700">Koleksiyon Ekle</Link>
+                    <Link href="/dashboard/urunler/katalog" className="block px-2 py-2 rounded hover:bg-gray-100 text-sm font-medium text-gray-700">Katalog</Link>
+                  </div>
+                )}
+              </div>
+            );
+          }
           const isActive = pathname === item.href;
           return (
             <Link
