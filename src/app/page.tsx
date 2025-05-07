@@ -44,7 +44,7 @@ export default function Login() {
           <h1 className="text-white text-3xl font-bold">
             Paşa Home Bayii Sipariş Sistemi
           </h1>
-          <p className="text-white text-sm mt-2">© 2024 Paşa Home</p>
+          <p className="text-white text-sm mt-2">© 2025 Paşa Home</p>
         </div>
         <div className="absolute inset-0 bg-black bg-opacity-40 z-0"></div>
         <Image 
@@ -62,7 +62,7 @@ export default function Login() {
         <div className="w-full max-w-md">
           <div className="flex justify-center mb-12">
             <Image
-              src="/pasa-logo.png"
+              src="/logo.svg"
               alt="Paşa Home Logo"
               width={200}
               height={60}
@@ -83,8 +83,8 @@ export default function Login() {
               <label className="block text-gray-400 text-sm mb-2">Kullanıcı Adı</label>
               <input
                 type="text"
-                className="w-full bg-white py-2 px-4 rounded focus:outline-none"
-                placeholder="özkan"
+                className="w-full bg-white py-2 px-4 rounded focus:outline-none text-black"
+                placeholder="Kullanıcı Adı"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -95,7 +95,7 @@ export default function Login() {
               <label className="block text-gray-400 text-sm mb-2">Şifre</label>
               <input
                 type="password"
-                className="w-full bg-white py-2 px-4 rounded focus:outline-none"
+                className="w-full bg-white py-2 px-4 rounded focus:outline-none text-black"
                 placeholder="************"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
