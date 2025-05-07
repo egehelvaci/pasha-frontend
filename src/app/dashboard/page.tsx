@@ -122,7 +122,9 @@ export default function Dashboard() {
   // Header bileşeni için kullanıcı bilgileri
   const userInfo = {
     name: `${user.name} ${user.surname}`,
-    imageUrl: user.avatar || 'https://via.placeholder.com/40'
+    imageUrl: user.avatar || 'https://via.placeholder.com/40',
+    debit: user.debit,
+    credit: user.credit
   };
 
   return (
