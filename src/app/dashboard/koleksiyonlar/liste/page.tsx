@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { FaTrash } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 
@@ -109,6 +109,7 @@ export default function CollectionList() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [sortBy, setSortBy] = useState<string>("name_asc");
+  const didFetch = useRef(false);
 
   const fetchCollections = () => {
     setLoading(true);
@@ -121,6 +122,8 @@ export default function CollectionList() {
   };
 
   useEffect(() => {
+    if (didFetch.current) return;
+    didFetch.current = true;
     fetchCollections();
   }, []);
 
@@ -179,9 +182,6 @@ export default function CollectionList() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-black">Koleksiyonlar Listesi</h1>
-          <div className="text-sm text-gray-400 mt-1">
-            Dashboard &nbsp;|&nbsp; Koleksiyonlar &nbsp;|&nbsp; <span className="text-black">Koleksiyonlar Listesi</span>
-          </div>
         </div>
         <button className="bg-blue-900 text-white rounded-full px-6 py-2 font-semibold flex items-center gap-2" onClick={() => setModalOpen(true)}>
           + Yeni Koleksiyon

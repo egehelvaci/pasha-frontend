@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import DoughnutChart from '../components/DoughnutChart';
@@ -12,6 +12,7 @@ export default function Dashboard() {
 
   const [latestProducts, setLatestProducts] = useState<any[]>([]);
   const [latestCollections, setLatestCollections] = useState<any[]>([]);
+  const didFetch = useRef(false);
 
   useEffect(() => {
     // Eğer kullanıcı yoksa ve yükleme tamamlandıysa, login sayfasına yönlendir
@@ -21,14 +22,24 @@ export default function Dashboard() {
   }, [user, isLoading, router]);
 
   useEffect(() => {
+    if (didFetch.current) return;
+    didFetch.current = true;
+    const controller1 = new AbortController();
+    const controller2 = new AbortController();
     // Son 10 ürün
-    fetch("https://pasha-backend-production.up.railway.app/api/products?limit=10&sort=-createdAt")
+    fetch("https://pasha-backend-production.up.railway.app/api/products/?limit=10&sort=-createdAt", { signal: controller1.signal })
       .then(res => res.json())
-      .then(data => setLatestProducts(data.data || []));
+      .then(data => setLatestProducts(data.data || []))
+      .catch(err => { if (err.name !== 'AbortError') throw err; });
     // Son 5 koleksiyon
-    fetch("https://pasha-backend-production.up.railway.app/api/collections/?limit=5&sort=-createdAt")
+    fetch("https://pasha-backend-production.up.railway.app/api/collections/?limit=5&sort=-createdAt", { signal: controller2.signal })
       .then(res => res.json())
-      .then(data => setLatestCollections(data.data || []));
+      .then(data => setLatestCollections(data.data || []))
+      .catch(err => { if (err.name !== 'AbortError') throw err; });
+    return () => {
+      controller1.abort();
+      controller2.abort();
+    };
   }, []);
 
   // Yükleme durumunda veya kullanıcı yoksa, içeriği gösterme

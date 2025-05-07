@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 const fakeProducts = [
   {
@@ -52,8 +52,11 @@ export default function ProductList() {
   const [sortBy, setSortBy] = useState("id_asc");
   const [collections, setCollections] = useState<{collectionId: string, name: string}[]>([]);
   const [selectedCollection, setSelectedCollection] = useState("");
+  const didFetch = useRef(false);
 
   useEffect(() => {
+    if (didFetch.current) return;
+    didFetch.current = true;
     fetch("https://pasha-backend-production.up.railway.app/api/collections/")
       .then(res => res.json())
       .then(data => {
@@ -91,9 +94,6 @@ export default function ProductList() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-black">Ürün Listesi</h1>
-          <div className="text-sm text-gray-400 mt-1">
-            Dashboard &nbsp;|&nbsp; Ürünler &nbsp;|&nbsp; <span className="text-black">Ürün Listesi</span>
-          </div>
         </div>
         <div className="flex gap-2">
           <button className="bg-blue-900 text-white rounded-full px-6 py-2 font-semibold flex items-center gap-2">

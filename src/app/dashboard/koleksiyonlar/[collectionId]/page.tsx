@@ -65,9 +65,6 @@ export default function CollectionDetail() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-black">{collection.name}</h1>
-          <div className="text-sm text-gray-400 mt-1">
-            Dashboard &nbsp;|&nbsp; Koleksiyonlar &nbsp;|&nbsp; <span className="text-black">{collection.name}</span>
-          </div>
         </div>
       </div>
 

@@ -126,7 +126,9 @@ const Header = ({ title, user }: HeaderProps) => {
         {/* Logo ve Başlık Kısmı */}
         <div className="flex items-center justify-between py-3">
           <div className="flex items-center">
-            <img src="/black-logo.svg" alt="Paşa Home" className="h-8 mr-3" />
+            <Link href="/dashboard">
+              <img src="/black-logo.svg" alt="Paşa Home" className="h-8 mr-3 cursor-pointer" />
+            </Link>
           </div>
           
           <div className="flex items-center">
