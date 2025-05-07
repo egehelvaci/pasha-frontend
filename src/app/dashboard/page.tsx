@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
-import Header from '../components/Header';
 import DoughnutChart from '../components/DoughnutChart';
 import PriceList from '../components/PriceList';
 
@@ -11,12 +10,26 @@ export default function Dashboard() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
 
+  const [latestProducts, setLatestProducts] = useState<any[]>([]);
+  const [latestCollections, setLatestCollections] = useState<any[]>([]);
+
   useEffect(() => {
     // Eğer kullanıcı yoksa ve yükleme tamamlandıysa, login sayfasına yönlendir
     if (!user && !isLoading) {
       router.push('/');
     }
   }, [user, isLoading, router]);
+
+  useEffect(() => {
+    // Son 10 ürün
+    fetch("https://pasha-backend-production.up.railway.app/api/products?limit=10&sort=-createdAt")
+      .then(res => res.json())
+      .then(data => setLatestProducts(data.data || []));
+    // Son 5 koleksiyon
+    fetch("https://pasha-backend-production.up.railway.app/api/collections/?limit=5&sort=-createdAt")
+      .then(res => res.json())
+      .then(data => setLatestCollections(data.data || []));
+  }, []);
 
   // Yükleme durumunda veya kullanıcı yoksa, içeriği gösterme
   if (isLoading || !user) {
@@ -128,7 +141,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen">
-      <Header title="Dashboard" user={userInfo} />
       {/* Mobilde finansal özet kutusu */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -145,75 +157,49 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* Sipariş ürün adet raporu */}
-          <DoughnutChart 
-            title="Sipariş Ürün Adet Raporu" 
-            data={orderProductCountChartData} 
-          />
-          
-          {/* Sipariş ürün metrekare raporu */}
-          <DoughnutChart 
-            title="Sipariş Ürün Metrekare Raporu" 
-            data={orderProductAreaChartData} 
-          />
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* Sipariş ürün istatistiği */}
+        {/* Son eklenen ürünler ve koleksiyonlar */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 className="text-lg font-medium text-gray-800 mb-4">Sipariş Ürün İstatistiği</h2>
-            <div className="space-y-4">
-              {productSummaryData.map((product) => (
-                <div key={product.id} className="flex items-center border-b border-gray-100 pb-4">
-                  <div className="w-16 h-16 flex-shrink-0 rounded-md overflow-hidden border border-gray-200">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="ml-4 flex-1">
-                    <h3 className="text-sm font-medium text-gray-800">{product.name}</h3>
-                    <div className="mt-2 flex items-center text-xs text-gray-500">
-                      <p className="mr-3">{product.quantity} adet ürün sipariş verildi</p>
-                      <p>Toplam {product.totalArea} m² olarak hesaplanmıştır.</p>
+            <h2 className="text-lg font-semibold text-black mb-4">Son Eklenen 10 Ürün</h2>
+            {latestProducts.length === 0 ? (
+              <div className="text-gray-500">Ürün bulunamadı.</div>
+            ) : (
+              <ul className="divide-y divide-gray-100">
+                {latestProducts.map((product: any) => (
+                  <li key={product.productId} className="py-2 flex items-center gap-3">
+                    {product.imageUrl && (
+                      <img src={product.imageUrl} alt={product.name} className="w-10 h-10 object-cover rounded" />
+                    )}
+                    <div>
+                      <div className="font-semibold text-black">{product.name}</div>
+                      <div className="text-xs text-gray-500">{product.code || product.productId}</div>
                     </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-          
-          {/* Sipariş kurum istatistiği */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 className="text-lg font-medium text-gray-800 mb-4">Sipariş Kurum İstatistiği</h2>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center border-b border-gray-100 pb-2">
-                <h3 className="text-sm font-medium">Paşa Home</h3>
-                <p className="text-sm text-gray-600">4 adet ürün siparişi verildi: Toplam 10.72 m²</p>
-              </div>
-              <div className="flex justify-between items-center border-b border-gray-100 pb-2">
-                <h3 className="text-sm font-medium">Altera Halı</h3>
-                <p className="text-sm text-gray-600">2 adet ürün siparişi verildi: Toplam 5.12 m²</p>
-              </div>
-              <div className="flex justify-between items-center">
-                <h3 className="text-sm font-medium">Novus Home</h3>
-                <p className="text-sm text-gray-600">3 adet ürün siparişi verildi: Toplam 8.40 m²</p>
-              </div>
-            </div>
+            <h2 className="text-lg font-semibold text-black mb-4">Son Eklenen 5 Koleksiyon</h2>
+            {latestCollections.length === 0 ? (
+              <div className="text-gray-500">Koleksiyon bulunamadı.</div>
+            ) : (
+              <ul className="divide-y divide-gray-100">
+                {latestCollections.map((col: any) => (
+                  <li key={col.collectionId} className="py-2 flex items-center gap-3">
+                    {col.coverImageUrl && (
+                      <img src={col.coverImageUrl} alt={col.name} className="w-10 h-10 object-cover rounded" />
+                    )}
+                    <div>
+                      <div className="font-semibold text-black">{col.name}</div>
+                      <div className="text-xs text-gray-500">{col.code}</div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-        </div>
-        
-        {/* Fiyat listesi */}
-        <div className="mb-6">
-          <PriceList
-            title="Paşa Home Güncel Fiyat Listesi"
-            items={priceListData}
-          />
         </div>
       </div>
     </div>

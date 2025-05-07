@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const fakeProducts = [
   {
@@ -49,20 +49,53 @@ const fakeProducts = [
 export default function ProductList() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<number[]>([]);
+  const [sortBy, setSortBy] = useState("id_asc");
+  const [collections, setCollections] = useState<{collectionId: string, name: string}[]>([]);
+  const [selectedCollection, setSelectedCollection] = useState("");
+
+  useEffect(() => {
+    fetch("https://pasha-backend-production.up.railway.app/api/collections/")
+      .then(res => res.json())
+      .then(data => {
+        setCollections(data.data?.map((col: any) => ({ collectionId: col.collectionId, name: col.name })) || []);
+      });
+  }, []);
+
+  const filteredProducts = fakeProducts.filter(product =>
+    (!selectedCollection || product.collection === collections.find(c => c.collectionId === selectedCollection)?.name) &&
+    (product.name.toLowerCase().includes(search.toLowerCase()) ||
+     product.description.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    switch (sortBy) {
+      case "id_asc":
+        return a.id - b.id;
+      case "id_desc":
+        return b.id - a.id;
+      case "name_asc":
+        return a.name.localeCompare(b.name);
+      case "name_desc":
+        return b.name.localeCompare(a.name);
+      case "date_asc":
+        return 0; // Tarih yok, örnek veri için
+      case "date_desc":
+        return 0; // Tarih yok, örnek veri için
+      default:
+        return 0;
+    }
+  });
 
   return (
     <div className="p-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Ürün Listesi</h1>
+          <h1 className="text-2xl font-bold text-black">Ürün Listesi</h1>
           <div className="text-sm text-gray-400 mt-1">
-            Dashboard &nbsp;|&nbsp; Ürünler &nbsp;|&nbsp; <span className="text-gray-700">Ürün Listesi</span>
+            Dashboard &nbsp;|&nbsp; Ürünler &nbsp;|&nbsp; <span className="text-black">Ürün Listesi</span>
           </div>
         </div>
         <div className="flex gap-2">
-          <button className="bg-blue-900 text-white rounded-full px-6 py-2 font-semibold flex items-center gap-2">
-            <span>Ürün Kalite Block</span>
-          </button>
           <button className="bg-blue-900 text-white rounded-full px-6 py-2 font-semibold flex items-center gap-2">
             <span>Yeni Ürün</span>
           </button>
@@ -72,16 +105,24 @@ export default function ProductList() {
         </div>
       </div>
       <div className="flex flex-wrap gap-2 mb-4">
-        <select className="border rounded px-3 py-2 text-sm">
-          <option>Sıralama</option>
+        <select className="border rounded px-3 py-2 text-sm text-black focus:outline-none focus:ring-0 focus:border-gray-300" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+          <option value="id_asc">Kayıt No (A-Z)</option>
+          <option value="id_desc">Kayıt No (Z-A)</option>
+          <option value="name_asc">Ürün Kodu (A-Z)</option>
+          <option value="name_desc">Ürün Kodu (Z-A)</option>
+          <option value="date_asc">Tarih (Artan)</option>
+          <option value="date_desc">Tarih (Azalan)</option>
         </select>
-        <select className="border rounded px-3 py-2 text-sm">
-          <option>Koleksiyon</option>
+        <select className="border rounded px-3 py-2 text-sm text-black focus:outline-none focus:ring-0 focus:border-gray-300" value={selectedCollection} onChange={e => setSelectedCollection(e.target.value)}>
+          <option value="">Tüm Koleksiyonlar</option>
+          {collections.map(col => (
+            <option key={col.collectionId} value={col.collectionId}>{col.name}</option>
+          ))}
         </select>
         <div className="relative">
           <input
             type="text"
-            className="border rounded px-3 py-2 text-sm pl-8"
+            className="border rounded px-3 py-2 text-sm pl-8 text-black focus:outline-none focus:ring-0 focus:border-gray-300"
             placeholder="Ara..."
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -90,7 +131,7 @@ export default function ProductList() {
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        {fakeProducts.map((product) => (
+        {sortedProducts.map((product) => (
           <div key={product.id} className="bg-white rounded-xl shadow p-3 flex flex-col h-full">
             <div className="relative mb-2 aspect-[250/390]">
               <img 
@@ -111,9 +152,9 @@ export default function ProductList() {
                   : [...selected, product.id])}
                 className="w-4 h-4"
               />
-              <span className="font-semibold text-gray-800 text-sm line-clamp-1">{product.name}</span>
+              <span className="font-semibold text-black text-base line-clamp-1">{product.name}</span>
             </div>
-            <div className="text-xs text-gray-500 line-clamp-2">{product.description}</div>
+            <div className="text-sm text-black line-clamp-2">{product.description}</div>
           </div>
         ))}
       </div>
