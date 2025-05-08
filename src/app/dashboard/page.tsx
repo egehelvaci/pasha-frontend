@@ -12,6 +12,8 @@ export default function Dashboard() {
 
   const [latestProducts, setLatestProducts] = useState<any[]>([]);
   const [latestCollections, setLatestCollections] = useState<any[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [isLoadingCollections, setIsLoadingCollections] = useState(true);
   const didFetch = useRef(false);
 
   useEffect(() => {
@@ -24,22 +26,36 @@ export default function Dashboard() {
   useEffect(() => {
     if (didFetch.current) return;
     didFetch.current = true;
-    const controller1 = new AbortController();
-    const controller2 = new AbortController();
-    // Son 10 ürün
-    fetch("https://pasha-backend-production.up.railway.app/api/products/?limit=10&sort=-createdAt", { signal: controller1.signal })
+
+    // Tüm ürünleri çek
+    fetch("https://pasha-backend-production.up.railway.app/api/products", { 
+      method: 'GET'
+    })
       .then(res => res.json())
-      .then(data => setLatestProducts(data.data || []))
-      .catch(err => { if (err.name !== 'AbortError') throw err; });
-    // Son 5 koleksiyon
-    fetch("https://pasha-backend-production.up.railway.app/api/collections/?limit=5&sort=-createdAt", { signal: controller2.signal })
+      .then(data => {
+        setLatestProducts(data.data || []);
+      })
+      .catch(err => { 
+        console.error('Ürün çekme hatası:', err);
+      })
+      .finally(() => {
+        setIsLoadingProducts(false);
+      });
+
+    // Tüm koleksiyonları çek
+    fetch("https://pasha-backend-production.up.railway.app/api/collections", { 
+      method: 'GET'
+    })
       .then(res => res.json())
-      .then(data => setLatestCollections(data.data || []))
-      .catch(err => { if (err.name !== 'AbortError') throw err; });
-    return () => {
-      controller1.abort();
-      controller2.abort();
-    };
+      .then(data => {
+        setLatestCollections(data.data || []);
+      })
+      .catch(err => { 
+        console.error('Koleksiyon çekme hatası:', err);
+      })
+      .finally(() => {
+        setIsLoadingCollections(false);
+      });
   }, []);
 
   // Yükleme durumunda veya kullanıcı yoksa, içeriği gösterme
@@ -152,7 +168,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen">
-      {/* Mobilde finansal özet kutusu */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           {/* Kullanıcı bilgileri kartı */}
@@ -169,47 +184,74 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-        {/* Son eklenen ürünler ve koleksiyonlar */}
+
+        {/* Ürünler ve Koleksiyonlar */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 className="text-lg font-semibold text-black mb-4">Son Eklenen 10 Ürün</h2>
-            {latestProducts.length === 0 ? (
-              <div className="text-gray-500">Ürün bulunamadı.</div>
-            ) : (
-              <ul className="divide-y divide-gray-100">
-                {latestProducts.map((product: any) => (
-                  <li key={product.productId} className="py-2 flex items-center gap-3">
-                    {product.imageUrl && (
-                      <img src={product.imageUrl} alt={product.name} className="w-10 h-10 object-cover rounded" />
-                    )}
-                    <div>
-                      <div className="font-semibold text-black">{product.name}</div>
-                      <div className="text-xs text-gray-500">{product.code || product.productId}</div>
+          {/* Ürünler Listesi */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div className="p-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-black">Ürünler</h2>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {isLoadingProducts ? (
+                <div className="p-4 flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-900"></div>
+                </div>
+              ) : latestProducts.length === 0 ? (
+                <div className="p-4 text-gray-500">Ürün bulunamadı.</div>
+              ) : (
+                latestProducts.map((product: any, index: number) => (
+                  <div 
+                    key={product.productId} 
+                    className={`p-4 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="font-semibold text-black">{product.name}</div>
+                        <div className="text-sm text-gray-500">{product.collection_name || "Koleksiyon yok"}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm text-gray-600">Stok: {product.stock}</div>
+                        <div className="text-sm text-gray-600">{product.price} {product.currency}</div>
+                      </div>
                     </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 className="text-lg font-semibold text-black mb-4">Son Eklenen 5 Koleksiyon</h2>
-            {latestCollections.length === 0 ? (
-              <div className="text-gray-500">Koleksiyon bulunamadı.</div>
-            ) : (
-              <ul className="divide-y divide-gray-100">
-                {latestCollections.map((col: any) => (
-                  <li key={col.collectionId} className="py-2 flex items-center gap-3">
-                    {col.coverImageUrl && (
-                      <img src={col.coverImageUrl} alt={col.name} className="w-10 h-10 object-cover rounded" />
-                    )}
-                    <div>
-                      <div className="font-semibold text-black">{col.name}</div>
-                      <div className="text-xs text-gray-500">{col.code}</div>
+
+          {/* Koleksiyonlar Listesi */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div className="p-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-black">Koleksiyonlar</h2>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {isLoadingCollections ? (
+                <div className="p-4 flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-900"></div>
+                </div>
+              ) : latestCollections.length === 0 ? (
+                <div className="p-4 text-gray-500">Koleksiyon bulunamadı.</div>
+              ) : (
+                latestCollections.map((col: any, index: number) => (
+                  <div 
+                    key={col.collectionId} 
+                    className={`p-4 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="font-semibold text-black">{col.name}</div>
+                        <div className="text-sm text-gray-500">{col.code}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm text-gray-600">{col.products?.length || 0} ürün</div>
+                      </div>
                     </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import FinancialSummaryMobile from '../components/FinancialSummaryMobile';
+import { FaUser, FaSignOutAlt, FaCog } from 'react-icons/fa';
 
 type HeaderProps = {
   title: string;
@@ -13,11 +14,15 @@ type HeaderProps = {
     imageUrl: string;
     debit: string;
     credit: string;
+    userType: {
+      id: number;
+    };
   };
 };
 
 const Header = ({ title, user }: HeaderProps) => {
   const pathname = usePathname();
+  const router = useRouter();
   const { logout } = useAuth();
   const [isBlurred, setIsBlurred] = useState(true);
   
@@ -27,8 +32,9 @@ const Header = ({ title, user }: HeaderProps) => {
     else setIsBlurred(true);
   }, []);
 
-  const handleLogout = async () => {
-    await logout();
+  const handleLogout = () => {
+    logout();
+    router.push('/');
   };
   
   const handleBlurToggle = () => {
@@ -222,6 +228,18 @@ const Header = ({ title, user }: HeaderProps) => {
                 </Link>
               );
             })}
+            {/* Sadece admin kullanıcılar için Ayarlar */}
+            <Link
+              href="/dashboard/ayarlar"
+              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                pathname === '/dashboard/ayarlar'
+                  ? 'bg-blue-800 text-white'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+              }`}
+            >
+              <span className="mr-2"><FaCog /></span>
+              Ayarlar
+            </Link>
           </div>
         </nav>
       </div>
