@@ -3,6 +3,8 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { FaTrash } from "react-icons/fa";
 import { FaArrowLeft } from "react-icons/fa";
+import { useAuth } from '@/app/context/AuthContext';
+import { API_BASE_URL } from '@/services/api';
 
 export default function ProductDetail() {
   const params = useParams();
@@ -16,6 +18,7 @@ export default function ProductDetail() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const { isAdmin } = useAuth();
 
   useEffect(() => {
     if (didFetch.current) return;
@@ -183,17 +186,19 @@ export default function ProductDetail() {
             <div><span className="font-semibold text-black">Kesim:</span> <span className="text-black">{product.cut ? "Var" : "Yok"}</span></div>
             <div><span className="font-semibold text-black">Eklenme Tarihi:</span> <span className="text-black">{new Date(product.createdAt).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span></div>
           </div>
-          <div className="flex justify-between items-end mt-8">
-            <button className="bg-blue-900 text-white rounded-full px-6 py-2 font-semibold w-fit" onClick={() => setModalOpen(true)}>
-              Güncelle
-            </button>
-            <button className="text-red-600 hover:text-red-800 text-2xl" title="Sil" onClick={() => setDeleteOpen(true)}>
-              <FaTrash />
-            </button>
-          </div>
+          {isAdmin && (
+            <div className="flex justify-between items-end mt-8">
+              <button className="bg-blue-900 text-white rounded-full px-6 py-2 font-semibold w-fit" onClick={() => setModalOpen(true)}>
+                Güncelle
+              </button>
+              <button className="text-red-600 hover:text-red-800 text-2xl" title="Sil" onClick={() => setDeleteOpen(true)}>
+                <FaTrash />
+              </button>
+            </div>
+          )}
         </div>
       </div>
-      {deleteOpen && (
+      {deleteOpen && isAdmin && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-lg relative">
             <h2 className="text-lg font-bold mb-4 text-black">Onay</h2>
@@ -206,7 +211,9 @@ export default function ProductDetail() {
           </div>
         </div>
       )}
-      <UpdateProductModal open={modalOpen} onClose={() => setModalOpen(false)} product={product} collections={collections} onSuccess={setProduct} />
+      {modalOpen && isAdmin && (
+        <UpdateProductModal open={modalOpen} onClose={() => setModalOpen(false)} product={product} collections={collections} onSuccess={setProduct} />
+      )}
     </div>
   );
 } 

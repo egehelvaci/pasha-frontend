@@ -17,6 +17,24 @@ type User = {
   debit: string;
   userType: string;
   userTypeId: number;
+  Store?: {
+    store_id: string;
+    kurum_adi: string;
+    vergi_numarasi: string;
+    vergi_dairesi: string;
+    yetkili_adi: string;
+    yetkili_soyadi: string;
+    telefon: string;
+    eposta: string;
+    adres: string;
+    faks_numarasi: string;
+    aciklama: string;
+    limitsiz_acik_hesap: boolean;
+    acik_hesap_tutari: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+  };
 } | null;
 
 type AuthContextType = {
@@ -25,6 +43,7 @@ type AuthContextType = {
   logout: () => Promise<{ success: boolean; message: string }>;
   isLoading: boolean;
   token: string | null;
+  isAdmin: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -42,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // LocalStorage'dan kullanıcı bilgisi ve token'ı al
       const storedUser = localStorage.getItem("user");
       const storedToken = localStorage.getItem("token");
+      const storedUserType = localStorage.getItem("userType");
       
       if (storedUser && storedUser !== "undefined") {
         setUser(JSON.parse(storedUser));
@@ -50,10 +71,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (storedToken && storedToken !== "undefined") {
         setToken(storedToken);
       }
+
+      if (storedUserType === "admin") {
+        setIsAdmin(true);
+      }
     } catch (error) {
       console.error("LocalStorage parse hatası:", error);
       localStorage.removeItem("user");
       localStorage.removeItem("token");
+      localStorage.removeItem("userType");
     } finally {
       setIsLoading(false);
     }
@@ -76,10 +102,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // API'den gelen kullanıcı bilgisini ve token'ı kaydet
         setUser(result.data.user);
         setToken(result.data.token);
+        setIsAdmin(result.data.user.userType === "admin");
         
         // LocalStorage'a kaydet
         localStorage.setItem("user", JSON.stringify(result.data.user));
         localStorage.setItem("token", result.data.token);
+        localStorage.setItem("userType", result.data.user.userType);
         
         return { success: true, message: "Giriş başarılı" };
       } else {
@@ -110,8 +138,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Token ve kullanıcı bilgilerini temizle
         setUser(null);
         setToken(null);
+        setIsAdmin(false);
         localStorage.removeItem("user");
         localStorage.removeItem("token");
+        localStorage.removeItem("userType");
         
         router.push("/");
         
@@ -119,8 +149,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         // Token yoksa sessiz çıkış yap
         setUser(null);
+        setIsAdmin(false);
         localStorage.removeItem("user");
         localStorage.removeItem("token");
+        localStorage.removeItem("userType");
         router.push("/");
         
         return { success: true, message: "Çıkış yapıldı" };
@@ -131,8 +163,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Hata olsa bile çıkış yap
       setUser(null);
       setToken(null);
+      setIsAdmin(false);
       localStorage.removeItem("user");
       localStorage.removeItem("token");
+      localStorage.removeItem("userType");
       router.push("/");
       
       return { success: false, message: "Çıkış yaparken bir hata oluştu" };
@@ -142,7 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, isLoading, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

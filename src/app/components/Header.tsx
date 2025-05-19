@@ -23,7 +23,7 @@ type HeaderProps = {
 const Header = ({ title, user }: HeaderProps) => {
   const pathname = usePathname();
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, isAdmin } = useAuth();
   const [isBlurred, setIsBlurred] = useState(true);
   
   useEffect(() => {
@@ -32,9 +32,11 @@ const Header = ({ title, user }: HeaderProps) => {
     else setIsBlurred(true);
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    router.push('/');
+  const handleLogout = async () => {
+    const result = await logout();
+    if (result.success) {
+      router.push('/');
+    }
   };
   
   const handleBlurToggle = () => {
@@ -77,14 +79,15 @@ const Header = ({ title, user }: HeaderProps) => {
       ),
     },
     {
-      name: 'Muhasebe',
-      href: '/dashboard/muhasebe',
+      name: 'Fiyat Listeleri',
+      href: '/dashboard/fiyat-listeleri',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
           <path d="M10.464 8.746c.227-.18.497-.311.786-.394v2.795a2.252 2.252 0 01-.786-.393c-.394-.313-.546-.681-.546-1.004 0-.323.152-.691.546-1.004zM12.75 15.662v-2.824c.347.085.664.228.921.421.427.32.579.686.579.991 0 .305-.152.671-.579.991a2.534 2.534 0 01-.921.42z" />
           <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v.816a3.836 3.836 0 00-1.72.756c-.712.566-1.112 1.35-1.112 2.178 0 .829.4 1.612 1.113 2.178.502.4 1.102.647 1.719.756v2.978a2.536 2.536 0 01-.921-.421l-.879-.66a.75.75 0 00-.9 1.2l.879.66c.533.4 1.169.645 1.821.75V18a.75.75 0 001.5 0v-.81a4.124 4.124 0 001.821-.749c.745-.559 1.179-1.344 1.179-2.191 0-.847-.434-1.632-1.179-2.191a4.122 4.122 0 00-1.821-.75V8.354c.29.082.559.213.786.393l.415.33a.75.75 0 00.933-1.175l-.415-.33a3.836 3.836 0 00-1.719-.755V6z" clipRule="evenodd" />
         </svg>
       ),
+      adminOnly: true,
     },
     {
       name: 'Stok',
@@ -177,11 +180,9 @@ const Header = ({ title, user }: HeaderProps) => {
               </div>
               {/* Avatar ve kullanıcı adı + dropdown */}
               <div className="relative group flex items-center transition hover:bg-gray-200 rounded px-2 py-1 cursor-pointer">
-                <img
-                  className="h-8 w-8 rounded-full"
-                  src={user.imageUrl || "https://via.placeholder.com/40"}
-                  alt={user.name}
-                />
+                <div className="h-8 w-8 rounded-full bg-blue-900 flex items-center justify-center text-white text-sm font-medium">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
                 <span className="ml-2 text-sm font-medium text-gray-700">{user.name}</span>
                 <div className="origin-top-left absolute left-0 top-[30px] mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 hidden group-hover:block hover:block z-10">
                   <a
@@ -213,6 +214,7 @@ const Header = ({ title, user }: HeaderProps) => {
           <div className="flex space-x-1">
             {navigation.map((item) => {
               const isActive = pathname === item.href;
+              if (item.adminOnly && !isAdmin) return null;
               return (
                 <Link
                   key={item.name}
@@ -229,17 +231,19 @@ const Header = ({ title, user }: HeaderProps) => {
               );
             })}
             {/* Sadece admin kullanıcılar için Ayarlar */}
-            <Link
-              href="/dashboard/ayarlar"
-              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                pathname === '/dashboard/ayarlar'
-                  ? 'bg-blue-800 text-white'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-              }`}
-            >
-              <span className="mr-2"><FaCog /></span>
-              Ayarlar
-            </Link>
+            {isAdmin && (
+              <Link
+                href="/dashboard/ayarlar"
+                className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                  pathname === '/dashboard/ayarlar'
+                    ? 'bg-blue-800 text-white'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                }`}
+              >
+                <span className="mr-2"><FaCog /></span>
+                Ayarlar
+              </Link>
+            )}
           </div>
         </nav>
       </div>

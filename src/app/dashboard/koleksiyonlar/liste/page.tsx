@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { FaTrash } from "react-icons/fa";
 import { useRouter } from "next/navigation";
+import { useAuth } from '@/app/context/AuthContext';
 
 interface Product {
   productId: string;
@@ -110,6 +111,7 @@ export default function CollectionList() {
   const [deleteError, setDeleteError] = useState("");
   const [sortBy, setSortBy] = useState<string>("name_asc");
   const didFetch = useRef(false);
+  const { isAdmin } = useAuth();
 
   const fetchCollections = () => {
     setLoading(true);
@@ -172,20 +174,24 @@ export default function CollectionList() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      <AddCollectionModal open={modalOpen} onClose={() => setModalOpen(false)} onSuccess={fetchCollections} />
-      <ConfirmModal
-        open={confirmOpen}
-        onClose={() => { setConfirmOpen(false); setDeleteId(null); }}
-        onConfirm={handleDelete}
-        text="Bu koleksiyonu silmek istediğinize emin misiniz?"
-      />
+      {isAdmin && <AddCollectionModal open={modalOpen} onClose={() => setModalOpen(false)} onSuccess={fetchCollections} />}
+      {isAdmin && (
+        <ConfirmModal
+          open={confirmOpen}
+          onClose={() => { setConfirmOpen(false); setDeleteId(null); }}
+          onConfirm={handleDelete}
+          text="Bu koleksiyonu silmek istediğinize emin misiniz?"
+        />
+      )}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-black">Koleksiyonlar Listesi</h1>
         </div>
-        <button className="bg-blue-900 text-white rounded-full px-6 py-2 font-semibold flex items-center gap-2" onClick={() => setModalOpen(true)}>
-          + Yeni Koleksiyon
-        </button>
+        {isAdmin && (
+          <button className="bg-blue-900 text-white rounded-full px-6 py-2 font-semibold flex items-center gap-2" onClick={() => setModalOpen(true)}>
+            + Yeni Koleksiyon
+          </button>
+        )}
       </div>
       <div className="flex flex-wrap gap-2 mb-4 items-center">
         <select 
@@ -220,14 +226,14 @@ export default function CollectionList() {
               <th className="py-3 px-2 text-left font-semibold">Koleksiyon Kodu</th>
               <th className="py-3 px-2 text-center font-semibold">Ekli Ürün Adedi</th>
               <th className="py-3 px-2 text-center font-semibold">Eklenme Tarihi</th>
-              <th className="py-3 px-2 text-center font-semibold w-16">Sil</th>
+              {isAdmin && <th className="py-3 px-2 text-center font-semibold w-16">Sil</th>}
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} className="text-center py-8 text-black">Yükleniyor...</td></tr>
-            ) : filtered.length === 0 ? (
-              <tr><td colSpan={6} className="text-center py-8 text-black">Koleksiyon bulunamadı.</td></tr>
+              <tr><td colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-black">Yükleniyor...</td></tr>
+            ) : sortedCollections.length === 0 ? (
+              <tr><td colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-black">Koleksiyon bulunamadı.</td></tr>
             ) : (
               sortedCollections.map(col => (
                 <tr 
@@ -242,16 +248,18 @@ export default function CollectionList() {
                   <td className="py-4 px-2 text-center text-sm text-black min-w-[180px] align-middle">
                     {new Date(col.createdAt).toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </td>
-                  <td className="py-4 px-2 text-center min-w-[40px] w-16 align-middle">
-                    <button
-                      className="text-red-600 hover:text-red-800"
-                      title="Sil"
-                      onClick={() => { setDeleteId(col.collectionId); setConfirmOpen(true); }}
-                      disabled={deleteLoading}
-                    >
-                      <FaTrash />
-                    </button>
-                  </td>
+                  {isAdmin && (
+                    <td className="py-4 px-2 text-center min-w-[40px] w-16 align-middle">
+                      <button
+                        className="text-red-600 hover:text-red-800"
+                        title="Sil"
+                        onClick={(e) => { e.stopPropagation(); setDeleteId(col.collectionId); setConfirmOpen(true); }}
+                        disabled={deleteLoading}
+                      >
+                        <FaTrash />
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))
             )}

@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { FaTrash } from "react-icons/fa";
+import { useAuth } from '@/app/context/AuthContext';
 
 export default function ProductList() {
   const [products, setProducts] = useState<any[]>([]);
@@ -17,6 +18,7 @@ export default function ProductList() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
+  const { isAdmin } = useAuth();
 
   useEffect(() => {
     if (didFetch.current) return;
@@ -181,14 +183,16 @@ export default function ProductList() {
         <div>
           <h1 className="text-2xl font-bold text-black">Ürün Listesi</h1>
         </div>
-        <div className="flex gap-2">
-          <button className="bg-blue-900 text-white rounded-full px-6 py-2 font-semibold flex items-center gap-2" onClick={() => setModalOpen(true)}>
-            <span>Yeni Ürün</span>
-          </button>
-          <button className="bg-white border border-gray-300 rounded-full px-3 py-2 flex items-center">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
-          </button>
-        </div>
+        {isAdmin && (
+          <div className="flex gap-2">
+            <button className="bg-blue-900 text-white rounded-full px-6 py-2 font-semibold flex items-center gap-2" onClick={() => setModalOpen(true)}>
+              <span>Yeni Ürün</span>
+            </button>
+            <button className="bg-white border border-gray-300 rounded-full px-3 py-2 flex items-center">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+            </button>
+          </div>
+        )}
       </div>
       <div className="flex flex-wrap gap-2 mb-4">
         <select className="border rounded px-3 py-2 text-sm text-black focus:outline-none focus:ring-0 focus:border-gray-300" value={sortBy} onChange={e => setSortBy(e.target.value)}>
@@ -233,15 +237,17 @@ export default function ProductList() {
               <span className="font-semibold text-black text-base line-clamp-1">{product.name}</span>
             </div>
             <div className="text-sm text-black line-clamp-2">{product.description}</div>
-            <div className="flex justify-end mt-auto">
-              <button
-                className="text-red-600 hover:text-red-800 z-10"
-                title="Sil"
-                onClick={e => { e.stopPropagation(); setDeleteId(product.productId); setConfirmOpen(true); }}
-              >
-                <FaTrash />
-              </button>
-            </div>
+            {isAdmin && (
+              <div className="flex justify-end mt-auto">
+                <button
+                  className="text-red-600 hover:text-red-800 z-10"
+                  title="Sil"
+                  onClick={e => { e.stopPropagation(); setDeleteId(product.productId); setConfirmOpen(true); }}
+                >
+                  <FaTrash />
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -266,7 +272,7 @@ export default function ProductList() {
           </div>
         </div>
       )}
-      <AddProductModal open={modalOpen} onClose={() => setModalOpen(false)} onSuccess={newProduct => setProducts([newProduct, ...products])} collections={collections} />
+      {isAdmin && <AddProductModal open={modalOpen} onClose={() => setModalOpen(false)} onSuccess={newProduct => setProducts([newProduct, ...products])} collections={collections} />}
     </div>
   );
 } 
