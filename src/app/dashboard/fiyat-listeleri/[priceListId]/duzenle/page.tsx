@@ -3,10 +3,55 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { PriceList, CreatePriceListData, getPriceLists, updatePriceList } from '@/services/api';
-import { Button, Form, Input, InputNumber, DatePicker, Modal, message, Select } from 'antd';
+import { Button, Form, Input, InputNumber, DatePicker, Modal, message, Select, Switch } from 'antd';
 import { useAuth } from '@/app/context/AuthContext';
 import dayjs from 'dayjs';
 import type { Collection } from '@/services/api';
+
+// Form için değerlerin tipini tanımla
+interface FormValues {
+  name: string;
+  description: string;
+  validity: [dayjs.Dayjs, dayjs.Dayjs] | undefined;
+  limitAmount?: number;
+  currency: string;
+  isActive: boolean;
+  collectionPrices: Record<string, number>;
+}
+
+// API yanıt tipi
+interface PriceListDetailItem {
+  price_list_detail_id: string;
+  price_list_id: string;
+  collection_id: string;
+  price_per_square_meter: number;
+  created_at: string;
+  updated_at: string;
+  Collection: {
+    collectionId: string;
+    name: string;
+    code: string;
+    description: string;
+  }
+}
+
+interface PriceListDetailResponse {
+  success: boolean;
+  data: {
+    price_list_id: string;
+    name: string;
+    description: string;
+    is_default: boolean;
+    valid_from: string | null;
+    valid_to: string | null;
+    limit_amount: number | null;
+    currency: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+    PriceListDetail: PriceListDetailItem[];
+  }
+}
 
 const { RangePicker } = DatePicker;
 
@@ -46,42 +91,78 @@ export default function EditPriceListPage() {
 
       setPriceList(currentPriceList);
 
-      // Form alanlarını doldur
-      const collectionPrices = {};
-      currentPriceList.PriceListDetail?.forEach(detail => {
-        collectionPrices[detail.product_id] = detail.price;
-      });
+      // Doğrudan fiyat listesi detaylarını getir
+      try {
+        const detailResponse = await fetch(`https://pasha-backend-production.up.railway.app/api/price-lists/${params.priceListId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        const detailData = await detailResponse.json() as PriceListDetailResponse;
+        
+        if (detailData.success) {
+          // Form alanlarını doldur
+          const collectionPrices: Record<string, number> = {};
+          
+          // PriceListDetail içerisindeki koleksiyon ID ve fiyatları doldur
+          detailData.data.PriceListDetail?.forEach((detail: PriceListDetailItem) => {
+            collectionPrices[detail.collection_id] = detail.price_per_square_meter;
+          });
 
-      form.setFieldsValue({
-        name: currentPriceList.name,
-        description: currentPriceList.description,
-        validity: currentPriceList.valid_from && currentPriceList.valid_to ? 
-          [dayjs(currentPriceList.valid_from), dayjs(currentPriceList.valid_to)] : undefined,
-        limitAmount: currentPriceList.limit_amount,
-        currency: currentPriceList.currency,
-        collectionPrices,
-      });
+          form.setFieldsValue({
+            name: currentPriceList.name,
+            description: currentPriceList.description,
+            validity: currentPriceList.valid_from && currentPriceList.valid_to ? 
+              [dayjs(currentPriceList.valid_from), dayjs(currentPriceList.valid_to)] : undefined,
+            limitAmount: currentPriceList.limit_amount,
+            currency: currentPriceList.currency,
+            isActive: currentPriceList.is_active,
+            collectionPrices,
+          });
+        }
+      } catch (error) {
+        console.error('Fiyat listesi detayı getirilemedi:', error);
+        
+        // Detay getirilemezse ana fiyat listesi verilerini kullan
+        form.setFieldsValue({
+          name: currentPriceList.name,
+          description: currentPriceList.description,
+          validity: currentPriceList.valid_from && currentPriceList.valid_to ? 
+            [dayjs(currentPriceList.valid_from), dayjs(currentPriceList.valid_to)] : undefined,
+          limitAmount: currentPriceList.limit_amount,
+          currency: currentPriceList.currency,
+          isActive: currentPriceList.is_active,
+        });
+      }
     } catch (error) {
       message.error('Veriler yüklenirken bir hata oluştu');
     }
   };
 
-  const onFinish = async (values: any) => {
+  const onFinish = async (values: FormValues) => {
     if (!priceList) return;
 
     const dateRange = values.validity || [];
-    const collectionPrices = Object.entries(values.collectionPrices || {}).map(([collectionId, price]) => ({
-      collectionId,
-      pricePerSquareMeter: Number(price),
-    }));
+    // Sadece değer girilmiş olan koleksiyon fiyatlarını dahil et
+    const collectionPrices = Object.entries(values.collectionPrices || {})
+      .filter(([_, price]) => price !== undefined && price !== null)
+      .map(([collectionId, price]) => ({
+        collectionId,
+        pricePerSquareMeter: Number(price),
+      }));
+      
+    // Tarihler için saat bilgisini ayarla 
+    const validFrom = dateRange[0] ? dateRange[0].hour(0).minute(0).second(0).toISOString() : undefined;
+    const validTo = dateRange[1] ? dateRange[1].hour(23).minute(59).second(59).toISOString() : undefined;
 
     const data: CreatePriceListData = {
       name: values.name,
       description: values.description,
-      validFrom: dateRange[0]?.toISOString(),
-      validTo: dateRange[1]?.toISOString(),
+      validFrom,
+      validTo,
       limitAmount: values.limitAmount,
       currency: values.currency,
+      is_active: values.isActive,
       collectionPrices,
     };
 
@@ -143,8 +224,7 @@ export default function EditPriceListPage() {
               >
                 <RangePicker
                   className="w-full"
-                  showTime
-                  format="DD.MM.YYYY HH:mm"
+                  format="DD.MM.YYYY"
                   disabled={priceList?.is_default}
                 />
               </Form.Item>
@@ -160,6 +240,19 @@ export default function EditPriceListPage() {
                   <Select.Option value="EUR">EUR</Select.Option>
                 </Select>
               </Form.Item>
+
+              {!priceList?.is_default && (
+                <Form.Item
+                  label="Durum"
+                  name="isActive"
+                  valuePropName="checked"
+                >
+                  <Switch
+                    checkedChildren="Aktif"
+                    unCheckedChildren="Pasif"
+                  />
+                </Form.Item>
+              )}
 
               <Form.Item
                 label="Limit Tutarı"
@@ -182,7 +275,6 @@ export default function EditPriceListPage() {
                       key={collection.collectionId}
                       label={collection.name}
                       name={['collectionPrices', collection.collectionId]}
-                      rules={[{ required: true, message: 'Lütfen fiyat giriniz' }]}
                     >
                       <InputNumber
                         className="w-full"

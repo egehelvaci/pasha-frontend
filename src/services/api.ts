@@ -119,6 +119,7 @@ export interface UpdatePriceListData {
   validTo?: string;
   limitAmount?: number;
   currency: string;
+  is_active?: boolean;
   collectionPrices: Array<{
     collectionId: string;
     pricePerSquareMeter: number;
@@ -152,6 +153,7 @@ export interface Store {
 export interface GetStoresResponse {
   success: boolean;
   data: Store[];
+  message?: string;
 }
 
 export interface CreateStoreData {
@@ -212,6 +214,7 @@ export interface CreatePriceListData {
   validTo?: string;
   limitAmount?: number;
   currency: string;
+  is_active?: boolean;
   collectionPrices: CollectionPrice[];
 }
 
@@ -236,6 +239,55 @@ export interface AssignPriceListData {
 export interface AssignPriceListResponse {
   success: boolean;
   data: PriceListAssignment;
+}
+
+export interface PriceListProduct {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  currency: string;
+  collection_name: string;
+  productImage: string;
+  stock: number;
+}
+
+export interface StorePriceListAssignment {
+  store_price_list_id: string;
+  store_id: string;
+  price_list_id: string;
+  created_at: string;
+  updated_at: string;
+  is_default_assignment: boolean;
+  PriceList: {
+    price_list_id: string;
+    name: string;
+    description: string;
+    is_default: boolean;
+    valid_from: string | null;
+    valid_to: string | null;
+    limit_amount: number | null;
+    currency: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+    products?: PriceListProduct[];
+  };
+}
+
+export interface AssignStorePriceListData {
+  storeId: string;
+  priceListId: string;
+}
+
+export interface AssignStorePriceListResponse {
+  success: boolean;
+  data: StorePriceListAssignment;
+}
+
+export interface GetStorePriceListsResponse {
+  success: boolean;
+  data: StorePriceListAssignment[];
 }
 
 export const API_BASE_URL = 'https://pasha-backend-production.up.railway.app'; // API sunucusunun adresi
@@ -495,16 +547,34 @@ export async function deletePriceList(priceListId: string): Promise<DeletePriceL
 export async function getStores(): Promise<Store[]> {
   try {
     const token = localStorage.getItem('token');
+    
+    if (!token) {
+      console.error('Token bulunamadı, kullanıcı girişi gerekiyor');
+      throw new Error('Oturum açmanız gerekiyor');
+    }
+    
     const response = await fetch(`${API_BASE_URL}/api/stores`, {
       headers: {
         'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
       },
     });
+    
     if (!response.ok) {
-      throw new Error('Mağazalar getirilemedi');
+      const errorData = await response.json();
+      const errorMessage = errorData.message || 'Mağazalar getirilemedi';
+      console.error('API Hatası:', errorMessage, 'Durum Kodu:', response.status);
+      throw new Error(errorMessage);
     }
+    
     const data: GetStoresResponse = await response.json();
-    return data.data;
+    
+    if (!data.success) {
+      console.error('API başarı durumu false:', data);
+      throw new Error(data.message || 'Mağazalar getirilemedi');
+    }
+    
+    return data.data || [];
   } catch (error) {
     console.error('Mağazaları getirirken hata oluştu:', error);
     throw error;
@@ -611,7 +681,7 @@ export async function createPriceList(data: CreatePriceListData): Promise<PriceL
 export async function assignPriceList(data: AssignPriceListData): Promise<PriceListAssignment> {
   try {
     const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE_URL}/api/price-lists/user-assignments`, {
+    const response = await fetch(`${API_BASE_URL}/api/price-lists/store-assignments`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -629,6 +699,53 @@ export async function assignPriceList(data: AssignPriceListData): Promise<PriceL
     return result.data;
   } catch (error) {
     console.error('Fiyat listesi atanırken hata oluştu:', error);
+    throw error;
+  }
+}
+
+export async function assignStorePriceList(data: AssignStorePriceListData): Promise<StorePriceListAssignment> {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/api/price-lists/store-assignments`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Fiyat listesi mağazaya atanamadı');
+    }
+
+    const result: AssignStorePriceListResponse = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Fiyat listesi mağazaya atanırken hata oluştu:', error);
+    throw error;
+  }
+}
+
+export async function getStorePriceLists(storeId: string): Promise<StorePriceListAssignment[]> {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/api/price-lists/store-assignments/${storeId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Mağaza fiyat listeleri getirilemedi');
+    }
+
+    const result: GetStorePriceListsResponse = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Mağaza fiyat listeleri getirilirken hata oluştu:', error);
     throw error;
   }
 } 

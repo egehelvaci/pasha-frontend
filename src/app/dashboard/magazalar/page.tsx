@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Store, getStores, deleteStore, PriceList, getPriceLists, assignPriceList } from '@/services/api';
+import { Store, getStores, deleteStore, PriceList, getPriceLists, assignStorePriceList } from '@/services/api';
 import { Button, Card, Table, Tag, message, Modal, Select } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, DollarOutlined } from '@ant-design/icons';
 import { useAuth } from '@/app/context/AuthContext';
 
 export default function StoresPage() {
   const router = useRouter();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isLoading: authLoading } = useAuth();
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -22,20 +22,27 @@ export default function StoresPage() {
   const [assignLoading, setAssignLoading] = useState(false);
 
   useEffect(() => {
-    if (!isAdmin) {
+    // Kimlik doğrulama yüklemesi tamamlandığında ve admin değilse
+    if (!authLoading && !isAdmin) {
       router.push('/dashboard');
       return;
     }
-    fetchStores();
-    fetchPriceLists();
-  }, [isAdmin, router]);
+    
+    // Kimlik doğrulama yüklemesi tamamlandığında ve admin ise veri çek
+    if (!authLoading && isAdmin) {
+      fetchStores();
+      fetchPriceLists();
+    }
+  }, [isAdmin, authLoading, router]);
 
   const fetchStores = async () => {
+    setLoading(true);
     try {
       const data = await getStores();
       setStores(data);
-    } catch (error) {
-      message.error('Mağazalar yüklenirken bir hata oluştu');
+    } catch (error: any) {
+      console.error('Mağazalar yüklenirken hata:', error);
+      message.error(error.message || 'Mağazalar yüklenirken bir hata oluştu');
     } finally {
       setLoading(false);
     }
@@ -44,7 +51,20 @@ export default function StoresPage() {
   const fetchPriceLists = async () => {
     try {
       const data = await getPriceLists();
-      setPriceLists(data);
+      // Geçerli tarihlere göre fiyat listelerini filtrele
+      const currentDate = new Date().toISOString();
+      const validPriceLists = data.filter(list => {
+        // valid_from tarihi boş veya şu andaki tarihten önce ise
+        const isValidFrom = !list.valid_from || new Date(list.valid_from).toISOString() <= currentDate;
+        // valid_to tarihi boş veya şu andaki tarihten sonra ise
+        const isValidTo = !list.valid_to || new Date(list.valid_to).toISOString() >= currentDate;
+        // Aktif olarak işaretlenmişse
+        const isActive = list.is_active;
+        
+        return isValidFrom && isValidTo && isActive;
+      });
+      
+      setPriceLists(validPriceLists);
     } catch (error) {
       message.error('Fiyat listeleri yüklenirken bir hata oluştu');
     }
@@ -72,14 +92,15 @@ export default function StoresPage() {
 
     setAssignLoading(true);
     try {
-      await assignPriceList({
-        userId: selectedStore.store_id,
+      await assignStorePriceList({
+        storeId: selectedStore.store_id,
         priceListId: selectedPriceList
       });
       message.success('Fiyat listesi başarıyla atandı');
       setAssignModalVisible(false);
       setSelectedStore(null);
       setSelectedPriceList('');
+      fetchStores();
     } catch (error: any) {
       message.error(error.message || 'Fiyat listesi atanırken bir hata oluştu');
     } finally {
@@ -297,6 +318,13 @@ export default function StoresPage() {
             {priceLists.map(list => (
               <Select.Option key={list.price_list_id} value={list.price_list_id}>
                 {list.name}
+                {list.valid_from || list.valid_to ? (
+                  <span className="ml-2 text-gray-500 text-xs">
+                    ({list.valid_from ? new Date(list.valid_from).toLocaleDateString('tr-TR') : ''} 
+                    {list.valid_from && list.valid_to ? ' - ' : ''}
+                    {list.valid_to ? new Date(list.valid_to).toLocaleDateString('tr-TR') : ''})
+                  </span>
+                ) : null}
               </Select.Option>
             ))}
           </Select>

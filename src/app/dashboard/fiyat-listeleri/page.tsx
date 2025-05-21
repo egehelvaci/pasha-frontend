@@ -9,7 +9,7 @@ import { useAuth } from '@/app/context/AuthContext';
 
 export default function PriceListsPage() {
   const router = useRouter();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isLoading: authLoading } = useAuth();
   const [priceLists, setPriceLists] = useState<PriceList[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -17,19 +17,24 @@ export default function PriceListsPage() {
   const [priceListToDelete, setPriceListToDelete] = useState<PriceList | null>(null);
 
   useEffect(() => {
-    if (!isAdmin) {
+    if (!authLoading && !isAdmin) {
       router.push('/dashboard');
       return;
     }
-    fetchPriceLists();
-  }, [isAdmin, router]);
+    
+    if (!authLoading && isAdmin) {
+      fetchPriceLists();
+    }
+  }, [isAdmin, authLoading, router]);
 
   const fetchPriceLists = async () => {
+    setLoading(true);
     try {
       const data = await getPriceLists();
       setPriceLists(data);
-    } catch (error) {
-      message.error('Fiyat listeleri yüklenirken bir hata oluştu');
+    } catch (error: any) {
+      console.error('Fiyat listeleri yüklenirken hata:', error);
+      message.error(error.message || 'Fiyat listeleri yüklenirken bir hata oluştu');
     } finally {
       setLoading(false);
     }
@@ -128,28 +133,26 @@ export default function PriceListsPage() {
       key: 'actions',
       render: (record: PriceList) => (
         <div className="flex gap-2">
+          <Button
+            type="link"
+            icon={<EditOutlined />}
+            onClick={() => router.push(`/dashboard/fiyat-listeleri/${record.price_list_id}/duzenle`)}
+          >
+            Güncelle
+          </Button>
           {!record.is_default && (
-            <>
-              <Button
-                type="link"
-                icon={<EditOutlined />}
-                onClick={() => router.push(`/dashboard/fiyat-listeleri/${record.price_list_id}/duzenle`)}
-              >
-                Güncelle
-              </Button>
-              <Button
-                type="link"
-                danger
-                icon={<DeleteOutlined />}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setPriceListToDelete(record);
-                  setDeleteModalVisible(true);
-                }}
-              >
-                Sil
-              </Button>
-            </>
+            <Button
+              type="link"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={(e) => {
+                e.stopPropagation();
+                setPriceListToDelete(record);
+                setDeleteModalVisible(true);
+              }}
+            >
+              Sil
+            </Button>
           )}
         </div>
       ),

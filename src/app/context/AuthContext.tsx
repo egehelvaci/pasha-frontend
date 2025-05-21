@@ -58,31 +58,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    try {
-      // LocalStorage'dan kullanıcı bilgisi ve token'ı al
-      const storedUser = localStorage.getItem("user");
-      const storedToken = localStorage.getItem("token");
-      const storedUserType = localStorage.getItem("userType");
-      
-      if (storedUser && storedUser !== "undefined") {
-        setUser(JSON.parse(storedUser));
-      }
-      
-      if (storedToken && storedToken !== "undefined") {
-        setToken(storedToken);
-      }
+    const checkAuth = async () => {
+      try {
+        // LocalStorage'dan kullanıcı bilgisi ve token'ı al
+        const storedUser = localStorage.getItem("user");
+        const storedToken = localStorage.getItem("token");
+        const storedUserType = localStorage.getItem("userType");
+        
+        if (storedUser && storedUser !== "undefined") {
+          setUser(JSON.parse(storedUser));
+        }
+        
+        if (storedToken && storedToken !== "undefined") {
+          setToken(storedToken);
+        }
 
-      if (storedUserType === "admin") {
-        setIsAdmin(true);
+        if (storedUserType === "admin") {
+          setIsAdmin(true);
+        }
+      } catch (error) {
+        console.error("LocalStorage parse hatası:", error);
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        localStorage.removeItem("userType");
+      } finally {
+        // Bu kısımda sayfalar arası geçişlerde yeniden yükleme kontrolü için bir gecikme ekledik
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 500);
       }
-    } catch (error) {
-      console.error("LocalStorage parse hatası:", error);
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
-      localStorage.removeItem("userType");
-    } finally {
-      setIsLoading(false);
-    }
+    };
+
+    checkAuth();
   }, []);
 
   const login = async (username: string, password: string) => {
