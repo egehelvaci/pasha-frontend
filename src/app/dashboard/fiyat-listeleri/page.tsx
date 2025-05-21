@@ -3,9 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { PriceList, getPriceLists, deletePriceList } from '@/services/api';
-import { Button, Card, Table, Tag, Tooltip, Modal, message } from 'antd';
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
+import { Button, Card, Table, Tag, message, Modal } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useAuth } from '@/app/context/AuthContext';
 
 export default function PriceListsPage() {
@@ -14,8 +13,8 @@ export default function PriceListsPage() {
   const [priceLists, setPriceLists] = useState<PriceList[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [selectedPriceList, setSelectedPriceList] = useState<PriceList | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [priceListToDelete, setPriceListToDelete] = useState<PriceList | null>(null);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -37,15 +36,15 @@ export default function PriceListsPage() {
   };
 
   const handleDelete = async () => {
-    if (!selectedPriceList) return;
-
+    if (!priceListToDelete) return;
+    
     setDeleteLoading(true);
     try {
-      await deletePriceList(selectedPriceList.price_list_id);
+      await deletePriceList(priceListToDelete.price_list_id);
       message.success('Fiyat listesi başarıyla silindi');
-      fetchPriceLists();
+      setPriceLists(priceLists.filter(list => list.price_list_id !== priceListToDelete.price_list_id));
       setDeleteModalVisible(false);
-      setSelectedPriceList(null);
+      setPriceListToDelete(null);
     } catch (error: any) {
       message.error(error.message || 'Fiyat listesi silinirken bir hata oluştu');
     } finally {
@@ -55,7 +54,7 @@ export default function PriceListsPage() {
 
   const columns = [
     {
-      title: 'Fiyat Listesi Adı',
+      title: 'Liste Adı',
       dataIndex: 'name',
       key: 'name',
       render: (text: string, record: PriceList) => (
@@ -66,15 +65,30 @@ export default function PriceListsPage() {
       ),
     },
     {
-      title: 'Durum',
-      key: 'status',
+      title: 'Geçerlilik',
+      key: 'validity',
       render: (record: PriceList) => (
-        <div className="flex gap-2">
-          {record.is_active && (
-            <Tag color="green">Aktif</Tag>
+        <div>
+          {record.valid_from || record.valid_to ? (
+            <>
+              <div>{record.valid_from ? new Date(record.valid_from).toLocaleDateString('tr-TR') : 'Başlangıç: -'}</div>
+              <div>{record.valid_to ? new Date(record.valid_to).toLocaleDateString('tr-TR') : 'Bitiş: -'}</div>
+            </>
+          ) : (
+            <Tag color="blue">Süresiz</Tag>
           )}
-          {record.is_default && (
-            <Tag color="blue">Varsayılan</Tag>
+        </div>
+      ),
+    },
+    {
+      title: 'Limit Tutarı',
+      key: 'limit',
+      render: (record: PriceList) => (
+        <div>
+          {record.limit_amount ? (
+            <div>{record.limit_amount.toLocaleString('tr-TR')} {record.currency}</div>
+          ) : (
+            <Tag color="blue">Limitsiz</Tag>
           )}
         </div>
       ),
@@ -85,57 +99,57 @@ export default function PriceListsPage() {
       key: 'currency',
     },
     {
-      title: 'Geçerlilik',
-      key: 'validity',
-      render: (record: PriceList) => {
-        if (!record.valid_from && !record.valid_to) {
-          return <span>Süresiz</span>;
-        }
-
-        return (
-          <Tooltip title={`${record.valid_from ? dayjs(record.valid_from).format('DD.MM.YYYY') : 'Başlangıç yok'} - ${record.valid_to ? dayjs(record.valid_to).format('DD.MM.YYYY') : 'Bitiş yok'}`}>
-            <span>
-              {record.valid_from ? dayjs(record.valid_from).format('DD.MM.YYYY') : '-'} - {record.valid_to ? dayjs(record.valid_to).format('DD.MM.YYYY') : '-'}
-            </span>
-          </Tooltip>
-        );
-      },
+      title: 'Varsayılan',
+      key: 'default',
+      render: (record: PriceList) => (
+        record.is_default ? (
+          <Tag color="green">Varsayılan</Tag>
+        ) : null
+      ),
     },
     {
-      title: 'Limit Tutar',
-      key: 'limit_amount',
+      title: 'Durum',
+      key: 'status',
       render: (record: PriceList) => (
-        record.limit_amount ? `${record.limit_amount.toLocaleString('tr-TR')} ${record.currency}` : '-'
+        <Tag color={record.is_active ? 'green' : 'red'}>
+          {record.is_active ? 'Aktif' : 'Pasif'}
+        </Tag>
       ),
     },
     {
       title: 'Ürün Sayısı',
-      key: 'product_count',
-      render: (record: PriceList) => record.PriceListDetail.length,
+      key: 'products',
+      render: (record: PriceList) => (
+        <div>{record.PriceListDetail?.length || 0}</div>
+      ),
     },
     {
       title: 'İşlemler',
       key: 'actions',
-      render: (_: any, record: PriceList) => (
+      render: (record: PriceList) => (
         <div className="flex gap-2">
-          <Button
-            type="link"
-            onClick={() => router.push(`/dashboard/fiyat-listeleri/${record.price_list_id}/duzenle`)}
-          >
-            Düzenle
-          </Button>
           {!record.is_default && (
-            <Button
-              type="link"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => {
-                setSelectedPriceList(record);
-                setDeleteModalVisible(true);
-              }}
-            >
-              Sil
-            </Button>
+            <>
+              <Button
+                type="link"
+                icon={<EditOutlined />}
+                onClick={() => router.push(`/dashboard/fiyat-listeleri/${record.price_list_id}/duzenle`)}
+              >
+                Güncelle
+              </Button>
+              <Button
+                type="link"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPriceListToDelete(record);
+                  setDeleteModalVisible(true);
+                }}
+              >
+                Sil
+              </Button>
+            </>
           )}
         </div>
       ),
@@ -169,19 +183,39 @@ export default function PriceListsPage() {
       </Card>
 
       <Modal
-        title="Fiyat Listesi Silme"
+        title="Fiyat Listesi Sil"
         open={deleteModalVisible}
-        onOk={handleDelete}
         onCancel={() => {
           setDeleteModalVisible(false);
-          setSelectedPriceList(null);
+          setPriceListToDelete(null);
         }}
-        okText="Sil"
-        cancelText="İptal"
-        confirmLoading={deleteLoading}
+        footer={[
+          <Button 
+            key="cancel" 
+            onClick={() => {
+              setDeleteModalVisible(false);
+              setPriceListToDelete(null);
+            }}
+          >
+            İptal
+          </Button>,
+          <Button 
+            key="delete" 
+            type="primary" 
+            danger 
+            loading={deleteLoading}
+            onClick={handleDelete}
+          >
+            Sil
+          </Button>,
+        ]}
       >
-        <p>Bu fiyat listesini silmek istediğinizden emin misiniz?</p>
-        <p className="text-gray-500 text-sm mt-2">Bu işlem geri alınamaz.</p>
+        <p>
+          <strong>{priceListToDelete?.name}</strong> fiyat listesini silmek istediğinize emin misiniz?
+        </p>
+        <p className="text-gray-500 text-sm mt-2">
+          Bu işlem geri alınamaz ve fiyat listesine bağlı tüm fiyatlar silinecektir.
+        </p>
       </Modal>
     </div>
   );

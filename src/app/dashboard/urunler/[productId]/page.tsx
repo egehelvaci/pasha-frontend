@@ -177,7 +177,6 @@ export default function ProductDetail() {
           </div>
           <div className="text-lg text-black whitespace-pre-line">{product.description}</div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base">
-            <div><span className="font-semibold text-black">Fiyat:</span> <span className="text-black">{product.price} {product.currency}</span></div>
             <div><span className="font-semibold text-black">Stok:</span> <span className="text-black">{product.stock}</span></div>
             <div><span className="font-semibold text-black">Koleksiyon:</span> <span className="text-black">{product.collection_name}</span></div>
             <div><span className="font-semibold text-black">Kayıt No:</span> <span className="text-black">{product.productId}</span></div>

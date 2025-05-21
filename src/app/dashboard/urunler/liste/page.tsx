@@ -188,9 +188,6 @@ export default function ProductList() {
             <button className="bg-blue-900 text-white rounded-full px-6 py-2 font-semibold flex items-center gap-2" onClick={() => setModalOpen(true)}>
               <span>Yeni Ürün</span>
             </button>
-            <button className="bg-white border border-gray-300 rounded-full px-3 py-2 flex items-center">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
-            </button>
           </div>
         )}
       </div>

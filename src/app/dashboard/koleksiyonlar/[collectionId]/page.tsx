@@ -6,8 +6,6 @@ interface Product {
   productId: string;
   name: string;
   description: string;
-  price: number;
-  currency: string;
   imageUrl: string | null;
 }
 
@@ -112,9 +110,6 @@ export default function CollectionDetail() {
                 )}
                 <h3 className="font-semibold text-black mb-2">{product.name}</h3>
                 <p className="text-sm text-gray-600 mb-2">{product.description}</p>
-                <p className="text-black font-medium">
-                  {product.price} {product.currency}
-                </p>
               </div>
             ))}
           </div>
