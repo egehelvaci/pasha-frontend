@@ -168,60 +168,95 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6">
+        <hr className="border-gray-200 mb-6" />
+        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          {/* Kullanıcı bilgileri kartı */}
+          {/* Kullanıcı bilgileri kartı - Sol taraf */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center">
-              <div className="h-14 w-14 rounded-full bg-blue-900 flex items-center justify-center text-white text-xl font-bold">
+            <div className="flex items-center mb-4">
+              <div className="h-20 w-20 rounded-full bg-blue-900 flex items-center justify-center text-white text-2xl font-bold">
                 {user.name[0]}{user.surname[0]}
               </div>
               <div className="ml-4">
-                <h2 className="text-lg font-medium text-gray-800">{user.name} {user.surname}</h2>
-                <p className="text-gray-500 text-sm">{user.username}</p>
-                <p className="text-gray-500 text-sm">{user.email}</p>
+                <h2 className="text-xl font-medium text-gray-800">{user.name} {user.surname}</h2>
+                <p className="text-gray-500">{user.username}</p>
+                {user.Store && (
+                  <p className="text-gray-600 mt-1">{user.Store.kurum_adi}</p>
+                )}
               </div>
             </div>
           </div>
           
-          {/* Fiyat Listesi Kartı */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 col-span-2">
+          {/* Fiyat Listesi Kartı - Sağ taraf */}
+          <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 col-span-2">
             {isLoadingPriceList ? (
               <div className="flex items-center justify-center h-full">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-900"></div>
               </div>
             ) : priceListDetail?.data ? (
               <div>
-                <h2 className="text-lg font-medium text-gray-800 mb-2">Fiyat Listesi: {priceListDetail.data.name}</h2>
-                <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-800">
+                      Güncel Fiyat Listesi
+                    </h2>
+                    <p className="text-gray-500 text-sm mt-1">
+                      {user.Store?.kurum_adi || "Paşa Home"}
+                    </p>
+                  </div>
+                  <button className="bg-gradient-to-r from-blue-800 to-blue-600 text-white px-6 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 font-medium">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                    </svg>
+                    Fiyat Hesapla
+                  </button>
+                </div>
+                <div className="overflow-hidden rounded-xl border border-gray-200">
                   <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Koleksiyon Adı
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                          Ürün Adı
                         </th>
-                        <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          m² Fiyatı ({priceListDetail.data.currency})
+                        <th scope="col" className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                          Fiyat
+                        </th>
+                        <th scope="col" className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                          Para Birimi
                         </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {priceListDetail.data.PriceListDetail && priceListDetail.data.PriceListDetail.length > 0 ? (
                         priceListDetail.data.PriceListDetail
-                          .map((detail) => (
-                            <tr key={detail.price_list_detail_id} className="hover:bg-gray-50">
+                          .map((detail, index) => (
+                            <tr key={detail.price_list_detail_id} 
+                                className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50 transition-colors duration-150 ease-in-out`}>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">{detail.Collection.name}</div>
+                                <div className="flex items-center">
+                                  <div className="h-8 w-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-800 font-semibold text-sm mr-3">
+                                    {detail.Collection.name.charAt(0)}
+                                  </div>
+                                  <div className="text-sm font-semibold text-gray-900">{detail.Collection.name} SERİSİ</div>
+                                </div>
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <span className="text-gray-900">
-                                  {detail.price_per_square_meter}
+                              <td className="px-6 py-4 whitespace-nowrap text-center">
+                                <span className="text-sm font-bold text-gray-900">
+                                  {typeof detail.price_per_square_meter === 'number' 
+                                    ? detail.price_per_square_meter.toFixed(2) 
+                                    : Number(detail.price_per_square_meter).toFixed(2)} ₺
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                  Türk Lirası
                                 </span>
                               </td>
                             </tr>
                           ))
                       ) : (
                         <tr>
-                          <td colSpan={2} className="px-6 py-4 text-center text-gray-500">
+                          <td colSpan={3} className="px-6 py-4 text-center text-gray-500">
                             Koleksiyon fiyatları bulunamadı
                           </td>
                         </tr>
@@ -237,70 +272,6 @@ export default function Dashboard() {
             )}
           </div>
         </div>
-
-        {/* Fiyat Listesi Ürünleri */}
-        {priceListItem?.PriceList?.products && priceListItem.PriceList.products.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-800">Ürünler ve Fiyatları</h2>
-              <p className="text-sm text-gray-500 mt-1">
-                {priceListItem.PriceList.name} listesindeki tüm ürünler
-              </p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Ürün
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Koleksiyon
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Stok
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Fiyat
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {priceListItem.PriceList.products.map((product) => (
-                    <tr key={product.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="h-10 w-10 flex-shrink-0">
-                            <img 
-                              className="h-10 w-10 rounded-lg object-cover" 
-                              src={product.productImage || "https://via.placeholder.com/40"} 
-                              alt={product.name} 
-                            />
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                            <div className="text-sm text-gray-500">{product.description}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                          {product.collection_name}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {product.stock}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
-                        {product.price} {product.currency}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

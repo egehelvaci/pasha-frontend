@@ -38,18 +38,26 @@ interface PriceListDetailItem {
 interface PriceListDetailResponse {
   success: boolean;
   data: {
-    price_list_id: string;
-    name: string;
-    description: string;
-    is_default: boolean;
-    valid_from: string | null;
-    valid_to: string | null;
-    limit_amount: number | null;
-    currency: string;
-    is_active: boolean;
-    created_at: string;
-    updated_at: string;
-    PriceListDetail: PriceListDetailItem[];
+    price_list: {
+      price_list_id: string;
+      name: string;
+      description: string;
+      is_default: boolean;
+      valid_from: string | null;
+      valid_to: string | null;
+      limit_amount: string | null;
+      currency: string;
+      is_active: boolean;
+      created_at: string;
+      updated_at: string;
+    };
+    collection_prices: {
+      price_list_detail_id: string;
+      collection_id: string;
+      collection_name: string;
+      collection_code: string;
+      price_per_square_meter: string;
+    }[];
   }
 }
 
@@ -131,9 +139,9 @@ export default function EditPriceListPage() {
           // Form alanlarını doldur
           const collectionPrices: Record<string, number> = {};
           
-          // PriceListDetail içerisindeki koleksiyon ID ve fiyatları doldur
-          detailData.data.PriceListDetail?.forEach((detail: PriceListDetailItem) => {
-            collectionPrices[detail.collection_id] = detail.price_per_square_meter;
+          // API'den gelen koleksiyon fiyatlarını doldur
+          detailData.data.collection_prices?.forEach((detail) => {
+            collectionPrices[detail.collection_id] = Number(detail.price_per_square_meter);
           });
 
           console.log('API yanıtı:', detailData);
@@ -143,13 +151,13 @@ export default function EditPriceListPage() {
           setCollectionPricesData(collectionPrices);
 
           antForm.setFieldsValue({
-            name: currentPriceList.name,
-            description: currentPriceList.description,
-            validity: currentPriceList.valid_from && currentPriceList.valid_to ? 
-              [dayjs(currentPriceList.valid_from), dayjs(currentPriceList.valid_to)] : undefined,
-            limitAmount: currentPriceList.limit_amount,
-            currency: currentPriceList.currency,
-            isActive: currentPriceList.is_active,
+            name: detailData.data.price_list.name,
+            description: detailData.data.price_list.description,
+            validity: detailData.data.price_list.valid_from && detailData.data.price_list.valid_to ? 
+              [dayjs(detailData.data.price_list.valid_from), dayjs(detailData.data.price_list.valid_to)] : undefined,
+            limitAmount: Number(detailData.data.price_list.limit_amount),
+            currency: detailData.data.price_list.currency,
+            isActive: detailData.data.price_list.is_active,
             collectionPrices,
           });
 
@@ -306,24 +314,6 @@ export default function EditPriceListPage() {
 
               <div className="md:col-span-2">
                 <h3 className="font-semibold mb-4">Koleksiyon Fiyatları</h3>
-                {Object.keys(collectionPricesData).length > 0 && (
-                  <div className="bg-blue-50 p-3 mb-4 rounded-md border border-blue-200 text-sm text-blue-700">
-                    <div className="font-medium mb-1">Mevcut Fiyatlar:</div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {collections.map(collection => {
-                        const price = collectionPricesData[collection.collectionId];
-                        if (price !== undefined) {
-                          return (
-                            <div key={collection.collectionId}>
-                              <strong>{collection.name}:</strong> {price.toLocaleString('tr-TR')} {priceList?.currency || 'TRY'}/m²
-                            </div>
-                          );
-                        }
-                        return null;
-                      })}
-                    </div>
-                  </div>
-                )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {collections.map((collection) => (
                     <Form.Item
