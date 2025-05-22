@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Store, getStores, deleteStore, PriceList, getPriceLists, assignStorePriceList } from '@/services/api';
 import { Button, Card, Table, Tag, message, Modal, Select } from 'antd';
@@ -20,6 +20,10 @@ export default function StoresPage() {
   const [selectedPriceList, setSelectedPriceList] = useState<string>('');
   const [selectedStore, setSelectedStore] = useState<Store | null>(null);
   const [assignLoading, setAssignLoading] = useState(false);
+  
+  // API çağrılarını takip etmek için ref oluştur
+  const storesFetchedRef = useRef(false);
+  const priceListsFetchedRef = useRef(false);
 
   useEffect(() => {
     // Kimlik doğrulama yüklemesi tamamlandığında ve admin değilse
@@ -30,12 +34,22 @@ export default function StoresPage() {
     
     // Kimlik doğrulama yüklemesi tamamlandığında ve admin ise veri çek
     if (!authLoading && isAdmin) {
-      fetchStores();
-      fetchPriceLists();
+      if (!storesFetchedRef.current) {
+        storesFetchedRef.current = true;
+        fetchStores();
+      }
+      
+      if (!priceListsFetchedRef.current) {
+        priceListsFetchedRef.current = true;
+        fetchPriceLists();
+      }
     }
   }, [isAdmin, authLoading, router]);
 
   const fetchStores = async () => {
+    // Zaten yükleme yapılıyorsa çık
+    if (loading && stores.length > 0) return;
+    
     setLoading(true);
     try {
       const data = await getStores();
@@ -80,6 +94,9 @@ export default function StoresPage() {
       setStores(stores.filter(store => store.store_id !== storeToDelete.store_id));
       setDeleteModalVisible(false);
       setStoreToDelete(null);
+      
+      // Verileri yenilemek için referansı sıfırla
+      storesFetchedRef.current = false;
     } catch (error: any) {
       message.error(error.message || 'Mağaza silinirken bir hata oluştu');
     } finally {
@@ -100,6 +117,9 @@ export default function StoresPage() {
       setAssignModalVisible(false);
       setSelectedStore(null);
       setSelectedPriceList('');
+      
+      // Mağaza listesini yenilemek için referansı sıfırla
+      storesFetchedRef.current = false;
       fetchStores();
     } catch (error: any) {
       message.error(error.message || 'Fiyat listesi atanırken bir hata oluştu');

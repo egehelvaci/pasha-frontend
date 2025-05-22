@@ -290,6 +290,37 @@ export interface GetStorePriceListsResponse {
   data: StorePriceListAssignment[];
 }
 
+export interface AssignUserToStoreData {
+  storeId: string;
+}
+
+export interface AssignUserToStoreResponse {
+  success: boolean;
+  data: {
+    userId: string;
+    username: string;
+    name: string;
+    surname: string;
+    Store: {
+      store_id: string;
+      kurum_adi: string;
+    }
+  };
+  message: string;
+}
+
+export interface RemoveUserFromStoreResponse {
+  success: boolean;
+  data: {
+    userId: string;
+    username: string;
+    name: string;
+    surname: string;
+    Store: null;
+  };
+  message: string;
+}
+
 export const API_BASE_URL = 'https://pasha-backend-production.up.railway.app'; // API sunucusunun adresi
 
 export async function getProducts(): Promise<Product[]> {
@@ -746,6 +777,55 @@ export async function getStorePriceLists(storeId: string): Promise<StorePriceLis
     return result.data;
   } catch (error) {
     console.error('Mağaza fiyat listeleri getirilirken hata oluştu:', error);
+    throw error;
+  }
+}
+
+export async function assignUserToStore(userId: string, data: AssignUserToStoreData): Promise<AssignUserToStoreResponse> {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/assign-store`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Kullanıcı mağazaya atanamadı');
+    }
+
+    const result: AssignUserToStoreResponse = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Kullanıcı mağazaya atanırken hata oluştu:', error);
+    throw error;
+  }
+}
+
+export async function removeUserFromStore(userId: string): Promise<RemoveUserFromStoreResponse> {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/remove-store`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Kullanıcının mağaza ataması kaldırılamadı');
+    }
+
+    const result: RemoveUserFromStoreResponse = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Kullanıcının mağaza ataması kaldırılırken hata oluştu:', error);
     throw error;
   }
 } 

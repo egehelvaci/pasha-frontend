@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { CreatePriceListData, createPriceList, getPriceLists } from '@/services/api';
 import { Button, Form, Input, InputNumber, DatePicker, Modal, message, Select } from 'antd';
@@ -62,6 +62,9 @@ export default function AddPriceListPage() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [defaultPrices, setDefaultPrices] = useState<Record<string, number>>({});
   const [form] = Form.useForm();
+  
+  // API çağrısını takip etmek için ref oluştur
+  const priceListsFetchedRef = useRef(false);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -95,6 +98,11 @@ export default function AddPriceListPage() {
 
   const fetchDefaultPriceList = async () => {
     try {
+      // Eğer zaten fetch yapıldıysa çık
+      if (priceListsFetchedRef.current) return;
+      
+      priceListsFetchedRef.current = true;
+      
       // Tüm fiyat listelerini al
       const priceLists = await getPriceLists();
       

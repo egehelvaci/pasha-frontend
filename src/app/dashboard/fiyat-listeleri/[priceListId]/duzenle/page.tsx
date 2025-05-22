@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { PriceList, CreatePriceListData, getPriceLists, updatePriceList } from '@/services/api';
 import { Button, Form, Input, InputNumber, DatePicker, Modal, message, Select, Switch } from 'antd';
@@ -62,15 +62,42 @@ export default function EditPriceListPage() {
   const [loading, setLoading] = useState(false);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [priceList, setPriceList] = useState<PriceList | null>(null);
-  const [form] = Form.useForm();
+  const [antForm] = Form.useForm();
+  const [collectionPricesData, setCollectionPricesData] = useState<Record<string, number>>({});
+  
+  // API çağrısını takip etmek için ref oluştur
+  const priceListsFetchedRef = useRef(false);
+  // Kod yeniden yüklendiğinde temiz bir başlangıç yapılması için
+  const isInitializedRef = useRef(false);
+
+  useEffect(() => {
+    // İlk render'da tüm bağlantıları temizle ve yeniden başlat
+    isInitializedRef.current = true;
+    
+    // Temizleme fonksiyonu
+    return () => {
+      isInitializedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!isAdmin) {
       router.push('/dashboard');
       return;
     }
-    fetchData();
+    
+    if (!priceListsFetchedRef.current) {
+      priceListsFetchedRef.current = true;
+      fetchData();
+    }
   }, [isAdmin, router]);
+
+  // Form değerlerinin değişimini izle
+  const onValuesChange = (changedValues: any, allValues: FormValues) => {
+    if (isInitializedRef.current) {
+      setCollectionPricesData(allValues.collectionPrices || {});
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -109,7 +136,13 @@ export default function EditPriceListPage() {
             collectionPrices[detail.collection_id] = detail.price_per_square_meter;
           });
 
-          form.setFieldsValue({
+          console.log('API yanıtı:', detailData);
+          console.log('Koleksiyon fiyatları:', collectionPrices);
+          
+          // Koleksiyon fiyatlarını state'e kaydet
+          setCollectionPricesData(collectionPrices);
+
+          antForm.setFieldsValue({
             name: currentPriceList.name,
             description: currentPriceList.description,
             validity: currentPriceList.valid_from && currentPriceList.valid_to ? 
@@ -119,12 +152,15 @@ export default function EditPriceListPage() {
             isActive: currentPriceList.is_active,
             collectionPrices,
           });
+
+          // Form alanlarının güncel değerlerini yazdır
+          console.log('Form alanlarına yüklenen değerler:', antForm.getFieldsValue());
         }
       } catch (error) {
         console.error('Fiyat listesi detayı getirilemedi:', error);
         
         // Detay getirilemezse ana fiyat listesi verilerini kullan
-        form.setFieldsValue({
+        antForm.setFieldsValue({
           name: currentPriceList.name,
           description: currentPriceList.description,
           validity: currentPriceList.valid_from && currentPriceList.valid_to ? 
@@ -195,9 +231,10 @@ export default function EditPriceListPage() {
       >
         <div className="max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
           <Form
-            form={form}
+            form={antForm}
             layout="vertical"
             onFinish={onFinish}
+            onValuesChange={onValuesChange}
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Form.Item
@@ -269,6 +306,24 @@ export default function EditPriceListPage() {
 
               <div className="md:col-span-2">
                 <h3 className="font-semibold mb-4">Koleksiyon Fiyatları</h3>
+                {Object.keys(collectionPricesData).length > 0 && (
+                  <div className="bg-blue-50 p-3 mb-4 rounded-md border border-blue-200 text-sm text-blue-700">
+                    <div className="font-medium mb-1">Mevcut Fiyatlar:</div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {collections.map(collection => {
+                        const price = collectionPricesData[collection.collectionId];
+                        if (price !== undefined) {
+                          return (
+                            <div key={collection.collectionId}>
+                              <strong>{collection.name}:</strong> {price.toLocaleString('tr-TR')} {priceList?.currency || 'TRY'}/m²
+                            </div>
+                          );
+                        }
+                        return null;
+                      })}
+                    </div>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {collections.map((collection) => (
                     <Form.Item
@@ -281,6 +336,7 @@ export default function EditPriceListPage() {
                         formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                         min={0}
                         step={0.01}
+                        placeholder={`${collection.code}`}
                       />
                     </Form.Item>
                   ))}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { PriceList, getPriceLists, deletePriceList } from '@/services/api';
 import { Button, Card, Table, Tag, message, Modal } from 'antd';
@@ -15,6 +15,9 @@ export default function PriceListsPage() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [priceListToDelete, setPriceListToDelete] = useState<PriceList | null>(null);
+  
+  // API çağrısını takip etmek için ref oluştur
+  const fetchedRef = useRef(false);
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -22,12 +25,16 @@ export default function PriceListsPage() {
       return;
     }
     
-    if (!authLoading && isAdmin) {
+    if (!authLoading && isAdmin && !fetchedRef.current) {
+      fetchedRef.current = true;
       fetchPriceLists();
     }
   }, [isAdmin, authLoading, router]);
 
   const fetchPriceLists = async () => {
+    // Zaten yükleme yapılıyorsa çık
+    if (loading && priceLists.length > 0) return;
+    
     setLoading(true);
     try {
       const data = await getPriceLists();
@@ -50,6 +57,9 @@ export default function PriceListsPage() {
       setPriceLists(priceLists.filter(list => list.price_list_id !== priceListToDelete.price_list_id));
       setDeleteModalVisible(false);
       setPriceListToDelete(null);
+      
+      // Verileri yenilemek için referansı sıfırla
+      fetchedRef.current = false;
     } catch (error: any) {
       message.error(error.message || 'Fiyat listesi silinirken bir hata oluştu');
     } finally {

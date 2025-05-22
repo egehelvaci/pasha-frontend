@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaStore } from 'react-icons/fa';
+import { getStores, assignUserToStore, removeUserFromStore } from '@/services/api';
 
 interface User {
   userId: string;
@@ -20,6 +21,10 @@ interface User {
     name: string;
     description: string;
   } | string;
+  Store?: {
+    store_id: string;
+    kurum_adi: string;
+  }
 }
 
 interface UserFormData {
@@ -52,13 +57,28 @@ export default function Settings() {
     email: '',
     userTypeName: 'viewer'
   });
+  const [assignStoreModalOpen, setAssignStoreModalOpen] = useState(false);
+  const [assigningUserId, setAssigningUserId] = useState<string | null>(null);
+  const [selectedStoreId, setSelectedStoreId] = useState<string>('');
+  const [stores, setStores] = useState<{store_id: string, kurum_adi: string}[]>([]);
+  const [assignLoading, setAssignLoading] = useState(false);
+  const [removeLoading, setRemoveLoading] = useState(false);
+  
+  // API çağrısını takip etmek için ref oluştur
+  const fetchedRef = useRef(false);
 
   useEffect(() => {
     if (!user) {
       router.push('/dashboard');
       return;
     }
-    fetchUsers();
+    
+    // Sadece bir kez çağrılmasını sağla
+    if (!fetchedRef.current) {
+      fetchedRef.current = true;
+      fetchUsers();
+      fetchStores();
+    }
   }, [user, router]);
 
   useEffect(() => {
@@ -89,6 +109,10 @@ export default function Settings() {
   }, [selectedUser]);
 
   const fetchUsers = async () => {
+    // Zaten yükleme yapılıyorsa çık
+    if (loading && users.length > 0) return;
+    
+    setLoading(true);
     try {
       const res = await fetch("https://pasha-backend-production.up.railway.app/api/admin/users", {
         headers: {
@@ -103,6 +127,18 @@ export default function Settings() {
       setError(err.message || "Kullanıcılar yüklenirken bir hata oluştu");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchStores = async () => {
+    try {
+      const storesData = await getStores();
+      setStores(storesData.map(store => ({
+        store_id: store.store_id,
+        kurum_adi: store.kurum_adi
+      })));
+    } catch (err: any) {
+      setError(err.message || "Mağazalar yüklenirken bir hata oluştu");
     }
   };
 
@@ -138,6 +174,9 @@ export default function Settings() {
       if (!data.success) throw new Error(data.message);
       setDeleteModalOpen(false);
       setDeleteUserId(null);
+      
+      // Kullanıcıları yenile
+      fetchedRef.current = false; // useRef'i sıfırla
       fetchUsers();
     } catch (err: any) {
       setError(err.message || "Kullanıcı silinirken bir hata oluştu");
@@ -167,6 +206,9 @@ export default function Settings() {
       
       setModalOpen(false);
       setSelectedUser(null);
+      
+      // Kullanıcıları yenile
+      fetchedRef.current = false; // useRef'i sıfırla
       fetchUsers();
     } catch (err: any) {
       setError(err.message || "İşlem sırasında bir hata oluştu");
@@ -176,6 +218,68 @@ export default function Settings() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleAssignStore = async () => {
+    if (!assigningUserId) return;
+    
+    // Mağaza atamasını kaldırma seçeneği
+    if (selectedStoreId === "remove") {
+      await handleRemoveStore();
+      return;
+    }
+    
+    if (!selectedStoreId) return;
+    
+    setAssignLoading(true);
+    try {
+      const result = await assignUserToStore(assigningUserId, {
+        storeId: selectedStoreId
+      });
+      
+      // Kullanıcı listesini güncelle
+      setUsers(users.map(u => 
+        u.userId === assigningUserId 
+          ? {...u, Store: result.data.Store} 
+          : u
+      ));
+      
+      setAssignStoreModalOpen(false);
+      setAssigningUserId(null);
+      setSelectedStoreId('');
+    } catch (err: any) {
+      setError(err.message || "Kullanıcı mağazaya atanırken bir hata oluştu");
+    } finally {
+      setAssignLoading(false);
+    }
+  };
+  
+  const handleRemoveStore = async () => {
+    if (!assigningUserId) return;
+    
+    setRemoveLoading(true);
+    try {
+      const result = await removeUserFromStore(assigningUserId);
+      
+      // Kullanıcı listesini güncelle
+      setUsers(users.map(u => {
+        if (u.userId === assigningUserId) {
+          // Store özelliğini undefined olarak ayarla (null değil)
+          const updatedUser = {...u};
+          updatedUser.Store = undefined;
+          return updatedUser;
+        }
+        return u;
+      }));
+      
+      setAssignStoreModalOpen(false);
+      setAssigningUserId(null);
+      setSelectedStoreId('');
+    } catch (err: any) {
+      setError(err.message || "Kullanıcının mağaza ataması kaldırılırken bir hata oluştu");
+    } finally {
+      setRemoveLoading(false);
+    }
   };
 
   if (loading) {
@@ -207,6 +311,7 @@ export default function Settings() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ad Soyad</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">E-posta</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kullanıcı Tipi</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mağaza</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bakiye</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durum</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
@@ -231,6 +336,9 @@ export default function Settings() {
                       ? (user.userType.description || user.userType.name)
                       : user.userType}
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {user.Store ? user.Store.kurum_adi : '-'}
+                  </td>
                   <td className={
                     `px-6 py-4 whitespace-nowrap text-sm font-semibold ` +
                     (((Number(user.credit) || 0) - (Number(user.debit) || 0)) < 0
@@ -250,6 +358,16 @@ export default function Settings() {
                       className="text-blue-600 hover:text-blue-900 mr-4"
                     >
                       <FaEdit />
+                    </button>
+                    <button
+                      onClick={() => { 
+                        setAssigningUserId(user.userId); 
+                        setSelectedStoreId(user.Store?.store_id || '');
+                        setAssignStoreModalOpen(true); 
+                      }}
+                      className="text-green-600 hover:text-green-900 mr-4"
+                    >
+                      <FaStore />
                     </button>
                     <button
                       onClick={() => { setDeleteUserId(user.userId); setDeleteModalOpen(true); }}
@@ -408,6 +526,59 @@ export default function Settings() {
             <div className="flex justify-end gap-2">
               <button className="px-4 py-2 rounded bg-gray-200 text-black" onClick={() => { setDeleteModalOpen(false); setDeleteUserId(null); }}>Vazgeç</button>
               <button className="px-4 py-2 rounded bg-red-600 text-white" onClick={handleDelete}>Evet</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mağaza Atama Modalı */}
+      {assignStoreModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-lg relative">
+            <h2 className="text-lg font-bold mb-4 text-black">Kullanıcı Mağaza Bilgileri</h2>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Mağaza</label>
+              <select
+                value={selectedStoreId}
+                onChange={(e) => setSelectedStoreId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black"
+              >
+                <option value="" className="text-black">Mağaza seçin</option>
+                {stores.map(store => (
+                  <option key={store.store_id} value={store.store_id} className="text-black">
+                    {store.kurum_adi}
+                  </option>
+                ))}
+                {users.find(u => u.userId === assigningUserId)?.Store && (
+                  <option value="remove" className="text-red-600 font-medium">
+                    Mağaza Atamasını Kaldır
+                  </option>
+                )}
+              </select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button 
+                className="px-4 py-2 rounded bg-gray-200 text-black" 
+                onClick={() => { 
+                  setAssignStoreModalOpen(false); 
+                  setAssigningUserId(null);
+                  setSelectedStoreId('');
+                }}
+              >
+                Vazgeç
+              </button>
+              <button 
+                className={`px-4 py-2 rounded ${selectedStoreId === "remove" ? "bg-red-600" : "bg-blue-900"} text-white`}
+                onClick={handleAssignStore}
+                disabled={!selectedStoreId || assignLoading || removeLoading}
+              >
+                {assignLoading || removeLoading 
+                  ? 'İşleniyor...' 
+                  : selectedStoreId === "remove" 
+                    ? 'Kaldır' 
+                    : 'Ata'
+                }
+              </button>
             </div>
           </div>
         </div>
