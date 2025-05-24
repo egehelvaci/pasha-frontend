@@ -427,9 +427,6 @@ export default function Dashboard() {
                             <h3 className="font-semibold text-gray-900 group-hover:text-green-600 transition-colors truncate text-sm">
                               {product.name}
                             </h3>
-                            <div className="flex items-center mt-1 space-x-3 text-xs text-gray-400">
-                              <span>{product.width}x{product.height} cm</span>
-                            </div>
                           </div>
                           <div className="flex-shrink-0">
                             <svg className="h-4 w-4 text-gray-400 group-hover:text-green-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
