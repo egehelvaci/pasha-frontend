@@ -143,9 +143,6 @@ export default function EditPriceListPage() {
           detailData.data.collection_prices?.forEach((detail) => {
             collectionPrices[detail.collection_id] = Number(detail.price_per_square_meter);
           });
-
-          console.log('API yanıtı:', detailData);
-          console.log('Koleksiyon fiyatları:', collectionPrices);
           
           // Koleksiyon fiyatlarını state'e kaydet
           setCollectionPricesData(collectionPrices);
@@ -160,9 +157,6 @@ export default function EditPriceListPage() {
             isActive: detailData.data.price_list.is_active,
             collectionPrices,
           });
-
-          // Form alanlarının güncel değerlerini yazdır
-          console.log('Form alanlarına yüklenen değerler:', antForm.getFieldsValue());
         }
       } catch (error) {
         console.error('Fiyat listesi detayı getirilemedi:', error);

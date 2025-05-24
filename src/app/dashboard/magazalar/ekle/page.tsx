@@ -31,6 +31,10 @@ export default function AddStorePage() {
     }
   };
 
+  const onValuesChange = (changedValues: any, allValues: any) => {
+    console.log('Form değerleri değişti:', changedValues);
+  };
+
   if (!isAdmin) return null;
 
   return (
@@ -51,6 +55,7 @@ export default function AddStorePage() {
             form={form}
             layout="vertical"
             onFinish={onFinish}
+            onValuesChange={onValuesChange}
             initialValues={{
               limitsiz_acik_hesap: false,
             }}
@@ -162,7 +167,7 @@ export default function AddStorePage() {
                       <InputNumber
                         className="w-full"
                         formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                        parser={(value) => value ? Number(value.replace(/\$\s?|(,*)/g, '')) : 0}
+                        parser={(value: string | undefined) => value ? Number(value.replace(/[^\d.]/g, '')) : 0}
                         min={0}
                       />
                     </Form.Item>

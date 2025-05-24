@@ -76,7 +76,7 @@ export default function Settings() {
     // Sadece bir kez çağrılmasını sağla
     if (!fetchedRef.current) {
       fetchedRef.current = true;
-      fetchUsers();
+    fetchUsers();
       fetchStores();
     }
   }, [user, router]);

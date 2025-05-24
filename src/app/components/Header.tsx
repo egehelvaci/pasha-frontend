@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import FinancialSummaryMobile from '../components/FinancialSummaryMobile';
-import { FaUser, FaSignOutAlt, FaCog } from 'react-icons/fa';
+import { FaUser, FaSignOutAlt, FaCog, FaShoppingCart } from 'react-icons/fa';
 
 type HeaderProps = {
   title: string;
@@ -32,11 +32,43 @@ const Header = ({ title, user }: HeaderProps) => {
   const router = useRouter();
   const { logout, isAdmin } = useAuth();
   const [isBlurred, setIsBlurred] = useState(true);
+  const [cartItems, setCartItems] = useState<number>(0);
   
   useEffect(() => {
     const stored = typeof window !== 'undefined' ? localStorage.getItem('headerBlur') : null;
     if (stored === 'false') setIsBlurred(false);
     else setIsBlurred(true);
+  }, []);
+  
+  // Sepet verilerini getir
+  useEffect(() => {
+    const fetchCartData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        
+        const res = await fetch("https://pasha-backend-production.up.railway.app/api/cart", {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const data = await res.json();
+        
+        if (data.success && data.data) {
+          setCartItems(data.data.totalItems || 0);
+        }
+      } catch (error) {
+        console.error("Sepet bilgileri alınamadı:", error);
+      }
+    };
+    
+    fetchCartData();
+    
+    // 1 dakikada bir sepeti yenile
+    const intervalId = setInterval(fetchCartData, 60000);
+    
+    return () => clearInterval(intervalId);
   }, []);
 
   const handleLogout = async () => {
@@ -82,6 +114,15 @@ const Header = ({ title, user }: HeaderProps) => {
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
           <path d="M3.375 3C2.339 3 1.5 3.84 1.5 4.875v.75c0 1.036.84 1.875 1.875 1.875h17.25c1.035 0 1.875-.84 1.875-1.875v-.75C22.5 3.839 21.66 3 20.625 3H3.375z" />
           <path fillRule="evenodd" d="M3.087 9l.54 9.176A3 3 0 006.62 21h10.757a3 3 0 002.995-2.824L20.913 9H3.087zm6.163 3.75A.75.75 0 0110 12h4a.75.75 0 010 1.5h-4a.75.75 0 01-.75-.75z" clipRule="evenodd" />
+        </svg>
+      ),
+    },
+    {
+      name: 'Sepetim',
+      href: '/dashboard/sepetim',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+          <path fillRule="evenodd" d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 004.25 22.5h15.5a1.875 1.875 0 001.865-2.071l-1.263-12a1.875 1.875 0 00-1.865-1.679H16.5V6a4.5 4.5 0 10-9 0zM12 3a3 3 0 00-3 3v.75h6V6a3 3 0 00-3-3zm-3 8.25a3 3 0 106 0v-.75a.75.75 0 011.5 0v.75a4.5 4.5 0 11-9 0v-.75a.75.75 0 011.5 0v.75z" clipRule="evenodd" />
         </svg>
       ),
     },
@@ -176,6 +217,21 @@ const Header = ({ title, user }: HeaderProps) => {
                   )}
                 </button>
               </div>
+              
+              {/* Sepet ikonu */}
+              <Link href="/dashboard/sepetim" className="relative group">
+                <div className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                    <path fillRule="evenodd" d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 004.25 22.5h15.5a1.875 1.875 0 001.865-2.071l-1.263-12a1.875 1.875 0 00-1.865-1.679H16.5V6a4.5 4.5 0 10-9 0zM12 3a3 3 0 00-3 3v.75h6V6a3 3 0 00-3-3zm-3 8.25a3 3 0 106 0v-.75a.75.75 0 011.5 0v.75a4.5 4.5 0 11-9 0v-.75a.75.75 0 011.5 0v.75z" clipRule="evenodd" />
+                  </svg>
+                  {cartItems > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-medium rounded-full w-5 h-5 flex items-center justify-center">
+                      {cartItems > 99 ? '99+' : cartItems}
+                    </span>
+                  )}
+                </div>
+              </Link>
+              
               {/* Avatar ve kullanıcı adı + dropdown */}
               <div className="relative group flex items-center transition hover:bg-gray-200 rounded px-2 py-1 cursor-pointer">
                 <div className="h-8 w-8 rounded-full bg-blue-900 flex items-center justify-center text-white text-sm font-medium">

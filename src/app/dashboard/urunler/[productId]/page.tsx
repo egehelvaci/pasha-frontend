@@ -14,39 +14,140 @@ export default function ProductDetail() {
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [collections, setCollections] = useState<any[]>([]);
-  const didFetch = useRef(false);
+  const productFetchedRef = useRef(false);
+  const collectionsFetchedRef = useRef(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const { isAdmin } = useAuth();
+  
+  // Ürün seçimleri için state'ler
+  const [selectedSize, setSelectedSize] = useState<any>(null);
+  const [selectedCutType, setSelectedCutType] = useState<any>(null);
+  const [selectedHasFringe, setSelectedHasFringe] = useState<boolean | null>(null);
+  const [totalPrice, setTotalPrice] = useState<number>(0);
+  const [customHeight, setCustomHeight] = useState<number>(100);  // Varsayılan 100 cm yükseklik
 
   useEffect(() => {
-    if (didFetch.current) return;
-    didFetch.current = true;
-    fetch(`https://pasha-backend-production.up.railway.app/api/products/${params.productId}`)
-      .then(res => {
-        if (!res.ok) throw new Error("Ürün bulunamadı");
-        return res.json();
-      })
-      .then(data => setProduct(data.data || data))
-      .catch(err => setError(err.message || "Bir hata oluştu"))
-      .finally(() => setLoading(false));
-    fetch("https://pasha-backend-production.up.railway.app/api/collections/")
-      .then(res => res.json())
-      .then(data => setCollections(data.data || []));
+    if (!productFetchedRef.current) {
+      productFetchedRef.current = true;
+      fetchProduct();
+    }
+    
+    if (!collectionsFetchedRef.current) {
+      collectionsFetchedRef.current = true;
+      fetchCollections();
+    }
   }, [params.productId]);
+
+  // Ürün detayları değiştiğinde default seçimleri ayarla
+  useEffect(() => {
+    if (product) {
+      // Default olarak ilk boyut seçeneğini seç
+      if (product.sizeOptions && product.sizeOptions.length > 0) {
+        setSelectedSize(product.sizeOptions[0]);
+      }
+      
+      // Default olarak ilk kesim türünü seç
+      if (product.cutTypes && product.cutTypes.length > 0) {
+        setSelectedCutType(product.cutTypes[0]);
+      }
+      
+      // Default saçak değerini ayarla
+      setSelectedHasFringe(product.hasFringe);
+    }
+  }, [product]);
+  
+  // Seçimler değiştiğinde fiyat hesaplama
+  useEffect(() => {
+    if (product && selectedSize) {
+      // Metrekare hesapla (yükseklik değişken ise 1 metre yükseklik kabul et)
+      let squareMeters;
+      if (selectedSize.is_optional_height) {
+        // İsteğe bağlı yükseklik için kullanıcının girdiği değeri kullan
+        squareMeters = (selectedSize.width * customHeight) / 10000; // cm² -> m²
+      } else {
+        // Sabit yükseklik için metrekare hesapla
+        squareMeters = (selectedSize.width * selectedSize.height) / 10000; // cm² -> m²
+      }
+      
+      // Birim fiyat ve toplam fiyat hesapla
+      const unitPrice = product.pricing?.price || 0;
+      const calculatedPrice = squareMeters * unitPrice;
+      
+      setTotalPrice(calculatedPrice);
+    }
+  }, [product, selectedSize, customHeight]);
+
+  const fetchProduct = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`https://pasha-backend-production.up.railway.app/api/products/${params.productId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!res.ok) throw new Error("Ürün bulunamadı");
+      const data = await res.json();
+      setProduct(data.data || data);
+      console.log("Ürün detayları:", data.data || data);
+    } catch (err: any) {
+      setError(err.message || "Bir hata oluştu");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCollections = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch("https://pasha-backend-production.up.railway.app/api/collections/", {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      setCollections(data.data || []);
+    } catch (error) {
+      console.error("Koleksiyonlar yüklenirken hata oluştu:", error);
+    }
+  };
+
+  // Boyut değişimi
+  const handleSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const sizeId = parseInt(e.target.value);
+    const size = product.sizeOptions.find((s: any) => s.id === sizeId);
+    setSelectedSize(size);
+    
+    // İsteğe bağlı yükseklik seçilince varsayılan değeri 100cm olarak ayarla
+    if (size && size.is_optional_height) {
+      setCustomHeight(100);
+    }
+  };
+  
+  // Kesim türü değişimi
+  const handleCutTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const cutTypeId = parseInt(e.target.value);
+    const cutType = product.cutTypes.find((c: any) => c.id === cutTypeId);
+    setSelectedCutType(cutType);
+  };
+  
+  // Saçak değişimi
+  const handleFringeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedHasFringe(e.target.value === "true");
+  };
 
   function UpdateProductModal({ open, onClose, product, collections, onSuccess }: { open: boolean, onClose: () => void, product: any, collections: any[], onSuccess: (updated: any) => void }) {
     const [form, setForm] = useState({
       name: product?.name || "",
       description: product?.description || "",
-      price: product?.price || "",
-      stock: product?.stock || "",
-      width: product?.width || "",
-      height: product?.height || "",
-      cut: product?.cut ? "true" : "false",
+      price: product?.pricing?.price || "",
+      stock: product?.sizeOptions?.[0]?.stockQuantity || "",
+      width: product?.sizeOptions?.[0]?.width || "",
+      height: product?.sizeOptions?.[0]?.height || "",
+      cut: product?.cutTypes?.[0]?.name === "standart" ? "true" : "false",
       collectionId: product?.collectionId || "",
-      currency: product?.currency || "TRY",
+      currency: product?.pricing?.currency || "TRY",
       productImage: null as File | null
     });
     const [loading, setLoading] = useState(false);
@@ -56,13 +157,13 @@ export default function ProductDetail() {
       setForm({
         name: product?.name || "",
         description: product?.description || "",
-        price: product?.price || "",
-        stock: product?.stock || "",
-        width: product?.width || "",
-        height: product?.height || "",
-        cut: product?.cut ? "true" : "false",
+        price: product?.pricing?.price || "",
+        stock: product?.sizeOptions?.[0]?.stockQuantity || "",
+        width: product?.sizeOptions?.[0]?.width || "",
+        height: product?.sizeOptions?.[0]?.height || "",
+        cut: product?.cutTypes?.[0]?.name === "standart" ? "true" : "false",
         collectionId: product?.collectionId || "",
-        currency: product?.currency || "TRY",
+        currency: product?.pricing?.currency || "TRY",
         productImage: null
       });
     }, [product]);
@@ -81,12 +182,16 @@ export default function ProductDetail() {
       setLoading(true);
       setError("");
       try {
+        const token = localStorage.getItem('token');
         const fd = new FormData();
         Object.entries(form).forEach(([key, value]) => {
           if (value !== null && value !== "") fd.append(key, value as any);
         });
         const res = await fetch(`https://pasha-backend-production.up.railway.app/api/products/${product.productId}`, {
           method: "PUT",
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
           body: fd
         });
         const data = await res.json();
@@ -143,8 +248,12 @@ export default function ProductDetail() {
     setDeleteLoading(true);
     setDeleteError("");
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch(`https://pasha-backend-production.up.railway.app/api/products/${product.productId}`, {
-        method: "DELETE"
+        method: "DELETE",
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       if (!res.ok) throw new Error("Ürün silinemedi");
       router.push("/dashboard/urunler/liste");
@@ -169,34 +278,177 @@ export default function ProductDetail() {
           <FaArrowLeft /> Geri
         </button>
       </div>
-      <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col md:flex-row gap-10 items-center relative">
-        <img src={product.productImage || product.imageUrl || "https://placehold.co/350x500"} alt={product.name} className="w-[350px] h-[500px] object-cover rounded-xl shadow-md border border-gray-200" />
-        <div className="flex-1 flex flex-col gap-6 h-full">
-          <div className="flex items-center justify-between gap-4">
-            <h1 className="text-3xl font-bold text-black break-words">{product.name}</h1>
+      
+      <div className="bg-white rounded-2xl shadow-lg p-8">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-black">{product.collection?.name} - {product.name}</h1>
+          <button 
+            onClick={() => setModalOpen(true)} 
+            className="bg-blue-900 text-white rounded-full px-4 py-2 text-sm font-semibold"
+          >
+            Düzenle
+          </button>
+        </div>
+        
+        <div className="flex flex-col md:flex-row gap-8">
+          <div className="w-full md:w-1/2">
+            <img 
+              src={product.productImage || "https://tebi.io/pashahome/products/ornek-urun.jpg"} 
+              alt={product.name} 
+              className="w-full rounded-lg shadow-md border border-gray-200 object-cover aspect-[250/390]" 
+            />
           </div>
-          <div className="text-lg text-black whitespace-pre-line">{product.description}</div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base">
-            <div><span className="font-semibold text-black">Stok:</span> <span className="text-black">{product.stock}</span></div>
-            <div><span className="font-semibold text-black">Koleksiyon:</span> <span className="text-black">{product.collection_name}</span></div>
-            <div><span className="font-semibold text-black">Kayıt No:</span> <span className="text-black">{product.productId}</span></div>
-            <div><span className="font-semibold text-black">Genişlik:</span> <span className="text-black">{product.width}</span></div>
-            <div><span className="font-semibold text-black">Yükseklik:</span> <span className="text-black">{product.height}</span></div>
-            <div><span className="font-semibold text-black">Kesim:</span> <span className="text-black">{product.cut ? "Var" : "Yok"}</span></div>
-            <div><span className="font-semibold text-black">Eklenme Tarihi:</span> <span className="text-black">{new Date(product.createdAt).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span></div>
-          </div>
-          {isAdmin && (
-            <div className="flex justify-between items-end mt-8">
-              <button className="bg-blue-900 text-white rounded-full px-6 py-2 font-semibold w-fit" onClick={() => setModalOpen(true)}>
-                Güncelle
-              </button>
-              <button className="text-red-600 hover:text-red-800 text-2xl" title="Sil" onClick={() => setDeleteOpen(true)}>
-                <FaTrash />
-              </button>
+          
+          <div className="w-full md:w-1/2">
+            <div className="grid grid-cols-1 gap-5">
+              <div className="flex flex-col gap-2">
+                <span className="text-sm text-gray-500">Boyut Seçimi</span>
+                <select 
+                  className="border rounded-md p-2 text-black"
+                  value={selectedSize?.id}
+                  onChange={handleSizeChange}
+                >
+                  {product.sizeOptions?.map((size: any) => (
+                    <option key={size.id} value={size.id}>
+                      {size.width}x{size.is_optional_height ? 'İsteğe Bağlı' : size.height} cm 
+                      (Stok: {size.stockQuantity})
+                    </option>
+                  ))}
+                </select>
+                
+                {selectedSize && selectedSize.is_optional_height && (
+                  <div className="mt-2">
+                    <label className="text-sm text-gray-500 block mb-1">Özel Yükseklik (cm)</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="10"
+                        max="500"
+                        value={customHeight}
+                        onChange={(e) => setCustomHeight(Number(e.target.value))}
+                        className="border rounded-md p-2 text-black w-24"
+                      />
+                      <span className="text-sm text-gray-500">cm</span>
+                    </div>
+                    <span className="text-xs text-gray-500 block mt-1">
+                      {selectedSize.width}x{customHeight} cm olarak hesaplanacak
+                    </span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex flex-col gap-2">
+                <span className="text-sm text-gray-500">Kesim Türü</span>
+                <select 
+                  className="border rounded-md p-2 text-black"
+                  value={selectedCutType?.id}
+                  onChange={handleCutTypeChange}
+                >
+                  {product.cutTypes?.map((cutType: any) => (
+                    <option key={cutType.id} value={cutType.id}>
+                      {cutType.name.charAt(0).toUpperCase() + cutType.name.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              {product.canHaveFringe && (
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm text-gray-500">Saçak</span>
+                  <select 
+                    className="border rounded-md p-2 text-black"
+                    value={selectedHasFringe?.toString()}
+                    onChange={handleFringeChange}
+                  >
+                    <option value="true">Saçaklı</option>
+                    <option value="false">Saçaksız</option>
+                  </select>
+                </div>
+              )}
+              
+              <div className="flex flex-col">
+                <span className="text-sm text-gray-500">Açıklama</span>
+                <p className="text-black">{product.description}</p>
+              </div>
+              
+              <div className="flex flex-col gap-2">
+                <span className="text-sm text-gray-500">Metrekare Fiyatı</span>
+                <span className="font-medium text-black">
+                  {product.pricing?.price} {product.pricing?.currency}/m²
+                </span>
+              </div>
+              
+              <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-blue-900">Toplam Tutar</span>
+                  <span className="text-lg font-bold text-blue-900">
+                    {totalPrice.toFixed(2)} {product.pricing?.currency}
+                  </span>
+                </div>
+                {selectedSize && (
+                  <div className="text-xs mt-1 text-blue-700">
+                    {selectedSize.width} cm genişlik × 
+                    {selectedSize.is_optional_height 
+                      ? ` ${customHeight} cm yükseklik (özel)` 
+                      : ` ${selectedSize.height} cm yükseklik`} 
+                    için hesaplandı
+                  </div>
+                )}
+              </div>
             </div>
+          </div>
+        </div>
+        
+        {/* Ürün Stok Durumu */}
+        <div className="mt-10">
+          <h2 className="text-xl font-bold text-black mb-4">Ürün Stok Durumu</h2>
+          <div className="text-sm text-gray-600 mb-2">{product.collection?.name} - {product.name}</div>
+          
+          {product.sizeOptions && product.sizeOptions.length > 0 ? (
+            <div className="space-y-4">
+              {product.sizeOptions.map((size: any, index: number) => (
+                <div 
+                  key={size.id || index} 
+                  className={`border-b pb-4 ${selectedSize?.id === size.id ? 'bg-blue-50 p-2 rounded' : ''}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-black">
+                      {size.width} x {size.is_optional_height ? '10000' : size.height}
+                    </span>
+                    <div className="flex-1 h-2 bg-gray-200 relative rounded-full overflow-hidden">
+                      <div 
+                        className="absolute top-0 left-0 h-full bg-blue-900 rounded-full"
+                        style={{ width: `${Math.min(100, (size.width / 200) * 100)}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-sm">
+                      {size.width} / 660 M²
+                    </span>
+                  </div>
+                  <div className="mt-1 text-sm text-gray-600">
+                    Stok: {size.stockQuantity} adet
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-gray-500">Bu ürün için boyut seçeneği bulunmamaktadır.</div>
           )}
         </div>
+        
+        {isAdmin && (
+          <div className="mt-8 flex justify-end">
+            <button 
+              className="text-red-600 hover:text-red-800 flex items-center gap-1" 
+              title="Sil" 
+              onClick={() => setDeleteOpen(true)}
+            >
+              <FaTrash /> Ürünü Sil
+            </button>
+          </div>
+        )}
       </div>
+      
       {deleteOpen && isAdmin && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-lg relative">
@@ -210,6 +462,7 @@ export default function ProductDetail() {
           </div>
         </div>
       )}
+      
       {modalOpen && isAdmin && (
         <UpdateProductModal open={modalOpen} onClose={() => setModalOpen(false)} product={product} collections={collections} onSuccess={setProduct} />
       )}

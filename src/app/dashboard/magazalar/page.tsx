@@ -36,12 +36,12 @@ export default function StoresPage() {
     if (!authLoading && isAdmin) {
       if (!storesFetchedRef.current) {
         storesFetchedRef.current = true;
-        fetchStores();
+      fetchStores();
       }
       
       if (!priceListsFetchedRef.current) {
         priceListsFetchedRef.current = true;
-        fetchPriceLists();
+      fetchPriceLists();
       }
     }
   }, [isAdmin, authLoading, router]);
