@@ -34,6 +34,8 @@ export default function CartPage() {
       const data = await res.json();
       
       if (data.success) {
+        console.log("Sepet verisi:", data.data);
+        console.log("İlk ürün detayı:", data.data.items[0]);
         setCartData(data.data);
       } else {
         setError("Sepet bilgileri alınamadı");
@@ -69,7 +71,10 @@ export default function CartPage() {
   };
 
   const handleUpdateQuantity = async (itemId: number, newQuantity: number) => {
-    if (newQuantity < 1) return;
+    // Miktar 0 olduğunda ürünü sepetten çıkar
+    if (newQuantity < 1) {
+      return handleRemoveItem(itemId);
+    }
     
     try {
       const token = localStorage.getItem('token');
@@ -94,11 +99,48 @@ export default function CartPage() {
     }
   };
 
+  // Sepeti tamamen temizleme
+  const handleClearCart = async () => {
+    if (!cartData || cartData.items.length === 0) return;
+    
+    if (!confirm("Sepetinizdeki tüm ürünleri silmek istediğinize emin misiniz?")) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE_URL}/api/cart/clear`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (res.ok) {
+        // Sepeti yenile
+        fetchCartData();
+      } else {
+        const data = await res.json();
+        setError(data.message || "Sepet temizlenemedi");
+      }
+    } catch (error) {
+      console.error("Sepet temizlenirken hata oluştu:", error);
+      setError("Sepet temizlenirken bir hata oluştu");
+    }
+  };
+
   return (
     <div className="p-6 bg-white min-h-screen">
       <div className="max-w-6xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">Sepetim</h1>
+          <h1 className="text-2xl font-bold text-gray-800">
+            Sepetim
+            {cartData && cartData.totalItems > 0 && (
+              <span className="ml-2 text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                {cartData.totalItems} ürün
+              </span>
+            )}
+          </h1>
           <p className="text-gray-600 mt-1">
             Seçtiğiniz ürünleri buradan yönetebilirsiniz.
           </p>
@@ -159,15 +201,25 @@ export default function CartPage() {
                         <div className="flex items-center">
                           <div className="w-16 h-16 flex-shrink-0">
                             <img 
-                              src={item.Product?.productImage || "https://tebi.io/pashahome/products/ornek-urun.jpg"} 
-                              alt={item.Product?.name} 
+                              src={item.product?.productImage || item.Product?.productImage || item.ProductDetails?.productImage || "/placeholder-product.jpg"} 
+                              alt={item.product?.name || item.Product?.name || "Ürün"} 
                               className="w-16 h-16 object-cover rounded-md"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.onerror = null; // Sonsuz döngüyü önlemek için
+                                target.src = "/placeholder-product.jpg"; // Projedeki varsayılan resim
+                              }}
                             />
                           </div>
                           <div className="ml-4">
                             <h3 className="text-sm font-medium text-gray-900">
-                              {item.Product?.name || "Ürün Adı"}
+                              {item.product?.name || item.Product?.name || "Ürün Adı"}
                             </h3>
+                            {(item.product?.collection || item.Product?.collection) && (
+                              <div className="text-xs text-blue-600 mt-0.5">
+                                {item.product?.collection?.name || item.Product?.collection?.name}
+                              </div>
+                            )}
                             <div className="mt-1 text-xs text-gray-500">
                               {item.width}×{item.height} cm
                               {item.has_fringe ? ', Saçaklı' : ', Saçaksız'}
@@ -189,7 +241,8 @@ export default function CartPage() {
                       </div>
                       <div className="col-span-2 text-center">
                         <div className="text-sm text-gray-900">
-                          {parseFloat(item.unit_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                          {parseFloat(item.unit_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} 
+                          {item.product?.pricing?.currency || item.Product?.pricing?.currency || '₺'}
                         </div>
                         <div className="text-xs text-gray-500">
                           m² başına
@@ -199,13 +252,22 @@ export default function CartPage() {
                         <div className="flex items-center justify-center">
                           <button 
                             className="w-8 h-8 border border-gray-300 rounded-l-md flex items-center justify-center text-gray-500 hover:bg-gray-50"
-                            onClick={() => handleUpdateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                            onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
                           >
                             -
                           </button>
-                          <div className="w-10 h-8 border-t border-b border-gray-300 flex items-center justify-center text-gray-900">
-                            {item.quantity}
-                          </div>
+                          <input
+                            type="number"
+                            min="1"
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const newQuantity = parseInt(e.target.value);
+                              if (!isNaN(newQuantity) && newQuantity >= 1) {
+                                handleUpdateQuantity(item.id, newQuantity);
+                              }
+                            }}
+                            className="w-10 h-8 border-t border-b border-gray-300 text-center text-gray-900 focus:outline-none"
+                          />
                           <button 
                             className="w-8 h-8 border border-gray-300 rounded-r-md flex items-center justify-center text-gray-500 hover:bg-gray-50"
                             onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
@@ -215,7 +277,8 @@ export default function CartPage() {
                         </div>
                       </div>
                       <div className="col-span-2 text-right font-medium text-gray-900">
-                        {parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                        {parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} 
+                        {item.product?.pricing?.currency || item.Product?.pricing?.currency || '₺'}
                       </div>
                     </div>
                   </div>
@@ -229,15 +292,24 @@ export default function CartPage() {
                 <div className="mt-4 space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Ara Toplam</span>
-                    <span className="text-gray-900 font-medium">{parseFloat(cartData.totalPrice).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
+                    <span className="text-gray-900 font-medium">
+                      {parseFloat(cartData.totalPrice).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} 
+                      {cartData.items[0]?.product?.pricing?.currency || cartData.items[0]?.Product?.pricing?.currency || '₺'}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">KDV (%18)</span>
-                    <span className="text-gray-900 font-medium">{(parseFloat(cartData.totalPrice) * 0.18).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
+                    <span className="text-gray-900 font-medium">
+                      {(parseFloat(cartData.totalPrice) * 0.18).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} 
+                      {cartData.items[0]?.product?.pricing?.currency || cartData.items[0]?.Product?.pricing?.currency || '₺'}
+                    </span>
                   </div>
                   <div className="border-t border-gray-200 pt-3 flex justify-between">
                     <span className="text-gray-900 font-medium">Toplam</span>
-                    <span className="text-lg text-blue-900 font-bold">{(parseFloat(cartData.totalPrice) * 1.18).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
+                    <span className="text-lg text-blue-900 font-bold">
+                      {(parseFloat(cartData.totalPrice) * 1.18).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} 
+                      {cartData.items[0]?.product?.pricing?.currency || cartData.items[0]?.Product?.pricing?.currency || '₺'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -249,12 +321,20 @@ export default function CartPage() {
                   >
                     Alışverişe Devam Et
                   </button>
-                  <button 
-                    className="px-6 py-3 bg-blue-900 text-white rounded-md hover:bg-blue-800 font-medium"
-                    onClick={() => router.push('/dashboard/siparis-olustur')}
-                  >
-                    Siparişi Tamamla
-                  </button>
+                  <div className="flex gap-3">
+                    <button 
+                      className="px-4 py-3 border border-red-600 text-red-600 rounded-md hover:bg-red-50 font-medium"
+                      onClick={handleClearCart}
+                    >
+                      Sepeti Temizle
+                    </button>
+                    <button 
+                      className="px-6 py-3 bg-blue-900 text-white rounded-md hover:bg-blue-800 font-medium"
+                      onClick={() => router.push('/dashboard/siparis-olustur')}
+                    >
+                      Siparişi Tamamla
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
