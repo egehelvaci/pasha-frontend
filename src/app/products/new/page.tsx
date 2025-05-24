@@ -9,6 +9,7 @@ export default function NewProduct() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -17,9 +18,8 @@ export default function NewProduct() {
 
     const form = e.currentTarget;
     const formData = new FormData(form);
-    const imageFile = (form.querySelector('input[type="file"]') as HTMLInputElement).files?.[0];
 
-    if (!imageFile) {
+    if (!selectedFile) {
       setError('Lütfen bir ürün görseli seçin');
       setLoading(false);
       return;
@@ -34,18 +34,18 @@ export default function NewProduct() {
         height: parseFloat(formData.get('height') as string),
         cut: formData.get('cut') === 'true',
         collectionId: formData.get('collectionId') as string,
-        productImage: imageFile,
+        productImage: selectedFile,
       };
 
       const response = await createProduct(productData);
       
       if (response.success) {
-        router.push(`/products/${response.data.productId}`);
+        router.push('/dashboard/urunler/liste');
       } else {
         setError('Ürün oluşturulurken bir hata oluştu');
       }
-    } catch (err) {
-      setError('Ürün oluşturulurken bir hata oluştu');
+    } catch (err: any) {
+      setError(err.message || 'Ürün oluşturulurken bir hata oluştu');
     } finally {
       setLoading(false);
     }
@@ -54,12 +54,14 @@ export default function NewProduct() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     } else {
+      setSelectedFile(null);
       setImagePreview(null);
     }
   };
@@ -213,7 +215,7 @@ export default function NewProduct() {
               disabled={loading}
               className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
             >
-              {loading ? 'Kaydediliyor...' : 'Kaydet'}
+              {loading ? 'Oluşturuluyor...' : 'Ürün Oluştur'}
             </button>
           </div>
         </form>
