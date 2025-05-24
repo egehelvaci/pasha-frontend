@@ -321,7 +321,7 @@ export interface RemoveUserFromStoreResponse {
   message: string;
 }
 
-export const API_BASE_URL = 'https://pasha-backend-production.up.railway.app';
+export const API_BASE_URL = 'https://pasha-backend-production.up.railway.app'; // API sunucusunun adresi
 
 export async function getProducts(): Promise<Product[]> {
   try {
@@ -340,11 +340,11 @@ export async function getProductById(id: string): Promise<Product> {
   try {
     const response = await fetch(`${API_BASE_URL}/products/${id}`);
     if (!response.ok) {
-      throw new Error('Ürün bulunamadı');
+      throw new Error('Ürün detayı getirilemedi');
     }
     return await response.json();
   } catch (error) {
-    console.error('Ürün getirilirken hata oluştu:', error);
+    console.error('Ürün detayını getirirken hata oluştu:', error);
     throw error;
   }
 }
@@ -364,7 +364,6 @@ export async function getProductsByCollection(collectionId: string): Promise<Pro
 
 export async function createProduct(productData: CreateProductData): Promise<CreateProductResponse> {
   try {
-    const token = localStorage.getItem('token');
     const formData = new FormData();
     
     // Form verilerini ekle
@@ -377,17 +376,13 @@ export async function createProduct(productData: CreateProductData): Promise<Cre
     formData.append('collectionId', productData.collectionId);
     formData.append('productImage', productData.productImage);
 
-    const response = await fetch(`${API_BASE_URL}/api/products`, {
+    const response = await fetch(`${API_BASE_URL}/products`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
       body: formData,
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Ürün oluşturulamadı');
+      throw new Error('Ürün oluşturulamadı');
     }
 
     return await response.json();
@@ -399,7 +394,6 @@ export async function createProduct(productData: CreateProductData): Promise<Cre
 
 export async function updateProduct(id: string, productData: UpdateProductData): Promise<CreateProductResponse> {
   try {
-    const token = localStorage.getItem('token');
     const formData = new FormData();
     
     // Sadece değiştirilmek istenen alanları ekle
@@ -412,17 +406,13 @@ export async function updateProduct(id: string, productData: UpdateProductData):
     if (productData.collectionId !== undefined) formData.append('collectionId', productData.collectionId);
     if (productData.productImage) formData.append('productImage', productData.productImage);
 
-    const response = await fetch(`${API_BASE_URL}/api/products/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/products/${id}`, {
       method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
       body: formData,
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Ürün güncellenemedi');
+      throw new Error('Ürün güncellenemedi');
     }
 
     return await response.json();
@@ -434,12 +424,8 @@ export async function updateProduct(id: string, productData: UpdateProductData):
 
 export async function deleteProduct(id: string): Promise<DeleteProductResponse> {
   try {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE_URL}/api/products/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/products/${id}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
     });
 
     if (!response.ok) {

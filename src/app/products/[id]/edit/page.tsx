@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { getProductById, updateProduct, UpdateProductData } from '@/services/api';
 
 interface Product {
-  productId: string;
+  id: string;
   name: string;
   description: string;
   stock: number;
@@ -20,33 +19,38 @@ export default function EditProduct() {
   const router = useRouter();
   const params = useParams();
   const [product, setProduct] = useState<Product | null>(null);
-  const [formData, setFormData] = useState<UpdateProductData>({});
+  const [formData, setFormData] = useState<Partial<Product>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [imagePreview, setImagePreview] = useState<string>('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const productId = params.id as string;
-        const data = await getProductById(productId);
-        setProduct(data);
-        setFormData({
-          name: data.name,
-          description: data.description,
-          stock: data.stock,
-          width: data.width,
-          height: data.height,
-          cut: data.cut,
-          collectionId: data.collectionId,
+        const token = localStorage.getItem('token');
+        const response = await fetch(`https://pasha-backend-production.up.railway.app/api/products/${params.id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
         });
-        if (data.productImage) {
-          setImagePreview(data.productImage);
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) {
+            setProduct(result.data);
+            setFormData(result.data);
+            if (result.data.productImage) {
+              setImagePreview(result.data.productImage);
+            }
+          } else {
+            setError(result.message || 'Ürün bulunamadı');
+          }
+        } else {
+          setError('Ürün yüklenirken bir hata oluştu');
         }
       } catch (err) {
-        setError('Ürün bilgileri yüklenirken bir hata oluştu');
+        setError('Bağlantı hatası');
       } finally {
         setLoading(false);
       }
@@ -63,23 +67,25 @@ export default function EditProduct() {
     setError('');
 
     try {
-      const updateData: UpdateProductData = {
-        ...formData,
-      };
+      const token = localStorage.getItem('token');
+      const response = await fetch(`https://pasha-backend-production.up.railway.app/api/products/${params.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
 
-      if (selectedFile) {
-        updateData.productImage = selectedFile;
-      }
+      const result = await response.json();
 
-      const response = await updateProduct(params.id as string, updateData);
-
-      if (response.success) {
+      if (response.ok && result.success) {
         router.push('/dashboard/urunler/liste');
       } else {
-        setError('Ürün güncellenirken bir hata oluştu');
+        setError(result.message || 'Ürün güncellenirken bir hata oluştu');
       }
-    } catch (err: any) {
-      setError(err.message || 'Ürün güncellenirken bir hata oluştu');
+    } catch (err) {
+      setError('Ürün güncellenirken bir hata oluştu');
     } finally {
       setSaving(false);
     }
@@ -105,7 +111,6 @@ export default function EditProduct() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
