@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pasha Frontend
 
-## Getting Started
+Bu proje [Next.js](https://nextjs.org) ile oluşturulmuş bir frontend uygulamasıdır.
 
-First, run the development server:
+## Başlangıç
+
+Geliştirme sunucusunu çalıştırmak için:
 
 ```bash
 npm run dev
-# or
+# veya
 yarn dev
-# or
+# veya
 pnpm dev
-# or
+# veya
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Tarayıcınızda [http://localhost:3000](http://localhost:3000) adresini açarak sonucu görebilirsiniz.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Vercel'e Deploy Etme
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. Vercel CLI ile Deploy
 
-## Learn More
+```bash
+# Vercel CLI'yi yükleyin
+npm i -g vercel
 
-To learn more about Next.js, take a look at the following resources:
+# Proje dizininde deploy komutunu çalıştırın
+vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Production deploy için
+vercel --prod
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 2. GitHub ile Otomatik Deploy
 
-## Deploy on Vercel
+1. Projenizi GitHub'a push edin
+2. [Vercel Dashboard](https://vercel.com/dashboard)'a gidin
+3. "New Project" butonuna tıklayın
+4. GitHub repository'nizi seçin
+5. Deploy ayarları otomatik olarak algılanacaktır
+6. "Deploy" butonuna tıklayın
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 3. Environment Variables
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Eğer projenizde environment variables kullanıyorsanız:
+
+1. Vercel Dashboard'da projenizi seçin
+2. "Settings" > "Environment Variables" bölümüne gidin
+3. Gerekli environment variables'ları ekleyin
+
+### Deploy Ayarları
+
+Proje aşağıdaki ayarlarla optimize edilmiştir:
+
+- **Build Command**: `npm run build`
+- **Output Directory**: `.next`
+- **Install Command**: `npm install`
+- **Development Command**: `npm run dev`
+
+### Özellikler
+
+- ✅ Next.js 13+ App Router
+- ✅ TypeScript desteği
+- ✅ Tailwind CSS
+- ✅ Chart.js entegrasyonu
+- ✅ Heroicons
+- ✅ Vercel için optimize edilmiş
+
+## Daha Fazla Bilgi
+
+Next.js hakkında daha fazla bilgi için:
+
+- [Next.js Dokümantasyonu](https://nextjs.org/docs)
+- [Next.js Öğrenme Rehberi](https://nextjs.org/learn)
+- [Vercel Deploy Dokümantasyonu](https://nextjs.org/docs/app/building-your-application/deploying)

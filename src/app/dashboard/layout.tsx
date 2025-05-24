@@ -15,12 +15,18 @@ export default function DashboardLayout({
     name: `${user.name} ${user.surname}`,
     imageUrl: user.avatar || 'https://via.placeholder.com/40',
     debit: user.debit,
-    credit: user.credit
+    credit: user.credit,
+    userType: {
+      id: user.userTypeId
+    }
   } : {
     name: '',
     imageUrl: '',
     debit: '0',
-    credit: '0'
+    credit: '0',
+    userType: {
+      id: 0
+    }
   };
 
   return (

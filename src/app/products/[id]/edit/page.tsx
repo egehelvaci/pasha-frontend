@@ -1,68 +1,88 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Product, getProductById, updateProduct, UpdateProductData } from '@/services/api';
+
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  stock: number;
+  collectionId: string;
+  width: number;
+  height: number;
+  cut: boolean;
+  productImage?: string;
+}
 
 export default function EditProduct() {
   const router = useRouter();
   const params = useParams();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [formData, setFormData] = useState<Partial<Product>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [product, setProduct] = useState<Product | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [formData, setFormData] = useState<UpdateProductData>({});
+  const [error, setError] = useState('');
+  const [imagePreview, setImagePreview] = useState<string>('');
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const productId = params.id as string;
-        const data = await getProductById(productId);
-        setProduct(data);
-        setFormData({
-          name: data.name,
-          description: data.description,
-          stock: data.stock,
-          width: data.width,
-          height: data.height,
-          cut: data.cut,
-          collectionId: data.collectionId,
+        const token = localStorage.getItem('token');
+        const response = await fetch(`https://pasha-backend-production.up.railway.app/api/products/${params.id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
         });
-        setImagePreview(data.productImage);
-        setLoading(false);
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) {
+            setProduct(result.data);
+            setFormData(result.data);
+            if (result.data.productImage) {
+              setImagePreview(result.data.productImage);
+            }
+          } else {
+            setError(result.message || 'Ürün bulunamadı');
+          }
+        } else {
+          setError('Ürün yüklenirken bir hata oluştu');
+        }
       } catch (err) {
-        setError('Ürün bilgileri yüklenirken bir hata oluştu');
+        setError('Bağlantı hatası');
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchProduct();
+    if (params.id) {
+      fetchProduct();
+    }
   }, [params.id]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSaving(true);
-    setError(null);
+    setError('');
 
     try {
-      const form = e.currentTarget;
-      const imageFile = (form.querySelector('input[type="file"]') as HTMLInputElement).files?.[0];
-      
-      const updateData: UpdateProductData = {
-        ...formData,
-      };
+      const token = localStorage.getItem('token');
+      const response = await fetch(`https://pasha-backend-production.up.railway.app/api/products/${params.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
 
-      if (imageFile) {
-        updateData.productImage = imageFile;
-      }
+      const result = await response.json();
 
-      const response = await updateProduct(params.id as string, updateData);
-      
-      if (response.success) {
-        router.push(`/products/${response.data.productId}`);
+      if (response.ok && result.success) {
+        router.push('/dashboard/urunler/liste');
       } else {
-        setError('Ürün güncellenirken bir hata oluştu');
+        setError(result.message || 'Ürün güncellenirken bir hata oluştu');
       }
     } catch (err) {
       setError('Ürün güncellenirken bir hata oluştu');
@@ -77,7 +97,7 @@ export default function EditProduct() {
     let parsedValue: string | number | boolean = value;
     
     if (type === 'number') {
-      parsedValue = value === '' ? undefined : Number(value);
+      parsedValue = value === '' ? 0 : Number(value);
     } else if (name === 'cut') {
       parsedValue = value === 'true';
     }
