@@ -265,6 +265,8 @@ export default function EditPriceListPage() {
                   className="w-full"
                   format="DD.MM.YYYY"
                   disabled={priceList?.is_default}
+                  allowEmpty={[true, true]}
+                  placeholder={['Başlangıç tarihi', 'Bitiş tarihi']}
                 />
               </Form.Item>
 

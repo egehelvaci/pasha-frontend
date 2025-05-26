@@ -234,6 +234,8 @@ export default function AddPriceListPage() {
                   <RangePicker
                     className="w-full"
                     format="DD.MM.YYYY"
+                    allowEmpty={[true, true]}
+                    placeholder={['Başlangıç tarihi', 'Bitiş tarihi']}
                   />
                 </Form.Item>
 

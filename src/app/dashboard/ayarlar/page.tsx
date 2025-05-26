@@ -34,6 +34,7 @@ interface UserFormData {
   surname: string;
   email: string;
   userTypeName: string;
+  storeId?: string;
   isActive?: boolean;
   credit?: string;
   debit?: string;
@@ -55,7 +56,8 @@ export default function Settings() {
     name: '',
     surname: '',
     email: '',
-    userTypeName: 'viewer'
+    userTypeName: 'viewer',
+    storeId: ''
   });
   const [assignStoreModalOpen, setAssignStoreModalOpen] = useState(false);
   const [assigningUserId, setAssigningUserId] = useState<string | null>(null);
@@ -94,7 +96,8 @@ export default function Settings() {
             : selectedUser.userType || '',
         isActive: typeof selectedUser.isActive === 'boolean' ? selectedUser.isActive : true,
         credit: selectedUser.credit ? String(selectedUser.credit) : '',
-        debit: selectedUser.debit ? String(selectedUser.debit) : ''
+        debit: selectedUser.debit ? String(selectedUser.debit) : '',
+        storeId: selectedUser.Store?.store_id || ''
       });
     } else {
       setFormData({
@@ -103,7 +106,8 @@ export default function Settings() {
         name: '',
         surname: '',
         email: '',
-        userTypeName: 'viewer'
+        userTypeName: 'viewer',
+        storeId: ''
       });
     }
   }, [selectedUser]);
@@ -469,6 +473,26 @@ export default function Settings() {
                   <option value="viewer">Görüntüleyici</option>
                 </select>
               </div>
+              {!selectedUser && (
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="storeId" className="text-sm font-semibold text-gray-700">Mağaza</label>
+                  <select
+                    name="storeId"
+                    id="storeId"
+                    value={formData.storeId || ''}
+                    onChange={handleInputChange}
+                    className="border rounded px-3 py-2 text-black"
+                    required
+                  >
+                    <option value="">Mağaza Seçin</option>
+                    {stores.map(store => (
+                      <option key={store.store_id} value={store.store_id}>
+                        {store.kurum_adi}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="flex flex-col gap-1">
                 <label htmlFor="credit" className="text-sm font-semibold text-gray-700">Alacak</label>
                 <input
