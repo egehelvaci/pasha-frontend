@@ -1201,115 +1201,78 @@ export default function ProductList() {
                 )}
               </div>
             )}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-0 p-0 border-t border-l">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
               {sortedProducts.map((product) => {
                 // Rule ID'ye göre kesim durumunu belirle
                 const isCustomCut = product.rule_id && [2, 4, 5].includes(parseInt(product.rule_id));
                 const statusText = isCustomCut ? 'KESİM' : 'HAZIR';
                 
                 return (
-                  <div key={product.productId} className="flex items-center justify-between py-5 px-4 border-b border-r hover:bg-gray-50">
-                    <div className="flex items-center">
-                      <div className="w-16 h-16 relative overflow-hidden mr-4">
-                        <img 
-                          src={product.productImage || "https://tebi.io/pashahome/products/ornek-urun.jpg"} 
-                          alt={product.name} 
-                          className="w-full h-full object-cover" 
-                        />
+                  <div key={product.productId} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow relative">
+                    {/* Koleksiyon adı - sol üst */}
+                    <div className="absolute top-2 left-2 z-10">
+                      <span className="bg-blue-900 text-white text-xs px-2 py-1 rounded-md font-medium">
+                        {product.collection?.name || collections.find(c => c.collectionId === product.collectionId)?.name || "SERİSİ"}
+                      </span>
+                    </div>
+                    
+                    {/* Makas işareti - sağ üst */}
+                    {isCustomCut && (
+                      <div className="absolute top-2 right-2 z-10">
+                        <span className="text-gray-600 text-xl">✂️</span>
                       </div>
-                      <div>
-                        <div className="flex items-center">
-                          {isCustomCut && (
-                            <span className="text-gray-600 mr-2 text-lg">✂️</span>
-                          )}
-                          <span className="text-gray-400 mr-1 text-lg">✦</span>
-                          <h3 className="text-black font-medium">
+                    )}
+                    
+                    {/* Ürün görseli */}
+                    <div className="aspect-[4/3] relative overflow-hidden">
+                      <img 
+                        src={product.productImage || "https://tebi.io/pashahome/products/ornek-urun.jpg"} 
+                        alt={product.name} 
+                        className="w-full h-full object-cover" 
+                      />
+                    </div>
+                    
+                    {/* Ürün bilgileri */}
+                    <div className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h3 className="text-black font-medium text-sm mb-1">
                             {statusText} {product.name}
                           </h3>
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1 uppercase tracking-wide">
-                          {product.collection?.name || collections.find(c => c.collectionId === product.collectionId)?.name || "-"} SERİSİ
-                        </div>
-                      </div>
-                    </div>
-                    <div className="relative flex items-center">
-                      <button 
-                        className="w-10 h-10 bg-blue-900 text-white rounded-full flex items-center justify-center text-xl shadow-sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedProductId(product.productId);
-                          setDetailModalOpen(true);
-                        }}
-                        onMouseEnter={() => setHoverProductId(product.productId)}
-                        onMouseLeave={() => setHoverProductId(null)}
-                      >
-                        +
-                      </button>
-                      {isAdmin && (
-                        <button 
-                          className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center text-sm shadow-sm ml-2"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedProductForUpdate(product);
-                            setUpdateModalOpen(true);
-                          }}
-                          title="Ürünü Güncelle"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                          </svg>
-                        </button>
-                      )}
-                      
-                      {hoverProductId === product.productId && (
-                        <div className="absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded-md shadow-lg w-64 z-50">
-                          <div className="absolute top-0 right-2 transform -translate-y-2 w-4 h-4 bg-white border-t border-l border-gray-200 transform rotate-45 z-0"></div>
-                          <div className="relative z-10">
-                            <div className="px-4 py-3 border-b border-gray-200">
-                              <div className="font-semibold text-blue-900">Kalite</div>
-                              <div className="text-sm text-gray-600">Standart Kalite</div>
-                            </div>
-                            <div className="px-4 py-3 border-b border-gray-200">
-                              <div className="font-semibold text-blue-900">Saçak</div>
-                              <div className="text-sm text-gray-600">
-                                {product.hasFringe ? 'Standart Saçak' : 'Saçaksız'}
-                              </div>
-                            </div>
-                            <div className="px-4 py-3 border-b border-gray-200">
-                              <div className="font-semibold text-blue-900">Kesim Türü</div>
-                              <div className="text-sm text-gray-600">
-                                {product.cutTypes && product.cutTypes.length > 0 
-                                  ? (product.cutTypes[0].name === 'standart' 
-                                    ? 'Standart' 
-                                    : product.cutTypes[0].name === 'oval' 
-                                      ? 'Oval' 
-                                      : product.cutTypes[0].name === 'daire' 
-                                        ? 'Daire' 
-                                        : 'Standart, Oval, Daire')
-                                  : 'Standart, Oval, Daire'}
-                              </div>
-                            </div>
-                            {product.sizeOptions && product.sizeOptions.length > 0 && (
-                              <>
-                                <div className="px-4 py-3 border-b border-gray-200">
-                                  <div className="font-semibold text-blue-900">En (cm)</div>
-                                  <div className="text-sm text-gray-600">
-                                    Min: 40 - Max: {Math.max(...product.sizeOptions.map((size: any) => size.width))}
-                                  </div>
-                                </div>
-                                <div className="px-4 py-3">
-                                  <div className="font-semibold text-blue-900">Boy (cm)</div>
-                                  <div className="text-sm text-gray-600">
-                                    Min: 40 - Max: {product.sizeOptions.some((size: any) => size.is_optional_height) 
-                                      ? '2500' 
-                                      : Math.max(...product.sizeOptions.map((size: any) => size.height))}
-                                  </div>
-                                </div>
-                              </>
-                            )}
+                          <div className="text-xs text-gray-500 uppercase tracking-wide">
+                            {product.collection?.name || collections.find(c => c.collectionId === product.collectionId)?.name || "-"}
                           </div>
                         </div>
-                      )}
+                        
+                        <div className="flex items-center gap-2 ml-2">
+                          <button 
+                            className="w-8 h-8 bg-blue-900 text-white rounded-full flex items-center justify-center text-sm shadow-sm hover:bg-blue-800 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedProductId(product.productId);
+                              setDetailModalOpen(true);
+                            }}
+                            title="Ürün Detayı"
+                          >
+                            +
+                          </button>
+                          {isAdmin && (
+                            <button 
+                              className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-xs shadow-sm hover:bg-green-700 transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedProductForUpdate(product);
+                                setUpdateModalOpen(true);
+                              }}
+                              title="Ürünü Güncelle"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 );
