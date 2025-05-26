@@ -87,7 +87,8 @@ const Header = ({ title, user }: HeaderProps) => {
         const data = await res.json();
         
         if (data.success && data.data) {
-          setCartItems(data.data.totalItems || 0);
+          // Ürün çeşidi sayısını göster (toplam adet değil)
+          setCartItems(data.data.items?.length || 0);
         } else {
           console.warn('Sepet verisi alınamadı:', data.message || 'Bilinmeyen hata');
           setCartItems(0);
