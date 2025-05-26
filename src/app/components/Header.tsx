@@ -44,31 +44,59 @@ const Header = ({ title, user }: HeaderProps) => {
   useEffect(() => {
     const fetchCartData = async () => {
       try {
+        // Token kontrolü
         const token = localStorage.getItem('token');
-        if (!token) return;
+        if (!token) {
+          console.log('Token bulunamadı, sepet verisi çekilmiyor');
+          return;
+        }
+        
+        // AbortController ile timeout kontrolü
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 saniye timeout
         
         const res = await fetch("https://pasha-backend-production.up.railway.app/api/cart", {
           headers: {
             'Authorization': `Bearer ${token}`
-          }
+          },
+          signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
+        
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
         
         const data = await res.json();
         
         if (data.success && data.data) {
           setCartItems(data.data.totalItems || 0);
+        } else {
+          console.warn('Sepet verisi alınamadı:', data.message || 'Bilinmeyen hata');
         }
       } catch (error) {
-        console.error("Sepet bilgileri alınamadı:", error);
+        if (error.name === 'AbortError') {
+          console.warn('Sepet verisi çekme işlemi zaman aşımına uğradı');
+        } else if (error.message?.includes('Failed to fetch')) {
+          console.warn('Ağ bağlantısı sorunu: Sepet verisi çekilemedi');
+        } else {
+          console.error("Sepet bilgileri alınamadı:", error);
+        }
+        // Hata durumunda sepet sayısını sıfırla
+        setCartItems(0);
       }
     };
-    
-    fetchCartData();
-    
-    // 1 dakikada bir sepeti yenile
-    const intervalId = setInterval(fetchCartData, 60000);
-    
-    return () => clearInterval(intervalId);
+
+    // Sadece browser ortamında çalıştır
+    if (typeof window !== 'undefined') {
+      fetchCartData();
+      
+      // 1 dakikada bir sepeti yenile
+      const intervalId = setInterval(fetchCartData, 60000);
+      
+      return () => clearInterval(intervalId);
+    }
   }, []);
 
   const handleLogout = async () => {
