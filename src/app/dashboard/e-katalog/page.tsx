@@ -281,9 +281,9 @@ const EKatalogPage = () => {
                       <h3 className="font-medium text-gray-900 text-sm line-clamp-2">
                         {product.name}
                       </h3>
-                      <p className="text-xs text-gray-500">
+                      <div className="bg-gray-100 px-2 py-1 rounded text-xs font-mono text-gray-700">
                         ID: {product.productId}
-                      </p>
+                      </div>
                       {product.collection && (
                         <p className="text-xs text-blue-600 font-medium">
                           {product.collection.name}
