@@ -265,7 +265,7 @@ const EKatalogPage = () => {
                         <img
                           src={product.productImage}
                           alt={product.name}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-contain p-2"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -281,9 +281,6 @@ const EKatalogPage = () => {
                       <h3 className="font-medium text-gray-900 text-sm line-clamp-2">
                         {product.name}
                       </h3>
-                      <div className="bg-gray-100 px-2 py-1 rounded text-xs font-mono text-gray-700">
-                        ID: {product.productId}
-                      </div>
                       {product.collection && (
                         <p className="text-xs text-blue-600 font-medium">
                           {product.collection.name}

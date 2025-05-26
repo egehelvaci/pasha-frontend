@@ -584,11 +584,13 @@ export default function ProductList() {
               
               <div className="flex flex-col md:flex-row gap-8">
                 <div className="w-full md:w-1/2">
-                  <img 
-                    src={product.productImage || "https://tebi.io/pashahome/products/ornek-urun.jpg"} 
-                    alt={product.name} 
-                    className="w-full rounded-lg shadow-md border border-gray-200 object-cover aspect-[250/390]" 
-                  />
+                  <div className="aspect-[4/3] relative overflow-hidden bg-gray-50 rounded-lg border border-gray-200">
+                    <img 
+                      src={product.productImage || "https://tebi.io/pashahome/products/ornek-urun.jpg"} 
+                      alt={product.name} 
+                      className="w-full h-full object-contain p-4" 
+                    />
+                  </div>
                 </div>
                 
                 <div className="w-full md:w-1/2">
@@ -1224,11 +1226,11 @@ export default function ProductList() {
                     )}
                     
                     {/* Ürün görseli */}
-                    <div className="aspect-[4/3] relative overflow-hidden">
+                    <div className="aspect-[4/3] relative overflow-hidden bg-gray-50 rounded-lg border border-gray-200">
                       <img 
                         src={product.productImage || "https://tebi.io/pashahome/products/ornek-urun.jpg"} 
                         alt={product.name} 
-                        className="w-full h-full object-cover" 
+                        className="w-full h-full object-contain p-4" 
                       />
                     </div>
                     
