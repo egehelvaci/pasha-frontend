@@ -33,15 +33,29 @@ const Header = ({ title, user }: HeaderProps) => {
   const { logout, isAdmin } = useAuth();
   const [isBlurred, setIsBlurred] = useState(true);
   const [cartItems, setCartItems] = useState<number>(0);
+  const [isMounted, setIsMounted] = useState(false);
+  
+  // Component mount kontrolü
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
   
   useEffect(() => {
-    const stored = typeof window !== 'undefined' ? localStorage.getItem('headerBlur') : null;
-    if (stored === 'false') setIsBlurred(false);
-    else setIsBlurred(true);
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('headerBlur');
+      if (stored === 'false') setIsBlurred(false);
+      else setIsBlurred(true);
+    }
   }, []);
   
   // Sepet verilerini getir
   useEffect(() => {
+    // Sadece client-side'da ve component mount olduktan sonra çalıştır
+    if (!isMounted || typeof window === 'undefined') {
+      return;
+    }
+
     const fetchCartData = async () => {
       try {
         // Token kontrolü
@@ -53,13 +67,15 @@ const Header = ({ title, user }: HeaderProps) => {
         
         // AbortController ile timeout kontrolü
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 saniye timeout
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 saniye timeout
         
         const res = await fetch("https://pasha-backend-production.up.railway.app/api/cart", {
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           },
-          signal: controller.signal
+          signal: controller.signal,
+          cache: 'no-cache'
         });
         
         clearTimeout(timeoutId);
@@ -74,12 +90,15 @@ const Header = ({ title, user }: HeaderProps) => {
           setCartItems(data.data.totalItems || 0);
         } else {
           console.warn('Sepet verisi alınamadı:', data.message || 'Bilinmeyen hata');
+          setCartItems(0);
         }
-      } catch (error) {
+      } catch (error: any) {
         if (error.name === 'AbortError') {
           console.warn('Sepet verisi çekme işlemi zaman aşımına uğradı');
         } else if (error.message?.includes('Failed to fetch')) {
           console.warn('Ağ bağlantısı sorunu: Sepet verisi çekilemedi');
+        } else if (error.message?.includes('NetworkError')) {
+          console.warn('Network hatası: Sepet verisi çekilemedi');
         } else {
           console.error("Sepet bilgileri alınamadı:", error);
         }
@@ -88,16 +107,16 @@ const Header = ({ title, user }: HeaderProps) => {
       }
     };
 
-    // Sadece browser ortamında çalıştır
-    if (typeof window !== 'undefined') {
-      fetchCartData();
-      
-      // 1 dakikada bir sepeti yenile
-      const intervalId = setInterval(fetchCartData, 60000);
-      
-      return () => clearInterval(intervalId);
-    }
-  }, []);
+    // İlk yükleme
+    fetchCartData();
+    
+    // 2 dakikada bir sepeti yenile (daha az sıklık)
+    const intervalId = setInterval(fetchCartData, 120000);
+    
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [isMounted]); // isMounted dependency'si eklendi
 
   const handleLogout = async () => {
     const result = await logout();
