@@ -34,6 +34,7 @@ const Header = ({ title, user }: HeaderProps) => {
   const [isBlurred, setIsBlurred] = useState(true);
   const [cartItems, setCartItems] = useState<number>(0);
   const [isMounted, setIsMounted] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Component mount kontrolü
   useEffect(() => {
@@ -218,103 +219,151 @@ const Header = ({ title, user }: HeaderProps) => {
   ];
 
   return (
-    <header className="bg-white border-b border-gray-200">
-      <div className="mx-auto px-4">
-        {/* Logo ve Başlık Kısmı */}
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <div className="container-responsive">
+        {/* Ana Header Kısmı */}
         <div className="flex items-center justify-between py-3">
+          {/* Logo */}
           <div className="flex items-center">
-            <Link href="/dashboard">
-              <img src="/black-logo.svg" alt="Paşa Home" className="h-8 mr-3 cursor-pointer" />
+            <Link href="/dashboard" className="flex-shrink-0">
+              <img 
+                src="/black-logo.svg" 
+                alt="Paşa Home" 
+                className="h-8 w-auto cursor-pointer" 
+              />
             </Link>
           </div>
           
-          <div className="flex items-center">
-            <div className="flex items-center gap-3 flex-row-reverse">
-              {/* Finansal özet kutusu */}
-              <div className="flex flex-row items-center gap-2 text-xs text-gray-500 bg-gray-100 rounded px-2 py-1 hidden md:flex">
-                <div className={`${isBlurred ? 'blur-sm' : ''} flex flex-row gap-4 transition-all duration-200`}>
-                  <div>
-                    <span className="block font-semibold">Borç</span>
-                    <span>{parseFloat(user.debit).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
-                  </div>
-                  <div>
-                    <span className="block font-semibold">Alacak</span>
-                    <span>{parseFloat(user.credit).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
-                  </div>
-                  <div>
-                    <span className="block font-semibold">Fark</span>
-                    <span>{(parseFloat(user.credit) - parseFloat(user.debit)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
-                  </div>
+          {/* Desktop: Sağ taraf kontrolleri */}
+          <div className="hidden lg:flex items-center space-x-4">
+            {/* Finansal özet kutusu */}
+            <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
+              <div className={`${isBlurred ? 'blur-sm' : ''} flex gap-4 transition-all duration-200`}>
+                <div className="text-center">
+                  <span className="block font-semibold text-gray-700">Borç</span>
+                  <span className="text-red-600 font-medium">
+                    {parseFloat(user.debit).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                  </span>
                 </div>
-                <button
-                  type="button"
-                  className="ml-2 p-1 bg-white/70 rounded-full hover:bg-white"
-                  onClick={handleBlurToggle}
-                  title={isBlurred ? 'Bilgileri Göster' : 'Bilgileri Gizle'}
-                >
-                  {isBlurred ? (
-                    // Göz kapalı ikonu
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-700">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12.001C3.226 15.376 7.113 19.5 12 19.5c1.772 0 3.432-.457 4.899-1.277M6.228 6.228A10.45 10.45 0 0112 4.5c4.887 0 8.774 4.124 10.066 7.499a10.523 10.523 0 01-4.293 5.226M6.228 6.228l11.544 11.544M6.228 6.228L3 3m15 15l-3-3" />
-                    </svg>
-                  ) : (
-                    // Göz açık ikonu
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-700">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12S5.25 6.75 12 6.75 21.75 12 21.75 12 18.75 17.25 12 17.25 2.25 12 2.25 12z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                  )}
-                </button>
+                <div className="text-center">
+                  <span className="block font-semibold text-gray-700">Alacak</span>
+                  <span className="text-green-600 font-medium">
+                    {parseFloat(user.credit).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                  </span>
+                </div>
+                <div className="text-center">
+                  <span className="block font-semibold text-gray-700">Fark</span>
+                  <span className={`font-medium ${(parseFloat(user.credit) - parseFloat(user.debit)) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {(parseFloat(user.credit) - parseFloat(user.debit)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                  </span>
+                </div>
               </div>
-              
-              {/* Sepet ikonu */}
-              <Link href="/dashboard/sepetim" className="relative group">
-                <div className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                    <path fillRule="evenodd" d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 004.25 22.5h15.5a1.875 1.875 0 001.865-2.071l-1.263-12a1.875 1.875 0 00-1.865-1.679H16.5V6a4.5 4.5 0 10-9 0zM12 3a3 3 0 00-3 3v.75h6V6a3 3 0 00-3-3zm-3 8.25a3 3 0 106 0v-.75a.75.75 0 011.5 0v.75a4.5 4.5 0 11-9 0v-.75a.75.75 0 011.5 0v.75z" clipRule="evenodd" />
+              <button
+                type="button"
+                className="ml-2 p-1.5 bg-white rounded-full hover:bg-gray-100 transition-colors"
+                onClick={handleBlurToggle}
+                title={isBlurred ? 'Bilgileri Göster' : 'Bilgileri Gizle'}
+              >
+                {isBlurred ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-gray-600">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12.001C3.226 15.376 7.113 19.5 12 19.5c1.772 0 3.432-.457 4.899-1.277M6.228 6.228A10.45 10.45 0 0112 4.5c4.887 0 8.774 4.124 10.066 7.499a10.523 10.523 0 01-4.293 5.226M6.228 6.228l11.544 11.544M6.228 6.228L3 3m15 15l-3-3" />
                   </svg>
-                  {cartItems > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-medium rounded-full w-5 h-5 flex items-center justify-center">
-                      {cartItems > 99 ? '99+' : cartItems}
-                    </span>
-                  )}
-                </div>
-              </Link>
-              
-              {/* Avatar ve kullanıcı adı + dropdown */}
-              <div className="relative group flex items-center transition hover:bg-gray-200 rounded px-2 py-1 cursor-pointer">
-                <div className="h-8 w-8 rounded-full bg-blue-900 flex items-center justify-center text-white text-sm font-medium">
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-gray-600">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12S5.25 6.75 12 6.75 21.75 12 21.75 12 18.75 17.25 12 17.25 2.25 12 2.25 12z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                )}
+              </button>
+            </div>
+            
+            {/* Sepet ikonu */}
+            <Link href="/dashboard/sepetim" className="relative group">
+              <div className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-gray-700">
+                  <path fillRule="evenodd" d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 004.25 22.5h15.5a1.875 1.875 0 001.865-2.071l-1.263-12a1.875 1.875 0 00-1.865-1.679H16.5V6a4.5 4.5 0 10-9 0zM12 3a3 3 0 00-3 3v.75h6V6a3 3 0 00-3-3zm-3 8.25a3 3 0 106 0v-.75a.75.75 0 011.5 0v.75a4.5 4.5 0 11-9 0v-.75a.75.75 0 011.5 0v.75z" clipRule="evenodd" />
+                </svg>
+                {cartItems > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {cartItems > 99 ? '99+' : cartItems}
+                  </span>
+                )}
+              </div>
+            </Link>
+            
+            {/* Kullanıcı dropdown */}
+            <div className="relative group">
+              <div className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
+                <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-medium">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
-                <span className="ml-2 text-sm font-medium text-gray-700">{user.name}</span>
-                <div className="origin-top-left absolute left-0 top-[30px] mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 hidden group-hover:block hover:block z-10">
-                  <a
-                    href="#"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Profiliniz
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Ayarlar
-                  </a>
-                  <button
-                    onClick={handleLogout}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Çıkış Yap
-                  </button>
-                </div>
+                <span className="text-sm font-medium text-gray-700 hidden xl:block">{user.name}</span>
+                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+              
+              {/* Dropdown menü */}
+              <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center space-x-2">
+                    <FaUser className="w-4 h-4" />
+                    <span>Profiliniz</span>
+                  </div>
+                </a>
+                <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center space-x-2">
+                    <FaCog className="w-4 h-4" />
+                    <span>Ayarlar</span>
+                  </div>
+                </a>
+                <hr className="my-1 border-gray-200" />
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center space-x-2">
+                    <FaSignOutAlt className="w-4 h-4" />
+                    <span>Çıkış Yap</span>
+                  </div>
+                </button>
               </div>
             </div>
           </div>
+          
+          {/* Mobil: Sağ taraf kontrolleri */}
+          <div className="flex lg:hidden items-center space-x-2">
+            {/* Sepet ikonu */}
+            <Link href="/dashboard/sepetim" className="relative p-2">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-gray-700">
+                <path fillRule="evenodd" d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 004.25 22.5h15.5a1.875 1.875 0 001.865-2.071l-1.263-12a1.875 1.875 0 00-1.865-1.679H16.5V6a4.5 4.5 0 10-9 0zM12 3a3 3 0 00-3 3v.75h6V6a3 3 0 00-3-3zm-3 8.25a3 3 0 106 0v-.75a.75.75 0 011.5 0v.75a4.5 4.5 0 11-9 0v-.75a.75.75 0 011.5 0v.75z" clipRule="evenodd" />
+              </svg>
+              {cartItems > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {cartItems > 99 ? '99+' : cartItems}
+                </span>
+              )}
+            </Link>
+            
+            {/* Hamburger menü */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className={`hamburger p-2 ${isMobileMenuOpen ? 'active' : ''}`}
+              aria-label="Menüyü aç/kapat"
+            >
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+          </div>
         </div>
+        
+        {/* Mobil finansal özet */}
         <FinancialSummaryMobile debit={user.debit} credit={user.credit} />
-        {/* Navigasyon Menüsü */}
-        <nav className="flex items-center justify-between py-2 overflow-x-auto">
-          <div className="flex space-x-1">
+        
+        {/* Desktop navigasyon */}
+        <nav className="hidden lg:block py-2">
+          <div className="flex space-x-1 overflow-x-auto">
             {navigation.map((item) => {
               const isActive = pathname === item.href;
               if (item.adminOnly && !isAdmin) return null;
@@ -322,9 +371,9 @@ const Header = ({ title, user }: HeaderProps) => {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                  className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
                     isActive
-                      ? 'bg-blue-800 text-white'
+                      ? 'bg-blue-600 text-white'
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                   }`}
                 >
@@ -333,13 +382,13 @@ const Header = ({ title, user }: HeaderProps) => {
                 </Link>
               );
             })}
-            {/* Sadece admin kullanıcılar için Ayarlar */}
+            {/* Admin ayarlar */}
             {isAdmin && (
               <Link
                 href="/dashboard/ayarlar"
-                className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
                   pathname === '/dashboard/ayarlar'
-                    ? 'bg-blue-800 text-white'
+                    ? 'bg-blue-600 text-white'
                     : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
@@ -350,6 +399,127 @@ const Header = ({ title, user }: HeaderProps) => {
           </div>
         </nav>
       </div>
+      
+      {/* Mobil menü overlay */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            onClick={() => setIsMobileMenuOpen(false)}
+          ></div>
+          
+          {/* Menü paneli */}
+          <div className="fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white shadow-xl z-50 transform transition-transform duration-300">
+            <div className="flex flex-col h-full">
+              {/* Menü başlığı */}
+              <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                <div className="flex items-center space-x-3">
+                  <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-900">{user.name}</div>
+                    <div className="text-sm text-gray-500">Kullanıcı</div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              {/* Finansal özet */}
+              <div className="p-4 bg-gray-50 border-b border-gray-200">
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div className={`${isBlurred ? 'blur-sm' : ''} transition-all duration-200`}>
+                    <div className="text-xs font-semibold text-gray-600 mb-1">Borç</div>
+                    <div className="text-sm font-bold text-red-600">
+                      {parseFloat(user.debit).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                    </div>
+                  </div>
+                  <div className={`${isBlurred ? 'blur-sm' : ''} transition-all duration-200`}>
+                    <div className="text-xs font-semibold text-gray-600 mb-1">Alacak</div>
+                    <div className="text-sm font-bold text-green-600">
+                      {parseFloat(user.credit).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                    </div>
+                  </div>
+                  <div className={`${isBlurred ? 'blur-sm' : ''} transition-all duration-200`}>
+                    <div className="text-xs font-semibold text-gray-600 mb-1">Fark</div>
+                    <div className={`text-sm font-bold ${(parseFloat(user.credit) - parseFloat(user.debit)) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {(parseFloat(user.credit) - parseFloat(user.debit)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={handleBlurToggle}
+                  className="w-full mt-3 px-3 py-2 text-xs bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  {isBlurred ? 'Bilgileri Göster' : 'Bilgileri Gizle'}
+                </button>
+              </div>
+              
+              {/* Navigasyon menüsü */}
+              <div className="flex-1 overflow-y-auto">
+                <nav className="p-4 space-y-2">
+                  {navigation.map((item) => {
+                    const isActive = pathname === item.href;
+                    if (item.adminOnly && !isAdmin) return null;
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                          isActive
+                            ? 'bg-blue-600 text-white'
+                            : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        <span className="mr-3">{item.icon}</span>
+                        {item.name}
+                      </Link>
+                    );
+                  })}
+                  {/* Admin ayarlar */}
+                  {isAdmin && (
+                    <Link
+                      href="/dashboard/ayarlar"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                        pathname === '/dashboard/ayarlar'
+                          ? 'bg-blue-600 text-white'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <span className="mr-3"><FaCog /></span>
+                      Ayarlar
+                    </Link>
+                  )}
+                </nav>
+              </div>
+              
+              {/* Alt kısım - Çıkış */}
+              <div className="p-4 border-t border-gray-200">
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    handleLogout();
+                  }}
+                  className="w-full flex items-center justify-center px-4 py-3 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                >
+                  <FaSignOutAlt className="mr-2" />
+                  Çıkış Yap
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };
