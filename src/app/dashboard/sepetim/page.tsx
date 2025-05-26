@@ -10,6 +10,7 @@ export default function CartPage() {
   const [loading, setLoading] = useState(true);
   const [cartData, setCartData] = useState<any>(null);
   const [error, setError] = useState("");
+  const [updatingItems, setUpdatingItems] = useState<Set<number>>(new Set());
   const router = useRouter();
 
   useEffect(() => {
@@ -49,7 +50,16 @@ export default function CartPage() {
   };
 
   const handleRemoveItem = async (itemId: number) => {
+    // Aynı ürün zaten güncelleniyorsa işlemi durdur
+    if (updatingItems.has(itemId)) {
+      return;
+    }
+    
     try {
+      // Loading state'i başlat
+      setUpdatingItems(prev => new Set(prev).add(itemId));
+      setError(""); // Önceki hataları temizle
+      
       const token = localStorage.getItem('token');
       const res = await fetch(`${API_BASE_URL}/api/cart/items/${itemId}`, {
         method: 'DELETE',
@@ -58,15 +68,24 @@ export default function CartPage() {
         }
       });
       
-      if (res.ok) {
+      const data = await res.json();
+      
+      if (res.ok && data.success) {
         // Sepeti yenile
-        fetchCartData();
+        await fetchCartData();
       } else {
-        setError("Ürün sepetten çıkarılamadı");
+        setError(data.message || "Ürün sepetten çıkarılamadı");
       }
     } catch (error) {
       console.error("Ürün sepetten çıkarılırken hata oluştu:", error);
-      setError("Ürün sepetten çıkarılırken bir hata oluştu");
+      setError("Ürün sepetten çıkarılırken bir hata oluştu. Lütfen tekrar deneyin.");
+    } finally {
+      // Loading state'i sonlandır
+      setUpdatingItems(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(itemId);
+        return newSet;
+      });
     }
   };
 
@@ -76,10 +95,19 @@ export default function CartPage() {
       return handleRemoveItem(itemId);
     }
     
+    // Aynı ürün zaten güncelleniyorsa işlemi durdur
+    if (updatingItems.has(itemId)) {
+      return;
+    }
+    
     try {
+      // Loading state'i başlat
+      setUpdatingItems(prev => new Set(prev).add(itemId));
+      setError(""); // Önceki hataları temizle
+      
       const token = localStorage.getItem('token');
       const res = await fetch(`${API_BASE_URL}/api/cart/items/${itemId}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -87,15 +115,24 @@ export default function CartPage() {
         body: JSON.stringify({ quantity: newQuantity })
       });
       
-      if (res.ok) {
+      const data = await res.json();
+      
+      if (res.ok && data.success) {
         // Sepeti yenile
-        fetchCartData();
+        await fetchCartData();
       } else {
-        setError("Ürün miktarı güncellenemedi");
+        setError(data.message || "Ürün miktarı güncellenemedi");
       }
     } catch (error) {
       console.error("Ürün miktarı güncellenirken hata oluştu:", error);
-      setError("Ürün miktarı güncellenirken bir hata oluştu");
+      setError("Ürün miktarı güncellenirken bir hata oluştu. Lütfen tekrar deneyin.");
+    } finally {
+      // Loading state'i sonlandır
+      setUpdatingItems(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(itemId);
+        return newSet;
+      });
     }
   };
 
@@ -231,10 +268,11 @@ export default function CartPage() {
                               </div>
                             )}
                             <button 
-                              className="mt-2 text-xs text-red-600 hover:text-red-800 font-medium"
+                              className="mt-2 text-xs text-red-600 hover:text-red-800 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                               onClick={() => handleRemoveItem(item.id)}
+                              disabled={updatingItems.has(item.id)}
                             >
-                              Kaldır
+                              {updatingItems.has(item.id) ? "Kaldırılıyor..." : "Kaldır"}
                             </button>
                           </div>
                         </div>
@@ -251,10 +289,15 @@ export default function CartPage() {
                       <div className="col-span-2 text-center">
                         <div className="flex items-center justify-center">
                           <button 
-                            className="w-8 h-8 border border-gray-300 rounded-l-md flex items-center justify-center text-gray-500 hover:bg-gray-50"
+                            className="w-8 h-8 border border-gray-300 rounded-l-md flex items-center justify-center text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                             onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                            disabled={updatingItems.has(item.id) || item.quantity <= 1}
                           >
-                            -
+                            {updatingItems.has(item.id) ? (
+                              <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                              "-"
+                            )}
                           </button>
                           <input
                             type="number"
@@ -266,15 +309,24 @@ export default function CartPage() {
                                 handleUpdateQuantity(item.id, newQuantity);
                               }
                             }}
-                            className="w-10 h-8 border-t border-b border-gray-300 text-center text-gray-900 focus:outline-none"
+                            disabled={updatingItems.has(item.id)}
+                            className="w-10 h-8 border-t border-b border-gray-300 text-center text-gray-900 focus:outline-none disabled:bg-gray-50 disabled:cursor-not-allowed"
                           />
                           <button 
-                            className="w-8 h-8 border border-gray-300 rounded-r-md flex items-center justify-center text-gray-500 hover:bg-gray-50"
+                            className="w-8 h-8 border border-gray-300 rounded-r-md flex items-center justify-center text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                             onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                            disabled={updatingItems.has(item.id)}
                           >
-                            +
+                            {updatingItems.has(item.id) ? (
+                              <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                              "+"
+                            )}
                           </button>
                         </div>
+                        {updatingItems.has(item.id) && (
+                          <div className="text-xs text-blue-600 mt-1">Güncelleniyor...</div>
+                        )}
                       </div>
                       <div className="col-span-2 text-right font-medium text-gray-900">
                         {parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} 

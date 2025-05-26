@@ -482,7 +482,12 @@ export default function ProductList() {
         cutTypeValue = "round";
       } else if (selectedCutType.name === "custom") {
         cutTypeValue = "custom";
+      } else if (selectedCutType.name === "post kesim") {
+        cutTypeValue = "post kesim";
       }
+      
+      console.log('Seçilen kesim türü:', selectedCutType.name);
+      console.log('API\'ye gönderilecek cutType:', cutTypeValue);
       
       setAddToCartLoading(true);
       setAddToCartError("");

@@ -56,6 +56,12 @@ interface ProductsResponse {
   message?: string;
 }
 
+interface ProductDetailResponse {
+  success: boolean;
+  data: Product;
+  message?: string;
+}
+
 interface StockUpdateRequest {
   width: number;
   height: number;
@@ -76,12 +82,14 @@ export default function StokPage() {
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedSizeOption, setSelectedSizeOption] = useState<SizeOption | null>(null);
   const [stockForm, setStockForm] = useState<StockUpdateRequest>({
     width: 0,
     height: 0,
     quantity: 0
   });
   const [isUpdatingStock, setIsUpdatingStock] = useState(false);
+  const [isLoadingProductDetail, setIsLoadingProductDetail] = useState(false);
 
   useEffect(() => {
     if (!user && !isLoading) {
@@ -111,7 +119,10 @@ export default function StokPage() {
       
       if (response.ok) {
         const data: ProductsResponse = await response.json();
+        console.log('API Response:', data);
         if (data.success) {
+          console.log('First product:', data.data[0]);
+          console.log('First product sizeOptions:', data.data[0]?.sizeOptions);
           // Ürünleri alfabetik sıraya göre düzenle
           const sortedProducts = data.data.sort((a, b) => a.name.localeCompare(b.name, 'tr'));
           setProducts(sortedProducts);
@@ -124,64 +135,395 @@ export default function StokPage() {
     }
   };
 
-  const openStockModal = (product: Product) => {
-    setSelectedProduct(product);
-    setStockForm({
-      width: product.sizeOptions[0]?.width || 0,
-      height: product.sizeOptions[0]?.height || 0,
-      quantity: 0
-    });
+  // Ürün detaylarını GET ile çek
+  const fetchProductDetail = async (productId: string): Promise<Product | null> => {
+    try {
+      setIsLoadingProductDetail(true);
+      
+      console.log('=== ÜRÜN DETAY ÇEKME BAŞLIYOR ===');
+      console.log('Product ID:', productId);
+      
+      // Önce normal product endpoint'ini deneyelim
+      const normalUrl = `https://pasha-backend-production.up.railway.app/api/products/${productId}`;
+      console.log('Normal GET URL:', normalUrl);
+      console.log('Token mevcut:', !!token);
+      
+      const response = await fetch(normalUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      console.log('=== GET RESPONSE ===');
+      console.log('GET Response status:', response.status);
+      
+      if (response.ok) {
+        const data: ProductDetailResponse = await response.json();
+        console.log('GET Response data:', data);
+        
+        if (data.success && data.data) {
+          console.log('✅ GET başarılı - Product ID:', data.data.productId);
+          console.log('Product name:', data.data.name);
+          console.log('SizeOptions count:', data.data.sizeOptions?.length || 0);
+          console.log('Variations count:', data.data.variations?.length || 0);
+          return data.data;
+        } else {
+          console.error('❌ GET başarısız veya data boş:', data);
+          
+          // Eğer normal endpoint çalışmazsa variations endpoint'ini deneyelim
+          console.log('Normal endpoint başarısız, variations endpoint deneniyor...');
+          return await fetchProductDetailVariations(productId);
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('❌ GET HTTP Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          response: errorText
+        });
+        
+        // Normal endpoint başarısızsa variations endpoint'ini deneyelim
+        console.log('Normal endpoint HTTP hatası, variations endpoint deneniyor...');
+        return await fetchProductDetailVariations(productId);
+      }
+    } catch (error) {
+      console.error('❌ GET Network Error:', error);
+      
+      // Network hatası durumunda da variations endpoint'ini deneyelim
+      console.log('Network hatası, variations endpoint deneniyor...');
+      return await fetchProductDetailVariations(productId);
+    } finally {
+      setIsLoadingProductDetail(false);
+    }
+  };
+
+  // Variations endpoint'ini deneyen yardımcı fonksiyon
+  const fetchProductDetailVariations = async (productId: string): Promise<Product | null> => {
+    try {
+      const variationsUrl = `https://pasha-backend-production.up.railway.app/api/products/${productId}/variations`;
+      console.log('Variations GET URL:', variationsUrl);
+      
+      const response = await fetch(variationsUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      console.log('Variations Response status:', response.status);
+      
+      if (response.ok) {
+        const data: ProductDetailResponse = await response.json();
+        console.log('Variations Response data:', data);
+        
+        if (data.success && data.data) {
+          console.log('✅ Variations GET başarılı - Product ID:', data.data.productId);
+          return data.data;
+        } else {
+          console.error('❌ Variations GET başarısız veya data boş:', data);
+          alert(`Ürün detayları alınırken hata oluştu: ${data.message || 'Bilinmeyen hata'}`);
+          return null;
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('❌ Variations HTTP Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          response: errorText
+        });
+        alert(`Ürün detayları alınırken hata oluştu! Status: ${response.status}`);
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ Variations Network Error:', error);
+      alert('Ürün detayları alınırken hata oluştu!');
+      return null;
+    }
+  };
+
+  const openStockModal = async (product: Product) => {
+    console.log('=== MODAL AÇILIYOR ===');
+    console.log('Seçilen ürün:', product.name);
+    console.log('Seçilen ürün ID:', product.productId);
+    console.log('Product object:', product);
+    
+    // Product ID kontrolü
+    if (!product.productId) {
+      console.error('❌ KRITIK HATA: Gelen product ID undefined!', product);
+      alert('Ürün ID\'si bulunamadı! Lütfen sayfayı yenileyip tekrar deneyin.');
+      return;
+    }
+    
+    // Önce ürün detaylarını GET ile çek
+    const detailedProduct = await fetchProductDetail(product.productId);
+    
+    // Eğer detaylı ürün bilgisi alınamazsa, mevcut ürün bilgisiyle devam et
+    let productToUse: Product;
+    
+    if (!detailedProduct || !detailedProduct.productId) {
+      console.log('⚠️ Detaylı ürün bilgisi alınamadı, mevcut ürün bilgisiyle devam ediliyor');
+      productToUse = product;
+    } else {
+      console.log('✅ Detaylı ürün bilgisi alındı');
+      console.log('Original Product ID:', product.productId);
+      console.log('Detailed Product ID:', detailedProduct.productId);
+      console.log('ID\'ler eşit mi?:', product.productId === detailedProduct.productId);
+      productToUse = detailedProduct;
+    }
+    
+    console.log('Kullanılacak ürün:', productToUse);
+    console.log('Kullanılacak ürün ID:', productToUse.productId);
+    
+    // selectedProduct'ı set et
+    setSelectedProduct(productToUse);
+    
+    // Set edildikten sonra kontrol et
+    console.log('selectedProduct set edildi, kontrol ediliyor...');
+    
+    // İlk boyut seçeneğini varsayılan olarak seç
+    if (productToUse.sizeOptions && productToUse.sizeOptions.length > 0) {
+      const firstOption = productToUse.sizeOptions[0];
+      console.log('İlk size option seçildi:', firstOption);
+      setSelectedSizeOption(firstOption);
+      setStockForm({
+        width: firstOption.width,
+        height: firstOption.height,
+        quantity: 1
+      });
+    } else if (productToUse.variations && productToUse.variations.length > 0) {
+      // Eğer sizeOptions yoksa variations'ı kullan
+      const firstVariation = productToUse.variations[0];
+      console.log('İlk variation seçildi:', firstVariation);
+      setSelectedSizeOption(null);
+      setStockForm({
+        width: firstVariation.width,
+        height: firstVariation.height,
+        quantity: 1
+      });
+    } else {
+      console.log('Ne sizeOptions ne de variations mevcut, manuel giriş');
+      setSelectedSizeOption(null);
+      setStockForm({
+        width: 100,
+        height: 100,
+        quantity: 1
+      });
+    }
+    
     setIsModalOpen(true);
+    
+    // Modal açıldıktan sonra selectedProduct'ı tekrar kontrol et
+    setTimeout(() => {
+      console.log('Modal açıldı, selectedProduct kontrol:', {
+        selectedProductExists: !!selectedProduct,
+        selectedProductId: selectedProduct?.productId
+      });
+    }, 100);
   };
 
   const closeStockModal = () => {
+    console.log('=== MODAL KAPANIYOR ===');
+    console.log('selectedProduct temizleniyor:', selectedProduct?.productId);
+    
     setIsModalOpen(false);
     setSelectedProduct(null);
+    setSelectedSizeOption(null);
     setStockForm({ width: 0, height: 0, quantity: 0 });
+    
+    console.log('Modal kapatıldı ve state temizlendi');
+  };
+
+  const handleSizeOptionChange = (sizeOption: SizeOption) => {
+    setSelectedSizeOption(sizeOption);
+    setStockForm(prev => ({
+      ...prev,
+      width: sizeOption.width,
+      height: sizeOption.height
+    }));
   };
 
   const updateStock = async () => {
-    if (!selectedProduct || !token) return;
+    if (!selectedProduct || !token) {
+      console.error('updateStock: selectedProduct veya token eksik', {
+        selectedProduct: !!selectedProduct,
+        token: !!token
+      });
+      return;
+    }
+
+    // Product ID kontrolü
+    if (!selectedProduct.productId) {
+      console.error('❌ KRITIK HATA: Product ID undefined!', {
+        selectedProduct: selectedProduct,
+        productId: selectedProduct.productId
+      });
+      alert('Ürün ID\'si bulunamadı! Lütfen sayfayı yenileyip tekrar deneyin.');
+      return;
+    }
+
+    console.log('=== STOK GÜNCELLEME BAŞLIYOR ===');
+    console.log('Selected Product:', selectedProduct);
+    console.log('Product ID:', selectedProduct.productId);
+    console.log('Product ID type:', typeof selectedProduct.productId);
+    console.log('Product ID length:', selectedProduct.productId?.length);
+    console.log('Token mevcut:', !!token);
+    console.log('Token başlangıcı:', token.substring(0, 20) + '...');
+    console.log('Request Body:', {
+      width: stockForm.width,
+      height: stockForm.height,
+      quantity: stockForm.quantity
+    });
+
+    const apiUrl = `https://pasha-backend-production.up.railway.app/api/products/${selectedProduct.productId}/stock`;
+    console.log('API URL:', apiUrl);
+
+    // Form validasyonu
+    if (stockForm.width <= 0 || stockForm.height <= 0 || stockForm.quantity <= 0) {
+      alert('Lütfen geçerli boyut ve miktar değerleri girin!');
+      return;
+    }
 
     setIsUpdatingStock(true);
     try {
-      const response = await fetch(`https://pasha-backend-production.up.railway.app/api/products/${selectedProduct.productId}/stock`, {
-        method: 'POST',
+      const requestBody = {
+        width: stockForm.width,
+        height: stockForm.height,
+        quantity: stockForm.quantity
+      };
+
+      console.log('Gönderilen request body:', JSON.stringify(requestBody, null, 2));
+
+      const response = await fetch(apiUrl, {
+        method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(stockForm)
+        body: JSON.stringify(requestBody)
       });
       
+      console.log('=== API RESPONSE ===');
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      
+      const responseText = await response.text();
+      console.log('Response text:', responseText);
+      
       if (response.ok) {
-        const data: StockUpdateResponse = await response.json();
-        if (data.success) {
-          // Ürün listesini güncelle
-          setProducts(prevProducts => 
-            prevProducts.map(product => 
-              product.productId === selectedProduct.productId 
-                ? data.data 
-                : product
-            )
-          );
-          closeStockModal();
-          alert('Stok başarıyla güncellendi!');
+        try {
+          const data: StockUpdateResponse = JSON.parse(responseText);
+          console.log('Parsed response data:', data);
+          
+          if (data.success) {
+            // Ürün listesini güncelle
+            setProducts(prevProducts => 
+              prevProducts.map(product => 
+                product.productId === selectedProduct.productId 
+                  ? data.data 
+                  : product
+              )
+            );
+            
+            // selectedProduct'ı da güncelle (modal içindeki güncel stok bilgileri için)
+            setSelectedProduct(data.data);
+            
+            // Stok form'unu sıfırla (yeni stok eklemek için)
+            setStockForm(prev => ({
+              ...prev,
+              quantity: 1 // Sadece quantity'yi sıfırla, boyutlar aynı kalsın
+            }));
+            
+            alert('Stok başarıyla güncellendi!');
+          } else {
+            console.error('API success false:', data.message);
+            alert(`Stok güncellenirken hata oluştu: ${data.message || 'Bilinmeyen hata'}`);
+          }
+        } catch (parseError) {
+          console.error('JSON parse hatası:', parseError);
+          alert('Sunucu yanıtı işlenirken hata oluştu!');
         }
       } else {
-        alert('Stok güncellenirken hata oluştu!');
+        console.error('HTTP Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          response: responseText
+        });
+        
+        // Özel hata mesajları
+        if (response.status === 404) {
+          alert('Ürün bulunamadı! Lütfen sayfayı yenileyip tekrar deneyin.');
+        } else if (response.status === 401) {
+          alert('Yetkilendirme hatası! Lütfen tekrar giriş yapın.');
+        } else if (response.status === 403) {
+          alert('Bu işlem için yetkiniz bulunmuyor!');
+        } else {
+          alert(`Stok güncellenirken hata oluştu! Status: ${response.status}, Mesaj: ${responseText}`);
+        }
       }
     } catch (error) {
-      console.error('Stok güncelleme hatası:', error);
-      alert('Stok güncellenirken hata oluştu!');
+      console.error('=== NETWORK/FETCH ERROR ===');
+      console.error('Error details:', error);
+      alert('Ağ hatası! Lütfen internet bağlantınızı kontrol edin.');
     } finally {
       setIsUpdatingStock(false);
     }
   };
 
   const getTotalStock = (product: Product) => {
-    return product.sizeOptions.reduce((total, option) => total + option.stockQuantity, 0);
+    let total = 0;
+    
+    // sizeOptions'dan stok hesapla
+    if (product.sizeOptions && Array.isArray(product.sizeOptions)) {
+      total += product.sizeOptions.reduce((sum, option) => sum + (option.stockQuantity || 0), 0);
+    }
+    
+    // variations'dan da stok hesapla
+    if (product.variations && Array.isArray(product.variations)) {
+      total += product.variations.reduce((sum, variation) => sum + (variation.stockQuantity || 0), 0);
+    }
+    
+    return total;
   };
+
+  // Token'ı test et
+  const testToken = async () => {
+    if (!token) {
+      console.error('Token mevcut değil');
+      return;
+    }
+
+    console.log('=== TOKEN TEST ===');
+    console.log('Token:', token.substring(0, 50) + '...');
+    
+    try {
+      const response = await fetch('https://pasha-backend-production.up.railway.app/api/products', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      console.log('Token test response status:', response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Token geçerli - Ürün sayısı:', data.data?.length || 0);
+      } else {
+        console.error('❌ Token geçersiz veya API hatası');
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+      }
+    } catch (error) {
+      console.error('❌ Token test hatası:', error);
+    }
+  };
+
+  // Test için useEffect ekle
+  useEffect(() => {
+    if (token) {
+      testToken();
+    }
+  }, [token]);
 
   if (isLoading || !user) {
     return <div className="min-h-screen flex items-center justify-center">Yükleniyor...</div>;
@@ -240,12 +582,6 @@ export default function StokPage() {
                         Koleksiyon
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Toplam Stok
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Boyut Seçenekleri
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         İşlemler
                       </th>
                     </tr>
@@ -277,37 +613,28 @@ export default function StokPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{product.collection.name}</div>
-                          <div className="text-sm text-gray-500">{product.collection.code}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            {getTotalStock(product)} adet
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="space-y-1">
-                            {product.sizeOptions.slice(0, 3).map((option, index) => (
-                              <div key={index} className="text-xs text-gray-600">
-                                {option.width}x{option.height} cm: {option.stockQuantity} adet
-                              </div>
-                            ))}
-                            {product.sizeOptions.length > 3 && (
-                              <div className="text-xs text-gray-400">
-                                +{product.sizeOptions.length - 3} daha...
-                              </div>
-                            )}
-                          </div>
+                          <div className="text-sm text-gray-900">{product.collection?.name || 'Koleksiyon Yok'}</div>
+                          <div className="text-sm text-gray-500">{product.collection?.code || '-'}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <button
                             onClick={() => openStockModal(product)}
-                            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
+                            disabled={isLoadingProductDetail}
+                            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                            Stok Ekle
+                            {isLoadingProductDetail ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
+                                Yükleniyor...
+                              </>
+                            ) : (
+                              <>
+                                <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                Stok Ekle
+                              </>
+                            )}
                           </button>
                         </td>
                       </tr>
@@ -327,15 +654,20 @@ export default function StokPage() {
           </div>
         </div>
 
-        {/* Stok Ekleme Modalı */}
+        {/* Gelişmiş Stok Ekleme Modalı */}
         {isModalOpen && selectedProduct && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
               <div className="mt-3">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    Stok Ekle: {selectedProduct.name}
-                  </h3>
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">
+                      Stok Ekle: {selectedProduct.name}
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Koleksiyon: {selectedProduct.collection?.name || 'Koleksiyon Yok'}
+                    </p>
+                  </div>
                   <button
                     onClick={closeStockModal}
                     className="text-gray-400 hover:text-gray-600"
@@ -346,38 +678,80 @@ export default function StokPage() {
                   </button>
                 </div>
 
-                <div className="space-y-4">
-                  {/* Genişlik Seçimi */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Genişlik (cm)
-                    </label>
-                    <select
-                      value={stockForm.width}
-                      onChange={(e) => setStockForm(prev => ({ ...prev, width: Number(e.target.value) }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
+                {/* Mevcut Stok Durumu */}
+                {selectedProduct.sizeOptions && selectedProduct.sizeOptions.length > 0 && (
+                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <h4 className="text-sm font-medium text-gray-900 mb-3">Mevcut Stok Durumu (Güncel)</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                       {selectedProduct.sizeOptions.map((option) => (
-                        <option key={option.id} value={option.width}>
-                          {option.width} cm
-                        </option>
+                        <div key={option.id} className="text-xs bg-white p-2 rounded border">
+                          <div className="font-medium">{option.width}x{option.height} cm</div>
+                          <div className={`${option.stockQuantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {option.stockQuantity || 0} adet
+                          </div>
+                        </div>
                       ))}
-                    </select>
+                    </div>
                   </div>
+                )}
 
-                  {/* Yükseklik */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Yükseklik (cm)
-                    </label>
-                    <input
-                      type="number"
-                      value={stockForm.height}
-                      onChange={(e) => setStockForm(prev => ({ ...prev, height: Number(e.target.value) }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Yükseklik girin"
-                    />
-                  </div>
+                <div className="space-y-4">
+                  {/* Boyut Seçimi */}
+                  {selectedProduct.sizeOptions && selectedProduct.sizeOptions.length > 0 ? (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Boyut Seçeneği
+                      </label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {selectedProduct.sizeOptions.map((option) => (
+                          <button
+                            key={option.id}
+                            onClick={() => handleSizeOptionChange(option)}
+                            className={`p-3 text-sm border rounded-lg transition-colors ${
+                              selectedSizeOption?.id === option.id
+                                ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                : 'border-gray-300 hover:border-gray-400'
+                            }`}
+                          >
+                            <div className="font-medium">{option.width}x{option.height} cm</div>
+                            <div className="text-xs text-gray-500">
+                              Mevcut: {option.stockQuantity || 0} adet
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    /* Manuel boyut girişi */
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Genişlik (cm)
+                        </label>
+                        <input
+                          type="number"
+                          value={stockForm.width}
+                          onChange={(e) => setStockForm(prev => ({ ...prev, width: Number(e.target.value) }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Genişlik"
+                          min="1"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Yükseklik (cm)
+                        </label>
+                        <input
+                          type="number"
+                          value={stockForm.height}
+                          onChange={(e) => setStockForm(prev => ({ ...prev, height: Number(e.target.value) }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Yükseklik"
+                          min="1"
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   {/* Miktar */}
                   <div>
@@ -389,10 +763,28 @@ export default function StokPage() {
                       value={stockForm.quantity}
                       onChange={(e) => setStockForm(prev => ({ ...prev, quantity: Number(e.target.value) }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Miktar girin"
+                      placeholder="Eklenecek miktar"
                       min="1"
                     />
                   </div>
+
+                  {/* Seçilen boyut özeti */}
+                  {selectedSizeOption && (
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="text-sm">
+                        <span className="font-medium">Seçilen boyut:</span> {stockForm.width}x{stockForm.height} cm
+                      </div>
+                      <div className="text-sm">
+                        <span className="font-medium">Mevcut stok:</span> {selectedSizeOption.stockQuantity || 0} adet
+                      </div>
+                      <div className="text-sm">
+                        <span className="font-medium">Eklenecek:</span> {stockForm.quantity} adet
+                      </div>
+                      <div className="text-sm font-medium text-blue-700">
+                        <span>Yeni toplam:</span> {(selectedSizeOption.stockQuantity || 0) + stockForm.quantity} adet
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex justify-end space-x-3 mt-6">
@@ -404,10 +796,10 @@ export default function StokPage() {
                   </button>
                   <button
                     onClick={updateStock}
-                    disabled={isUpdatingStock || stockForm.quantity <= 0}
+                    disabled={isUpdatingStock || stockForm.quantity <= 0 || stockForm.width <= 0 || stockForm.height <= 0}
                     className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isUpdatingStock ? 'Güncelleniyor...' : 'Stok Ekle'}
+                    {isUpdatingStock ? 'Güncelleniyor...' : 'Stok Güncelle'}
                   </button>
                 </div>
               </div>
