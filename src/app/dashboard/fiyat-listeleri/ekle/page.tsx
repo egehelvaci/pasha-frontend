@@ -16,39 +16,34 @@ interface FormValues {
   limitAmount?: number;
   currency: string;
   collectionPrices: Record<string, number>;
+  adjustmentType: 'increase' | 'decrease';
+  adjustmentRate?: number;
 }
 
 // API yanıt tipi
-interface PriceListDetailItem {
-  price_list_detail_id: string;
-  price_list_id: string;
-  collection_id: string;
-  price_per_square_meter: number;
-  created_at: string;
-  updated_at: string;
-  Collection: {
-    collectionId: string;
-    name: string;
-    code: string;
-    description: string;
-  }
-}
-
 interface PriceListDetailResponse {
   success: boolean;
   data: {
-    price_list_id: string;
-    name: string;
-    description: string;
-    is_default: boolean;
-    valid_from: string | null;
-    valid_to: string | null;
-    limit_amount: number | null;
-    currency: string;
-    is_active: boolean;
-    created_at: string;
-    updated_at: string;
-    PriceListDetail: PriceListDetailItem[];
+    price_list: {
+      price_list_id: string;
+      name: string;
+      description: string;
+      is_default: boolean;
+      valid_from: string | null;
+      valid_to: string | null;
+      limit_amount: string | null;
+      currency: string;
+      is_active: boolean;
+      created_at: string;
+      updated_at: string;
+    };
+    collection_prices: {
+      price_list_detail_id: string;
+      collection_id: string;
+      collection_name: string;
+      collection_code: string;
+      price_per_square_meter: string;
+    }[];
   }
 }
 
@@ -121,8 +116,8 @@ export default function AddPriceListPage() {
         if (detailData.success) {
           // Koleksiyon fiyatlarını kaydet
           const prices: Record<string, number> = {};
-          detailData.data.PriceListDetail?.forEach((detail: PriceListDetailItem) => {
-            prices[detail.collection_id] = detail.price_per_square_meter;
+          detailData.data.collection_prices?.forEach((detail: any) => {
+            prices[detail.collection_id] = Number(detail.price_per_square_meter);
           });
           
           setDefaultPrices(prices);
@@ -130,7 +125,8 @@ export default function AddPriceListPage() {
           // Form alanına varsayılan değerleri ata
           form.setFieldsValue({
             collectionPrices: prices,
-            currency: detailData.data.currency || 'TRY'
+            currency: detailData.data.price_list.currency || 'TRY',
+            adjustmentType: 'increase'
           });
         }
       }
@@ -138,6 +134,32 @@ export default function AddPriceListPage() {
       console.error('Varsayılan fiyat listesi yüklenirken hata:', error);
       // Hata olsa bile devam et, sadece varsayılan fiyatlar gelmez
     }
+  };
+
+  // Zam/indirim uygulama fonksiyonu
+  const applyAdjustment = () => {
+    const adjustmentType = form.getFieldValue('adjustmentType');
+    const adjustmentRate = form.getFieldValue('adjustmentRate');
+    
+    if (!adjustmentRate || adjustmentRate <= 0) {
+      message.warning('Lütfen geçerli bir oran giriniz');
+      return;
+    }
+    
+    const currentPrices = form.getFieldValue('collectionPrices') || {};
+    const updatedPrices: Record<string, number> = {};
+    
+    Object.entries(currentPrices).forEach(([collectionId, price]) => {
+      if (price && price > 0) {
+        const multiplier = adjustmentType === 'increase' 
+          ? (1 + adjustmentRate / 100) 
+          : (1 - adjustmentRate / 100);
+        updatedPrices[collectionId] = Math.round(Number(price) * multiplier * 100) / 100;
+      }
+    });
+    
+    form.setFieldsValue({ collectionPrices: updatedPrices });
+    message.success(`%${adjustmentRate} ${adjustmentType === 'increase' ? 'zam' : 'indirim'} uygulandı`);
   };
 
   const onFinish = async (values: FormValues) => {
@@ -206,6 +228,7 @@ export default function AddPriceListPage() {
               onFinish={onFinish}
               initialValues={{
                 currency: 'TRY',
+                adjustmentType: 'increase',
               }}
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -263,6 +286,55 @@ export default function AddPriceListPage() {
                   />
                 </Form.Item>
 
+                {/* Zam/İndirim Bölümü */}
+                <div className="md:col-span-2">
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-200 mb-4">
+                    <h4 className="font-medium text-green-800 mb-3 flex items-center">
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      Toplu Fiyat Güncelleme
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                      <Form.Item
+                        label="İşlem Tipi"
+                        name="adjustmentType"
+                        className="mb-0"
+                      >
+                        <Select>
+                          <Select.Option value="increase">Zam</Select.Option>
+                          <Select.Option value="decrease">İndirim</Select.Option>
+                        </Select>
+                      </Form.Item>
+                      
+                      <Form.Item
+                        label="Oran (%)"
+                        name="adjustmentRate"
+                        className="mb-0"
+                      >
+                        <InputNumber
+                          className="w-full"
+                          min={0}
+                          max={100}
+                          step={0.1}
+                          placeholder="Örn: 10"
+                        />
+                      </Form.Item>
+                      
+                      <Button 
+                        type="primary" 
+                        onClick={applyAdjustment}
+                        className="bg-green-600 hover:bg-green-700 border-green-600"
+                      >
+                        Uygula
+                      </Button>
+                    </div>
+                    <p className="text-sm text-green-700 mt-2">
+                      Girilen oran ile tüm koleksiyon fiyatları otomatik olarak güncellenecektir.
+                    </p>
+                  </div>
+                </div>
+
                 <div className="md:col-span-2">
                   <h3 className="font-semibold mb-4">Koleksiyon Fiyatları</h3>
                   {Object.keys(defaultPrices).length > 0 && (
@@ -270,7 +342,7 @@ export default function AddPriceListPage() {
                       <div className="font-medium mb-1">Bilgi:</div>
                       <p>
                         Koleksiyon fiyatları varsayılan fiyat listesinden otomatik olarak doldurulmuştur. 
-                        İsterseniz bu fiyatları değiştirebilirsiniz.
+                        İsterseniz bu fiyatları değiştirebilir veya yukarıdaki toplu güncelleme özelliğini kullanabilirsiniz.
                       </p>
                     </div>
                   )}

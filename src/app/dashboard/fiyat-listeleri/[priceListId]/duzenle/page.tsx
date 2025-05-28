@@ -17,6 +17,8 @@ interface FormValues {
   currency: string;
   isActive: boolean;
   collectionPrices: Record<string, number>;
+  adjustmentType: 'increase' | 'decrease';
+  adjustmentRate?: number;
 }
 
 // API yanıt tipi
@@ -105,6 +107,33 @@ export default function EditPriceListPage() {
     if (isInitializedRef.current) {
       setCollectionPricesData(allValues.collectionPrices || {});
     }
+  };
+
+  // Zam/indirim uygulama fonksiyonu
+  const applyAdjustment = () => {
+    const adjustmentType = antForm.getFieldValue('adjustmentType');
+    const adjustmentRate = antForm.getFieldValue('adjustmentRate');
+    
+    if (!adjustmentRate || adjustmentRate <= 0) {
+      message.warning('Lütfen geçerli bir oran giriniz');
+      return;
+    }
+    
+    const currentPrices = antForm.getFieldValue('collectionPrices') || {};
+    const updatedPrices: Record<string, number> = {};
+    
+    Object.entries(currentPrices).forEach(([collectionId, price]) => {
+      if (price && typeof price === 'number' && price > 0) {
+        const multiplier = adjustmentType === 'increase' 
+          ? (1 + adjustmentRate / 100) 
+          : (1 - adjustmentRate / 100);
+        updatedPrices[collectionId] = Math.round(Number(price) * multiplier * 100) / 100;
+      }
+    });
+    
+    antForm.setFieldsValue({ collectionPrices: updatedPrices });
+    setCollectionPricesData(updatedPrices);
+    message.success(`%${adjustmentRate} ${adjustmentType === 'increase' ? 'zam' : 'indirim'} uygulandı`);
   };
 
   const fetchData = async () => {
@@ -307,6 +336,56 @@ export default function EditPriceListPage() {
                   disabled={priceList?.is_default}
                 />
               </Form.Item>
+
+              {/* Zam/İndirim Bölümü */}
+              <div className="md:col-span-2">
+                <div className="bg-green-50 p-4 rounded-lg border border-green-200 mb-4">
+                  <h4 className="font-medium text-green-800 mb-3 flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Toplu Fiyat Güncelleme
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                    <Form.Item
+                      label="İşlem Tipi"
+                      name="adjustmentType"
+                      className="mb-0"
+                      initialValue="increase"
+                    >
+                      <Select>
+                        <Select.Option value="increase">Zam</Select.Option>
+                        <Select.Option value="decrease">İndirim</Select.Option>
+                      </Select>
+                    </Form.Item>
+                    
+                    <Form.Item
+                      label="Oran (%)"
+                      name="adjustmentRate"
+                      className="mb-0"
+                    >
+                      <InputNumber
+                        className="w-full"
+                        min={0}
+                        max={100}
+                        step={0.1}
+                        placeholder="Örn: 10"
+                      />
+                    </Form.Item>
+                    
+                    <Button 
+                      type="primary" 
+                      onClick={applyAdjustment}
+                      className="bg-green-600 hover:bg-green-700 border-green-600"
+                    >
+                      Uygula
+                    </Button>
+                  </div>
+                  <p className="text-sm text-green-700 mt-2">
+                    Girilen oran ile mevcut fiyatlar güncellenerek yeni fiyatlar hesaplanacaktır.
+                  </p>
+                </div>
+              </div>
 
               <div className="md:col-span-2">
                 <h3 className="font-semibold mb-4">Koleksiyon Fiyatları</h3>

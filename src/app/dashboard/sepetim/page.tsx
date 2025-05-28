@@ -268,10 +268,24 @@ export default function CartPage() {
                               </div>
                             )}
                             <button 
-                              className="mt-2 text-xs text-red-600 hover:text-red-800 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="mt-2 text-xs text-red-600 hover:text-red-800 hover:bg-red-50 px-2 py-1 rounded-md flex items-center gap-1 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                               onClick={() => handleRemoveItem(item.id)}
                               disabled={updatingItems.has(item.id)}
                             >
+                              <svg 
+                                xmlns="http://www.w3.org/2000/svg" 
+                                className="h-3 w-3" 
+                                fill="none" 
+                                viewBox="0 0 24 24" 
+                                stroke="currentColor"
+                              >
+                                <path 
+                                  strokeLinecap="round" 
+                                  strokeLinejoin="round" 
+                                  strokeWidth={2} 
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" 
+                                />
+                              </svg>
                               {updatingItems.has(item.id) ? "Kaldırılıyor..." : "Kaldır"}
                             </button>
                           </div>
@@ -342,24 +356,10 @@ export default function CartPage() {
               <div className="px-6 py-4">
                 <h3 className="text-lg font-medium text-gray-900">Sipariş Özeti</h3>
                 <div className="mt-4 space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Ara Toplam</span>
-                    <span className="text-gray-900 font-medium">
-                      {parseFloat(cartData.totalPrice).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} 
-                      {cartData.items[0]?.product?.pricing?.currency || cartData.items[0]?.Product?.pricing?.currency || '₺'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">KDV (%18)</span>
-                    <span className="text-gray-900 font-medium">
-                      {(parseFloat(cartData.totalPrice) * 0.18).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} 
-                      {cartData.items[0]?.product?.pricing?.currency || cartData.items[0]?.Product?.pricing?.currency || '₺'}
-                    </span>
-                  </div>
-                  <div className="border-t border-gray-200 pt-3 flex justify-between">
+                  <div className="flex justify-between">
                     <span className="text-gray-900 font-medium">Toplam</span>
                     <span className="text-lg text-blue-900 font-bold">
-                      {(parseFloat(cartData.totalPrice) * 1.18).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} 
+                      {parseFloat(cartData.totalPrice).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} 
                       {cartData.items[0]?.product?.pricing?.currency || cartData.items[0]?.Product?.pricing?.currency || '₺'}
                     </span>
                   </div>

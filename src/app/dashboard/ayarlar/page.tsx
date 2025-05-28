@@ -35,7 +35,6 @@ interface UserFormData {
   email: string;
   userTypeName: string;
   storeId?: string;
-  isActive?: boolean;
   credit?: string;
   debit?: string;
 }
@@ -57,7 +56,9 @@ export default function Settings() {
     surname: '',
     email: '',
     userTypeName: 'viewer',
-    storeId: ''
+    storeId: '',
+    credit: '',
+    debit: ''
   });
   const [assignStoreModalOpen, setAssignStoreModalOpen] = useState(false);
   const [assigningUserId, setAssigningUserId] = useState<string | null>(null);
@@ -94,7 +95,6 @@ export default function Settings() {
           typeof selectedUser.userType === 'object'
             ? selectedUser.userType.name
             : selectedUser.userType || '',
-        isActive: typeof selectedUser.isActive === 'boolean' ? selectedUser.isActive : true,
         credit: selectedUser.credit ? String(selectedUser.credit) : '',
         debit: selectedUser.debit ? String(selectedUser.debit) : '',
         storeId: selectedUser.Store?.store_id || ''
@@ -107,7 +107,9 @@ export default function Settings() {
         surname: '',
         email: '',
         userTypeName: 'viewer',
-        storeId: ''
+        storeId: '',
+        credit: '',
+        debit: ''
       });
     }
   }, [selectedUser]);
@@ -413,7 +415,7 @@ export default function Settings() {
                     name="password"
                     id="password"
                     type="password"
-                    value={formData.password}
+                    value={formData.password || ''}
                     onChange={handleInputChange}
                     placeholder="Şifre"
                     className="border rounded px-3 py-2 text-black"
@@ -498,7 +500,7 @@ export default function Settings() {
                 <input
                   name="credit"
                   id="credit"
-                  value={formData.credit ?? ''}
+                  value={formData.credit || ''}
                   onChange={handleInputChange}
                   placeholder="Alacak"
                   className="border rounded px-3 py-2 text-black"
@@ -511,27 +513,13 @@ export default function Settings() {
                 <input
                   name="debit"
                   id="debit"
-                  value={formData.debit ?? ''}
+                  value={formData.debit || ''}
                   onChange={handleInputChange}
                   placeholder="Borç"
                   className="border rounded px-3 py-2 text-black"
                   type="number"
                   min="0"
                 />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="isActive" className="text-sm font-semibold text-gray-700">Durum</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    id="isActive"
-                    name="isActive"
-                    type="checkbox"
-                    checked={formData.isActive ?? true}
-                    onChange={e => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-black">{formData.isActive ? 'Aktif' : 'Pasif'}</span>
-                </div>
               </div>
               <button type="submit" className="bg-blue-900 text-white rounded-full px-6 py-2 font-semibold mt-2">
                 {selectedUser ? 'Güncelle' : 'Ekle'}

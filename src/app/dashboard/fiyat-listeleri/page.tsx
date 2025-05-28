@@ -38,7 +38,18 @@ export default function PriceListsPage() {
     setLoading(true);
     try {
       const data = await getPriceLists();
-      setPriceLists(data);
+      
+      // Varsayılan fiyat listesini en üste yerleştir
+      const sortedData = data.sort((a, b) => {
+        // Varsayılan liste (is_default: true) en üstte olacak
+        if (a.is_default && !b.is_default) return -1;
+        if (!a.is_default && b.is_default) return 1;
+        
+        // Diğerleri için alfabetik sıralama
+        return a.name.localeCompare(b.name, 'tr-TR');
+      });
+      
+      setPriceLists(sortedData);
     } catch (error: any) {
       console.error('Fiyat listeleri yüklenirken hata:', error);
       message.error(error.message || 'Fiyat listeleri yüklenirken bir hata oluştu');
@@ -54,7 +65,19 @@ export default function PriceListsPage() {
     try {
       await deletePriceList(priceListToDelete.price_list_id);
       message.success('Fiyat listesi başarıyla silindi');
-      setPriceLists(priceLists.filter(list => list.price_list_id !== priceListToDelete.price_list_id));
+      
+      // Listeden sil ve sıralamayı koru
+      const filteredLists = priceLists.filter(list => list.price_list_id !== priceListToDelete.price_list_id);
+      const sortedData = filteredLists.sort((a, b) => {
+        // Varsayılan liste (is_default: true) en üstte olacak
+        if (a.is_default && !b.is_default) return -1;
+        if (!a.is_default && b.is_default) return 1;
+        
+        // Diğerleri için alfabetik sıralama
+        return a.name.localeCompare(b.name, 'tr-TR');
+      });
+      
+      setPriceLists(sortedData);
       setDeleteModalVisible(false);
       setPriceListToDelete(null);
       
