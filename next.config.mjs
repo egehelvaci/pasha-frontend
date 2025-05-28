@@ -18,15 +18,30 @@ const nextConfig = {
     // Ant Design React uyumsuzluk uyarısını bastır
     if (dev && !isServer) {
       const originalWarn = console.warn;
+      const originalError = console.error;
+      
       console.warn = (...args) => {
         if (
           args[0] &&
           typeof args[0] === 'string' &&
-          args[0].includes('[antd: compatible]')
+          (args[0].includes('[antd: compatible]') || 
+           args[0].includes('antd v5 support React is 16 ~ 18'))
         ) {
           return;
         }
         originalWarn(...args);
+      };
+
+      console.error = (...args) => {
+        if (
+          args[0] &&
+          typeof args[0] === 'string' &&
+          (args[0].includes('[antd: compatible]') || 
+           args[0].includes('antd v5 support React is 16 ~ 18'))
+        ) {
+          return;
+        }
+        originalError(...args);
       };
     }
     return config;
