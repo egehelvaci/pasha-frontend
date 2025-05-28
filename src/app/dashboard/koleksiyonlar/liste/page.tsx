@@ -23,8 +23,7 @@ function AddCollectionModal({ open, onClose, onSuccess }: { open: boolean, onClo
   const [form, setForm] = useState({
     name: "",
     description: "",
-    code: "",
-    catalogOrder: ""
+    code: ""
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -41,10 +40,7 @@ function AddCollectionModal({ open, onClose, onSuccess }: { open: boolean, onClo
       const res = await fetch("https://pasha-backend-production.up.railway.app/api/collections", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          catalogOrder: Number(form.catalogOrder)
-        })
+        body: JSON.stringify(form)
       });
       if (!res.ok) throw new Error("Koleksiyon eklenemedi");
       onSuccess();
@@ -52,8 +48,7 @@ function AddCollectionModal({ open, onClose, onSuccess }: { open: boolean, onClo
       setForm({
         name: "",
         description: "",
-        code: "",
-        catalogOrder: ""
+        code: ""
       });
     } catch (err: any) {
       setError(err.message || "Bir hata oluştu");
@@ -72,7 +67,6 @@ function AddCollectionModal({ open, onClose, onSuccess }: { open: boolean, onClo
           <input name="name" value={form.name} onChange={handleChange} required placeholder="Ad" className="border rounded px-3 py-2 text-black" />
           <textarea name="description" value={form.description} onChange={handleChange} required placeholder="Açıklama" className="border rounded px-3 py-2 text-black" />
           <input name="code" value={form.code} onChange={handleChange} required placeholder="Kod" className="border rounded px-3 py-2 text-black" />
-          <input name="catalogOrder" type="text" min={1} value={form.catalogOrder} onChange={handleChange} placeholder="Katalog Sırası" className="border rounded px-3 py-2 text-black" />
           {error && <div className="text-red-500 text-sm">{error}</div>}
           <button type="submit" disabled={loading} className="bg-blue-900 text-white rounded-full px-6 py-2 font-semibold mt-2">
             {loading ? "Ekleniyor..." : "Ekle"}
