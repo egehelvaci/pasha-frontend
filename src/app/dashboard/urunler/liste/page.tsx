@@ -228,7 +228,7 @@ export default function ProductList() {
     
     return (
       <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg relative overflow-y-auto max-h-[90vh]">
+        <div className="bg-white rounded-xl p-6 w-full max-w-6xl shadow-lg relative overflow-y-auto max-h-[90vh]">
           <button 
             className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-xl" 
             onClick={onClose}
@@ -238,101 +238,197 @@ export default function ProductList() {
           
           <h2 className="text-xl font-bold mb-6 text-black">Yeni Ürün Ekle</h2>
           
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Ürün Adı <span className="text-red-500">*</span>
-              </label>
-              <input 
-                type="text"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
-                placeholder="Ürün adını girin"
-              />
+          <div className="flex gap-6">
+            {/* Sol taraf - Form */}
+            <div className="w-1/2">
+              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ürün Adı <span className="text-red-500">*</span>
+                  </label>
+                  <input 
+                    type="text"
+                    name="name"
+                    value={form.name}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
+                    placeholder="Ürün adını girin"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ürün Açıklaması <span className="text-red-500">*</span>
+                  </label>
+                  <textarea 
+                    name="description"
+                    value={form.description}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900 min-h-[100px]"
+                    placeholder="Ürün açıklamasını girin"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Koleksiyon <span className="text-red-500">*</span>
+                  </label>
+                  <select 
+                    name="collectionId"
+                    value={form.collectionId}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
+                  >
+                    <option value="">Koleksiyon Seçin</option>
+                  {collections.map(col => (
+                      <option key={col.collectionId} value={col.collectionId}>
+                        {col.name}
+                      </option>
+                  ))}
+                </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Kural ID
+                  </label>
+                  <select 
+                    name="rule_id"
+                    value={form.rule_id}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
+                  >
+                    <option value="">Kural Seçin</option>
+                    <option value="1">1 - Standart Hazır</option>
+                    <option value="2">2 - Standart Kesim</option>
+                    <option value="3">3 - Tavşan Post</option>
+                    <option value="4">4 - Tavşan Kesim Post</option>
+                    <option value="5">5 - Tavşan Halı</option>
+                    <option value="6">6 - Banyo/Paspas</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ürün Görseli
+                  </label>
+                  <input 
+                    type="file"
+                    name="productImage"
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
+                    accept="image/*"
+                  />
+                </div>
+                
+                {error && (
+                  <div className="text-red-500 text-sm mt-1">{error}</div>
+                )}
+                
+                <div className="flex justify-end mt-4">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="mr-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  >
+                    İptal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-4 py-2 bg-blue-900 text-white rounded-md hover:bg-blue-800 disabled:opacity-70"
+                  >
+                  {loading ? "Ekleniyor..." : "Ekle"}
+                </button>
+                </div>
+              </form>
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Ürün Açıklaması <span className="text-red-500">*</span>
-              </label>
-              <textarea 
-                name="description"
-                value={form.description}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900 min-h-[100px]"
-                placeholder="Ürün açıklamasını girin"
-              />
+            {/* Sağ taraf - Kural Tablosu */}
+            <div className="w-1/2">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Kural ID Açıklamaları</h3>
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="max-h-[500px] overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 sticky top-0">
+                      <tr>
+                        <th className="px-3 py-2 text-left font-medium text-gray-700 border-b">ID</th>
+                        <th className="px-3 py-2 text-left font-medium text-gray-700 border-b">Kural Açıklaması</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      <tr className="hover:bg-gray-50">
+                        <td className="px-3 py-3 font-medium text-blue-600">1</td>
+                        <td className="px-3 py-3">
+                          <div className="space-y-1">
+                            <div className="font-medium text-gray-900">Standart Hazır</div>
+                            <div className="text-xs text-gray-600">• Saçaklı/Saçaksız seçenekler</div>
+                            <div className="text-xs text-gray-600">• Standart ölçüler</div>
+                            <div className="text-xs text-gray-600">• Kesim: Standart, Oval, Daire</div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr className="hover:bg-gray-50">
+                        <td className="px-3 py-3 font-medium text-blue-600">2</td>
+                        <td className="px-3 py-3">
+                          <div className="space-y-1">
+                            <div className="font-medium text-gray-900">Standart Kesim</div>
+                            <div className="text-xs text-gray-600">• Saçaklı/Saçaksız seçenekler</div>
+                            <div className="text-xs text-gray-600">• Standart En + Opsiyonel Boy</div>
+                            <div className="text-xs text-gray-600">• Kesim: Standart, Oval, Daire</div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr className="hover:bg-gray-50">
+                        <td className="px-3 py-3 font-medium text-blue-600">3</td>
+                        <td className="px-3 py-3">
+                          <div className="space-y-1">
+                            <div className="font-medium text-gray-900">Tavşan Post</div>
+                            <div className="text-xs text-gray-600">• Saçak yok</div>
+                            <div className="text-xs text-gray-600">• Standart Tavşan Ölçüleri</div>
+                            <div className="text-xs text-gray-600">• Kesim: Post Kesim</div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr className="hover:bg-gray-50">
+                        <td className="px-3 py-3 font-medium text-blue-600">4</td>
+                        <td className="px-3 py-3">
+                          <div className="space-y-1">
+                            <div className="font-medium text-gray-900">Tavşan Kesim Post</div>
+                            <div className="text-xs text-gray-600">• Saçak yok</div>
+                            <div className="text-xs text-gray-600">• 80×Ops, 100×Ops, 180×Ops</div>
+                            <div className="text-xs text-gray-600">• Kesim: Post, Standart, Oval, Daire</div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr className="hover:bg-gray-50">
+                        <td className="px-3 py-3 font-medium text-blue-600">5</td>
+                        <td className="px-3 py-3">
+                          <div className="space-y-1">
+                            <div className="font-medium text-gray-900">Tavşan Halı</div>
+                            <div className="text-xs text-gray-600">• Saçak yok</div>
+                            <div className="text-xs text-gray-600">• Standart En + Opsiyonel Boy</div>
+                            <div className="text-xs text-gray-600">• Kesim: Standart, Oval, Daire</div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr className="hover:bg-gray-50">
+                        <td className="px-3 py-3 font-medium text-blue-600">6</td>
+                        <td className="px-3 py-3">
+                          <div className="space-y-1">
+                            <div className="font-medium text-gray-900">Banyo/Paspas</div>
+                            <div className="text-xs text-gray-600">• Saçaklı/Saçaksız seçenekler</div>
+                            <div className="text-xs text-gray-600">• Tek Ebat: 100×100</div>
+                            <div className="text-xs text-gray-600">• Kesim: Standart</div>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Koleksiyon <span className="text-red-500">*</span>
-              </label>
-              <select 
-                name="collectionId"
-                value={form.collectionId}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
-              >
-                <option value="">Koleksiyon Seçin</option>
-              {collections.map(col => (
-                  <option key={col.collectionId} value={col.collectionId}>
-                    {col.name}
-                  </option>
-              ))}
-            </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Kural ID
-              </label>
-              <input 
-                type="text"
-                name="rule_id"
-                value={form.rule_id}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
-                placeholder="Opsiyonel"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Ürün Görseli
-              </label>
-              <input 
-                type="file"
-                name="productImage"
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
-                accept="image/*"
-              />
-            </div>
-            
-            {error && (
-              <div className="text-red-500 text-sm mt-1">{error}</div>
-            )}
-            
-            <div className="flex justify-end mt-4">
-              <button
-                type="button"
-                onClick={onClose}
-                className="mr-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-              >
-                İptal
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-4 py-2 bg-blue-900 text-white rounded-md hover:bg-blue-800 disabled:opacity-70"
-              >
-              {loading ? "Ekleniyor..." : "Ekle"}
-            </button>
-            </div>
-          </form>
+          </div>
         </div>
       </div>
     );
@@ -898,7 +994,7 @@ export default function ProductList() {
     if (!open) return null;
     
     if (showDeleteConfirm) {
-  return (
+      return (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg relative">
             <h2 className="text-xl font-bold mb-4 text-black">Ürünü Sil</h2>
@@ -933,7 +1029,7 @@ export default function ProductList() {
     
     return (
       <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg relative overflow-y-auto max-h-[90vh]">
+        <div className="bg-white rounded-xl p-6 w-full max-w-6xl shadow-lg relative overflow-y-auto max-h-[90vh]">
           <button 
             className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-xl" 
             onClick={onClose}
@@ -951,111 +1047,207 @@ export default function ProductList() {
             </button>
           </div>
           
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Ürün Adı
-              </label>
-              <input 
-                type="text"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
-                placeholder="Ürün adını girin"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Ürün Açıklaması
-              </label>
-              <textarea 
-                name="description"
-                value={form.description}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900 min-h-[100px]"
-                placeholder="Ürün açıklamasını girin"
-              />
-      </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Koleksiyon
-              </label>
-              <select 
-                name="collectionId"
-                value={form.collectionId}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
-              >
-                <option value="">Koleksiyon Seçin</option>
-          {collections.map(col => (
-                  <option key={col.collectionId} value={col.collectionId}>
-                    {col.name}
-                  </option>
-          ))}
-        </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Kural ID
-              </label>
-          <input
-            type="text"
-                name="rule_id"
-                value={form.rule_id}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
-                placeholder="Opsiyonel"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Ürün Görseli
-              </label>
-              <input 
-                type="file"
-                name="productImage"
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
-                accept="image/*"
-              />
-              {product.productImage && (
-                <div className="mt-2">
-                  <p className="text-xs text-gray-500 mb-1">Mevcut görsel:</p>
-                  <img 
-                    src={product.productImage} 
-                    alt={product.name} 
-                    className="h-24 w-auto object-cover rounded-md border border-gray-200"
+          <div className="flex gap-6">
+            {/* Sol taraf - Form */}
+            <div className="w-1/2">
+              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ürün Adı
+                  </label>
+                  <input 
+                    type="text"
+                    name="name"
+                    value={form.name}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
+                    placeholder="Ürün adını girin"
                   />
                 </div>
-              )}
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ürün Açıklaması
+                  </label>
+                  <textarea 
+                    name="description"
+                    value={form.description}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900 min-h-[100px]"
+                    placeholder="Ürün açıklamasını girin"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Koleksiyon
+                  </label>
+                  <select 
+                    name="collectionId"
+                    value={form.collectionId}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
+                  >
+                    <option value="">Koleksiyon Seçin</option>
+                    {collections.map(col => (
+                      <option key={col.collectionId} value={col.collectionId}>
+                        {col.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Kural ID
+                  </label>
+                  <select 
+                    name="rule_id"
+                    value={form.rule_id}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
+                  >
+                    <option value="">Kural Seçin</option>
+                    <option value="1">1 - Standart Hazır</option>
+                    <option value="2">2 - Standart Kesim</option>
+                    <option value="3">3 - Tavşan Post</option>
+                    <option value="4">4 - Tavşan Kesim Post</option>
+                    <option value="5">5 - Tavşan Halı</option>
+                    <option value="6">6 - Banyo/Paspas</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ürün Görseli
+                  </label>
+                  <input 
+                    type="file"
+                    name="productImage"
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
+                    accept="image/*"
+                  />
+                  {product.productImage && (
+                    <div className="mt-2">
+                      <p className="text-xs text-gray-500 mb-1">Mevcut görsel:</p>
+                      <img 
+                        src={product.productImage} 
+                        alt={product.name} 
+                        className="h-24 w-auto object-cover rounded-md border border-gray-200"
+                      />
+                    </div>
+                  )}
+                </div>
+                
+                {error && (
+                  <div className="text-red-500 text-sm mt-1">{error}</div>
+                )}
+                
+                <div className="flex justify-end mt-4">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="mr-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  >
+                    İptal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-70"
+                  >
+                    {loading ? "Güncelleniyor..." : "Güncelle"}
+                  </button>
+                </div>
+              </form>
             </div>
             
-            {error && (
-              <div className="text-red-500 text-sm mt-1">{error}</div>
-            )}
-            
-            <div className="flex justify-end mt-4">
-              <button
-                type="button"
-                onClick={onClose}
-                className="mr-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-              >
-                İptal
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-70"
-              >
-                {loading ? "Güncelleniyor..." : "Güncelle"}
-              </button>
+            {/* Sağ taraf - Kural Tablosu */}
+            <div className="w-1/2">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Kural ID Açıklamaları</h3>
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="max-h-[500px] overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 sticky top-0">
+                      <tr>
+                        <th className="px-3 py-2 text-left font-medium text-gray-700 border-b">ID</th>
+                        <th className="px-3 py-2 text-left font-medium text-gray-700 border-b">Kural Açıklaması</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      <tr className="hover:bg-gray-50">
+                        <td className="px-3 py-3 font-medium text-blue-600">1</td>
+                        <td className="px-3 py-3">
+                          <div className="space-y-1">
+                            <div className="font-medium text-gray-900">Standart Hazır</div>
+                            <div className="text-xs text-gray-600">• Saçaklı/Saçaksız seçenekler</div>
+                            <div className="text-xs text-gray-600">• Standart ölçüler</div>
+                            <div className="text-xs text-gray-600">• Kesim: Standart, Oval, Daire</div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr className="hover:bg-gray-50">
+                        <td className="px-3 py-3 font-medium text-blue-600">2</td>
+                        <td className="px-3 py-3">
+                          <div className="space-y-1">
+                            <div className="font-medium text-gray-900">Standart Kesim</div>
+                            <div className="text-xs text-gray-600">• Saçaklı/Saçaksız seçenekler</div>
+                            <div className="text-xs text-gray-600">• Standart En + Opsiyonel Boy</div>
+                            <div className="text-xs text-gray-600">• Kesim: Standart, Oval, Daire</div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr className="hover:bg-gray-50">
+                        <td className="px-3 py-3 font-medium text-blue-600">3</td>
+                        <td className="px-3 py-3">
+                          <div className="space-y-1">
+                            <div className="font-medium text-gray-900">Tavşan Post</div>
+                            <div className="text-xs text-gray-600">• Saçak yok</div>
+                            <div className="text-xs text-gray-600">• Standart Tavşan Ölçüleri</div>
+                            <div className="text-xs text-gray-600">• Kesim: Post Kesim</div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr className="hover:bg-gray-50">
+                        <td className="px-3 py-3 font-medium text-blue-600">4</td>
+                        <td className="px-3 py-3">
+                          <div className="space-y-1">
+                            <div className="font-medium text-gray-900">Tavşan Kesim Post</div>
+                            <div className="text-xs text-gray-600">• Saçak yok</div>
+                            <div className="text-xs text-gray-600">• 80×Ops, 100×Ops, 180×Ops</div>
+                            <div className="text-xs text-gray-600">• Kesim: Post, Standart, Oval, Daire</div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr className="hover:bg-gray-50">
+                        <td className="px-3 py-3 font-medium text-blue-600">5</td>
+                        <td className="px-3 py-3">
+                          <div className="space-y-1">
+                            <div className="font-medium text-gray-900">Tavşan Halı</div>
+                            <div className="text-xs text-gray-600">• Saçak yok</div>
+                            <div className="text-xs text-gray-600">• Standart En + Opsiyonel Boy</div>
+                            <div className="text-xs text-gray-600">• Kesim: Standart, Oval, Daire</div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr className="hover:bg-gray-50">
+                        <td className="px-3 py-3 font-medium text-blue-600">6</td>
+                        <td className="px-3 py-3">
+                          <div className="space-y-1">
+                            <div className="font-medium text-gray-900">Banyo/Paspas</div>
+                            <div className="text-xs text-gray-600">• Saçaklı/Saçaksız seçenekler</div>
+                            <div className="text-xs text-gray-600">• Tek Ebat: 100×100</div>
+                            <div className="text-xs text-gray-600">• Kesim: Standart</div>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
-          </form>
+          </div>
         </div>
       </div>
     );
