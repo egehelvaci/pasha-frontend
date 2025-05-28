@@ -150,11 +150,12 @@ export default function AddPriceListPage() {
     const updatedPrices: Record<string, number> = {};
     
     Object.entries(currentPrices).forEach(([collectionId, price]) => {
-      if (price && price > 0) {
+      const numericPrice = Number(price);
+      if (!isNaN(numericPrice) && numericPrice > 0) {
         const multiplier = adjustmentType === 'increase' 
           ? (1 + adjustmentRate / 100) 
           : (1 - adjustmentRate / 100);
-        updatedPrices[collectionId] = Math.round(Number(price) * multiplier * 100) / 100;
+        updatedPrices[collectionId] = Math.round(numericPrice * multiplier * 100) / 100;
       }
     });
     
