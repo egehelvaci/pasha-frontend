@@ -828,4 +828,76 @@ export async function removeUserFromStore(userId: string): Promise<RemoveUserFro
     console.error('Kullanıcının mağaza ataması kaldırılırken hata oluştu:', error);
     throw error;
   }
+}
+
+// Şifre sıfırlama interface'leri
+export interface ForgotPasswordData {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface ValidateResetTokenResponse {
+  success: boolean;
+  message: string;
+  email?: string;
+}
+
+export interface ResetPasswordData {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface ResetPasswordResponse {
+  success: boolean;
+  message: string;
+}
+
+// Şifre sıfırlama API fonksiyonları
+export async function forgotPassword(data: ForgotPasswordData): Promise<ForgotPasswordResponse> {
+  const response = await fetch('https://pasha-backend-production.up.railway.app/api/auth/forgot-password', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error('Şifre sıfırlama talebi gönderilemedi');
+  }
+
+  return response.json();
+}
+
+export async function validateResetToken(token: string): Promise<ValidateResetTokenResponse> {
+  const response = await fetch(`https://pasha-backend-production.up.railway.app/api/auth/validate-reset-token/${token}`, {
+    method: 'GET',
+  });
+
+  if (!response.ok) {
+    throw new Error('Token doğrulanamadı');
+  }
+
+  return response.json();
+}
+
+export async function resetPassword(data: ResetPasswordData): Promise<ResetPasswordResponse> {
+  const response = await fetch('https://pasha-backend-production.up.railway.app/api/auth/reset-password', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error('Şifre sıfırlanamadı');
+  }
+
+  return response.json();
 } 

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { useAuth } from "./context/AuthContext";
 
 export default function Login() {
@@ -117,9 +118,9 @@ export default function Login() {
                 </label>
               </div>
               <div className="text-sm">
-                <a href="#" className="text-blue-500 hover:text-blue-600">
+                <Link href="/forgot-password" className="text-blue-500 hover:text-blue-600">
                   Şifremi Unuttum
-                </a>
+                </Link>
               </div>
             </div>
 
