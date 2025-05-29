@@ -35,6 +35,7 @@ const Header = ({ title, user }: HeaderProps) => {
   const [cartItems, setCartItems] = useState<number>(0);
   const [isMounted, setIsMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   
   // Component mount kontrolü
   useEffect(() => {
@@ -176,15 +177,6 @@ const Header = ({ title, user }: HeaderProps) => {
       ),
     },
     {
-      name: 'Sepetim',
-      href: '/dashboard/sepetim',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-          <path fillRule="evenodd" d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 004.25 22.5h15.5a1.875 1.875 0 001.865-2.071l-1.263-12a1.875 1.875 0 00-1.865-1.679H16.5V6a4.5 4.5 0 10-9 0zM12 3a3 3 0 00-3 3v.75h6V6a3 3 0 00-3-3zm-3 8.25a3 3 0 106 0v-.75a.75.75 0 011.5 0v.75a4.5 4.5 0 11-9 0v-.75a.75.75 0 011.5 0v.75z" clipRule="evenodd" />
-        </svg>
-      ),
-    },
-    {
       name: 'Stok',
       href: '/dashboard/stok',
       icon: (
@@ -314,26 +306,33 @@ const Header = ({ title, user }: HeaderProps) => {
               
               {/* Dropdown menü */}
               <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                <button 
+                  onClick={() => setIsProfileModalOpen(true)}
+                  className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                >
                   <div className="flex items-center space-x-2">
-                    <FaUser className="w-4 h-4" />
+                    <FaUser size={16} />
                     <span>Profiliniz</span>
                   </div>
-                </a>
-                <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                </button>
+                {isAdmin && (
+                <Link href="/dashboard/ayarlar" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                   <div className="flex items-center space-x-2">
-                    <FaCog className="w-4 h-4" />
+                    <FaCog size={16} />
                     <span>Ayarlar</span>
                   </div>
-                </a>
+                </Link>
+                )}
                 <hr className="my-1 border-gray-200" />
                 <button
                   onClick={handleLogout}
                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                 >
                   <div className="flex items-center space-x-2">
-                    <FaSignOutAlt className="w-4 h-4" />
-                    <span>Çıkış Yap</span>
+                    <span className="mr-2">
+                      <FaSignOutAlt size={16} />
+                    </span>
+                    Çıkış Yap
                   </div>
                 </button>
               </div>
@@ -390,21 +389,7 @@ const Header = ({ title, user }: HeaderProps) => {
                   {item.name}
                 </Link>
               );
-            })}
-            {/* Admin ayarlar */}
-            {isAdmin && (
-              <Link
-                href="/dashboard/ayarlar"
-                className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
-                  pathname === '/dashboard/ayarlar'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                <span className="mr-2"><FaCog /></span>
-                Ayarlar
-              </Link>
-            )}
+            })}            
           </div>
         </nav>
       </div>
@@ -505,7 +490,7 @@ const Header = ({ title, user }: HeaderProps) => {
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      <span className="mr-3"><FaCog /></span>
+                      <span className="mr-3"><FaCog size={16} /></span>
                       Ayarlar
                     </Link>
                   )}
@@ -521,10 +506,90 @@ const Header = ({ title, user }: HeaderProps) => {
                   }}
                   className="w-full flex items-center justify-center px-4 py-3 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
                 >
-                  <FaSignOutAlt className="mr-2" />
+                  <span className="mr-2">
+                    <FaSignOutAlt size={16} />
+                  </span>
                   Çıkış Yap
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Profil Modal */}
+      {isProfileModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Kullanıcı Profili</h3>
+              <button
+                onClick={() => setIsProfileModalOpen(false)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* Modal Content */}
+            <div className="p-6">
+              {/* Profil Fotoğrafı */}
+              <div className="flex justify-center mb-6">
+                <div className="h-20 w-20 rounded-full bg-blue-600 flex items-center justify-center text-white text-2xl font-bold">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+              </div>
+              
+              {/* Kullanıcı Bilgileri */}
+              <div className="space-y-4">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Ad Soyad</label>
+                  <p className="text-gray-900 font-medium">{user.name}</p>
+                </div>
+                
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Kullanıcı Tipi</label>
+                  <p className="text-gray-900">
+                    {user.userType.id === 1 ? 'Admin' : 'Kullanıcı'}
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Borç</label>
+                    <p className="text-red-600 font-bold">
+                      {parseFloat(user.debit).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                    </p>
+                  </div>
+                  
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Alacak</label>
+                    <p className="text-green-600 font-bold">
+                      {parseFloat(user.credit).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Bakiye Farkı</label>
+                  <p className={`font-bold ${(parseFloat(user.credit) - parseFloat(user.debit)) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {(parseFloat(user.credit) - parseFloat(user.debit)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+              <button
+                onClick={() => setIsProfileModalOpen(false)}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                Kapat
+              </button>
             </div>
           </div>
         </div>
