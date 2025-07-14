@@ -285,14 +285,6 @@ const SiparisOlustur = () => {
                   <p className="text-sm text-gray-600">Limit bilgisi yükleniyor...</p>
                 </div>
               )}
-              
-              <button
-                onClick={performLimitCheck}
-                disabled={checkingLimits}
-                className="mt-4 w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 disabled:opacity-50 transition-colors text-sm"
-              >
-                {checkingLimits ? 'Kontrol Ediliyor...' : 'Limitleri Yeniden Kontrol Et'}
-              </button>
             </div>
 
             {/* Otomatik Bilgiler */}
@@ -312,16 +304,6 @@ const SiparisOlustur = () => {
                   <p className="text-sm text-green-800">
                     Ödeme mevcut açık hesap limitinizden otomatik olarak düşülecektir.
                   </p>
-                </div>
-
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                  <h3 className="text-sm font-medium text-purple-900 mb-2">⚙️ Otomatik İşlemler</h3>
-                  <ul className="text-sm text-purple-800 space-y-1">
-                    <li>• Açık hesap tutarı sipariş tutarı kadar düşürülecek</li>
-                    <li>• Fiyat listesi limiti güncellenecek</li>
-                    <li>• Sepet pasif duruma geçecek</li>
-                    <li>• Mağaza adres bilgileri siparişe eklenecek</li>
-                  </ul>
                 </div>
               </div>
             </div>
