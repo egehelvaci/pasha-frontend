@@ -339,7 +339,8 @@ export default function StokPage() {
     setStockForm(prev => ({
       ...prev,
       width: sizeOption.width,
-      height: sizeOption.height
+      height: sizeOption.height,
+      quantity: sizeOption.stockQuantity || 0
     }));
   };
 
@@ -828,7 +829,6 @@ export default function StokPage() {
                       onChange={(e) => setStockForm(prev => ({ ...prev, quantity: Number(e.target.value) }))}
                       className="w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Eklenecek miktar"
-                      min="1"
                     />
                   </div>
 
@@ -850,7 +850,7 @@ export default function StokPage() {
                         </div>
                         <div className="pt-1 border-t border-blue-200">
                           <span className="font-medium text-blue-700">Yeni toplam:</span> 
-                          <span className="ml-1 text-blue-900 font-semibold">{(selectedSizeOption.stockQuantity || 0) + stockForm.quantity} adet</span>
+                          <span className="ml-1 text-blue-900 font-semibold">{stockForm.quantity} adet</span>
                         </div>
                       </div>
                     </div>

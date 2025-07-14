@@ -73,7 +73,9 @@ interface Order {
   qr_codes?: Array<{
     id: string;
     qr_code: string;
-    quantity: number;
+    qrCodeImageUrl: string;
+    required_scans: number;
+    scan_count: number;
     is_scanned: boolean;
     scanned_at: string | null;
     created_at: string;
@@ -125,7 +127,6 @@ interface OrderStats {
   total: number;
   pending: number;
   confirmed: number;
-  shipped: number;
   delivered: number;
   canceled: number;
 }
@@ -133,7 +134,6 @@ interface OrderStats {
 const statusLabels: { [key: string]: string } = {
   'PENDING': 'Beklemede',
   'CONFIRMED': 'Onaylandı',
-  'SHIPPED': 'Kargoya Verildi',
   'DELIVERED': 'Teslim Edildi',
   'CANCELED': 'İptal Edildi'
 };
@@ -141,7 +141,6 @@ const statusLabels: { [key: string]: string } = {
 const statusColors: { [key: string]: string } = {
   'PENDING': 'bg-yellow-100 text-yellow-800',
   'CONFIRMED': 'bg-blue-100 text-blue-800',
-  'SHIPPED': 'bg-purple-100 text-purple-800',
   'DELIVERED': 'bg-green-100 text-green-800',
   'CANCELED': 'bg-red-100 text-red-800'
 };
@@ -168,7 +167,6 @@ const Siparisler = () => {
       total: orders.length,
       pending: 0,
       confirmed: 0,
-      shipped: 0,
       delivered: 0,
       canceled: 0
     };
@@ -180,9 +178,6 @@ const Siparisler = () => {
           break;
         case 'CONFIRMED':
           stats.confirmed++;
-          break;
-        case 'SHIPPED':
-          stats.shipped++;
           break;
         case 'DELIVERED':
           stats.delivered++;
@@ -324,6 +319,35 @@ const Siparisler = () => {
     }
   };
 
+  // QR kod oluşturma fonksiyonu
+  const generateQRCodes = async (orderId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`https://pasha-backend-production.up.railway.app/api/admin/orders/${orderId}/generate-qr-images`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('QR kodları oluşturulamadı');
+      }
+
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || 'QR kodları oluşturulamadı');
+      }
+
+      console.log('QR kodları başarıyla oluşturuldu:', data.data);
+      return data.data;
+    } catch (error) {
+      console.error('QR kod oluşturma hatası:', error);
+      throw error;
+    }
+  };
+
   // Admin için sipariş durumu güncelleme
   const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
     if (!isAdmin) return;
@@ -331,6 +355,8 @@ const Siparisler = () => {
     setUpdatingStatus(true);
     try {
       const token = localStorage.getItem('token');
+      
+      // İlk olarak sipariş durumunu güncelle
       const response = await fetch(`https://pasha-backend-production.up.railway.app/api/admin/orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
@@ -346,13 +372,30 @@ const Siparisler = () => {
 
       const data = await response.json();
       if (data.success) {
+        // Eğer sipariş CONFIRMED durumuna geçiyorsa QR kodları oluştur
+        if (newStatus === 'CONFIRMED') {
+          try {
+            console.log('Sipariş onaylandı, QR kodları oluşturuluyor...');
+            await generateQRCodes(orderId);
+            console.log('QR kodları başarıyla oluşturuldu');
+            // QR kodları oluşturulduktan sonra alert mesajını güncelle
+            alert('Sipariş durumu güncellendi ve QR kodları oluşturuldu!');
+          } catch (qrError) {
+            console.error('QR kod oluşturma hatası:', qrError);
+            // QR kod hatası sipariş güncellemeyi engellemez, sadece uyarı verelim
+            alert('Sipariş durumu güncellendi ancak QR kodları oluşturulurken bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
+          }
+        } else {
+          // Diğer durumlarda normal alert mesajı
+          alert('Sipariş durumu başarıyla güncellendi!');
+        }
+
         // Siparişleri yeniden yükle
         await fetchOrders(currentPage, statusFilter, searchQuery);
         // Modal'daki sipariş detayını da güncelle
         if (selectedOrder && selectedOrder.id === orderId) {
           await handleViewOrderDetail(orderId);
         }
-        alert('Sipariş durumu başarıyla güncellendi!');
       } else {
         throw new Error(data.message || 'Sipariş durumu güncellenemedi');
       }
@@ -426,7 +469,7 @@ const Siparisler = () => {
 
         {/* Admin İstatistikleri */}
         {isAdmin && orderStats && (
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
             <div className="bg-white p-4 rounded-lg border border-gray-200">
               <div className="text-2xl font-bold text-gray-900">{orderStats.total}</div>
               <div className="text-sm text-gray-500">Toplam</div>
@@ -438,10 +481,6 @@ const Siparisler = () => {
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
               <div className="text-2xl font-bold text-blue-800">{orderStats.confirmed}</div>
               <div className="text-sm text-blue-600">Onaylandı</div>
-            </div>
-            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-              <div className="text-2xl font-bold text-purple-800">{orderStats.shipped}</div>
-              <div className="text-sm text-purple-600">Kargoda</div>
             </div>
             <div className="bg-green-50 p-4 rounded-lg border border-green-200">
               <div className="text-2xl font-bold text-green-800">{orderStats.delivered}</div>
@@ -493,7 +532,6 @@ const Siparisler = () => {
                 <option value="">Tüm Durumlar</option>
                 <option value="PENDING">Beklemede</option>
                 <option value="CONFIRMED">Onaylandı</option>
-                <option value="SHIPPED">Kargoya Verildi</option>
                 <option value="DELIVERED">Teslim Edildi</option>
                 <option value="CANCELED">İptal Edildi</option>
               </select>
@@ -657,15 +695,6 @@ const Siparisler = () => {
                           </button>
                         )}
                         {order.status === 'CONFIRMED' && (
-                          <button
-                            onClick={() => handleUpdateOrderStatus(order.id, 'SHIPPED')}
-                            disabled={updatingStatus}
-                            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm disabled:opacity-50"
-                          >
-                            Kargoya Ver
-                          </button>
-                        )}
-                        {order.status === 'SHIPPED' && (
                           <button
                             onClick={() => handleUpdateOrderStatus(order.id, 'DELIVERED')}
                             disabled={updatingStatus}
@@ -838,6 +867,186 @@ const Siparisler = () => {
                         </div>
                       </div>
                     )}
+
+                    {/* QR Kodları Bölümü */}
+                    {selectedOrder.qr_codes && selectedOrder.qr_codes.length > 0 && (
+                      <div>
+                        <h4 className="text-lg font-semibold text-gray-900 mb-3">QR Kodları</h4>
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                                     {/* QR İstatistikleri */}
+                           {selectedOrder.qr_codes && selectedOrder.qr_codes.length > 0 && (
+                             <div className="mb-4">
+                               <div className="grid grid-cols-3 gap-4 mb-3">
+                                 <div className="text-center">
+                                   <div className="text-2xl font-bold text-blue-600">
+                                     {selectedOrder.qr_codes.length}
+                                   </div>
+                                   <div className="text-sm text-gray-600">Toplam QR</div>
+                                 </div>
+                                 <div className="text-center">
+                                   <div className="text-2xl font-bold text-green-600">
+                                     {selectedOrder.qr_codes.filter(qr => qr.scan_count >= qr.required_scans).length}
+                                   </div>
+                                   <div className="text-sm text-gray-600">Tamamlandı</div>
+                                 </div>
+                                 <div className="text-center">
+                                   <div className="text-2xl font-bold text-yellow-600">
+                                     {selectedOrder.qr_codes.reduce((total, qr) => total + qr.scan_count, 0)}
+                                   </div>
+                                   <div className="text-sm text-gray-600">Toplam Tarama</div>
+                                 </div>
+                               </div>
+                               
+                               {/* Genel İlerleme Çubuğu */}
+                               <div className="w-full bg-gray-200 rounded-full h-3">
+                                 <div 
+                                   className="bg-green-600 h-3 rounded-full transition-all duration-300" 
+                                   style={{
+                                     width: `${Math.round((selectedOrder.qr_codes.filter(qr => qr.scan_count >= qr.required_scans).length / selectedOrder.qr_codes.length) * 100)}%`
+                                   }}
+                                 ></div>
+                               </div>
+                               <div className="text-center text-sm text-gray-600 mt-1">
+                                 %{Math.round((selectedOrder.qr_codes.filter(qr => qr.scan_count >= qr.required_scans).length / selectedOrder.qr_codes.length) * 100)} Tamamlandı
+                               </div>
+                             </div>
+                           )}
+                          
+                          {/* QR Kod Listesi */}
+                          <div className="max-h-40 overflow-y-auto space-y-2">
+                            {selectedOrder.qr_codes.map((qrCode, index) => (
+                                                             <div 
+                                 key={qrCode.id} 
+                                 className={`flex items-center justify-between p-2 rounded ${
+                                   qrCode.scan_count >= qrCode.required_scans ? 'bg-green-100 border border-green-200' : 'bg-white border border-gray-200'
+                                 }`}
+                               >
+                                <div className="flex items-center space-x-3">
+                                  <span className="text-sm font-medium">
+                                    QR #{index + 1}
+                                  </span>
+                                                                     <div className="text-xs text-gray-500">
+                                     <div>{qrCode.required_scans} adet gerekli</div>
+                                     <div className="flex items-center space-x-2 mt-1">
+                                       <div className="text-green-600">{qrCode.scan_count} tarandı</div>
+                                       <div className="w-16 bg-gray-200 rounded-full h-2">
+                                         <div 
+                                           className="bg-green-600 h-2 rounded-full" 
+                                           style={{width: `${Math.min((qrCode.scan_count / qrCode.required_scans) * 100, 100)}%`}}
+                                         ></div>
+                                       </div>
+                                       <div className="text-xs">
+                                         {Math.round((qrCode.scan_count / qrCode.required_scans) * 100)}%
+                                       </div>
+                                     </div>
+                                   </div>
+                                </div>
+                                                                 <div className="flex items-center space-x-2">
+                                   {qrCode.scan_count >= qrCode.required_scans ? (
+                                     <div className="text-xs">
+                                       <span className="text-green-600 font-medium">✓ Tamamlandı</span>
+                                       {qrCode.scanned_at && (
+                                         <div className="text-gray-500">
+                                           {new Date(qrCode.scanned_at).toLocaleDateString('tr-TR', {
+                                             day: '2-digit',
+                                             month: '2-digit',
+                                             hour: '2-digit',
+                                             minute: '2-digit'
+                                           })}
+                                         </div>
+                                       )}
+                                     </div>
+                                   ) : (
+                                     <div className="text-xs">
+                                       <span className="text-yellow-600 font-medium">
+                                         {qrCode.scan_count > 0 ? `${qrCode.required_scans - qrCode.scan_count} kaldı` : 'Beklemede'}
+                                       </span>
+                                     </div>
+                                   )}
+                                  <button
+                                    onClick={() => {
+                                      // QR kod detayını göster/indir
+                                                                             const qrWindow = window.open('', '_blank');
+                                       if (qrWindow) {
+                                         qrWindow.document.write(`
+                                           <html>
+                                             <head><title>QR Kod #${index + 1}</title></head>
+                                             <body style="display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f0f0;">
+                                                    <div style="text-align: center; background: white; padding: 30px; max-width: 600px; margin: 20px;">
+                                                   
+                                                   
+                                                   <div style="margin: 20px 0;">
+                                                     <img src="${qrCode.qrCodeImageUrl}" alt="QR Kod" style="max-width: 250px; max-height: 250px; border: 1px solid black;" onerror="this.innerHTML='<p>QR kod görseli yüklenemedi</p>'" />
+                                                   </div>
+                                                   
+                                                   <!-- Sipariş Veren Bilgileri -->
+                                                   <div style="border: 1px solid black; padding: 15px; margin-bottom: 15px; text-align: left;">
+                                                     ${selectedOrder.user ? `
+                                                       <p style="margin: 3px 0;"><strong>Ad Soyad:</strong> ${selectedOrder.user.name} ${selectedOrder.user.surname}</p>
+                                                       <p style="margin: 3px 0;"><strong>E-posta:</strong> ${selectedOrder.user.email}</p>
+                                                       <p style="margin: 3px 0;"><strong>Telefon:</strong> ${selectedOrder.user.phone}</p>
+                                                     ` : `
+                                                       <p style="margin: 3px 0;"><strong>Mağaza:</strong> ${selectedOrder.store_name}</p>
+                                                       <p style="margin: 3px 0;"><strong>E-posta:</strong> ${selectedOrder.store_email}</p>
+                                                       <p style="margin: 3px 0;"><strong>Telefon:</strong> ${selectedOrder.store_phone}</p>
+                                                     `}
+                                                   </div>
+                                                   
+                                                   <!-- Adres Bilgileri -->
+                                                   <div style="border: 1px solid black; padding: 15px; margin-bottom: 15px; text-align: left;">
+                                                     <h3 style="color: black; margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">Teslimat Adresi</h3>
+                                                     <p style="margin: 3px 0; line-height: 1.4;">${selectedOrder.delivery_address}</p>
+                                                     <p style="margin: 3px 0;"><strong>Mağaza:</strong> ${selectedOrder.store_name}</p>
+                                                     <p style="margin: 3px 0;"><strong>Vergi No:</strong> ${selectedOrder.store_tax_number}</p>
+                                                   </div>
+                                                 </div>
+                                             </body>
+                                           </html>
+                                         `);
+                                         qrWindow.document.close();
+                                       }
+                                    }}
+                                    className="text-blue-600 hover:text-blue-800 text-xs underline"
+                                  >
+                                    Göster
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* QR Kodları yoksa ama sipariş onaylanmışsa */}
+                    {isAdmin && selectedOrder.status === 'CONFIRMED' && (!selectedOrder.qr_codes || selectedOrder.qr_codes.length === 0) && (
+                      <div>
+                        <h4 className="text-lg font-semibold text-gray-900 mb-3">QR Kodları</h4>
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+                          <p className="text-yellow-800 mb-3">Bu sipariş için henüz QR kodları oluşturulmamış.</p>
+                                                     <button
+                             onClick={async () => {
+                               try {
+                                 setUpdatingStatus(true);
+                                 await generateQRCodes(selectedOrder.id);
+                                 // QR kodları oluşturulduktan sonra sipariş detayını yenile
+                                 await handleViewOrderDetail(selectedOrder.id);
+                                 alert('QR kodları başarıyla oluşturuldu!');
+                               } catch (error) {
+                                 console.error('QR kod oluşturma hatası:', error);
+                                 alert('QR kodları oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.');
+                               } finally {
+                                 setUpdatingStatus(false);
+                               }
+                             }}
+                             disabled={updatingStatus}
+                             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                           >
+                             {updatingStatus ? 'QR Kodları Oluşturuluyor...' : 'QR Kodları Oluştur'}
+                           </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Sağ taraf - Ürünler */}
@@ -898,15 +1107,6 @@ const Siparisler = () => {
                             </button>
                           )}
                           {selectedOrder.status === 'CONFIRMED' && (
-                            <button
-                              onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'SHIPPED')}
-                              disabled={updatingStatus}
-                              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
-                            >
-                              {updatingStatus ? 'Güncelleniyor...' : 'Kargoya Ver'}
-                            </button>
-                          )}
-                          {selectedOrder.status === 'SHIPPED' && (
                             <button
                               onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'DELIVERED')}
                               disabled={updatingStatus}
