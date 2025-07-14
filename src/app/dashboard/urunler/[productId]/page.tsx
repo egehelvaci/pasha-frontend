@@ -27,6 +27,7 @@ export default function ProductDetail() {
   const [selectedHasFringe, setSelectedHasFringe] = useState<boolean | null>(null);
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [customHeight, setCustomHeight] = useState<number>(100);  // Varsayılan 100 cm yükseklik
+  const [quantity, setQuantity] = useState<number>(1);  // Ürün adedi
 
   useEffect(() => {
     if (!productFetchedRef.current) {
@@ -60,6 +61,7 @@ export default function ProductDetail() {
   
   // Seçimler değiştiğinde fiyat hesaplama
   useEffect(() => {
+    console.log('Fiyat hesaplama useEffect çalışıyor', { product: !!product, selectedSize: !!selectedSize, quantity });
     if (product && selectedSize) {
       // Metrekare hesapla (yükseklik değişken ise 1 metre yükseklik kabul et)
       let squareMeters;
@@ -71,13 +73,20 @@ export default function ProductDetail() {
         squareMeters = (selectedSize.width * selectedSize.height) / 10000; // cm² -> m²
       }
       
-      // Birim fiyat ve toplam fiyat hesapla
+      // Birim fiyat ve toplam fiyat hesapla (quantity ile çarp)
       const unitPrice = product.pricing?.price || 0;
-      const calculatedPrice = squareMeters * unitPrice;
+      const calculatedPrice = squareMeters * unitPrice * quantity;
+      
+      console.log('Fiyat hesaplama detayları:', { 
+        squareMeters, 
+        unitPrice, 
+        quantity, 
+        calculatedPrice 
+      });
       
       setTotalPrice(calculatedPrice);
     }
-  }, [product, selectedSize, customHeight]);
+  }, [product, selectedSize, customHeight, quantity]);
 
   const fetchProduct = async () => {
     try {
@@ -325,7 +334,14 @@ export default function ProductDetail() {
                         min="10"
                         max="500"
                         value={customHeight}
-                        onChange={(e) => setCustomHeight(Number(e.target.value))}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === '') {
+                            setCustomHeight(10);
+                          } else {
+                            setCustomHeight(Number(value) || 10);
+                          }
+                        }}
                         className="border rounded-md p-2 text-black w-24"
                       />
                       <span className="text-sm text-gray-500">cm</span>
@@ -366,6 +382,46 @@ export default function ProductDetail() {
                 </div>
               )}
               
+              <div className="flex flex-col gap-2">
+                <span className="text-sm text-gray-500">Adet</span>
+                <div className="flex items-center gap-2">
+                  <button 
+                    type="button"
+                    className="w-8 h-8 border border-gray-300 flex items-center justify-center rounded-l-md text-gray-500 hover:bg-gray-50"
+                    onClick={() => {
+                      if (quantity > 1) {
+                        console.log('Quantity azalıyor:', { eskiQuantity: quantity, yeniQuantity: quantity - 1 });
+                        setQuantity(quantity - 1);
+                      }
+                    }}
+                  >
+                    -
+                  </button>
+                  <input 
+                    type="number" 
+                    min="1" 
+                    value={quantity}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const newQuantity = value === '' ? 1 : Math.max(1, parseInt(value) || 1);
+                      console.log('Quantity değişiyor:', { eskiQuantity: quantity, yeniQuantity: newQuantity });
+                      setQuantity(newQuantity);
+                    }}
+                    className="w-16 border-y border-gray-300 py-1 px-2 text-center text-black"
+                  />
+                  <button 
+                    type="button"
+                    className="w-8 h-8 border border-gray-300 flex items-center justify-center rounded-r-md text-gray-500 hover:bg-gray-50"
+                    onClick={() => {
+                      console.log('Quantity artıyor:', { eskiQuantity: quantity, yeniQuantity: quantity + 1 });
+                      setQuantity(quantity + 1);
+                    }}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+              
               <div className="flex flex-col">
                 <span className="text-sm text-gray-500">Açıklama</span>
                 <p className="text-black">{product.description}</p>
@@ -391,9 +447,13 @@ export default function ProductDetail() {
                     {selectedSize.is_optional_height 
                       ? ` ${customHeight} cm yükseklik (özel)` 
                       : ` ${selectedSize.height} cm yükseklik`} 
-                    için hesaplandı
+                    × {quantity} adet için hesaplandı
                   </div>
                 )}
+                {/* DEBUG: Quantity değerini göster */}
+                <div className="text-xs mt-1 text-red-600 font-mono">
+                  DEBUG: quantity = {quantity}, typeof = {typeof quantity}
+                </div>
               </div>
             </div>
           </div>

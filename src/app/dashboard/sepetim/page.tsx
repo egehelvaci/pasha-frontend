@@ -318,9 +318,15 @@ export default function CartPage() {
                             min="1"
                             value={item.quantity}
                             onChange={(e) => {
-                              const newQuantity = parseInt(e.target.value);
-                              if (!isNaN(newQuantity) && newQuantity >= 1) {
-                                handleUpdateQuantity(item.id, newQuantity);
+                              const value = e.target.value;
+                              if (value === '') {
+                                // Boş string ise 1'e ayarla
+                                handleUpdateQuantity(item.id, 1);
+                              } else {
+                                const newQuantity = parseInt(value);
+                                if (!isNaN(newQuantity) && newQuantity >= 1) {
+                                  handleUpdateQuantity(item.id, newQuantity);
+                                }
                               }
                             }}
                             disabled={updatingItems.has(item.id)}

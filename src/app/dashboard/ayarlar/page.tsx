@@ -501,7 +501,12 @@ export default function Settings() {
                   name="credit"
                   id="credit"
                   value={formData.credit || ''}
-                  onChange={handleInputChange}
+                  onChange={(e) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      credit: e.target.value
+                    }));
+                  }}
                   placeholder="Alacak"
                   className="border rounded px-3 py-2 text-black"
                   type="number"
@@ -514,7 +519,12 @@ export default function Settings() {
                   name="debit"
                   id="debit"
                   value={formData.debit || ''}
-                  onChange={handleInputChange}
+                  onChange={(e) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      debit: e.target.value
+                    }));
+                  }}
                   placeholder="Borç"
                   className="border rounded px-3 py-2 text-black"
                   type="number"

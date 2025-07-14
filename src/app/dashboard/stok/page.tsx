@@ -796,7 +796,7 @@ export default function StokPage() {
                         <input
                           type="number"
                           value={stockForm.width}
-                          onChange={(e) => setStockForm(prev => ({ ...prev, width: Number(e.target.value) }))}
+                          onChange={(e) => setStockForm(prev => ({ ...prev, width: e.target.value === '' ? 0 : Number(e.target.value) }))}
                           className="w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="Genişlik"
                           min="1"
@@ -809,7 +809,7 @@ export default function StokPage() {
                         <input
                           type="number"
                           value={stockForm.height}
-                          onChange={(e) => setStockForm(prev => ({ ...prev, height: Number(e.target.value) }))}
+                          onChange={(e) => setStockForm(prev => ({ ...prev, height: e.target.value === '' ? 0 : Number(e.target.value) }))}
                           className="w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="Yükseklik"
                           min="1"
@@ -821,14 +821,14 @@ export default function StokPage() {
                   {/* Miktar */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Eklenecek Miktar
+                      Güncellenecek Stok:
                     </label>
                     <input
                       type="number"
                       value={stockForm.quantity}
-                      onChange={(e) => setStockForm(prev => ({ ...prev, quantity: Number(e.target.value) }))}
+                      onChange={(e) => setStockForm(prev => ({ ...prev, quantity: e.target.value === '' ? 0 : Number(e.target.value) }))}
                       className="w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Eklenecek miktar"
+                      placeholder="Güncellenecek miktar"
                     />
                   </div>
 
@@ -845,7 +845,7 @@ export default function StokPage() {
                           <span className="ml-1 text-gray-900">{selectedSizeOption.stockQuantity || 0} adet</span>
                         </div>
                         <div>
-                          <span className="font-medium text-gray-700">Eklenecek:</span> 
+                          <span className="font-medium text-gray-700">Güncellenecek:</span> 
                           <span className="ml-1 text-gray-900">{stockForm.quantity} adet</span>
                         </div>
                         <div className="pt-1 border-t border-blue-200">
