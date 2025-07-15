@@ -85,10 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("token");
         localStorage.removeItem("userType");
       } finally {
-        // Bu kısımda sayfalar arası geçişlerde yeniden yükleme kontrolü için bir gecikme ekledik
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 500);
+        setIsLoading(false);
       }
     };
 

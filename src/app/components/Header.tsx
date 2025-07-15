@@ -293,7 +293,7 @@ const Header = ({ title, user }: HeaderProps) => {
                 <div className={`${isBlurred ? 'blur-sm' : ''} flex gap-4 transition-all duration-200`}>
                   <div className="text-center">
                     <span className="block font-semibold text-gray-700">Bakiye</span>
-                    <span className="text-green-600 font-medium">
+                    <span className={`font-medium ${financialInfo.bakiye < 0 ? 'text-red-600' : 'text-green-600'}`}>
                       {financialInfo.bakiye.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                     </span>
                   </div>
@@ -499,7 +499,7 @@ const Header = ({ title, user }: HeaderProps) => {
                   <div className="grid grid-cols-3 gap-3 text-center">
                     <div className={`${isBlurred ? 'blur-sm' : ''} transition-all duration-200`}>
                       <div className="text-xs font-semibold text-gray-600 mb-1">Bakiye</div>
-                      <div className="text-sm font-bold text-green-600">
+                      <div className={`text-sm font-bold ${financialInfo.bakiye < 0 ? 'text-red-600' : 'text-green-600'}`}>
                         {financialInfo.bakiye.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                       </div>
                     </div>
@@ -642,7 +642,7 @@ const Header = ({ title, user }: HeaderProps) => {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="bg-gray-50 rounded-lg p-4">
                         <label className="block text-sm font-medium text-gray-600 mb-1">Bakiye</label>
-                        <p className="text-green-600 font-bold">
+                        <p className={`font-bold ${financialInfo.bakiye < 0 ? 'text-red-600' : 'text-green-600'}`}>
                           {financialInfo.bakiye.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                         </p>
                       </div>

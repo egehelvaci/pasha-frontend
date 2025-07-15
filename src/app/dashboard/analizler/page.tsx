@@ -62,7 +62,7 @@ interface AnalyticsData {
 }
 
 export default function AnalyticsPage() {
-  const { user, isAdmin, token } = useAuth();
+  const { user, isAdmin, token, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -70,12 +70,48 @@ export default function AnalyticsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<'1_month' | '3_months' | '1_year'>('1_year');
 
   useEffect(() => {
+    // Auth yüklemesi tamamlanmadıysa bekle
+    if (authLoading) return;
+    
+    // Auth yüklemesi tamamlandıktan sonra admin kontrolü yap
     if (!isAdmin) {
       router.push('/dashboard');
       return;
     }
     fetchAnalyticsData();
-  }, [isAdmin, router, selectedPeriod]);
+  }, [isAdmin, router, selectedPeriod, authLoading]);
+
+  // Auth yüklenirken loading göster
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // Admin kontrolü
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <svg className="mx-auto h-12 w-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">Erişim Reddedildi</h3>
+          <p className="mt-1 text-sm text-gray-500">Bu sayfaya erişim yetkiniz bulunmamaktadır.</p>
+          <div className="mt-6">
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Dashboard'a Dön
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const fetchAnalyticsData = async () => {
     try {

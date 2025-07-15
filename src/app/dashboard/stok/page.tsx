@@ -92,22 +92,33 @@ export default function StokPage() {
   const [isLoadingProductDetail, setIsLoadingProductDetail] = useState(false);
 
   useEffect(() => {
-    if (!user && !isLoading) {
+    // Auth loading tamamlandığında user yoksa login'e yönlendir
+    if (!isLoading && !user) {
       router.push('/');
     }
   }, [user, isLoading, router]);
 
   // Admin kontrolü
   useEffect(() => {
-    if (user && !isAdmin) {
+    // Auth loading tamamlandığında admin kontrolü yap
+    if (!isLoading && user && !isAdmin) {
       router.push('/dashboard');
     }
-  }, [user, isAdmin, router]);
+  }, [user, isAdmin, isLoading, router]);
 
   useEffect(() => {
     if (!token) return;
     fetchProducts();
   }, [token]);
+
+  // Auth yüklenirken loading göster
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   const fetchProducts = async () => {
     try {

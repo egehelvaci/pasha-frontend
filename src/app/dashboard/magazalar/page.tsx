@@ -178,7 +178,10 @@ export default function StoresPage() {
       render: (record: Store) => (
         <div>
           <div className="text-sm">
-            <span className="font-medium text-green-600">Bakiye:</span> {record.bakiye?.toLocaleString('tr-TR') || '0'} ₺
+            <span className="font-medium">Bakiye:</span> 
+            <span className={`ml-1 ${(record.bakiye || 0) < 0 ? 'text-red-600' : 'text-green-600'} font-medium`}>
+              {record.bakiye?.toLocaleString('tr-TR') || '0'} ₺
+            </span>
           </div>
           <div className="text-sm">
             <span className="font-medium text-blue-600">Açık Hesap:</span> {record.limitsiz_acik_hesap ? 'Limitsiz' : `${record.acik_hesap_tutari?.toLocaleString('tr-TR') || '0'} ₺`}

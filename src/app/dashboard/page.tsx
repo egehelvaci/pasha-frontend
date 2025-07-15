@@ -115,7 +115,8 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    if (!user && !isLoading) {
+    // Auth loading tamamlandığında user yoksa login'e yönlendir
+    if (!isLoading && !user) {
       router.push('/');
     }
   }, [user, isLoading, router]);

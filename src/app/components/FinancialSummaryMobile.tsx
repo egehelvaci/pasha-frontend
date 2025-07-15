@@ -37,7 +37,9 @@ export default function FinancialSummaryMobile({
         {/* 🆕 Yeni mağaza bakiye sistemi */}
         <div>
           <span className="block font-semibold text-green-700">Bakiye</span>
-          <span className="text-green-600">{formatCurrency(bakiye || 0)}</span>
+          <span className={`${(bakiye || 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
+            {formatCurrency(bakiye || 0)}
+          </span>
         </div>
         <div>
           <span className="block font-semibold text-blue-700">Açık Hesap</span>
