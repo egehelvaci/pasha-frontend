@@ -14,16 +14,12 @@ export default function DashboardLayout({
   const userInfo = user ? {
     name: `${user.name} ${user.surname}`,
     imageUrl: user.avatar || 'https://via.placeholder.com/40',
-    debit: user.debit,
-    credit: user.credit,
     userType: {
-      id: user.userTypeId
+      id: user.userTypeId || 0
     }
   } : {
     name: '',
     imageUrl: '',
-    debit: '0',
-    credit: '0',
     userType: {
       id: 0
     }

@@ -1,16 +1,12 @@
 import React, { useState, useEffect } from "react";
 
 type Props = {
-  debit?: string | number;
-  credit?: string | number;
   bakiye?: number; // 🆕 Mağaza bakiyesi
   acikHesapLimiti?: number; // 🆕 Açık hesap limiti
   limitsizAcikHesap?: boolean; // 🆕 Limitsiz açık hesap flag'i
 };
 
 export default function FinancialSummaryMobile({ 
-  debit = "0", 
-  credit = "0", 
   bakiye, 
   acikHesapLimiti, 
   limitsizAcikHesap = false 
@@ -35,52 +31,29 @@ export default function FinancialSummaryMobile({
   const formatCurrency = (amount: string | number) =>
     parseFloat(amount as string).toLocaleString("tr-TR", { minimumFractionDigits: 2 }) + " ₺";
 
-  // Yeni mağaza sistemi mi yoksa eski sistem mi kontrol et
-  const isNewSystem = bakiye !== undefined || acikHesapLimiti !== undefined;
-
   return (
     <div className="flex items-center justify-center w-full gap-2 text-xs text-gray-500 bg-gray-100 rounded px-2 py-1 flex md:hidden mt-2 mb-2">
       <div className={`${isBlurred ? "blur-sm" : ""} flex flex-row gap-4 transition-all duration-200`}>
-        {isNewSystem ? (
-          // 🆕 Yeni mağaza bakiye sistemi
-          <>
-            <div>
-              <span className="block font-semibold text-green-700">Bakiye</span>
-              <span className="text-green-600">{formatCurrency(bakiye || 0)}</span>
-            </div>
-            <div>
-              <span className="block font-semibold text-blue-700">Açık Hesap</span>
-              <span className="text-blue-600">
-                {limitsizAcikHesap ? 'Limitsiz' : formatCurrency(acikHesapLimiti || 0)}
-              </span>
-            </div>
-            <div>
-              <span className="block font-semibold text-purple-700">Toplam</span>
-              <span className="text-purple-600">
-                {limitsizAcikHesap 
-                  ? 'Limitsiz' 
-                  : formatCurrency((bakiye || 0) + (acikHesapLimiti || 0))
-                }
-              </span>
-            </div>
-          </>
-        ) : (
-          // Eski sistem (geriye uyumluluk için)
-          <>
-            <div>
-              <span className="block font-semibold">Borç</span>
-              <span>{formatCurrency(debit)}</span>
-            </div>
-            <div>
-              <span className="block font-semibold">Alacak</span>
-              <span>{formatCurrency(credit)}</span>
-            </div>
-            <div>
-              <span className="block font-semibold">Fark</span>
-              <span>{formatCurrency(Number(credit) - Number(debit))}</span>
-            </div>
-          </>
-        )}
+        {/* 🆕 Yeni mağaza bakiye sistemi */}
+        <div>
+          <span className="block font-semibold text-green-700">Bakiye</span>
+          <span className="text-green-600">{formatCurrency(bakiye || 0)}</span>
+        </div>
+        <div>
+          <span className="block font-semibold text-blue-700">Açık Hesap</span>
+          <span className="text-blue-600">
+            {limitsizAcikHesap ? 'Limitsiz' : formatCurrency(acikHesapLimiti || 0)}
+          </span>
+        </div>
+        <div>
+          <span className="block font-semibold text-purple-700">Toplam</span>
+          <span className="text-purple-600">
+            {limitsizAcikHesap 
+              ? 'Limitsiz' 
+              : formatCurrency((bakiye || 0) + (acikHesapLimiti || 0))
+            }
+          </span>
+        </div>
       </div>
       <button
         type="button"

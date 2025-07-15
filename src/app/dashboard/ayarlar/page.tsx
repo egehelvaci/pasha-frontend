@@ -14,8 +14,6 @@ interface User {
   surname?: string;
   email: string;
   isActive: boolean;
-  credit: number;
-  debit: number;
   userType: {
     id: number;
     name: string;
@@ -35,8 +33,6 @@ interface UserFormData {
   email: string;
   userTypeName: string;
   storeId?: string;
-  credit?: string;
-  debit?: string;
 }
 
 export default function Settings() {
@@ -56,9 +52,7 @@ export default function Settings() {
     surname: '',
     email: '',
     userTypeName: 'viewer',
-    storeId: '',
-    credit: '',
-    debit: ''
+    storeId: ''
   });
   const [assignStoreModalOpen, setAssignStoreModalOpen] = useState(false);
   const [assigningUserId, setAssigningUserId] = useState<string | null>(null);
@@ -95,8 +89,6 @@ export default function Settings() {
           typeof selectedUser.userType === 'object'
             ? selectedUser.userType.name
             : selectedUser.userType || '',
-        credit: selectedUser.credit ? String(selectedUser.credit) : '',
-        debit: selectedUser.debit ? String(selectedUser.debit) : '',
         storeId: selectedUser.Store?.store_id || ''
       });
     } else {
@@ -107,9 +99,7 @@ export default function Settings() {
         surname: '',
         email: '',
         userTypeName: 'viewer',
-        storeId: '',
-        credit: '',
-        debit: ''
+        storeId: ''
       });
     }
   }, [selectedUser]);
@@ -318,7 +308,6 @@ export default function Settings() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">E-posta</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kullanıcı Tipi</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mağaza</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bakiye</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durum</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
               </tr>
@@ -344,14 +333,6 @@ export default function Settings() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {user.Store ? user.Store.kurum_adi : '-'}
-                  </td>
-                  <td className={
-                    `px-6 py-4 whitespace-nowrap text-sm font-semibold ` +
-                    (((Number(user.credit) || 0) - (Number(user.debit) || 0)) < 0
-                      ? 'text-red-600'
-                      : 'text-green-600')
-                  }>
-                    {((Number(user.credit) || 0) - (Number(user.debit) || 0)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
@@ -495,42 +476,7 @@ export default function Settings() {
                   </select>
                 </div>
               )}
-              <div className="flex flex-col gap-1">
-                <label htmlFor="credit" className="text-sm font-semibold text-gray-700">Alacak</label>
-                <input
-                  name="credit"
-                  id="credit"
-                  value={formData.credit || ''}
-                  onChange={(e) => {
-                    setFormData(prev => ({
-                      ...prev,
-                      credit: e.target.value
-                    }));
-                  }}
-                  placeholder="Alacak"
-                  className="border rounded px-3 py-2 text-black"
-                  type="number"
-                  min="0"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="debit" className="text-sm font-semibold text-gray-700">Borç</label>
-                <input
-                  name="debit"
-                  id="debit"
-                  value={formData.debit || ''}
-                  onChange={(e) => {
-                    setFormData(prev => ({
-                      ...prev,
-                      debit: e.target.value
-                    }));
-                  }}
-                  placeholder="Borç"
-                  className="border rounded px-3 py-2 text-black"
-                  type="number"
-                  min="0"
-                />
-              </div>
+
               <button type="submit" className="bg-blue-900 text-white rounded-full px-6 py-2 font-semibold mt-2">
                 {selectedUser ? 'Güncelle' : 'Ekle'}
               </button>

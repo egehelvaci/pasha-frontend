@@ -148,8 +148,6 @@ const Header = ({ title, user }: HeaderProps) => {
     }
     // Admin kullanıcıları için eski format (eğer hala kullanılıyorsa)
     return {
-      debit: 0,
-      credit: 0,
       bakiye: 0,
       acikHesapLimiti: 0,
       toplamKullanilabilir: 0,
@@ -429,8 +427,6 @@ const Header = ({ title, user }: HeaderProps) => {
         {/* Mobil finansal özet - Sadece mağaza kullanıcıları için */}
         {authUser?.store && (
           <FinancialSummaryMobile 
-            debit="0" 
-            credit="0" 
             bakiye={financialInfo.bakiye}
             acikHesapLimiti={financialInfo.acikHesapLimiti}
             limitsizAcikHesap={financialInfo.limitsizAcikHesap}

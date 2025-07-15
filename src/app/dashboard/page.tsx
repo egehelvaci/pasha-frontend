@@ -232,8 +232,8 @@ export default function Dashboard() {
             <div className="ml-4">
               <h2 className="text-xl font-medium text-gray-800">{user.name} {user.surname}</h2>
               <p className="text-gray-500">{user.username}</p>
-              {user.Store && (
-                <p className="text-gray-600 mt-1">{user.Store.kurum_adi}</p>
+              {user.store && (
+                <p className="text-gray-600 mt-1">{user.store.kurum_adi}</p>
               )}
             </div>
           </div>
