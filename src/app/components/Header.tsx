@@ -209,11 +209,30 @@ const Header = ({ title, user }: HeaderProps) => {
       adminOnly: true,
     },
     {
-      name: 'Koleksiyonlar',
+      name: 'Koleksiyon',
       href: '/dashboard/koleksiyonlar/liste',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
           <path d="M4 4h16v2H4V4zm0 4h16v2H4V8zm0 4h10v2H4v-2zm0 4h10v2H4v-2z" />
+        </svg>
+      ),
+    },
+    {
+      name: 'Analiz',
+      href: '/dashboard/analizler',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+          <path d="M18.375 2.25c-1.035 0-1.875.84-1.875 1.875v15.75c0 1.035.84 1.875 1.875 1.875h.75c1.035 0 1.875-.84 1.875-1.875V4.125c0-1.036-.84-1.875-1.875-1.875h-.75zM9.75 8.625c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-.75a1.875 1.875 0 01-1.875-1.875V8.625zM3 13.125c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v6.75c0 1.035-.84 1.875-1.875 1.875h-.75A1.875 1.875 0 013 19.875v-6.75z" />
+        </svg>
+      ),
+      adminOnly: true,
+    },
+    {
+      name: 'Ödeme',
+      href: '/dashboard/odemeler',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+          <path d="M2.273 5.625A4.483 4.483 0 015.25 4.5h13.5c1.141 0 2.227.425 3.048 1.19A3.75 3.75 0 0021.75 9v.75a2.25 2.25 0 01-2.25 2.25H4.5A2.25 2.25 0 012.25 9.75V9a3.75 3.75 0 01.023-3.375zM4.5 15.75a2.25 2.25 0 00-2.25 2.25v.75c0 .414.336.75.75.75h18a.75.75 0 00.75-.75v-.75a2.25 2.25 0 00-2.25-2.25H4.5z" />
         </svg>
       ),
     },
@@ -371,7 +390,7 @@ const Header = ({ title, user }: HeaderProps) => {
         
         {/* Desktop navigasyon */}
         <nav className="hidden lg:block py-2">
-          <div className="flex space-x-1 overflow-x-auto">
+          <div className="flex space-x-1 ">
             {navigation.map((item) => {
               const isActive = pathname === item.href;
               if (item.adminOnly && !isAdmin) return null;
