@@ -607,13 +607,13 @@ export default function ProductList() {
           squareMeters = (selectedSize.width * selectedSize.height) / 10000; // cm² -> m²
         }
         
-        // Birim fiyat ve toplam fiyat hesapla
+        // Birim fiyat ve toplam fiyat hesapla (quantity ile çarp)
         const unitPrice = product.pricing?.price || 0;
-        const calculatedPrice = squareMeters * unitPrice;
+        const calculatedPrice = squareMeters * unitPrice * quantity;
         
         setTotalPrice(calculatedPrice);
       }
-    }, [product, selectedSize, customHeight]);
+    }, [product, selectedSize, customHeight, quantity]);
 
     const fetchProductDetail = async (id: string) => {
       setLoading(true);
@@ -883,7 +883,7 @@ export default function ProductList() {
                           {selectedSize.is_optional_height 
                             ? ` ${customHeight} cm yükseklik (özel)` 
                             : ` ${selectedSize.height} cm yükseklik`} 
-                          için hesaplandı
+                          × {quantity} adet için hesaplandı
                         </div>
                       )}
                     </div>
