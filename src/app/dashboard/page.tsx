@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getMyStorePriceList } from '@/services/api';
 
 interface Collection {
   collectionId: string;
@@ -123,36 +124,26 @@ export default function Dashboard() {
 
   // Fiyat listesini yenileme fonksiyonu
   const refreshPriceList = useCallback(async () => {
-    if (!token || !storeId) return;
+    if (!token) return;
 
     setIsLoadingPriceList(true);
     try {
-      const response = await fetch(`https://pasha-backend-production.up.railway.app/api/price-lists/store-assignments/${storeId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Cache-Control': 'no-cache'
-        }
-      });
+      const data = await getMyStorePriceList();
       
-      if (response.ok) {
-        const data: PriceListResponse = await response.json();
-        if (data.success) {
-          // Fiyat listesi detaylarını alfabetik sıraya göre düzenle
-          const sortedPriceList = {
-            ...data.data,
-            PriceListDetail: data.data.PriceListDetail.sort((a, b) => 
-              a.Collection.name.localeCompare(b.Collection.name, 'tr')
-            )
-          };
-          setPriceList(sortedPriceList);
-        }
-      }
+      // Fiyat listesi detaylarını alfabetik sıraya göre düzenle
+      const sortedPriceList = {
+        ...data,
+        PriceListDetail: data.PriceListDetail.sort((a: any, b: any) => 
+          a.Collection.name.localeCompare(b.Collection.name, 'tr')
+        )
+      };
+      setPriceList(sortedPriceList);
     } catch (error) {
       console.error('Fiyat listesi yenileme hatası:', error);
     } finally {
       setIsLoadingPriceList(false);
     }
-  }, [token, storeId]);
+  }, [token]);
 
   // Ana veri çekme fonksiyonları
   const fetchCollections = useCallback(async () => {

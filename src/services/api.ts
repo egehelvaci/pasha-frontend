@@ -787,6 +787,28 @@ export async function getStorePriceLists(storeId: string): Promise<StorePriceLis
   }
 }
 
+export async function getMyStorePriceList(): Promise<any> {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/api/price-lists/my-store/price-list`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Mağaza fiyat listesi getirilemedi');
+    }
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Mağaza fiyat listesi getirilirken hata oluştu:', error);
+    throw error;
+  }
+}
+
 export async function assignUserToStore(userId: string, data: AssignUserToStoreData): Promise<AssignUserToStoreResponse> {
   try {
     const token = localStorage.getItem('token');

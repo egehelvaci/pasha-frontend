@@ -384,15 +384,7 @@ export default function AddProductRulePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
                 </svg>
                 <h3 className="mt-2 text-sm font-medium text-gray-900">Kesim türü bulunamadı</h3>
-                <p className="mt-1 text-sm text-gray-500">Önce kesim türleri oluşturmalısınız.</p>
-                <div className="mt-4">
-                  <Link
-                    href="/dashboard/urun-kurallari/kesim-turleri"
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                  >
-                    Kesim Türleri Yönetimi
-                  </Link>
-                </div>
+                <p className="mt-1 text-sm text-gray-500">Sistem yöneticisine başvurun.</p>
               </div>
             )}
           </div>
