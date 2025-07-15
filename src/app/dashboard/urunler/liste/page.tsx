@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { FaTrash } from "react-icons/fa";
 import { useAuth } from '@/app/context/AuthContext';
+import { getProductRules, ProductRule } from '@/services/api';
 
 // API Base URL
 const API_BASE_URL = "https://pasha-backend-production.up.railway.app";
@@ -28,6 +29,7 @@ export default function ProductList() {
   const [hoverProductId, setHoverProductId] = useState<string | null>(null);
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [selectedProductForUpdate, setSelectedProductForUpdate] = useState<any>(null);
+  const [productRules, setProductRules] = useState<ProductRule[]>([]);
   const { isAdmin } = useAuth();
 
   useEffect(() => {
@@ -40,6 +42,8 @@ export default function ProductList() {
       collectionsFetchedRef.current = true;
       fetchCollections();
     }
+    
+    fetchProductRules();
   }, []);
 
   const fetchProducts = async () => {
@@ -86,6 +90,16 @@ export default function ProductList() {
     } catch (error) {
       console.error("Koleksiyonlar yüklenirken hata oluştu:", error);
       setCollections([]);
+    }
+  };
+
+  const fetchProductRules = async () => {
+    try {
+      const rules = await getProductRules();
+      setProductRules(rules);
+    } catch (error) {
+      console.error("Ürün kuralları yüklenirken hata oluştu:", error);
+      setProductRules([]);
     }
   };
 
@@ -137,7 +151,7 @@ export default function ProductList() {
     }
   };
 
-  function AddProductModal({ open, onClose, onSuccess, collections }: { open: boolean, onClose: () => void, onSuccess: (newProduct: any) => void, collections: {collectionId: string, name: string}[] }) {
+  function AddProductModal({ open, onClose, onSuccess, collections, productRules }: { open: boolean, onClose: () => void, onSuccess: (newProduct: any) => void, collections: {collectionId: string, name: string}[], productRules: ProductRule[] }) {
     const [form, setForm] = useState({
       name: "",
       description: "",
@@ -232,7 +246,11 @@ export default function ProductList() {
         fd.append('collectionId', form.collectionId);
         
         if (form.rule_id) {
-          fd.append('rule_id', form.rule_id);
+          const ruleIdNumber = parseInt(form.rule_id);
+          if (!isNaN(ruleIdNumber)) {
+            fd.append('rule_id', ruleIdNumber.toString());
+            console.log('Gönderilen rule_id (number):', ruleIdNumber);
+          }
         }
         
         if (form.productImage) {
@@ -347,12 +365,11 @@ export default function ProductList() {
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
                   >
                     <option value="">Kural Seçin</option>
-                    <option value="1">1 - Standart Hazır</option>
-                    <option value="2">2 - Standart Kesim</option>
-                    <option value="3">3 - Tavşan Post</option>
-                    <option value="4">4 - Tavşan Kesim Post</option>
-                    <option value="5">5 - Tavşan Halı</option>
-                    <option value="6">6 - Banyo/Paspas</option>
+                    {productRules.map(rule => (
+                      <option key={rule.id} value={rule.id}>
+                        {rule.id} - {rule.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 
@@ -458,72 +475,34 @@ export default function ProductList() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      <tr className="hover:bg-gray-50">
-                        <td className="px-3 py-3 font-medium text-blue-600">1</td>
-                        <td className="px-3 py-3">
-                          <div className="space-y-1">
-                            <div className="font-medium text-gray-900">Standart Hazır</div>
-                            <div className="text-xs text-gray-600">• Saçaklı/Saçaksız seçenekler</div>
-                            <div className="text-xs text-gray-600">• Standart ölçüler</div>
-                            <div className="text-xs text-gray-600">• Kesim: Standart, Oval, Daire</div>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr className="hover:bg-gray-50">
-                        <td className="px-3 py-3 font-medium text-blue-600">2</td>
-                        <td className="px-3 py-3">
-                          <div className="space-y-1">
-                            <div className="font-medium text-gray-900">Standart Kesim</div>
-                            <div className="text-xs text-gray-600">• Saçaklı/Saçaksız seçenekler</div>
-                            <div className="text-xs text-gray-600">• Standart En + Opsiyonel Boy</div>
-                            <div className="text-xs text-gray-600">• Kesim: Standart, Oval, Daire</div>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr className="hover:bg-gray-50">
-                        <td className="px-3 py-3 font-medium text-blue-600">3</td>
-                        <td className="px-3 py-3">
-                          <div className="space-y-1">
-                            <div className="font-medium text-gray-900">Tavşan Post</div>
-                            <div className="text-xs text-gray-600">• Saçak yok</div>
-                            <div className="text-xs text-gray-600">• Standart Tavşan Ölçüleri</div>
-                            <div className="text-xs text-gray-600">• Kesim: Post Kesim</div>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr className="hover:bg-gray-50">
-                        <td className="px-3 py-3 font-medium text-blue-600">4</td>
-                        <td className="px-3 py-3">
-                          <div className="space-y-1">
-                            <div className="font-medium text-gray-900">Tavşan Kesim Post</div>
-                            <div className="text-xs text-gray-600">• Saçak yok</div>
-                            <div className="text-xs text-gray-600">• 80×Ops, 100×Ops, 180×Ops</div>
-                            <div className="text-xs text-gray-600">• Kesim: Post, Standart, Oval, Daire</div>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr className="hover:bg-gray-50">
-                        <td className="px-3 py-3 font-medium text-blue-600">5</td>
-                        <td className="px-3 py-3">
-                          <div className="space-y-1">
-                            <div className="font-medium text-gray-900">Tavşan Halı</div>
-                            <div className="text-xs text-gray-600">• Saçak yok</div>
-                            <div className="text-xs text-gray-600">• Standart En + Opsiyonel Boy</div>
-                            <div className="text-xs text-gray-600">• Kesim: Standart, Oval, Daire</div>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr className="hover:bg-gray-50">
-                        <td className="px-3 py-3 font-medium text-blue-600">6</td>
-                        <td className="px-3 py-3">
-                          <div className="space-y-1">
-                            <div className="font-medium text-gray-900">Banyo/Paspas</div>
-                            <div className="text-xs text-gray-600">• Saçaklı/Saçaksız seçenekler</div>
-                            <div className="text-xs text-gray-600">• Tek Ebat: 100×100</div>
-                            <div className="text-xs text-gray-600">• Kesim: Standart</div>
-                          </div>
-                        </td>
-                      </tr>
+                      {productRules.map(rule => (
+                        <tr key={rule.id} className="hover:bg-gray-50">
+                          <td className="px-3 py-3 font-medium text-blue-600">{rule.id}</td>
+                          <td className="px-3 py-3">
+                            <div className="space-y-1">
+                              <div className="font-medium text-gray-900">{rule.name}</div>
+                              <div className="text-xs text-gray-600">• {rule.canHaveFringe ? 'Saçaklı/Saçaksız seçenekler' : 'Saçak yok'}</div>
+                              {rule.sizeOptions && rule.sizeOptions.length > 0 && (
+                                <div className="text-xs text-gray-600">
+                                  • {rule.sizeOptions.some(size => size.isOptionalHeight) 
+                                    ? 'Standart En + Opsiyonel Boy' 
+                                    : rule.sizeOptions.length === 1 
+                                      ? `Tek Ebat: ${rule.sizeOptions[0].width}×${rule.sizeOptions[0].height}` 
+                                      : rule.sizeOptions.map(size => `${size.width}×${size.isOptionalHeight ? 'Ops' : size.height}`).join(', ')}
+                                </div>
+                              )}
+                              {rule.cutTypes && rule.cutTypes.length > 0 && (
+                                <div className="text-xs text-gray-600">
+                                  • Kesim: {rule.cutTypes.map(cut => cut.name.charAt(0).toUpperCase() + cut.name.slice(1)).join(', ')}
+                                </div>
+                              )}
+                              {rule.description && (
+                                <div className="text-xs text-gray-600">• {rule.description}</div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
@@ -981,7 +960,7 @@ export default function ProductList() {
     );
   }
 
-  function UpdateProductModal({ open, onClose, product, collections, onSuccess }: { open: boolean, onClose: () => void, product: any, collections: {collectionId: string, name: string}[], onSuccess: (updatedProduct: any) => void }) {
+  function UpdateProductModal({ open, onClose, product, collections, productRules, onSuccess }: { open: boolean, onClose: () => void, product: any, collections: {collectionId: string, name: string}[], productRules: ProductRule[], onSuccess: (updatedProduct: any) => void }) {
     const [form, setForm] = useState({
       name: "",
       description: "",
@@ -1092,7 +1071,17 @@ export default function ProductList() {
         }
         
         if (form.rule_id !== (product.rule_id?.toString() || "")) {
-          fd.append('rule_id', form.rule_id);
+          if (form.rule_id && form.rule_id.trim() !== "") {
+            const ruleIdNumber = parseInt(form.rule_id);
+            if (!isNaN(ruleIdNumber)) {
+              fd.append('rule_id', ruleIdNumber.toString());
+              console.log('Update - Gönderilen rule_id (number):', ruleIdNumber);
+            }
+          } else {
+            // Boş string gönder (rule_id'yi kaldırmak için)
+            fd.append('rule_id', '');
+            console.log('Update - rule_id kaldırılıyor');
+          }
         }
         
         if (form.productImage) {
@@ -1259,12 +1248,11 @@ export default function ProductList() {
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
                   >
                     <option value="">Kural Seçin</option>
-                    <option value="1">1 - Standart Hazır</option>
-                    <option value="2">2 - Standart Kesim</option>
-                    <option value="3">3 - Tavşan Post</option>
-                    <option value="4">4 - Tavşan Kesim Post</option>
-                    <option value="5">5 - Tavşan Halı</option>
-                    <option value="6">6 - Banyo/Paspas</option>
+                    {productRules.map(rule => (
+                      <option key={rule.id} value={rule.id}>
+                        {rule.id} - {rule.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 
@@ -1394,72 +1382,34 @@ export default function ProductList() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      <tr className="hover:bg-gray-50">
-                        <td className="px-3 py-3 font-medium text-blue-600">1</td>
-                        <td className="px-3 py-3">
-                          <div className="space-y-1">
-                            <div className="font-medium text-gray-900">Standart Hazır</div>
-                            <div className="text-xs text-gray-600">• Saçaklı/Saçaksız seçenekler</div>
-                            <div className="text-xs text-gray-600">• Standart ölçüler</div>
-                            <div className="text-xs text-gray-600">• Kesim: Standart, Oval, Daire</div>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr className="hover:bg-gray-50">
-                        <td className="px-3 py-3 font-medium text-blue-600">2</td>
-                        <td className="px-3 py-3">
-                          <div className="space-y-1">
-                            <div className="font-medium text-gray-900">Standart Kesim</div>
-                            <div className="text-xs text-gray-600">• Saçaklı/Saçaksız seçenekler</div>
-                            <div className="text-xs text-gray-600">• Standart En + Opsiyonel Boy</div>
-                            <div className="text-xs text-gray-600">• Kesim: Standart, Oval, Daire</div>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr className="hover:bg-gray-50">
-                        <td className="px-3 py-3 font-medium text-blue-600">3</td>
-                        <td className="px-3 py-3">
-                          <div className="space-y-1">
-                            <div className="font-medium text-gray-900">Tavşan Post</div>
-                            <div className="text-xs text-gray-600">• Saçak yok</div>
-                            <div className="text-xs text-gray-600">• Standart Tavşan Ölçüleri</div>
-                            <div className="text-xs text-gray-600">• Kesim: Post Kesim</div>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr className="hover:bg-gray-50">
-                        <td className="px-3 py-3 font-medium text-blue-600">4</td>
-                        <td className="px-3 py-3">
-                          <div className="space-y-1">
-                            <div className="font-medium text-gray-900">Tavşan Kesim Post</div>
-                            <div className="text-xs text-gray-600">• Saçak yok</div>
-                            <div className="text-xs text-gray-600">• 80×Ops, 100×Ops, 180×Ops</div>
-                            <div className="text-xs text-gray-600">• Kesim: Post, Standart, Oval, Daire</div>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr className="hover:bg-gray-50">
-                        <td className="px-3 py-3 font-medium text-blue-600">5</td>
-                        <td className="px-3 py-3">
-                          <div className="space-y-1">
-                            <div className="font-medium text-gray-900">Tavşan Halı</div>
-                            <div className="text-xs text-gray-600">• Saçak yok</div>
-                            <div className="text-xs text-gray-600">• Standart En + Opsiyonel Boy</div>
-                            <div className="text-xs text-gray-600">• Kesim: Standart, Oval, Daire</div>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr className="hover:bg-gray-50">
-                        <td className="px-3 py-3 font-medium text-blue-600">6</td>
-                        <td className="px-3 py-3">
-                          <div className="space-y-1">
-                            <div className="font-medium text-gray-900">Banyo/Paspas</div>
-                            <div className="text-xs text-gray-600">• Saçaklı/Saçaksız seçenekler</div>
-                            <div className="text-xs text-gray-600">• Tek Ebat: 100×100</div>
-                            <div className="text-xs text-gray-600">• Kesim: Standart</div>
-                          </div>
-                        </td>
-                      </tr>
+                      {productRules.map(rule => (
+                        <tr key={rule.id} className="hover:bg-gray-50">
+                          <td className="px-3 py-3 font-medium text-blue-600">{rule.id}</td>
+                          <td className="px-3 py-3">
+                            <div className="space-y-1">
+                              <div className="font-medium text-gray-900">{rule.name}</div>
+                              <div className="text-xs text-gray-600">• {rule.canHaveFringe ? 'Saçaklı/Saçaksız seçenekler' : 'Saçak yok'}</div>
+                              {rule.sizeOptions && rule.sizeOptions.length > 0 && (
+                                <div className="text-xs text-gray-600">
+                                  • {rule.sizeOptions.some(size => size.isOptionalHeight) 
+                                    ? 'Standart En + Opsiyonel Boy' 
+                                    : rule.sizeOptions.length === 1 
+                                      ? `Tek Ebat: ${rule.sizeOptions[0].width}×${rule.sizeOptions[0].height}` 
+                                      : rule.sizeOptions.map(size => `${size.width}×${size.isOptionalHeight ? 'Ops' : size.height}`).join(', ')}
+                                </div>
+                              )}
+                              {rule.cutTypes && rule.cutTypes.length > 0 && (
+                                <div className="text-xs text-gray-600">
+                                  • Kesim: {rule.cutTypes.map(cut => cut.name.charAt(0).toUpperCase() + cut.name.slice(1)).join(', ')}
+                                </div>
+                              )}
+                              {rule.description && (
+                                <div className="text-xs text-gray-600">• {rule.description}</div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
@@ -1615,8 +1565,9 @@ export default function ProductList() {
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
               {sortedProducts.map((product) => {
-                // Rule ID'ye göre kesim durumunu belirle
-                const isCustomCut = product.rule_id && [2, 4, 5].includes(parseInt(product.rule_id));
+                // Ürünün boyut seçeneklerinde is_optional_height true olan varsa kesim ürünü
+                const hasOptionalHeight = product.sizeOptions && product.sizeOptions.some((size: any) => size.is_optional_height === true);
+                const isCustomCut = hasOptionalHeight;
                 const statusText = isCustomCut ? 'KESİM' : 'HAZIR';
                 
                 return (
@@ -1718,6 +1669,7 @@ export default function ProductList() {
             setModalOpen(false);
           }} 
           collections={collections}
+          productRules={productRules}
         />
       )}
       {selectedProductId && (
@@ -1729,6 +1681,7 @@ export default function ProductList() {
           onClose={() => setUpdateModalOpen(false)} 
           product={selectedProductForUpdate} 
           collections={collections} 
+          productRules={productRules}
           onSuccess={(updatedProduct) => {
             if (updatedProduct.deleted) {
               // Ürün silindiyse listeden kaldır
