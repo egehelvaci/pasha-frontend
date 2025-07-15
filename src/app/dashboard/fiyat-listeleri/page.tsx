@@ -148,11 +148,51 @@ export default function PriceListsPage() {
     {
       title: 'Durum',
       key: 'status',
-      render: (record: PriceList) => (
-        <Tag color={record.is_active ? 'green' : 'red'}>
-          {record.is_active ? 'Aktif' : 'Pasif'}
-        </Tag>
-      ),
+      render: (record: PriceList) => {
+        const currentDate = new Date();
+        let isExpired = false;
+        let isLimitLow = false;
+        
+        // Default olmayan fiyat listeleri için tarih kontrolü yap
+        if (!record.is_default) {
+          // valid_to tarihi varsa ve geçmişse expired olarak işaretle
+          if (record.valid_to) {
+            const validToDate = new Date(record.valid_to);
+            isExpired = validToDate < currentDate;
+          }
+          
+          // valid_from tarihi varsa ve henüz gelmemişse de inactive sayılabilir
+          if (record.valid_from) {
+            const validFromDate = new Date(record.valid_from);
+            if (validFromDate > currentDate) {
+              isExpired = true; // Henüz başlamamış
+            }
+          }
+          
+          // Limit 1000 TL ve altına düşmüşse pasif yap
+          if (record.limit_amount && record.limit_amount <= 1000) {
+            isLimitLow = true;
+          }
+        }
+        
+        // Tarihi geçmişse veya limit düşükse pasif göster
+        const isActive = record.is_active && !isExpired && !isLimitLow;
+        
+        return (
+          <div>
+            <Tag color={isActive ? 'green' : 'red'}>
+              {isActive ? 'Aktif' : 'Pasif'}
+            </Tag>
+            {(isExpired || isLimitLow) && !record.is_default && (
+              <div className="text-xs text-gray-500 mt-1">
+                {isExpired && (record.valid_to && new Date(record.valid_to) < currentDate ? 'Süresi dolmuş' : 'Henüz başlamamış')}
+                {isLimitLow && 'Limit yetersiz (≤1000 TL)'}
+                {isExpired && isLimitLow && ' & '}
+              </div>
+            )}
+          </div>
+        );
+      },
     },
     {
       title: 'Ürün Sayısı',
