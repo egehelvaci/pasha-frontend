@@ -3,38 +3,41 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 
+type Store = {
+  store_id: string;
+  kurum_adi: string;
+  vergi_numarasi: string;
+  vergi_dairesi: string;
+  yetkili_adi: string;
+  yetkili_soyadi: string;
+  telefon: string;
+  eposta: string;
+  adres: string;
+  faks_numarasi: string;
+  aciklama: string;
+  limitsiz_acik_hesap: boolean;
+  acik_hesap_tutari: number;
+  bakiye: number;                    // 🆕 Mağaza bakiyesi
+  maksimum_taksit: number;           // 🆕 Maksimum taksit sayısı
+  toplam_kullanilabilir: number;     // 🆕 Bakiye + açık hesap toplamı
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
 type User = {
   userId: string;
   username: string;
   name: string;
   surname: string;
   email: string;
-  phoneNumber: string;
+  phoneNumber?: string;
   isActive: boolean;
   createdAt: string;
-  avatar: string;
-  credit: string;
-  debit: string;
+  avatar?: string;
   userType: string;
-  userTypeId: number;
-  Store?: {
-    store_id: string;
-    kurum_adi: string;
-    vergi_numarasi: string;
-    vergi_dairesi: string;
-    yetkili_adi: string;
-    yetkili_soyadi: string;
-    telefon: string;
-    eposta: string;
-    adres: string;
-    faks_numarasi: string;
-    aciklama: string;
-    limitsiz_acik_hesap: boolean;
-    acik_hesap_tutari: string;
-    is_active: boolean;
-    created_at: string;
-    updated_at: string;
-  };
+  userTypeId?: number;
+  store: Store | null;               // 🆕 Mağaza bilgileri (admin için null)
 } | null;
 
 type AuthContextType = {
@@ -106,13 +109,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = await response.json();
 
       if (response.ok && result.success) {
-        // API'den gelen kullanıcı bilgisini ve token'ı kaydet
-        setUser(result.data.user);
+        // Yeni API response formatına göre kullanıcı bilgisini ayarla
+        const userData = {
+          userId: result.data.user.userId,
+          username: result.data.user.username,
+          name: result.data.user.name,
+          surname: result.data.user.surname,
+          email: result.data.user.email,
+          phoneNumber: result.data.user.phoneNumber,
+          isActive: result.data.user.isActive,
+          createdAt: result.data.user.createdAt,
+          avatar: result.data.user.avatar,
+          userType: result.data.user.userType,
+          userTypeId: result.data.user.userTypeId,
+          store: result.data.user.store || null  // Admin için null, mağaza kullanıcısı için store objesi
+        };
+
+        setUser(userData);
         setToken(result.data.token);
         setIsAdmin(result.data.user.userType === "admin");
         
         // LocalStorage'a kaydet
-        localStorage.setItem("user", JSON.stringify(result.data.user));
+        localStorage.setItem("user", JSON.stringify(userData));
         localStorage.setItem("token", result.data.token);
         localStorage.setItem("userType", result.data.user.userType);
         

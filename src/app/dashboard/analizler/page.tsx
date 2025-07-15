@@ -18,29 +18,47 @@ ChartJS.register(
   PointElement
 );
 
-interface TopCustomer {
-  name: string;
-  surname: string;
-  orderCount: number;
-  totalAmount: string;
+interface TopStore {
+  store_id: string;
+  store_name: string;
+  user_name: string;
+  order_count: number;
+  total_amount: number;
+  period: string;
 }
 
 interface TopProduct {
-  name: string;
-  orderCount: number;
-  totalQuantity: number;
+  product_id: string;
+  product_name: string;
+  collection_name: string;
+  product_image: string;
+  total_quantity: number;
+  total_amount: number;
+  period: string;
 }
 
-interface SquareMeterData {
+interface OrderOverTimeData {
+  time_period: string;
+  order_count: number;
+  total_amount: number;
+  total_area_m2: number;
+}
+
+interface TotalStats {
+  total_orders: number;
+  total_amount: number;
+  total_product_quantity: number;
+  total_area_m2: number;
   period: string;
-  totalSquareMeters: number;
-  orderCount: number;
+  start_date: string;
+  end_date: string;
 }
 
 interface AnalyticsData {
-  topCustomers: TopCustomer[];
+  topStores: TopStore[];
   topProducts: TopProduct[];
-  squareMeterData: SquareMeterData[];
+  ordersOverTime: OrderOverTimeData[];
+  totalStats: TotalStats;
 }
 
 export default function AnalyticsPage() {
@@ -49,7 +67,7 @@ export default function AnalyticsPage() {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedPeriod, setSelectedPeriod] = useState<'1month' | '3months' | '1year'>('1month');
+  const [selectedPeriod, setSelectedPeriod] = useState<'1_month' | '3_months' | '1_year'>('1_year');
 
   useEffect(() => {
     if (!isAdmin) {
@@ -69,22 +87,42 @@ export default function AnalyticsPage() {
         return;
       }
 
-      const response = await fetch(`https://pasha-backend-production.up.railway.app/api/admin/analytics?period=${selectedPeriod}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const baseUrl = 'https://pasha-backend-production.up.railway.app/api/admin/statistics';
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
 
-      if (!response.ok) {
+      // Paralel olarak tüm API'leri çağır
+      const [topStoresRes, topProductsRes, ordersOverTimeRes, totalStatsRes] = await Promise.all([
+        fetch(`${baseUrl}/top-stores?period=${selectedPeriod}`, { headers }),
+        fetch(`${baseUrl}/top-products?period=${selectedPeriod}`, { headers }),
+        fetch(`${baseUrl}/orders-over-time?period=${selectedPeriod}&groupBy=month`, { headers }),
+        fetch(`${baseUrl}/totals?period=${selectedPeriod}`, { headers })
+      ]);
+
+      // Tüm response'ları kontrol et
+      if (!topStoresRes.ok || !topProductsRes.ok || !ordersOverTimeRes.ok || !totalStatsRes.ok) {
         throw new Error('Analytics verisi alınamadı');
       }
 
-      const data = await response.json();
-      if (data.success) {
-        setAnalyticsData(data.data);
+      const [topStoresData, topProductsData, ordersOverTimeData, totalStatsData] = await Promise.all([
+        topStoresRes.json(),
+        topProductsRes.json(),
+        ordersOverTimeRes.json(),
+        totalStatsRes.json()
+      ]);
+
+      // Tüm response'ların başarılı olduğunu kontrol et
+      if (topStoresData.success && topProductsData.success && ordersOverTimeData.success && totalStatsData.success) {
+        setAnalyticsData({
+          topStores: topStoresData.data.stores,
+          topProducts: topProductsData.data.products,
+          ordersOverTime: ordersOverTimeData.data.chart_data,
+          totalStats: totalStatsData.data
+        });
       } else {
-        throw new Error(data.message || 'Analytics verisi alınamadı');
+        throw new Error('Analytics verisi alınamadı');
       }
     } catch (error: any) {
       console.error('Analytics hatası:', error);
@@ -92,25 +130,124 @@ export default function AnalyticsPage() {
       
       // Mock data for development
       setAnalyticsData({
-        topCustomers: [
-          { name: 'Ahmet', surname: 'Yılmaz', orderCount: 15, totalAmount: '25000.00' },
-          { name: 'Mehmet', surname: 'Kaya', orderCount: 12, totalAmount: '20000.00' },
-          { name: 'Ayşe', surname: 'Demir', orderCount: 10, totalAmount: '18000.00' },
-          { name: 'Fatma', surname: 'Çelik', orderCount: 8, totalAmount: '15000.00' },
-          { name: 'Ali', surname: 'Özkan', orderCount: 7, totalAmount: '12000.00' }
+        topStores: [
+          { 
+            store_id: '1', 
+            store_name: 'ABC Halı Mağazası', 
+            user_name: 'Ahmet Yılmaz', 
+            order_count: 25, 
+            total_amount: 45750.50, 
+            period: selectedPeriod 
+          },
+          { 
+            store_id: '2', 
+            store_name: 'XYZ Tekstil', 
+            user_name: 'Mehmet Özkan', 
+            order_count: 18, 
+            total_amount: 32100.25, 
+            period: selectedPeriod 
+          },
+          { 
+            store_id: '3', 
+            store_name: 'Modern Halı Dünyası', 
+            user_name: 'Fatma Demir', 
+            order_count: 15, 
+            total_amount: 28900.75, 
+            period: selectedPeriod 
+          },
+          { 
+            store_id: '4', 
+            store_name: 'Elit Halı Sarayı', 
+            user_name: 'Can Kaya', 
+            order_count: 12, 
+            total_amount: 22450.00, 
+            period: selectedPeriod 
+          },
+          { 
+            store_id: '5', 
+            store_name: 'Premium Tekstil', 
+            user_name: 'Ayşe Şahin', 
+            order_count: 10, 
+            total_amount: 19200.30, 
+            period: selectedPeriod 
+          }
         ],
         topProducts: [
-          { name: 'Vintage Halı Siyah', orderCount: 25, totalQuantity: 45 },
-          { name: 'Modern Kilim Gri', orderCount: 20, totalQuantity: 35 },
-          { name: 'Klasik Halı Kırmızı', orderCount: 18, totalQuantity: 30 },
-          { name: 'Antik Halı Bej', orderCount: 15, totalQuantity: 25 },
-          { name: 'Contemporary Halı Mavi', orderCount: 12, totalQuantity: 20 }
+          {
+            product_id: 'product-1',
+            product_name: 'Premium Anadolu Halısı',
+            collection_name: 'Geleneksel Koleksiyon',
+            product_image: '/logo.svg',
+            total_quantity: 45,
+            total_amount: 22750.50,
+            period: selectedPeriod
+          },
+          {
+            product_id: 'product-2',
+            product_name: 'Modern Desenli Halı',
+            collection_name: 'Modern Koleksiyon',
+            product_image: '/logo.svg',
+            total_quantity: 38,
+            total_amount: 19450.75,
+            period: selectedPeriod
+          },
+          {
+            product_id: 'product-3',
+            product_name: 'Vintage Tarzı Halı',
+            collection_name: 'Vintage Koleksiyon',
+            product_image: '/logo.svg',
+            total_quantity: 32,
+            total_amount: 16800.00,
+            period: selectedPeriod
+          },
+          {
+            product_id: 'product-4',
+            product_name: 'Lüks Yün Halı',
+            collection_name: 'Premium Koleksiyon',
+            product_image: '/logo.svg',
+            total_quantity: 28,
+            total_amount: 15750.25,
+            period: selectedPeriod
+          },
+          {
+            product_id: 'product-5',
+            product_name: 'Çocuk Odası Halısı',
+            collection_name: 'Çocuk Koleksiyon',
+            product_image: '/logo.svg',
+            total_quantity: 25,
+            total_amount: 8750.50,
+            period: selectedPeriod
+          }
         ],
-        squareMeterData: [
-          { period: 'Son 1 Ay', totalSquareMeters: 1250.5, orderCount: 45 },
-          { period: 'Son 3 Ay', totalSquareMeters: 3850.2, orderCount: 128 },
-          { period: 'Son 1 Yıl', totalSquareMeters: 15420.8, orderCount: 485 }
-        ]
+        ordersOverTime: [
+          {
+            time_period: '2024-01',
+            order_count: 45,
+            total_amount: 67500.75,
+            total_area_m2: 1250.5
+          },
+          {
+            time_period: '2024-02',
+            order_count: 52,
+            total_amount: 78650.25,
+            total_area_m2: 1456.8
+          },
+          {
+            time_period: '2024-03',
+            order_count: 38,
+            total_amount: 55200.50,
+            total_area_m2: 1098.3
+          }
+        ],
+        totalStats: {
+          total_orders: 245,
+          total_amount: 387650.75,
+          total_product_quantity: 1847,
+          total_area_m2: 12567.8,
+          period: selectedPeriod,
+          start_date: '2023-03-15T10:30:00.000Z',
+          end_date: '2024-03-15T10:30:00.000Z'
+        }
       });
     } finally {
       setLoading(false);
@@ -146,12 +283,12 @@ export default function AnalyticsPage() {
   }
 
   // Chart yapılandırmaları
-  const topCustomersChartData = {
-    labels: analyticsData.topCustomers.map(customer => `${customer.name} ${customer.surname}`),
+  const topStoresChartData = {
+    labels: analyticsData.topStores.map(store => store.store_name),
     datasets: [
       {
         label: 'Sipariş Adedi',
-        data: analyticsData.topCustomers.map(customer => customer.orderCount),
+        data: analyticsData.topStores.map(store => store.order_count),
         backgroundColor: [
           'rgba(59, 130, 246, 0.8)',
           'rgba(16, 185, 129, 0.8)', 
@@ -172,11 +309,11 @@ export default function AnalyticsPage() {
   };
 
   const topProductsChartData = {
-    labels: analyticsData.topProducts.map(product => product.name),
+    labels: analyticsData.topProducts.map(product => product.product_name),
     datasets: [
       {
-        label: 'Sipariş Adedi',
-        data: analyticsData.topProducts.map(product => product.orderCount),
+        label: 'Toplam Adet',
+        data: analyticsData.topProducts.map(product => product.total_quantity),
         backgroundColor: [
           'rgba(236, 72, 153, 0.8)',
           'rgba(34, 197, 94, 0.8)',
@@ -196,17 +333,28 @@ export default function AnalyticsPage() {
     ]
   };
 
-  const squareMeterChartData = {
-    labels: analyticsData.squareMeterData.map(item => item.period),
+  const ordersOverTimeChartData = {
+    labels: analyticsData.ordersOverTime.map(item => item.time_period),
     datasets: [
       {
-        label: 'Toplam Metrekare',
-        data: analyticsData.squareMeterData.map(item => item.totalSquareMeters),
+        label: 'Toplam Metrekare (m²)',
+        data: analyticsData.ordersOverTime.map(item => item.total_area_m2),
         borderColor: 'rgba(99, 102, 241, 1)',
         backgroundColor: 'rgba(99, 102, 241, 0.1)',
         borderWidth: 3,
         fill: true,
-        tension: 0.4
+        tension: 0.4,
+        yAxisID: 'y'
+      },
+      {
+        label: 'Sipariş Sayısı',
+        data: analyticsData.ordersOverTime.map(item => item.order_count),
+        borderColor: 'rgba(239, 68, 68, 1)',
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        borderWidth: 2,
+        fill: false,
+        tension: 0.4,
+        yAxisID: 'y1'
       }
     ]
   };
@@ -224,8 +372,55 @@ export default function AnalyticsPage() {
     },
     scales: {
       y: {
+        type: 'linear' as const,
+        display: true,
+        position: 'left' as const,
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Metrekare (m²)'
+        }
+      },
+      y1: {
+        type: 'linear' as const,
+        display: true,
+        position: 'right' as const,
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Sipariş Sayısı'
+        },
+        grid: {
+          drawOnChartArea: false,
+        },
+      },
+    },
+  };
+
+  const simpleChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+      },
+      title: {
+        display: true,
+        text: 'Analiz Verileri'
+      },
+    },
+    scales: {
+      y: {
         beginAtZero: true
       }
+    }
+  };
+
+  const getPeriodLabel = (period: string) => {
+    switch (period) {
+      case '1_month': return 'Son 1 Ay';
+      case '3_months': return 'Son 3 Ay';
+      case '1_year': return 'Son 1 Yıl';
+      default: return period;
     }
   };
 
@@ -235,7 +430,7 @@ export default function AnalyticsPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Analiz Paneli</h1>
-          <p className="mt-2 text-gray-600">Sipariş ve müşteri analizlerinizi görüntüleyin</p>
+          <p className="mt-2 text-gray-600">Sipariş ve mağaza analizlerinizi görüntüleyin</p>
         </div>
 
         {/* Period Selector */}
@@ -244,9 +439,9 @@ export default function AnalyticsPage() {
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Zaman Aralığı Seçin</h2>
             <div className="flex flex-wrap gap-3">
               {[
-                { value: '1month', label: 'Son 1 Ay' },
-                { value: '3months', label: 'Son 3 Ay' }, 
-                { value: '1year', label: 'Son 1 Yıl' }
+                { value: '1_month', label: 'Son 1 Ay' },
+                { value: '3_months', label: 'Son 3 Ay' }, 
+                { value: '1_year', label: 'Son 1 Yıl' }
               ].map((period) => (
                 <button
                   key={period.value}
@@ -264,60 +459,114 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* En Çok Sipariş Veren Müşteriler */}
+        {/* Toplam İstatistikler Kartları */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">En Çok Sipariş Veren Müşteriler (TOP 5)</h2>
-            <div style={{ height: '400px' }}>
-              <Bar data={topCustomersChartData} options={chartOptions} />
-            </div>
-          </div>
-
-          {/* En Çok Sipariş Verilen Ürünler */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">En Çok Sipariş Verilen Ürünler (TOP 5)</h2>
-            <div style={{ height: '400px' }}>
-              <Bar data={topProductsChartData} options={chartOptions} />
-            </div>
-          </div>
-        </div>
-
-        {/* Metrekare Analizi */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Siparişler Metrekare Bazlı</h2>
-          <div style={{ height: '400px' }}>
-            <Line data={squareMeterChartData} options={chartOptions} />
-          </div>
-        </div>
-
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Toplam Müşteri Siparişleri</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Toplam Siparişler</h3>
             <p className="text-3xl font-bold text-blue-600">
-              {analyticsData.topCustomers.reduce((sum, customer) => sum + customer.orderCount, 0)}
+              {analyticsData.totalStats.total_orders}
             </p>
-            <p className="text-sm text-gray-500 mt-1">Son {selectedPeriod === '1month' ? '1 ay' : selectedPeriod === '3months' ? '3 ay' : '1 yıl'}</p>
+            <p className="text-sm text-gray-500 mt-1">{getPeriodLabel(selectedPeriod)}</p>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Toplam Ürün Siparişleri</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Toplam Ciro</h3>
             <p className="text-3xl font-bold text-green-600">
-              {analyticsData.topProducts.reduce((sum, product) => sum + product.orderCount, 0)}
+              {analyticsData.totalStats.total_amount.toLocaleString('tr-TR', {
+                style: 'currency',
+                currency: 'TRY'
+              })}
             </p>
-            <p className="text-sm text-gray-500 mt-1">Son {selectedPeriod === '1month' ? '1 ay' : selectedPeriod === '3months' ? '3 ay' : '1 yıl'}</p>
+            <p className="text-sm text-gray-500 mt-1">{getPeriodLabel(selectedPeriod)}</p>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Toplam Ürün Adedi</h3>
+            <p className="text-3xl font-bold text-purple-600">
+              {analyticsData.totalStats.total_product_quantity}
+            </p>
+            <p className="text-sm text-gray-500 mt-1">{getPeriodLabel(selectedPeriod)}</p>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Toplam Metrekare</h3>
-            <p className="text-3xl font-bold text-purple-600">
-              {analyticsData.squareMeterData.find(item => 
-                item.period === (selectedPeriod === '1month' ? 'Son 1 Ay' : 
-                                selectedPeriod === '3months' ? 'Son 3 Ay' : 'Son 1 Yıl')
-              )?.totalSquareMeters.toFixed(1) || '0'} m²
+            <p className="text-3xl font-bold text-orange-600">
+              {analyticsData.totalStats.total_area_m2.toFixed(1)} m²
             </p>
-            <p className="text-sm text-gray-500 mt-1">Son {selectedPeriod === '1month' ? '1 ay' : selectedPeriod === '3months' ? '3 ay' : '1 yıl'}</p>
+            <p className="text-sm text-gray-500 mt-1">{getPeriodLabel(selectedPeriod)}</p>
+          </div>
+        </div>
+
+        {/* Charts Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          {/* En Çok Sipariş Veren Mağazalar */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">En Çok Sipariş Veren Mağazalar (TOP 5)</h2>
+            <div style={{ height: '400px' }}>
+              <Bar data={topStoresChartData} options={simpleChartOptions} />
+            </div>
+            <div className="mt-4 space-y-2">
+              {analyticsData.topStores.map((store, index) => (
+                <div key={store.store_id} className="flex justify-between items-center text-sm">
+                  <span className="font-medium">{index + 1}. {store.store_name}</span>
+                  <div className="text-right">
+                    <div className="text-gray-900">{store.order_count} sipariş</div>
+                    <div className="text-gray-500">{store.total_amount.toLocaleString('tr-TR', {
+                      style: 'currency',
+                      currency: 'TRY'
+                    })}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* En Çok Sipariş Edilen Ürünler */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">En Çok Sipariş Edilen Ürünler (TOP 5)</h2>
+            <div style={{ height: '400px' }}>
+              <Bar data={topProductsChartData} options={simpleChartOptions} />
+            </div>
+            <div className="mt-4 space-y-2">
+              {analyticsData.topProducts.map((product, index) => (
+                <div key={product.product_id} className="flex justify-between items-center text-sm">
+                  <div>
+                    <div className="font-medium">{index + 1}. {product.product_name}</div>
+                    <div className="text-gray-500">{product.collection_name}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-gray-900">{product.total_quantity} adet</div>
+                    <div className="text-gray-500">{product.total_amount.toLocaleString('tr-TR', {
+                      style: 'currency',
+                      currency: 'TRY'
+                    })}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Zaman Bazlı Analiz */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Zaman Bazlı Sipariş Analizi</h2>
+          <div style={{ height: '400px' }}>
+            <Line data={ordersOverTimeChartData} options={chartOptions} />
+          </div>
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+            {analyticsData.ordersOverTime.map((item, index) => (
+              <div key={index} className="text-center p-4 bg-gray-50 rounded-lg">
+                <div className="text-lg font-semibold text-gray-900">{item.time_period}</div>
+                <div className="text-sm text-gray-600 mt-1">
+                  <div>{item.order_count} sipariş</div>
+                  <div>{item.total_area_m2.toFixed(1)} m²</div>
+                  <div>{item.total_amount.toLocaleString('tr-TR', {
+                    style: 'currency',
+                    currency: 'TRY'
+                  })}</div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

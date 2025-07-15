@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from "react";
 
 type Props = {
-  debit: string | number;
-  credit: string | number;
+  debit?: string | number;
+  credit?: string | number;
+  bakiye?: number; // 🆕 Mağaza bakiyesi
+  acikHesapLimiti?: number; // 🆕 Açık hesap limiti
+  limitsizAcikHesap?: boolean; // 🆕 Limitsiz açık hesap flag'i
 };
 
-export default function FinancialSummaryMobile({ debit, credit }: Props) {
+export default function FinancialSummaryMobile({ 
+  debit = "0", 
+  credit = "0", 
+  bakiye, 
+  acikHesapLimiti, 
+  limitsizAcikHesap = false 
+}: Props) {
   const [isBlurred, setIsBlurred] = useState(true);
 
   useEffect(() => {
@@ -26,21 +35,52 @@ export default function FinancialSummaryMobile({ debit, credit }: Props) {
   const formatCurrency = (amount: string | number) =>
     parseFloat(amount as string).toLocaleString("tr-TR", { minimumFractionDigits: 2 }) + " ₺";
 
+  // Yeni mağaza sistemi mi yoksa eski sistem mi kontrol et
+  const isNewSystem = bakiye !== undefined || acikHesapLimiti !== undefined;
+
   return (
     <div className="flex items-center justify-center w-full gap-2 text-xs text-gray-500 bg-gray-100 rounded px-2 py-1 flex md:hidden mt-2 mb-2">
       <div className={`${isBlurred ? "blur-sm" : ""} flex flex-row gap-4 transition-all duration-200`}>
-        <div>
-          <span className="block font-semibold">Borç</span>
-          <span>{formatCurrency(debit)}</span>
-        </div>
-        <div>
-          <span className="block font-semibold">Alacak</span>
-          <span>{formatCurrency(credit)}</span>
-        </div>
-        <div>
-          <span className="block font-semibold">Fark</span>
-          <span>{formatCurrency(Number(credit) - Number(debit))}</span>
-        </div>
+        {isNewSystem ? (
+          // 🆕 Yeni mağaza bakiye sistemi
+          <>
+            <div>
+              <span className="block font-semibold text-green-700">Bakiye</span>
+              <span className="text-green-600">{formatCurrency(bakiye || 0)}</span>
+            </div>
+            <div>
+              <span className="block font-semibold text-blue-700">Açık Hesap</span>
+              <span className="text-blue-600">
+                {limitsizAcikHesap ? 'Limitsiz' : formatCurrency(acikHesapLimiti || 0)}
+              </span>
+            </div>
+            <div>
+              <span className="block font-semibold text-purple-700">Toplam</span>
+              <span className="text-purple-600">
+                {limitsizAcikHesap 
+                  ? 'Limitsiz' 
+                  : formatCurrency((bakiye || 0) + (acikHesapLimiti || 0))
+                }
+              </span>
+            </div>
+          </>
+        ) : (
+          // Eski sistem (geriye uyumluluk için)
+          <>
+            <div>
+              <span className="block font-semibold">Borç</span>
+              <span>{formatCurrency(debit)}</span>
+            </div>
+            <div>
+              <span className="block font-semibold">Alacak</span>
+              <span>{formatCurrency(credit)}</span>
+            </div>
+            <div>
+              <span className="block font-semibold">Fark</span>
+              <span>{formatCurrency(Number(credit) - Number(debit))}</span>
+            </div>
+          </>
+        )}
       </div>
       <button
         type="button"
@@ -56,7 +96,7 @@ export default function FinancialSummaryMobile({ debit, credit }: Props) {
         ) : (
           // Göz açık ikonu
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-700">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12S5.25 6.75 12 6.75 21.75 12 21.75 12 18.75 17.25 12 17.25 2.25 12 2.25 12z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12S5.25 6.75 12 6.75 21.75 12 21.75 12S18.75 17.25 12 17.25 2.25 12 2.25 12z" />
             <circle cx="12" cy="12" r="3" />
           </svg>
         )}

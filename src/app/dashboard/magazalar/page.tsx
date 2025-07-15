@@ -173,15 +173,26 @@ export default function StoresPage() {
       ),
     },
     {
-      title: 'Açık Hesap',
-      key: 'acik_hesap',
+      title: 'Finansal Bilgiler', // 🆕 Yeni kolon
+      key: 'finansal',
       render: (record: Store) => (
         <div>
-          {record.limitsiz_acik_hesap ? (
-            <Tag color="green">Limitsiz</Tag>
-          ) : (
-            <div>{record.acik_hesap_tutari.toLocaleString('tr-TR')} ₺</div>
-          )}
+          <div className="text-sm">
+            <span className="font-medium text-green-600">Bakiye:</span> {record.bakiye?.toLocaleString('tr-TR') || '0'} ₺
+          </div>
+          <div className="text-sm">
+            <span className="font-medium text-blue-600">Açık Hesap:</span> {record.limitsiz_acik_hesap ? 'Limitsiz' : `${record.acik_hesap_tutari?.toLocaleString('tr-TR') || '0'} ₺`}
+          </div>
+          <div className="text-sm">
+            <span className="font-medium text-purple-600">Toplam:</span> {
+              record.limitsiz_acik_hesap 
+                ? 'Limitsiz' 
+                : `${((record.bakiye || 0) + (record.acik_hesap_tutari || 0)).toLocaleString('tr-TR')} ₺`
+            }
+          </div>
+          <div className="text-sm">
+            <span className="font-medium text-orange-600">Max Taksit:</span> {record.maksimum_taksit || 1}
+          </div>
         </div>
       ),
     },
@@ -204,7 +215,7 @@ export default function StoresPage() {
             icon={<EditOutlined />}
             onClick={() => router.push(`/dashboard/magazalar/${record.store_id}/duzenle`)}
           >
-            Güncelle
+            Düzenle
           </Button>
           <Button
             type="link"
@@ -214,7 +225,7 @@ export default function StoresPage() {
               setAssignModalVisible(true);
             }}
           >
-            Fiyat Listesi Ata
+            Fiyat Listesi
           </Button>
           <Button
             type="link"

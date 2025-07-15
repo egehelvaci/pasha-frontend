@@ -12,8 +12,6 @@ type HeaderProps = {
   user: {
     name: string;
     imageUrl: string;
-    debit: string;
-    credit: string;
     userType: {
       id: number;
     };
@@ -30,7 +28,7 @@ interface NavigationItem {
 const Header = ({ title, user }: HeaderProps) => {
   const pathname = usePathname();
   const router = useRouter();
-  const { logout, isAdmin } = useAuth();
+  const { logout, isAdmin, user: authUser } = useAuth(); // AuthContext'teki user'ı al
   const [isBlurred, setIsBlurred] = useState(true);
   const [cartItems, setCartItems] = useState<number>(0);
   const [isMounted, setIsMounted] = useState(false);
@@ -136,6 +134,30 @@ const Header = ({ title, user }: HeaderProps) => {
       return !prev;
     });
   };
+
+  // Finansal bilgileri AuthContext'teki store'dan al
+  const getFinancialInfo = () => {
+    if (authUser?.store) {
+      // Mağaza kullanıcısı için yeni sistem
+      return {
+        bakiye: authUser.store.bakiye || 0,
+        acikHesapLimiti: authUser.store.acik_hesap_tutari || 0,
+        toplamKullanilabilir: authUser.store.toplam_kullanilabilir || ((authUser.store.bakiye || 0) + (authUser.store.acik_hesap_tutari || 0)),
+        limitsizAcikHesap: authUser.store.limitsiz_acik_hesap || false
+      };
+    }
+    // Admin kullanıcıları için eski format (eğer hala kullanılıyorsa)
+    return {
+      debit: 0,
+      credit: 0,
+      bakiye: 0,
+      acikHesapLimiti: 0,
+      toplamKullanilabilir: 0,
+      limitsizAcikHesap: false
+    };
+  };
+
+  const financialInfo = getFinancialInfo();
   
   const navigation: NavigationItem[] = [
     {
@@ -228,11 +250,22 @@ const Header = ({ title, user }: HeaderProps) => {
       adminOnly: true,
     },
     {
+      name: 'Ürün Kuralları',
+      href: '/dashboard/urun-kurallari',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+          <path fillRule="evenodd" d="M2.25 13.5a8.25 8.25 0 018.25-8.25.75.75 0 01.75.75v6.75H18a.75.75 0 01.75.75 8.25 8.25 0 01-16.5 0z" clipRule="evenodd" />
+          <path fillRule="evenodd" d="M12.75 3a.75.75 0 01.75-.75 8.25 8.25 0 018.25 8.25.75.75 0 01-.75.75h-7.5V3z" clipRule="evenodd" />
+        </svg>
+      ),
+      adminOnly: true,
+    },
+    {
       name: 'Ödeme',
       href: '/dashboard/odemeler',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-          <path d="M2.273 5.625A4.483 4.483 0 015.25 4.5h13.5c1.141 0 2.227.425 3.048 1.19A3.75 3.75 0 0021.75 9v.75a2.25 2.25 0 01-2.25 2.25H4.5A2.25 2.25 0 012.25 9.75V9a3.75 3.75 0 01.023-3.375zM4.5 15.75a2.25 2.25 0 00-2.25 2.25v.75c0 .414.336.75.75.75h18a.75.75 0 00.75-.75v-.75a2.25 2.25 0 00-2.25-2.25H4.5z" />
+          <path d="M2.273 5.625A4.483 4.483 0 015.25 4.5h13.5c1.141 0 2.227.425 3.048 1.19A3.75 3.75 0 0121.75 9v.75a2.25 2.25 0 01-2.25 2.25H4.5A2.25 2.25 0 012.25 9.75V9a3.75 3.75 0 01.023-3.375zM4.5 15.75a2.25 2.25 0 00-2.25 2.25v.75c0 .414.336.75.75.75h18a.75.75 0 00.75-.75v-.75a2.25 2.25 0 00-2.25-2.25H4.5z" />
         </svg>
       ),
     },
@@ -256,46 +289,54 @@ const Header = ({ title, user }: HeaderProps) => {
           
           {/* Desktop: Sağ taraf kontrolleri */}
           <div className="hidden lg:flex items-center space-x-4">
-            {/* Finansal özet kutusu */}
-            <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
-              <div className={`${isBlurred ? 'blur-sm' : ''} flex gap-4 transition-all duration-200`}>
-                <div className="text-center">
-                  <span className="block font-semibold text-gray-700">Borç</span>
-                  <span className="text-red-600 font-medium">
-                    {parseFloat(user.debit).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                  </span>
+            {/* Finansal özet kutusu - Sadece mağaza kullanıcıları için */}
+            {authUser?.store && (
+              <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
+                <div className={`${isBlurred ? 'blur-sm' : ''} flex gap-4 transition-all duration-200`}>
+                  <div className="text-center">
+                    <span className="block font-semibold text-gray-700">Bakiye</span>
+                    <span className="text-green-600 font-medium">
+                      {financialInfo.bakiye.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                    </span>
+                  </div>
+                  <div className="text-center">
+                    <span className="block font-semibold text-gray-700">Açık Hesap</span>
+                    <span className="text-blue-600 font-medium">
+                      {financialInfo.limitsizAcikHesap 
+                        ? 'Limitsiz' 
+                        : `${financialInfo.acikHesapLimiti.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`
+                      }
+                    </span>
+                  </div>
+                  <div className="text-center">
+                    <span className="block font-semibold text-gray-700">Toplam</span>
+                    <span className="text-purple-600 font-medium">
+                      {financialInfo.limitsizAcikHesap 
+                        ? 'Limitsiz' 
+                        : `${financialInfo.toplamKullanilabilir.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`
+                      }
+                    </span>
+                  </div>
                 </div>
-                <div className="text-center">
-                  <span className="block font-semibold text-gray-700">Alacak</span>
-                  <span className="text-green-600 font-medium">
-                    {parseFloat(user.credit).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                  </span>
-                </div>
-                <div className="text-center">
-                  <span className="block font-semibold text-gray-700">Fark</span>
-                  <span className={`font-medium ${(parseFloat(user.credit) - parseFloat(user.debit)) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {(parseFloat(user.credit) - parseFloat(user.debit)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                  </span>
-                </div>
+                <button
+                  type="button"
+                  className="ml-2 p-1.5 bg-white rounded-full hover:bg-gray-100 transition-colors"
+                  onClick={handleBlurToggle}
+                  title={isBlurred ? 'Bilgileri Göster' : 'Bilgileri Gizle'}
+                >
+                  {isBlurred ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-gray-600">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12.001C3.226 15.376 7.113 19.5 12 19.5c1.772 0 3.432-.457 4.899-1.277M6.228 6.228A10.45 10.45 0 0112 4.5c4.887 0 8.774 4.124 10.066 7.499a10.523 10.523 0 01-4.293 5.226M6.228 6.228l11.544 11.544M6.228 6.228L3 3m15 15l-3-3" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-gray-600">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12S5.25 6.75 12 6.75 21.75 12 21.75 12S18.75 17.25 12 17.25 2.25 12 2.25 12z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  )}
+                </button>
               </div>
-              <button
-                type="button"
-                className="ml-2 p-1.5 bg-white rounded-full hover:bg-gray-100 transition-colors"
-                onClick={handleBlurToggle}
-                title={isBlurred ? 'Bilgileri Göster' : 'Bilgileri Gizle'}
-              >
-                {isBlurred ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-gray-600">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12.001C3.226 15.376 7.113 19.5 12 19.5c1.772 0 3.432-.457 4.899-1.277M6.228 6.228A10.45 10.45 0 0112 4.5c4.887 0 8.774 4.124 10.066 7.499a10.523 10.523 0 01-4.293 5.226M6.228 6.228l11.544 11.544M6.228 6.228L3 3m15 15l-3-3" />
-                  </svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-gray-600">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12S5.25 6.75 12 6.75 21.75 12 21.75 12 18.75 17.25 12 17.25 2.25 12 2.25 12z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                )}
-              </button>
-            </div>
+            )}
             
             {/* Sepet ikonu */}
             <Link href="/dashboard/sepetim" className="relative group">
@@ -385,8 +426,16 @@ const Header = ({ title, user }: HeaderProps) => {
           </div>
         </div>
         
-        {/* Mobil finansal özet */}
-        <FinancialSummaryMobile debit={user.debit} credit={user.credit} />
+        {/* Mobil finansal özet - Sadece mağaza kullanıcıları için */}
+        {authUser?.store && (
+          <FinancialSummaryMobile 
+            debit="0" 
+            credit="0" 
+            bakiye={financialInfo.bakiye}
+            acikHesapLimiti={financialInfo.acikHesapLimiti}
+            limitsizAcikHesap={financialInfo.limitsizAcikHesap}
+          />
+        )}
         
         {/* Desktop navigasyon */}
         <nav className="hidden lg:block py-2">
@@ -433,7 +482,9 @@ const Header = ({ title, user }: HeaderProps) => {
                   </div>
                   <div>
                     <div className="font-medium text-gray-900">{user.name}</div>
-                    <div className="text-sm text-gray-500">Kullanıcı</div>
+                    <div className="text-sm text-gray-500">
+                      {authUser?.userType === 'admin' ? 'Admin' : 'Kullanıcı'}
+                    </div>
                   </div>
                 </div>
                 <button
@@ -446,35 +497,43 @@ const Header = ({ title, user }: HeaderProps) => {
                 </button>
               </div>
               
-              {/* Finansal özet */}
-              <div className="p-4 bg-gray-50 border-b border-gray-200">
-                <div className="grid grid-cols-3 gap-3 text-center">
-                  <div className={`${isBlurred ? 'blur-sm' : ''} transition-all duration-200`}>
-                    <div className="text-xs font-semibold text-gray-600 mb-1">Borç</div>
-                    <div className="text-sm font-bold text-red-600">
-                      {parseFloat(user.debit).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+              {/* Finansal özet - Sadece mağaza kullanıcıları için */}
+              {authUser?.store && (
+                <div className="p-4 bg-gray-50 border-b border-gray-200">
+                  <div className="grid grid-cols-3 gap-3 text-center">
+                    <div className={`${isBlurred ? 'blur-sm' : ''} transition-all duration-200`}>
+                      <div className="text-xs font-semibold text-gray-600 mb-1">Bakiye</div>
+                      <div className="text-sm font-bold text-green-600">
+                        {financialInfo.bakiye.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                      </div>
+                    </div>
+                    <div className={`${isBlurred ? 'blur-sm' : ''} transition-all duration-200`}>
+                      <div className="text-xs font-semibold text-gray-600 mb-1">Açık Hesap</div>
+                      <div className="text-sm font-bold text-blue-600">
+                        {financialInfo.limitsizAcikHesap 
+                          ? 'Limitsiz' 
+                          : `${financialInfo.acikHesapLimiti.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`
+                        }
+                      </div>
+                    </div>
+                    <div className={`${isBlurred ? 'blur-sm' : ''} transition-all duration-200`}>
+                      <div className="text-xs font-semibold text-gray-600 mb-1">Toplam</div>
+                      <div className="text-sm font-bold text-purple-600">
+                        {financialInfo.limitsizAcikHesap 
+                          ? 'Limitsiz' 
+                          : `${financialInfo.toplamKullanilabilir.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`
+                        }
+                      </div>
                     </div>
                   </div>
-                  <div className={`${isBlurred ? 'blur-sm' : ''} transition-all duration-200`}>
-                    <div className="text-xs font-semibold text-gray-600 mb-1">Alacak</div>
-                    <div className="text-sm font-bold text-green-600">
-                      {parseFloat(user.credit).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                    </div>
-                  </div>
-                  <div className={`${isBlurred ? 'blur-sm' : ''} transition-all duration-200`}>
-                    <div className="text-xs font-semibold text-gray-600 mb-1">Fark</div>
-                    <div className={`text-sm font-bold ${(parseFloat(user.credit) - parseFloat(user.debit)) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {(parseFloat(user.credit) - parseFloat(user.debit)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                    </div>
-                  </div>
+                  <button
+                    onClick={handleBlurToggle}
+                    className="w-full mt-3 px-3 py-2 text-xs bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    {isBlurred ? 'Bilgileri Göster' : 'Bilgileri Gizle'}
+                  </button>
                 </div>
-                <button
-                  onClick={handleBlurToggle}
-                  className="w-full mt-3 px-3 py-2 text-xs bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  {isBlurred ? 'Bilgileri Göster' : 'Bilgileri Gizle'}
-                </button>
-              </div>
+              )}
               
               {/* Navigasyon menüsü */}
               <div className="flex-1 overflow-y-auto">
@@ -572,32 +631,48 @@ const Header = ({ title, user }: HeaderProps) => {
                 <div className="bg-gray-50 rounded-lg p-4">
                   <label className="block text-sm font-medium text-gray-600 mb-1">Kullanıcı Tipi</label>
                   <p className="text-gray-900">
-                    {user.userType.id === 1 ? 'Admin' : 'Kullanıcı'}
+                    {authUser?.userType === 'admin' ? 'Admin' : 'Mağaza Kullanıcısı'}
                   </p>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <label className="block text-sm font-medium text-gray-600 mb-1">Borç</label>
-                    <p className="text-red-600 font-bold">
-                      {parseFloat(user.debit).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                    </p>
-                  </div>
-                  
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <label className="block text-sm font-medium text-gray-600 mb-1">Alacak</label>
-                    <p className="text-green-600 font-bold">
-                      {parseFloat(user.credit).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Bakiye Farkı</label>
-                  <p className={`font-bold ${(parseFloat(user.credit) - parseFloat(user.debit)) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {(parseFloat(user.credit) - parseFloat(user.debit)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                  </p>
-                </div>
+                {/* Mağaza kullanıcısı için finansal bilgiler */}
+                {authUser?.store && (
+                  <>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Mağaza</label>
+                      <p className="text-gray-900 font-medium">{authUser.store.kurum_adi}</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Bakiye</label>
+                        <p className="text-green-600 font-bold">
+                          {financialInfo.bakiye.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                        </p>
+                      </div>
+                      
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Açık Hesap</label>
+                        <p className="text-blue-600 font-bold">
+                          {financialInfo.limitsizAcikHesap 
+                            ? 'Limitsiz' 
+                            : `${financialInfo.acikHesapLimiti.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`
+                          }
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Toplam Kullanılabilir</label>
+                      <p className="text-purple-600 font-bold">
+                        {financialInfo.limitsizAcikHesap 
+                          ? 'Limitsiz' 
+                          : `${financialInfo.toplamKullanilabilir.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`
+                        }
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
             

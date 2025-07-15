@@ -145,6 +145,8 @@ export interface Store {
   aciklama: string;
   limitsiz_acik_hesap: boolean;
   acik_hesap_tutari: number;
+  bakiye: number;                     // 🆕 Mağaza bakiyesi
+  maksimum_taksit: number;            // 🆕 Maksimum taksit sayısı
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -169,6 +171,8 @@ export interface CreateStoreData {
   aciklama: string;
   limitsiz_acik_hesap: boolean;
   acik_hesap_tutari?: number;
+  bakiye?: number;                    // 🆕 Mağaza bakiyesi
+  maksimum_taksit?: number;           // 🆕 Maksimum taksit sayısı
 }
 
 export interface CreateStoreResponse {
@@ -189,6 +193,8 @@ export interface UpdateStoreData {
   aciklama?: string;
   limitsiz_acik_hesap?: boolean;
   acik_hesap_tutari?: number;
+  bakiye?: number;                    // 🆕 Mağaza bakiyesi
+  maksimum_taksit?: number;           // 🆕 Maksimum taksit sayısı
   is_active?: boolean;
 }
 
@@ -901,3 +907,446 @@ export async function resetPassword(data: ResetPasswordData): Promise<ResetPassw
 
   return response.json();
 } 
+
+// Ürün Kuralları ve Kesim Türleri için interface'ler
+export interface SizeOption {
+  id: number;
+  width: number;
+  height: number;
+  isOptionalHeight: boolean;
+}
+
+export interface CutType {
+  id: number;
+  name: string;
+  createdAt?: string;
+  updatedAt?: string;
+  ruleCount?: number;
+  rules?: Array<{
+    id: number;
+    name: string;
+    description?: string;
+  }>;
+  variationCount?: number;
+  variations?: Array<{
+    id: number;
+    width: number;
+    height: number;
+    hasFringe: boolean;
+    stockQuantity: number;
+    product: {
+      id: string;
+      name: string;
+    };
+  }>;
+  usedInProducts?: Array<{
+    id: string;
+    name: string;
+  }>;
+}
+
+export interface ProductRule {
+  id: number;
+  name: string;
+  description: string;
+  canHaveFringe: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  sizeOptions: SizeOption[];
+  cutTypes: Array<{
+    id: number;
+    name: string;
+  }>;
+  productCount?: number;
+  products?: Array<{
+    productId: string;
+    name: string;
+  }>;
+}
+
+export interface CreateProductRuleData {
+  name: string;
+  description: string;
+  canHaveFringe: boolean;
+  sizeOptions: Array<{
+    width: number;
+    height: number;
+    isOptionalHeight: boolean;
+  }>;
+  cutTypeIds: number[];
+}
+
+export interface UpdateProductRuleData {
+  name?: string;
+  description?: string;
+  canHaveFringe?: boolean;
+  isActive?: boolean;
+}
+
+export interface CreateSizeOptionData {
+  width: number;
+  height: number;
+  isOptionalHeight: boolean;
+}
+
+export interface CreateCutTypeData {
+  name: string;
+}
+
+// Ürün Kuralları API Fonksiyonları
+export const getProductRules = async (isActive?: boolean, search?: string): Promise<ProductRule[]> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Token bulunamadı');
+
+    let url = `${API_BASE_URL}/api/admin/product-rules`;
+    const params = new URLSearchParams();
+    
+    if (isActive !== undefined) params.append('isActive', isActive.toString());
+    if (search) params.append('search', search);
+    
+    if (params.toString()) url += `?${params.toString()}`;
+
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) throw new Error('Ürün kuralları alınamadı');
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Ürün kuralları getirme hatası:', error);
+    throw error;
+  }
+};
+
+export const getProductRule = async (ruleId: number): Promise<ProductRule> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Token bulunamadı');
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/product-rules/${ruleId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) throw new Error('Ürün kuralı alınamadı');
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Ürün kuralı getirme hatası:', error);
+    throw error;
+  }
+};
+
+export const createProductRule = async (data: CreateProductRuleData): Promise<ProductRule> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Token bulunamadı');
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/product-rules`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) throw new Error('Ürün kuralı oluşturulamadı');
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Ürün kuralı oluşturma hatası:', error);
+    throw error;
+  }
+};
+
+export const updateProductRule = async (ruleId: number, data: UpdateProductRuleData): Promise<ProductRule> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Token bulunamadı');
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/product-rules/${ruleId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) throw new Error('Ürün kuralı güncellenemedi');
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Ürün kuralı güncelleme hatası:', error);
+    throw error;
+  }
+};
+
+export const deleteProductRule = async (ruleId: number): Promise<void> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Token bulunamadı');
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/product-rules/${ruleId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const result = await response.json();
+      throw new Error(result.message || 'Ürün kuralı silinemedi');
+    }
+  } catch (error) {
+    console.error('Ürün kuralı silme hatası:', error);
+    throw error;
+  }
+};
+
+// Boyut Seçenekleri API Fonksiyonları
+export const addSizeOption = async (ruleId: number, data: CreateSizeOptionData): Promise<SizeOption> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Token bulunamadı');
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/product-rules/${ruleId}/size-options`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) throw new Error('Boyut seçeneği eklenemedi');
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Boyut seçeneği ekleme hatası:', error);
+    throw error;
+  }
+};
+
+export const updateSizeOption = async (ruleId: number, sizeId: number, data: CreateSizeOptionData): Promise<SizeOption> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Token bulunamadı');
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/product-rules/${ruleId}/size-options/${sizeId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) throw new Error('Boyut seçeneği güncellenemedi');
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Boyut seçeneği güncelleme hatası:', error);
+    throw error;
+  }
+};
+
+export const deleteSizeOption = async (ruleId: number, sizeId: number): Promise<void> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Token bulunamadı');
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/product-rules/${ruleId}/size-options/${sizeId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) throw new Error('Boyut seçeneği silinemedi');
+  } catch (error) {
+    console.error('Boyut seçeneği silme hatası:', error);
+    throw error;
+  }
+};
+
+// Kesim Türleri Ataması API Fonksiyonları
+export const assignCutTypes = async (ruleId: number, cutTypeIds: number[]): Promise<CutType[]> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Token bulunamadı');
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/product-rules/${ruleId}/cut-types`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ cutTypeIds })
+    });
+
+    if (!response.ok) throw new Error('Kesim türleri atanamadı');
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Kesim türleri atama hatası:', error);
+    throw error;
+  }
+};
+
+export const removeCutType = async (ruleId: number, cutTypeId: number): Promise<void> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Token bulunamadı');
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/product-rules/${ruleId}/cut-types/${cutTypeId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) throw new Error('Kesim türü ataması kaldırılamadı');
+  } catch (error) {
+    console.error('Kesim türü atama kaldırma hatası:', error);
+    throw error;
+  }
+};
+
+// Kesim Türleri Yönetimi API Fonksiyonları
+export const getCutTypes = async (search?: string): Promise<CutType[]> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Token bulunamadı');
+
+    let url = `${API_BASE_URL}/api/admin/cut-types`;
+    if (search) url += `?search=${encodeURIComponent(search)}`;
+
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) throw new Error('Kesim türleri alınamadı');
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Kesim türleri getirme hatası:', error);
+    throw error;
+  }
+};
+
+export const getCutType = async (cutTypeId: number): Promise<CutType> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Token bulunamadı');
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/cut-types/${cutTypeId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) throw new Error('Kesim türü alınamadı');
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Kesim türü getirme hatası:', error);
+    throw error;
+  }
+};
+
+export const createCutType = async (data: CreateCutTypeData): Promise<CutType> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Token bulunamadı');
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/cut-types`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) throw new Error('Kesim türü oluşturulamadı');
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Kesim türü oluşturma hatası:', error);
+    throw error;
+  }
+};
+
+export const updateCutType = async (cutTypeId: number, data: CreateCutTypeData): Promise<CutType> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Token bulunamadı');
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/cut-types/${cutTypeId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) throw new Error('Kesim türü güncellenemedi');
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Kesim türü güncelleme hatası:', error);
+    throw error;
+  }
+};
+
+export const deleteCutType = async (cutTypeId: number): Promise<void> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Token bulunamadı');
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/cut-types/${cutTypeId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const result = await response.json();
+      throw new Error(result.message || 'Kesim türü silinemedi');
+    }
+  } catch (error) {
+    console.error('Kesim türü silme hatası:', error);
+    throw error;
+  }
+}; 

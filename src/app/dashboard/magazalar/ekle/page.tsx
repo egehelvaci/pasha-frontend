@@ -8,7 +8,7 @@ import { useAuth } from '@/app/context/AuthContext';
 
 export default function AddStorePage() {
   const router = useRouter();
-  const { isAdmin } = useAuth();
+  const { isAdmin, token } = useAuth();
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
 
@@ -21,9 +21,28 @@ export default function AddStorePage() {
   const onFinish = async (values: CreateStoreData) => {
     setLoading(true);
     try {
-      await createStore(values);
-      message.success('Mağaza başarıyla oluşturuldu');
-      router.push('/dashboard/magazalar');
+      // Admin API endpoint'ini kullan
+      const response = await fetch('https://pasha-backend-production.up.railway.app/api/admin/stores', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(values),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Mağaza oluşturulamadı');
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        message.success('Mağaza başarıyla oluşturuldu');
+        router.push('/dashboard/magazalar');
+      } else {
+        throw new Error(result.message || 'Mağaza oluşturulamadı');
+      }
     } catch (error: any) {
       message.error(error.message || 'Mağaza oluşturulurken bir hata oluştu');
     } finally {
@@ -58,6 +77,8 @@ export default function AddStorePage() {
             onValuesChange={onValuesChange}
             initialValues={{
               limitsiz_acik_hesap: false,
+              bakiye: 0,
+              maksimum_taksit: 1,
             }}
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -144,10 +165,43 @@ export default function AddStorePage() {
                 <Input.TextArea rows={3} />
               </Form.Item>
 
+              {/* 🆕 Bakiye Alanı */}
+              <Form.Item
+                label="Mağaza Bakiyesi (TL)"
+                name="bakiye"
+                rules={[{ required: true, message: 'Lütfen mağaza bakiyesini giriniz' }]}
+                tooltip="Mağazanın kullanabileceği mevcut bakiye tutarı"
+              >
+                <InputNumber
+                  className="w-full"
+                  formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                  parser={(value: string | undefined) => value ? Number(value.replace(/[^\d.]/g, '')) : 0}
+                  min={0}
+                  precision={2}
+                  placeholder="0.00"
+                />
+              </Form.Item>
+
+              {/* 🆕 Maksimum Taksit Sayısı */}
+              <Form.Item
+                label="Maksimum Taksit Sayısı"
+                name="maksimum_taksit"
+                rules={[{ required: true, message: 'Lütfen maksimum taksit sayısını giriniz' }]}
+                tooltip="Mağazanın kullanabileceği maksimum taksit sayısı"
+              >
+                <InputNumber
+                  className="w-full"
+                  min={1}
+                  max={48}
+                  placeholder="1"
+                />
+              </Form.Item>
+
               <Form.Item
                 label="Limitsiz Açık Hesap"
                 name="limitsiz_acik_hesap"
                 valuePropName="checked"
+                tooltip="Bu seçenek aktifse mağaza sınırsız açık hesap kullanabilir"
               >
                 <Switch />
               </Form.Item>
@@ -160,20 +214,34 @@ export default function AddStorePage() {
                   const isLimitsiz = getFieldValue('limitsiz_acik_hesap');
                   return !isLimitsiz ? (
                     <Form.Item
-                      label="Açık Hesap Tutarı"
+                      label="Açık Hesap Limiti (TL)"
                       name="acik_hesap_tutari"
-                      rules={[{ required: true, message: 'Lütfen açık hesap tutarını giriniz' }]}
+                      rules={[{ required: true, message: 'Lütfen açık hesap limitini giriniz' }]}
+                      tooltip="Mağazanın bakiyesi bittiğinde kullanabileceği açık hesap limiti"
                     >
                       <InputNumber
                         className="w-full"
                         formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                         parser={(value: string | undefined) => value ? Number(value.replace(/[^\d.]/g, '')) : 0}
                         min={0}
+                        precision={2}
+                        placeholder="0.00"
                       />
                     </Form.Item>
                   ) : null;
                 }}
               </Form.Item>
+            </div>
+
+            {/* Bilgilendirme Kartı */}
+            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h4 className="text-sm font-semibold text-blue-800 mb-2">💡 Yeni Ödeme Sistemi Bilgileri:</h4>
+              <ul className="text-xs text-blue-700 space-y-1">
+                <li>• <strong>Bakiye:</strong> Mağazanın doğrudan kullanabileceği para miktarı</li>
+                <li>• <strong>Açık Hesap Limiti:</strong> Bakiye bittiğinde kullanılabilecek kredi tutarı</li>
+                <li>• <strong>Toplam Kullanılabilir:</strong> Bakiye + Açık Hesap Limiti</li>
+                <li>• <strong>Sipariş Mantığı:</strong> Önce bakiyeden, sonra açık hesaptan düşülür</li>
+              </ul>
             </div>
 
             <div className="flex justify-end gap-2 mt-4 sticky bottom-0 bg-white py-4 border-t">
