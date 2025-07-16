@@ -41,9 +41,9 @@ interface AccountingData {
 }
 
 interface TransactionFormData {
-    customer_id: string;
-    product_id: string;
-    square_meters: number;
+    store_id: string;
+    collection_id?: string;
+    square_meters?: number;
     transaction_type: string;
     amount: number;
     is_expense: boolean;
@@ -67,8 +67,8 @@ const MuhasebePage = () => {
     const [selectedCollection, setSelectedCollection] = useState<string>('');
     const [collections, setCollections] = useState<any[]>([]);
     const [formData, setFormData] = useState<TransactionFormData>({
-        customer_id: '',
-        product_id: '',
+        store_id: '',
+        collection_id: '',
         square_meters: 0,
         transaction_type: '',
         amount: 0,
@@ -269,7 +269,7 @@ const MuhasebePage = () => {
     const handleCustomerChange = (customerId: string) => {
         setSelectedCustomer(customerId);
         setSelectedCollection('');
-        setFormData(prev => ({ ...prev, customer_id: customerId, product_id: '', amount: 0 }));
+        setFormData(prev => ({ ...prev, store_id: customerId, collection_id: '', amount: 0 }));
 
         if (customerId) {
             // Sadece bir kez çağır
@@ -284,8 +284,8 @@ const MuhasebePage = () => {
 
     // Tutarı hesapla
     const calculateAmount = () => {
-        const selectedProduct = collections.find(c => c.id === formData.product_id);
-        if (selectedProduct && formData.square_meters > 0) {
+        const selectedProduct = collections.find(c => c.id === formData.collection_id);
+        if (selectedProduct && formData.square_meters && formData.square_meters > 0) {
             const calculatedAmount = selectedProduct.price_per_square_meter * formData.square_meters;
             setFormData(prev => ({ ...prev, amount: calculatedAmount }));
         }
@@ -301,8 +301,8 @@ const MuhasebePage = () => {
     const closeModal = () => {
         setIsModalOpen(false);
         setFormData({
-            customer_id: '',
-            product_id: '',
+            store_id: '',
+            collection_id: '',
             square_meters: 0,
             transaction_type: '',
             amount: 0,
@@ -320,7 +320,7 @@ const MuhasebePage = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!formData.customer_id || !formData.amount || !formData.description) {
+        if (!formData.store_id || !formData.amount || !formData.description) {
             alert('Lütfen gerekli alanları doldurun');
             return;
         }
@@ -329,10 +329,23 @@ const MuhasebePage = () => {
             setFormLoading(true);
             const token = localStorage.getItem('token');
 
-            const submitData = {
-                ...formData,
-                transaction_date: new Date(formData.transaction_date).toISOString()
+            // API formatına uygun olarak veri hazırla
+            const submitData: any = {
+                store_id: formData.store_id,
+                transaction_type: formData.transaction_type,
+                amount: formData.amount,
+                is_expense: formData.is_expense,
+                transaction_date: new Date(formData.transaction_date).toISOString(),
+                description: formData.description
             };
+
+            // Eğer koleksiyon seçildiyse collection_id ve square_meters ekle
+            if (formData.collection_id) {
+                submitData.collection_id = formData.collection_id;
+                if (formData.square_meters && formData.square_meters > 0) {
+                    submitData.square_meters = formData.square_meters;
+                }
+            }
 
             const response = await fetch('https://pasha-backend-production.up.railway.app/api/admin/accounting-transactions', {
                 method: 'POST',
@@ -653,7 +666,7 @@ const MuhasebePage = () => {
                                             value={selectedCollection}
                                             onChange={(e) => {
                                                 setSelectedCollection(e.target.value);
-                                                setFormData(prev => ({ ...prev, product_id: e.target.value }));
+                                                setFormData(prev => ({ ...prev, collection_id: e.target.value }));
                                             }}
                                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a]"
                                         disabled={!selectedCustomer || formLoading || collections.length === 0}
@@ -693,7 +706,7 @@ const MuhasebePage = () => {
                                     <button
                                         type="button"
                                         onClick={calculateAmount}
-                                        disabled={!formData.product_id || !formData.square_meters || formLoading}
+                                        disabled={!formData.collection_id || !formData.square_meters || formLoading}
                                         className="w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                                     >
                                         Hesapla
