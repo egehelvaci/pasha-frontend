@@ -123,6 +123,18 @@ export default function AddStorePage() {
               </Form.Item>
 
               <Form.Item
+                label="TCKN"
+                name="tckn"
+                rules={[
+                  { required: true, message: 'Lütfen TCKN giriniz' },
+                  { len: 11, message: 'TCKN 11 haneli olmalıdır' },
+                  { pattern: /^[0-9]+$/, message: 'TCKN sadece sayılardan oluşmalıdır' }
+                ]}
+              >
+                <Input maxLength={11} placeholder="12345678901" />
+              </Form.Item>
+
+              <Form.Item
                 label="Telefon"
                 name="telefon"
                 rules={[{ required: true, message: 'Lütfen telefon numarasını giriniz' }]}

@@ -126,6 +126,7 @@ Bakiye += İptal Edilen Sipariş Tutarı
   "vergi_numarasi": "1234567890",
   "yetkili_adi": "Ahmet",
   "yetkili_soyadi": "Yılmaz",
+  "tckn": "12345678901",              // 🆕 TCKN alanı
   "telefon": "0212 555 0123",
   "eposta": "info@abc.com",
   "adres": "İstanbul",
@@ -188,6 +189,7 @@ Bakiye += İptal Edilen Sipariş Tutarı
         "telefon": "0212 555 0123",
         "eposta": "info@abc.com",
         "adres": "İstanbul",
+        "tckn": "12345678901",                    // 🆕 TCKN alanı
         "bakiye": 15000.00,                   // 🆕 Mağaza bakiyesi
         "acik_hesap_tutari": 10000.00,        // Açık hesap limiti
         "maksimum_taksit": 12,                // 🆕 Maksimum taksit sayısı

@@ -15,6 +15,7 @@ type Store = {
   adres: string;
   faks_numarasi: string;
   aciklama: string;
+  tckn: string;                      // 🆕 TCKN alanı
   limitsiz_acik_hesap: boolean;
   acik_hesap_tutari: number;
   bakiye: number;                    // 🆕 Mağaza bakiyesi

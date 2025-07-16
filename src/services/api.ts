@@ -143,6 +143,7 @@ export interface Store {
   adres: string;
   faks_numarasi: string;
   aciklama: string;
+  tckn: string;                       // 🆕 TCKN alanı
   limitsiz_acik_hesap: boolean;
   acik_hesap_tutari: number;
   bakiye: number;                     // 🆕 Mağaza bakiyesi
@@ -169,6 +170,7 @@ export interface CreateStoreData {
   adres: string;
   faks_numarasi?: string;
   aciklama: string;
+  tckn: string;                       // 🆕 TCKN alanı
   limitsiz_acik_hesap: boolean;
   acik_hesap_tutari?: number;
   bakiye?: number;                    // 🆕 Mağaza bakiyesi
@@ -191,6 +193,7 @@ export interface UpdateStoreData {
   adres?: string;
   faks_numarasi?: string;
   aciklama?: string;
+  tckn?: string;                      // 🆕 TCKN alanı
   limitsiz_acik_hesap?: boolean;
   acik_hesap_tutari?: number;
   bakiye?: number;                    // 🆕 Mağaza bakiyesi
@@ -1529,6 +1532,7 @@ export interface UserProfileInfo {
   username: string;
   email: string;
   phoneNumber?: string;
+  tckn?: string;                      // 🆕 TCKN alanı
   isActive: boolean;
   createdAt: string;
   userType: string;
@@ -1545,6 +1549,7 @@ export interface StoreProfileInfo {
   eposta?: string;
   adres?: string;
   faks_numarasi?: string;
+  tckn?: string;                      // 🆕 TCKN alanı
   is_active: boolean;
   created_at: string;
 }
@@ -1567,6 +1572,7 @@ export interface StoreUpdateData {
   eposta?: string;
   adres?: string;
   faks_numarasi?: string;
+  tckn?: string;                      // 🆕 TCKN alanı
 }
 
 export interface StoreUpdateResponse {

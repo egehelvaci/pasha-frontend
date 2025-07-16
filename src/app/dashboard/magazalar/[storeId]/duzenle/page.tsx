@@ -52,6 +52,7 @@ export default function EditStorePage() {
           vergi_dairesi: currentStore.vergi_dairesi,
           yetkili_adi: currentStore.yetkili_adi,
           yetkili_soyadi: currentStore.yetkili_soyadi,
+          tckn: currentStore.tckn,                       // 🆕 TCKN alanı
           telefon: currentStore.telefon,
           eposta: currentStore.eposta,
           adres: currentStore.adres,
@@ -165,6 +166,18 @@ export default function EditStorePage() {
                 rules={[{ required: true, message: 'Lütfen yetkili soyadını giriniz' }]}
               >
                 <Input />
+              </Form.Item>
+
+              <Form.Item
+                label="TCKN"
+                name="tckn"
+                rules={[
+                  { required: true, message: 'Lütfen TCKN giriniz' },
+                  { len: 11, message: 'TCKN 11 haneli olmalıdır' },
+                  { pattern: /^[0-9]+$/, message: 'TCKN sadece sayılardan oluşmalıdır' }
+                ]}
+              >
+                <Input maxLength={11} placeholder="12345678901" />
               </Form.Item>
 
               <Form.Item

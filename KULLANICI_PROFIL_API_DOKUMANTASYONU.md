@@ -61,6 +61,7 @@ Authorization: Bearer <JWT_TOKEN>
       "vergi_dairesi": "Kadıköy Vergi Dairesi",
       "yetkili_adi": "Mehmet",
       "yetkili_soyadi": "Demir",
+      "tckn": "12345678901",                  // 🆕 TCKN alanı
       "telefon": "0212 555 0123",
       "eposta": "info@abchali.com",
       "adres": "Atatürk Cad. No:123 Kadıköy/İstanbul",
@@ -104,6 +105,7 @@ Authorization: Bearer <JWT_TOKEN>
   "vergi_dairesi": "Kadıköy Vergi Dairesi", // Opsiyonel
   "yetkili_adi": "Mehmet", // Opsiyonel
   "yetkili_soyadi": "Demir", // Opsiyonel
+  "tckn": "12345678901", // Opsiyonel (11 haneli)
   "telefon": "0212 555 0123", // Opsiyonel (Türkiye formatı)
   "eposta": "info@abchali.com", // Opsiyonel (email formatı)
   "adres": "Atatürk Cad. No:123 Kadıköy/İstanbul", // Opsiyonel
@@ -114,6 +116,7 @@ Authorization: Bearer <JWT_TOKEN>
 #### Validation Kuralları
 - **kurum_adi**: Zorunlu, boş olamaz
 - **vergi_numarasi**: 10-11 haneli sayısal değer (opsiyonel)
+- **tckn**: 11 haneli sayısal değer (opsiyonel)
 - **telefon**: Türkiye telefon formatı `0XXX XXX XX XX` veya `+90XXX XXX XX XX` (opsiyonel)
 - **eposta**: Geçerli email formatı (opsiyonel)
 - Diğer alanlar: String, maksimum uzunluk kontrolleri
@@ -130,6 +133,7 @@ Authorization: Bearer <JWT_TOKEN>
     "vergi_dairesi": "Kadıköy Vergi Dairesi",
     "yetkili_adi": "Mehmet",
     "yetkili_soyadi": "Demir",
+    "tckn": "12345678901",                    // 🆕 TCKN alanı
     "telefon": "0212 555 0123",
     "eposta": "info@abchali.com",
     "adres": "Atatürk Cad. No:123 Kadıköy/İstanbul",
