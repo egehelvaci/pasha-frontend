@@ -647,7 +647,7 @@ const MuhasebePage = () => {
                                 {/* Ürün Seçimi */}
                                 <div className="md:col-span-2">
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Ürün <span className="text-red-500">*</span>
+                                        Ürün
                                     </label>
                                                                             <select
                                             value={selectedCollection}
@@ -656,7 +656,6 @@ const MuhasebePage = () => {
                                                 setFormData(prev => ({ ...prev, product_id: e.target.value }));
                                             }}
                                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a]"
-                                        required
                                         disabled={!selectedCustomer || formLoading || collections.length === 0}
                                     >
                                         <option value="">
