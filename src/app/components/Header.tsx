@@ -341,6 +341,16 @@ const Header = ({ title, user }: HeaderProps) => {
       ),
     },
     {
+      name: 'Analizlerim',
+      href: '/dashboard/kullanici-analizleri',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+          <path d="M18.375 2.25c-1.035 0-1.875.84-1.875 1.875v15.75c0 1.035.84 1.875 1.875 1.875h.75c1.035 0 1.875-.84 1.875-1.875V4.125c0-1.036-.84-1.875-1.875-1.875h-.75zM9.75 8.625c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-.75a1.875 1.875 0 01-1.875-1.875V8.625zM3 13.125c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v6.75c0 1.035-.84 1.875-1.875 1.875h-.75A1.875 1.875 0 013 19.875v-6.75z" />
+        </svg>
+      ),
+      adminOnly: false,
+    },
+    {
       name: 'Analiz',
       href: '/dashboard/analizler',
       icon: (
@@ -494,20 +504,29 @@ const Header = ({ title, user }: HeaderProps) => {
               
               {/* Dropdown menü */}
               <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <button 
-                  onClick={() => setIsProfileModalOpen(true)}
-                  className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                >
-                  <div className="flex items-center space-x-2">
-                    <FaUser size={16} />
-                    <span>Profiliniz</span>
-                  </div>
-                </button>
+                {!isAdmin ? (
+                  <Link href="/dashboard/ayarlar" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                    <div className="flex items-center space-x-2">
+                      <FaUser size={16} />
+                      <span>Profiliniz</span>
+                    </div>
+                  </Link>
+                ) : (
+                  <button 
+                    onClick={() => setIsProfileModalOpen(true)}
+                    className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <FaUser size={16} />
+                      <span>Profiliniz</span>
+                    </div>
+                  </button>
+                )}
                 {isAdmin && (
                 <Link href="/dashboard/ayarlar" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                   <div className="flex items-center space-x-2">
                     <FaCog size={16} />
-                    <span>Ayarlar</span>
+                    <span>Kullanıcı Yönetimi</span>
                   </div>
                 </Link>
                 )}
@@ -570,7 +589,10 @@ const Header = ({ title, user }: HeaderProps) => {
           <div className="flex space-x-1 ">
             {navigation.map((item) => {
               const isActive = pathname === item.href;
-              if (item.adminOnly && !isAdmin) return null;
+              // Admin kullanıcılar için sadece adminOnly: true olan öğeleri göster
+              // Admin olmayan kullanıcılar için sadece adminOnly: false olan öğeleri göster
+              if (isAdmin && item.adminOnly === false) return null;
+              if (!isAdmin && item.adminOnly === true) return null;
               return (
                 <Link
                   key={item.name}
@@ -686,7 +708,10 @@ const Header = ({ title, user }: HeaderProps) => {
                 <nav className="p-4 space-y-2">
                   {navigation.map((item) => {
                     const isActive = pathname === item.href;
-                    if (item.adminOnly && !isAdmin) return null;
+                    // Admin kullanıcılar için sadece adminOnly: true olan öğeleri göster
+                    // Admin olmayan kullanıcılar için sadece adminOnly: false olan öğeleri göster
+                    if (isAdmin && item.adminOnly === false) return null;
+                    if (!isAdmin && item.adminOnly === true) return null;
                     return (
                       <Link
                         key={item.name}

@@ -215,20 +215,51 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6">
         <hr className="border-gray-200 mb-6" />
         
-        {/* Kullanıcı bilgileri kartı */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-6">
-          <div className="flex items-center">
-            <div className="h-20 w-20 rounded-full bg-blue-900 flex items-center justify-center text-white text-2xl font-bold">
-              {user.name[0]}{user.surname[0]}
-            </div>
-            <div className="ml-4">
-              <h2 className="text-xl font-medium text-gray-800">{user.name} {user.surname}</h2>
-              <p className="text-gray-500">{user.username}</p>
-              {user.store && (
-                <p className="text-gray-600 mt-1">{user.store.kurum_adi}</p>
-              )}
+        {/* Kullanıcı bilgileri ve hızlı linkler */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* Kullanıcı bilgileri kartı */}
+          <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center">
+              <div className="h-20 w-20 rounded-full bg-blue-900 flex items-center justify-center text-white text-2xl font-bold">
+                {user.name[0]}{user.surname[0]}
+              </div>
+              <div className="ml-4">
+                <h2 className="text-xl font-medium text-gray-800">{user.name} {user.surname}</h2>
+                <p className="text-gray-500">{user.username}</p>
+                {user.store && (
+                  <p className="text-gray-600 mt-1">{user.store.kurum_adi}</p>
+                )}
+              </div>
             </div>
           </div>
+
+          {/* Analiz kartı - Sadece admin olmayan kullanıcılar için */}
+          {!user.userType || user.userType !== 'admin' ? (
+            <div className="bg-gradient-to-br from-purple-600 to-blue-600 p-6 rounded-lg shadow-sm border border-gray-200 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Sipariş Analizlerim</h3>
+                  <p className="text-purple-100 text-sm mb-4">
+                    Kişisel sipariş istatistiklerinizi inceleyin
+                  </p>
+                  <Link 
+                    href="/dashboard/kullanici-analizleri"
+                    className="inline-flex items-center gap-2 bg-white text-purple-600 px-4 py-2 rounded-md font-medium text-sm hover:bg-purple-50 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    Analizleri Görüntüle
+                  </Link>
+                </div>
+                <div className="flex-shrink-0">
+                  <svg className="w-12 h-12 text-purple-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         {/* Ana içerik - 3 kolonlu layout */}

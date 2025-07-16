@@ -3,8 +3,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { FaPlus, FaEdit, FaTrash, FaStore } from 'react-icons/fa';
-import { getStores, assignUserToStore, removeUserFromStore } from '@/services/api';
+import { FaPlus, FaEdit, FaTrash, FaStore, FaUser, FaLock, FaBuilding, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { getStores, assignUserToStore, removeUserFromStore, getMyProfile, updateStoreProfile, changePassword, StoreUpdateData, PasswordChangeData, UserProfileInfo, StoreProfileInfo } from '@/services/api';
 
 interface User {
   userId: string;
@@ -38,6 +38,8 @@ interface UserFormData {
 export default function Settings() {
   const { user, token, isAdmin, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  
+  // Admin için mevcut state'ler
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -61,6 +63,39 @@ export default function Settings() {
   const [assignLoading, setAssignLoading] = useState(false);
   const [removeLoading, setRemoveLoading] = useState(false);
   
+  // Normal kullanıcı için yeni state'ler
+  const [activeTab, setActiveTab] = useState<'profile' | 'store' | 'password'>('profile');
+  const [userProfile, setUserProfile] = useState<UserProfileInfo | null>(null);
+  const [storeProfile, setStoreProfile] = useState<StoreProfileInfo | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+  
+  // Şifre değiştirme form state'leri
+  const [passwordForm, setPasswordForm] = useState<PasswordChangeData>({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  // Mağaza güncelleme form state'leri
+  const [storeForm, setStoreForm] = useState<StoreUpdateData>({
+    kurum_adi: '',
+    vergi_numarasi: '',
+    vergi_dairesi: '',
+    yetkili_adi: '',
+    yetkili_soyadi: '',
+    telefon: '',
+    eposta: '',
+    adres: '',
+    faks_numarasi: ''
+  });
+  const [storeLoading, setStoreLoading] = useState(false);
+  const [storeMessage, setStoreMessage] = useState('');
+  
   // API çağrısını takip etmek için ref oluştur
   const fetchedRef = useRef(false);
 
@@ -68,17 +103,17 @@ export default function Settings() {
     // Auth yüklemesi tamamlanmadıysa bekle
     if (authLoading) return;
     
-    // Admin olmayan kullanıcıları dashboard'a yönlendir
-    if (!isAdmin) {
-      router.push('/dashboard');
-      return;
-    }
-    
-    // Sadece bir kez çağrılmasını sağla
-    if (!fetchedRef.current) {
-      fetchedRef.current = true;
-    fetchUsers();
-      fetchStores();
+    // Admin kullanıcılar için mevcut logic
+    if (isAdmin) {
+      // Sadece bir kez çağrılmasını sağla
+      if (!fetchedRef.current) {
+        fetchedRef.current = true;
+        fetchUsers();
+        fetchStores();
+      }
+    } else {
+      // Normal kullanıcılar için profil bilgilerini getir
+      fetchUserProfile();
     }
   }, [isAdmin, authLoading, router]);
 
@@ -91,29 +126,107 @@ export default function Settings() {
     );
   }
 
-  // Admin kontrolü
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <svg className="mx-auto h-12 w-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">Erişim Reddedildi</h3>
-          <p className="mt-1 text-sm text-gray-500">Bu sayfaya erişim yetkiniz bulunmamaktadır.</p>
-          <div className="mt-6">
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              Dashboard'a Dön
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Normal kullanıcı profil bilgilerini getir
+  const fetchUserProfile = async () => {
+    setProfileLoading(true);
+    try {
+      const profileData = await getMyProfile();
+      setUserProfile(profileData.user);
+      setStoreProfile(profileData.store);
+      
+      // Mağaza form'unu doldur
+      if (profileData.store) {
+        setStoreForm({
+          kurum_adi: profileData.store.kurum_adi || '',
+          vergi_numarasi: profileData.store.vergi_numarasi || '',
+          vergi_dairesi: profileData.store.vergi_dairesi || '',
+          yetkili_adi: profileData.store.yetkili_adi || '',
+          yetkili_soyadi: profileData.store.yetkili_soyadi || '',
+          telefon: profileData.store.telefon || '',
+          eposta: profileData.store.eposta || '',
+          adres: profileData.store.adres || '',
+          faks_numarasi: profileData.store.faks_numarasi || ''
+        });
+      }
+    } catch (err: any) {
+      setError(err.message || "Profil bilgileri yüklenirken bir hata oluştu");
+    } finally {
+      setProfileLoading(false);
+    }
+  };
 
+  // Şifre değiştirme form handler'ı
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPasswordForm(prev => ({ ...prev, [name]: value }));
+    setPasswordMessage(''); // Mesajı temizle
+  };
+
+  // Şifre değiştirme submit
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordMessage('');
+
+    // Frontend validasyonu
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordMessage('Yeni şifre ve onay şifresi eşleşmiyor');
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordMessage('Yeni şifre en az 6 karakter olmalıdır');
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const message = await changePassword(passwordForm);
+      setPasswordMessage(message);
+      // Form'u temizle
+      setPasswordForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    } catch (err: any) {
+      setPasswordMessage('Hata: ' + err.message);
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  // Mağaza form handler'ı
+  const handleStoreChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setStoreForm(prev => ({ ...prev, [name]: value }));
+    setStoreMessage(''); // Mesajı temizle
+  };
+
+  // Mağaza güncelleme submit
+  const handleStoreSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStoreMessage('');
+
+    // Frontend validasyonu
+    if (!storeForm.kurum_adi.trim()) {
+      setStoreMessage('Kurum adı zorunludur');
+      return;
+    }
+
+    setStoreLoading(true);
+    try {
+      await updateStoreProfile(storeForm);
+      setStoreMessage('Mağaza bilgileri başarıyla güncellendi!');
+      // Profil bilgilerini yenile
+      await fetchUserProfile();
+    } catch (err: any) {
+      setStoreMessage('Hata: ' + err.message);
+    } finally {
+      setStoreLoading(false);
+    }
+  };
+
+  // Admin için mevcut fonksiyonlar (değişiklik yok)
   useEffect(() => {
     if (selectedUser) {
       setFormData({
@@ -187,29 +300,27 @@ export default function Settings() {
       setSelectedUser(data.data);
       setModalOpen(true);
     } catch (err: any) {
-      setError(err.message || "Kullanıcı detayları yüklenirken bir hata oluştu");
+      setError(err.message || "Kullanıcı bilgileri alınırken bir hata oluştu");
     }
   };
 
-  const handleDelete = async () => {
+  const handleDeleteUser = async () => {
     if (!deleteUserId) return;
+    
     try {
       const res = await fetch(`https://pasha-backend-production.up.railway.app/api/admin/users/${deleteUserId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ permanently: true })
+        }
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.message);
+      
+      setUsers(users.filter(u => u.userId !== deleteUserId));
       setDeleteModalOpen(false);
       setDeleteUserId(null);
-      
-      // Kullanıcıları yenile
-      fetchedRef.current = false; // useRef'i sıfırla
-      fetchUsers();
     } catch (err: any) {
       setError(err.message || "Kullanıcı silinirken bir hata oluştu");
     }
@@ -314,6 +425,354 @@ export default function Settings() {
     }
   };
 
+  // Normal kullanıcı için profil yönetimi UI'ı
+  if (!isAdmin) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Profil Ayarları</h1>
+          <p className="text-gray-600">Kişisel bilgilerinizi ve ayarlarınızı yönetin</p>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="border-b border-gray-200 mb-6">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab('profile')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'profile'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <FaUser className="inline mr-2" />
+              Profil Bilgileri
+            </button>
+            {storeProfile && (
+              <button
+                onClick={() => setActiveTab('store')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'store'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <FaBuilding className="inline mr-2" />
+                Mağaza Bilgileri
+              </button>
+            )}
+            <button
+              onClick={() => setActiveTab('password')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'password'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <FaLock className="inline mr-2" />
+              Şifre Değiştir
+            </button>
+          </nav>
+        </div>
+
+        {profileLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        ) : (
+          <>
+            {/* Profil Bilgileri Tab */}
+            {activeTab === 'profile' && userProfile && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Kişisel Bilgiler</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Ad</label>
+                    <p className="bg-gray-50 px-3 py-2 rounded-md text-gray-900">{userProfile.name}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Soyad</label>
+                    <p className="bg-gray-50 px-3 py-2 rounded-md text-gray-900">{userProfile.surname}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Kullanıcı Adı</label>
+                    <p className="bg-gray-50 px-3 py-2 rounded-md text-gray-900">{userProfile.username}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">E-posta</label>
+                    <p className="bg-gray-50 px-3 py-2 rounded-md text-gray-900">{userProfile.email}</p>
+                  </div>
+                  {userProfile.phoneNumber && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
+                      <p className="bg-gray-50 px-3 py-2 rounded-md text-gray-900">{userProfile.phoneNumber}</p>
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Kullanıcı Tipi</label>
+                    <p className="bg-gray-50 px-3 py-2 rounded-md text-gray-900">{userProfile.userType}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Mağaza Bilgileri Tab */}
+            {activeTab === 'store' && storeProfile && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Mağaza Bilgileri</h2>
+                
+                {storeMessage && (
+                  <div className={`mb-4 p-3 rounded-md ${
+                    storeMessage.startsWith('Hata') 
+                      ? 'bg-red-50 border border-red-200 text-red-700' 
+                      : 'bg-green-50 border border-green-200 text-green-700'
+                  }`}>
+                    {storeMessage}
+                  </div>
+                )}
+
+                <form onSubmit={handleStoreSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Kurum Adı *
+                      </label>
+                      <input
+                        type="text"
+                        name="kurum_adi"
+                        value={storeForm.kurum_adi}
+                        onChange={handleStoreChange}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Vergi Numarası
+                      </label>
+                      <input
+                        type="text"
+                        name="vergi_numarasi"
+                        value={storeForm.vergi_numarasi}
+                        onChange={handleStoreChange}
+                        placeholder="10-11 haneli sayısal değer"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Vergi Dairesi
+                      </label>
+                      <input
+                        type="text"
+                        name="vergi_dairesi"
+                        value={storeForm.vergi_dairesi}
+                        onChange={handleStoreChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Yetkili Adı
+                      </label>
+                      <input
+                        type="text"
+                        name="yetkili_adi"
+                        value={storeForm.yetkili_adi}
+                        onChange={handleStoreChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Yetkili Soyadı
+                      </label>
+                      <input
+                        type="text"
+                        name="yetkili_soyadi"
+                        value={storeForm.yetkili_soyadi}
+                        onChange={handleStoreChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Telefon
+                      </label>
+                      <input
+                        type="tel"
+                        name="telefon"
+                        value={storeForm.telefon}
+                        onChange={handleStoreChange}
+                        placeholder="0212 555 0123"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        E-posta
+                      </label>
+                      <input
+                        type="email"
+                        name="eposta"
+                        value={storeForm.eposta}
+                        onChange={handleStoreChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Adres
+                      </label>
+                      <textarea
+                        name="adres"
+                        value={storeForm.adres}
+                        onChange={handleStoreChange}
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Faks Numarası
+                      </label>
+                      <input
+                        type="tel"
+                        name="faks_numarasi"
+                        value={storeForm.faks_numarasi}
+                        onChange={handleStoreChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={storeLoading}
+                      className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {storeLoading ? 'Güncelleniyor...' : 'Güncelle'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* Şifre Değiştir Tab */}
+            {activeTab === 'password' && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Şifre Değiştir</h2>
+                
+                {passwordMessage && (
+                  <div className={`mb-4 p-3 rounded-md ${
+                    passwordMessage.startsWith('Hata') 
+                      ? 'bg-red-50 border border-red-200 text-red-700' 
+                      : 'bg-green-50 border border-green-200 text-green-700'
+                  }`}>
+                    {passwordMessage}
+                  </div>
+                )}
+
+                <form onSubmit={handlePasswordSubmit} className="space-y-4 max-w-md">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Mevcut Şifre *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showCurrentPassword ? "text" : "password"}
+                        name="currentPassword"
+                        value={passwordForm.currentPassword}
+                        onChange={handlePasswordChange}
+                        required
+                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      >
+                        {showCurrentPassword ? <FaEyeSlash className="h-4 w-4 text-gray-400" /> : <FaEye className="h-4 w-4 text-gray-400" />}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Yeni Şifre *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showNewPassword ? "text" : "password"}
+                        name="newPassword"
+                        value={passwordForm.newPassword}
+                        onChange={handlePasswordChange}
+                        required
+                        minLength={6}
+                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      >
+                        {showNewPassword ? <FaEyeSlash className="h-4 w-4 text-gray-400" /> : <FaEye className="h-4 w-4 text-gray-400" />}
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">En az 6 karakter olmalıdır</p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Yeni Şifre Onayı *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        name="confirmPassword"
+                        value={passwordForm.confirmPassword}
+                        onChange={handlePasswordChange}
+                        required
+                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      >
+                        {showConfirmPassword ? <FaEyeSlash className="h-4 w-4 text-gray-400" /> : <FaEye className="h-4 w-4 text-gray-400" />}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-4">
+                    <button
+                      type="submit"
+                      disabled={passwordLoading}
+                      className="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {passwordLoading ? 'Değiştiriliyor...' : 'Şifre Değiştir'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // Admin için mevcut UI (değişiklik yok)
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Yükleniyor...</div>;
   }
@@ -410,9 +869,10 @@ export default function Settings() {
       {modalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg relative">
-            <button className="absolute top-2 right-3 text-gray-400 hover:text-gray-700" onClick={() => setModalOpen(false)}>&times;</button>
-            <h2 className="text-xl font-bold mb-4 text-black">{selectedUser ? 'Kullanıcı Düzenle' : 'Yeni Kullanıcı'}</h2>
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <h2 className="text-lg font-bold mb-4 text-black">
+              {selectedUser ? 'Kullanıcı Düzenle' : 'Yeni Kullanıcı Ekle'}
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="flex flex-col gap-1">
                 <label htmlFor="username" className="text-sm font-semibold text-gray-700">Kullanıcı Adı</label>
                 <input
@@ -432,7 +892,7 @@ export default function Settings() {
                     name="password"
                     id="password"
                     type="password"
-                    value={formData.password || ''}
+                    value={formData.password}
                     onChange={handleInputChange}
                     placeholder="Şifre"
                     className="border rounded px-3 py-2 text-black"
@@ -513,9 +973,14 @@ export default function Settings() {
                 </div>
               )}
 
-              <button type="submit" className="bg-blue-900 text-white rounded-full px-6 py-2 font-semibold mt-2">
-                {selectedUser ? 'Güncelle' : 'Ekle'}
-              </button>
+              <div className="flex justify-end gap-2 mt-6">
+                <button type="button" className="px-4 py-2 rounded bg-gray-200 text-black" onClick={() => { setModalOpen(false); setSelectedUser(null); }}>
+                  Vazgeç
+                </button>
+                <button type="submit" className="bg-blue-900 text-white rounded px-6 py-2 font-semibold">
+                  {selectedUser ? 'Güncelle' : 'Ekle'}
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -525,11 +990,11 @@ export default function Settings() {
       {deleteModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-lg relative">
-            <h2 className="text-lg font-bold mb-4 text-black">Onay</h2>
-            <div className="mb-6 text-black">Bu kullanıcıyı silmek istediğinize emin misiniz?</div>
+            <h2 className="text-lg font-bold mb-4 text-black">Kullanıcıyı Sil</h2>
+            <p className="text-gray-600 mb-6">Bu kullanıcıyı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.</p>
             <div className="flex justify-end gap-2">
               <button className="px-4 py-2 rounded bg-gray-200 text-black" onClick={() => { setDeleteModalOpen(false); setDeleteUserId(null); }}>Vazgeç</button>
-              <button className="px-4 py-2 rounded bg-red-600 text-white" onClick={handleDelete}>Evet</button>
+              <button className="px-4 py-2 rounded bg-red-600 text-white" onClick={handleDeleteUser}>Evet</button>
             </div>
           </div>
         </div>

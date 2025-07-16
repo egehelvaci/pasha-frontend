@@ -1426,3 +1426,251 @@ export const getMyBalance = async (): Promise<BalanceInfo> => {
     throw error;
   }
 }; 
+
+// Kullanıcı istatistikleri interface'leri
+export interface UserInfo {
+  user_id: string;
+  name: string;
+  email: string;
+  store_name: string;
+  store_id: string;
+}
+
+export interface OrderStatistics {
+  total_orders: number;
+  total_amount: number;
+  total_area_m2: number;
+  pending_orders: number;
+  confirmed_orders: number;
+  delivered_orders: number;
+  canceled_orders: number;
+  completed_orders: number;
+}
+
+export interface TopProduct {
+  product_id: string;
+  product_name: string;
+  collection_name: string;
+  product_image: string;
+  total_quantity: number;
+  total_amount: number;
+  order_count: number;
+}
+
+export interface TopCollection {
+  collection_id: string;
+  collection_name: string;
+  collection_code: string;
+  total_quantity: number;
+  total_amount: number;
+  order_count: number;
+}
+
+export interface MonthlyOrder {
+  month: string;
+  order_count: number;
+  total_amount: number;
+}
+
+export interface PeriodInfo {
+  period: string;
+  start_date: string;
+  end_date: string;
+}
+
+export interface UserStatisticsResponse {
+  success: boolean;
+  data: {
+    user_info: UserInfo;
+    order_statistics: OrderStatistics;
+    top_products: TopProduct[];
+    top_collections: TopCollection[];
+    monthly_orders: MonthlyOrder[];
+    period_info: PeriodInfo;
+  };
+}
+
+// Kullanıcı istatistiklerini çeken API fonksiyonu
+export const getMyUserStatistics = async (period: '1_month' | '3_months' | '6_months' | '1_year' = '1_year'): Promise<UserStatisticsResponse['data']> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Token bulunamadı');
+
+    const response = await fetch(`${API_BASE_URL}/api/my-statistics/user-stats?period=${period}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Kullanıcı istatistikleri alınamadı');
+    }
+
+    const result: UserStatisticsResponse = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Kullanıcı istatistikleri getirme hatası:', error);
+    throw error;
+  }
+}; 
+
+// =============================================================================
+// KULLANICI PROFİL YÖNETİMİ
+// =============================================================================
+
+// Profil ilgili interface'ler
+export interface UserProfileInfo {
+  userId: string;
+  name: string;
+  surname: string;
+  username: string;
+  email: string;
+  phoneNumber?: string;
+  isActive: boolean;
+  createdAt: string;
+  userType: string;
+}
+
+export interface StoreProfileInfo {
+  store_id: string;
+  kurum_adi: string;
+  vergi_numarasi?: string;
+  vergi_dairesi?: string;
+  yetkili_adi?: string;
+  yetkili_soyadi?: string;
+  telefon?: string;
+  eposta?: string;
+  adres?: string;
+  faks_numarasi?: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface ProfileResponse {
+  success: boolean;
+  data: {
+    user: UserProfileInfo;
+    store: StoreProfileInfo | null;
+  };
+}
+
+export interface StoreUpdateData {
+  kurum_adi: string;
+  vergi_numarasi?: string;
+  vergi_dairesi?: string;
+  yetkili_adi?: string;
+  yetkili_soyadi?: string;
+  telefon?: string;
+  eposta?: string;
+  adres?: string;
+  faks_numarasi?: string;
+}
+
+export interface StoreUpdateResponse {
+  success: boolean;
+  message: string;
+  data: StoreProfileInfo;
+}
+
+export interface PasswordChangeData {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface PasswordChangeResponse {
+  success: boolean;
+  message: string;
+}
+
+// Profil bilgilerini getir
+export const getMyProfile = async (): Promise<{ user: UserProfileInfo; store: StoreProfileInfo | null }> => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/profile/me`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Profil bilgileri alınamadı');
+    }
+
+    const result: ProfileResponse = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Profil bilgileri getirme hatası:', error);
+    throw error;
+  }
+};
+
+// Mağaza bilgilerini güncelle
+export const updateStoreProfile = async (storeData: StoreUpdateData): Promise<StoreProfileInfo> => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/profile/store`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(storeData)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Mağaza bilgileri güncellenemedi');
+    }
+
+    const result: StoreUpdateResponse = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Mağaza bilgileri güncelleme hatası:', error);
+    throw error;
+  }
+};
+
+// Şifre değiştir
+export const changePassword = async (passwordData: PasswordChangeData): Promise<string> => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/profile/change-password`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(passwordData)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Şifre değiştirilemedi');
+    }
+
+    const result: PasswordChangeResponse = await response.json();
+    return result.message;
+  } catch (error) {
+    console.error('Şifre değiştirme hatası:', error);
+    throw error;
+  }
+}; 
