@@ -184,7 +184,7 @@ export default function StoresPage() {
             </span>
           </div>
           <div className="text-sm">
-            <span className="font-medium text-blue-600">Açık Hesap:</span> {record.limitsiz_acik_hesap ? 'Limitsiz' : `${record.acik_hesap_tutari?.toLocaleString('tr-TR') || '0'} ₺`}
+            <span className="font-medium text-[#00365a]">Açık Hesap:</span> {record.limitsiz_acik_hesap ? 'Limitsiz' : `${record.acik_hesap_tutari?.toLocaleString('tr-TR') || '0'} ₺`}
           </div>
           <div className="text-sm">
             <span className="font-medium text-purple-600">Toplam:</span> {
@@ -260,6 +260,9 @@ export default function StoresPage() {
             type="primary"
             icon={<PlusOutlined />}
             onClick={() => router.push('/dashboard/magazalar/ekle')}
+            style={{ backgroundColor: '#00365a', borderColor: '#00365a' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#004170'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#00365a'}
           >
             Yeni Mağaza
           </Button>

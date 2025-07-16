@@ -109,7 +109,7 @@ export default function ProductRulesPage() {
           <div className="mt-6">
             <button
               onClick={() => router.push('/dashboard')}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#00365a] hover:bg-[#004170] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00365a]"
             >
               Dashboard'a Dön
             </button>
@@ -131,7 +131,7 @@ export default function ProductRulesPage() {
           <div className="flex flex-col sm:flex-row gap-2">
             <Link
               href="/dashboard/urun-kurallari/ekle"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#00365a] hover:bg-[#004170] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00365a]"
             >
               <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -166,7 +166,7 @@ export default function ProductRulesPage() {
               </select>
               <button
                 onClick={handleSearch}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#00365a] hover:bg-[#004170] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00365a]"
               >
                 <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -196,8 +196,8 @@ export default function ProductRulesPage() {
             <div className="text-sm text-red-600">Pasif Kural</div>
           </div>
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <div className="text-2xl font-bold text-blue-800">{cutTypes.length}</div>
-            <div className="text-sm text-blue-600">Kesim Türü</div>
+            <div className="text-2xl font-bold text-[#00365a]">{cutTypes.length}</div>
+            <div className="text-sm text-[#00365a]">Kesim Türü</div>
           </div>
         </div>
 
@@ -218,7 +218,7 @@ export default function ProductRulesPage() {
             <div className="mt-6">
               <Link
                 href="/dashboard/urun-kurallari/ekle"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#00365a] hover:bg-[#004170]"
               >
                 İlk Kuralı Ekle
               </Link>
@@ -279,7 +279,7 @@ export default function ProductRulesPage() {
                   <div className="flex space-x-2">
                     <Link
                       href={`/dashboard/urun-kurallari/${rule.id}`}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      className="text-[#00365a] hover:text-[#004170] text-sm font-medium"
                     >
                       Detay
                     </Link>

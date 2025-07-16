@@ -210,6 +210,9 @@ export default function PriceListsPage() {
             type="link"
             icon={<EditOutlined />}
             onClick={() => router.push(`/dashboard/fiyat-listeleri/${record.price_list_id}/duzenle`)}
+            style={{ color: '#00365a' }}
+            onMouseEnter={(e) => e.currentTarget.style.color = '#004170'}
+            onMouseLeave={(e) => e.currentTarget.style.color = '#00365a'}
           >
             Güncelle
           </Button>
@@ -245,6 +248,9 @@ export default function PriceListsPage() {
             type="primary"
             icon={<PlusOutlined />}
             onClick={() => router.push('/dashboard/fiyat-listeleri/ekle')}
+            style={{ backgroundColor: '#00365a', borderColor: '#00365a' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#004170'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#00365a'}
           >
             Yeni Fiyat Listesi
           </Button>

@@ -176,7 +176,7 @@ const statusLabels: { [key: string]: string } = {
 
 const statusColors: { [key: string]: string } = {
   'PENDING': 'bg-yellow-100 text-yellow-800',
-  'CONFIRMED': 'bg-blue-100 text-blue-800',
+  'CONFIRMED': 'bg-blue-100 text-[#00365a]',
   'SHIPPED': 'bg-purple-100 text-purple-800',
   'DELIVERED': 'bg-green-100 text-green-800',
   'CANCELED': 'bg-red-100 text-red-800'
@@ -519,8 +519,8 @@ const Siparisler = () => {
               <div className="text-sm text-yellow-600">Beklemede</div>
             </div>
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <div className="text-2xl font-bold text-blue-800">{orderStats.confirmed}</div>
-              <div className="text-sm text-blue-600">Onaylandı</div>
+              <div className="text-2xl font-bold text-[#00365a]">{orderStats.confirmed}</div>
+              <div className="text-sm text-[#00365a]">Onaylandı</div>
             </div>
             <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
               <div className="text-2xl font-bold text-purple-800">{orderStats.shipped}</div>
@@ -556,7 +556,7 @@ const Siparisler = () => {
                 />
                 <button
                   onClick={handleSearch}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors"
                 >
                   Ara
                 </button>
@@ -587,11 +587,11 @@ const Siparisler = () => {
           {(statusFilter || searchQuery) && (
             <div className="mt-4 flex flex-wrap gap-2">
               {statusFilter && (
-                <div className="flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                <div className="flex items-center bg-blue-100 text-[#00365a] px-3 py-1 rounded-full text-sm">
                   Durum: {statusLabels[statusFilter]}
                   <button
                     onClick={() => handleStatusFilter('')}
-                    className="ml-2 text-blue-600 hover:text-blue-800"
+                    className="ml-2 text-[#00365a] hover:text-[#004170]"
                   >
                     ×
                   </button>
@@ -704,7 +704,7 @@ const Siparisler = () => {
                       </div>
                       <div>
                         <span className="text-gray-600">Toplam Tutar:</span>
-                        <span className="ml-2 font-semibold text-blue-600">
+                        <span className="ml-2 font-semibold text-[#00365a]">
                           {parseFloat(order.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                         </span>
                       </div>
@@ -860,7 +860,7 @@ const Siparisler = () => {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">Toplam Tutar:</span>
-                          <span className="font-semibold text-blue-600">
+                          <span className="font-semibold text-[#00365a]">
                             {parseFloat(selectedOrder.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                           </span>
                         </div>
@@ -946,7 +946,7 @@ const Siparisler = () => {
                             <div className="flex-1">
                               <h5 className="font-medium text-gray-900">{item.product.name}</h5>
                               {item.product.collection && (
-                                <p className="text-xs text-blue-600 mt-1">
+                                <p className="text-xs text-[#00365a] mt-1">
                                   {item.product.collection.name}
                                 </p>
                               )}
@@ -978,7 +978,7 @@ const Siparisler = () => {
                           <div className="mb-4">
                             <div className="grid grid-cols-3 gap-4 mb-3">
                               <div className="text-center">
-                                <div className="text-2xl font-bold text-blue-600">
+                                <div className="text-2xl font-bold text-[#00365a]">
                                   {selectedOrder.qr_codes.length}
                                 </div>
                                 <div className="text-sm text-gray-600">QR Kod</div>
@@ -1042,7 +1042,7 @@ const Siparisler = () => {
                                       {qrCode.order_item.has_fringe ? ' Saçaklı' : ' Saçaksız'} • 
                                       {qrCode.order_item.cut_type.charAt(0).toUpperCase() + qrCode.order_item.cut_type.slice(1)} Kesim
                                     </div>
-                                    <div className="text-xs text-blue-600 mt-1">
+                                    <div className="text-xs text-[#00365a] mt-1">
                                       Adet: {qrCode.order_item.quantity} • 
                                       Tarama: {qrCode.scan_count}/{qrCode.required_scans}
                                     </div>
@@ -1116,7 +1116,7 @@ const Siparisler = () => {
                                           qrWindow.document.close();
                                         }
                                       }}
-                                      className="text-blue-600 hover:text-blue-800 text-xs underline"
+                                      className="text-[#00365a] hover:text-[#004170] text-xs underline"
                                     >
                                       Göster
                                     </button>
@@ -1348,7 +1348,7 @@ const Siparisler = () => {
                               receiptWindow.document.close();
                             }
                           }}
-                          className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                          className="px-6 py-3 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors text-sm font-medium"
                         >
                           📄 Fiş Görüntüle
                         </button>

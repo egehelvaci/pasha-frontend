@@ -85,7 +85,7 @@ export default function AnalyticsPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00365a]"></div>
       </div>
     );
   }
@@ -103,7 +103,7 @@ export default function AnalyticsPage() {
           <div className="mt-6">
             <button
               onClick={() => router.push('/dashboard')}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#00365a] hover:bg-[#004170] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00365a]"
             >
               Dashboard'a Dön
             </button>
@@ -294,7 +294,7 @@ export default function AnalyticsPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex items-center space-x-2">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00365a]"></div>
           <span className="text-gray-600">Analiz verileri yükleniyor...</span>
         </div>
       </div>
@@ -309,7 +309,7 @@ export default function AnalyticsPage() {
           <div className="text-gray-600 mb-4">{error}</div>
           <button 
             onClick={fetchAnalyticsData}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                            className="px-4 py-2 bg-[#00365a] text-white rounded-md hover:bg-[#004170]"
           >
             Tekrar Dene
           </button>
@@ -484,7 +484,7 @@ export default function AnalyticsPage() {
                   onClick={() => setSelectedPeriod(period.value as any)}
                   className={`px-4 py-2 rounded-md font-medium transition-colors ${
                     selectedPeriod === period.value
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-[#00365a] text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
@@ -499,7 +499,7 @@ export default function AnalyticsPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Toplam Siparişler</h3>
-            <p className="text-3xl font-bold text-blue-600">
+            <p className="text-3xl font-bold text-[#00365a]">
               {analyticsData.totalStats.total_orders}
             </p>
             <p className="text-sm text-gray-500 mt-1">{getPeriodLabel(selectedPeriod)}</p>

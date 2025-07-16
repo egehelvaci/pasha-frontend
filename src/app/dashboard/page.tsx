@@ -220,7 +220,7 @@ export default function Dashboard() {
           {/* Kullanıcı bilgileri kartı */}
           <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="flex items-center">
-              <div className="h-20 w-20 rounded-full bg-blue-900 flex items-center justify-center text-white text-2xl font-bold">
+              <div className="h-20 w-20 rounded-full bg-[#00365a] flex items-center justify-center text-white text-2xl font-bold">
                 {user.name[0]}{user.surname[0]}
               </div>
               <div className="ml-4">
@@ -235,7 +235,7 @@ export default function Dashboard() {
 
           {/* Analiz kartı - Sadece admin olmayan kullanıcılar için */}
           {!user.userType || user.userType !== 'admin' ? (
-            <div className="bg-gradient-to-br from-purple-600 to-blue-600 p-6 rounded-lg shadow-sm border border-gray-200 text-white">
+            <div className="bg-gradient-to-br from-purple-600 to-[#00365a] p-6 rounded-lg shadow-sm border border-gray-200 text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Sipariş Analizlerim</h3>
@@ -345,7 +345,7 @@ export default function Dashboard() {
                   </div>
                   <Link 
                     href="/dashboard/koleksiyonlar/liste"
-                    className="bg-gradient-to-r from-blue-800 to-blue-600 text-white px-3 py-1.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1 font-medium text-xs"
+                    className="bg-gradient-to-r from-[#00365a] to-[#00365a] text-white px-3 py-1.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1 font-medium text-xs"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -356,7 +356,7 @@ export default function Dashboard() {
                 
                 {isLoadingCollections ? (
                   <div className="flex items-center justify-center flex-1">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-900"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00365a]"></div>
                   </div>
                 ) : collections.length > 0 ? (
                   <div className="flex-1 overflow-hidden">
@@ -365,21 +365,21 @@ export default function Dashboard() {
                         <Link
                           key={collection.collectionId}
                           href={`/dashboard/koleksiyonlar/${collection.collectionId}`}
-                          className="block p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all duration-200 group"
+                          className="block p-3 border border-gray-200 rounded-lg hover:border-[#00365a] hover:shadow-md transition-all duration-200 group"
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center">
-                              <div className="h-8 w-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-800 font-semibold text-xs mr-3">
+                              <div className="h-8 w-8 rounded-lg bg-blue-100 flex items-center justify-center text-[#00365a] font-semibold text-xs mr-3">
                                 {collection.name.charAt(0)}
                               </div>
                               <div>
-                                <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors text-sm">
+                                <h3 className="font-semibold text-gray-900 group-hover:text-[#00365a] transition-colors text-sm">
                                   {collection.name}
                                 </h3>
                                 <p className="text-xs text-gray-500">{collection.code}</p>
                               </div>
                             </div>
-                            <svg className="h-4 w-4 text-gray-400 group-hover:text-blue-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="h-4 w-4 text-gray-400 group-hover:text-[#00365a] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
                           </div>

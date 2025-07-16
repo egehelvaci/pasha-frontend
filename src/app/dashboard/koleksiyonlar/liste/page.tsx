@@ -68,7 +68,7 @@ function AddCollectionModal({ open, onClose, onSuccess }: { open: boolean, onClo
           <textarea name="description" value={form.description} onChange={handleChange} required placeholder="Açıklama" className="border rounded px-3 py-2 text-black" />
           <input name="code" value={form.code} onChange={handleChange} required placeholder="Kod" className="border rounded px-3 py-2 text-black" />
           {error && <div className="text-red-500 text-sm">{error}</div>}
-          <button type="submit" disabled={loading} className="bg-blue-900 text-white rounded-full px-6 py-2 font-semibold mt-2">
+          <button type="submit" disabled={loading} className="bg-[#00365a] text-white rounded-full px-6 py-2 font-semibold mt-2">
             {loading ? "Ekleniyor..." : "Ekle"}
           </button>
         </form>
@@ -182,7 +182,7 @@ export default function CollectionList() {
           <h1 className="text-2xl font-bold text-black">Koleksiyonlar Listesi</h1>
         </div>
         {isAdmin && (
-          <button className="bg-blue-900 text-white rounded-full px-6 py-2 font-semibold flex items-center gap-2" onClick={() => setModalOpen(true)}>
+          <button className="bg-[#00365a] text-white rounded-full px-6 py-2 font-semibold flex items-center gap-2" onClick={() => setModalOpen(true)}>
             + Yeni Koleksiyon
           </button>
         )}

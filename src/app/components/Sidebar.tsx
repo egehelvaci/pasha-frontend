@@ -104,7 +104,7 @@ const Sidebar = () => {
                 <button
                   onClick={() => setOpenProducts((prev) => !prev)}
                   className={`flex items-center w-full px-2 py-3 text-sm font-medium rounded-md transition ${
-                    isActive ? 'bg-blue-800 text-white' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    isActive ? 'bg-[#00365a] text-white' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                   }`}
                 >
                   <span className="mr-3">{item.icon}</span>
@@ -113,11 +113,11 @@ const Sidebar = () => {
                 </button>
                 {openProducts && (
                   <div className="ml-8 mt-1 space-y-1">
-                    <Link href="/dashboard/urunler/liste" className="block px-2 py-2 rounded hover:bg-gray-100 text-sm font-medium text-gray-700">Ürün Listesi</Link>
-                    <Link href="/dashboard/urunler/ekle" className="block px-2 py-2 rounded hover:bg-gray-100 text-sm font-medium text-gray-700">Ürün Ekle</Link>
-                    <Link href="/dashboard/urunler/koleksiyonlar" className="block px-2 py-2 rounded hover:bg-gray-100 text-sm font-medium text-gray-700">Koleksiyon Listesi</Link>
-                    <Link href="/dashboard/urunler/koleksiyon-ekle" className="block px-2 py-2 rounded hover:bg-gray-100 text-sm font-medium text-gray-700">Koleksiyon Ekle</Link>
-                    <Link href="/dashboard/urunler/katalog" className="block px-2 py-2 rounded hover:bg-gray-100 text-sm font-medium text-gray-700">Katalog</Link>
+                    <Link href="/dashboard/urunler/liste" className="block px-2 py-2 rounded hover:bg-gray-100 text-sm font-medium text-gray-700 outline-none focus:ring-2 focus:ring-gray-200">Ürün Listesi</Link>
+                    <Link href="/dashboard/urunler/ekle" className="block px-2 py-2 rounded hover:bg-gray-100 text-sm font-medium text-gray-700 outline-none focus:ring-2 focus:ring-gray-200">Ürün Ekle</Link>
+                    <Link href="/dashboard/urunler/koleksiyonlar" className="block px-2 py-2 rounded hover:bg-gray-100 text-sm font-medium text-gray-700 outline-none focus:ring-2 focus:ring-gray-200">Koleksiyon Listesi</Link>
+                    <Link href="/dashboard/urunler/koleksiyon-ekle" className="block px-2 py-2 rounded hover:bg-gray-100 text-sm font-medium text-gray-700 outline-none focus:ring-2 focus:ring-gray-200">Koleksiyon Ekle</Link>
+                    <Link href="/dashboard/urunler/katalog" className="block px-2 py-2 rounded hover:bg-gray-100 text-sm font-medium text-gray-700 outline-none focus:ring-2 focus:ring-gray-200">Katalog</Link>
                   </div>
                 )}
               </div>
@@ -128,10 +128,10 @@ const Sidebar = () => {
             <Link
               key={item.name}
               href={item.href}
-              className={`flex items-center px-2 py-3 text-sm font-medium rounded-md ${
+              className={`flex items-center px-2 py-3 text-sm font-medium rounded-md outline-none focus:ring-2 focus:ring-gray-200 ${
                 isActive
-                  ? 'bg-blue-800 text-white'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                      ? 'bg-[#00365a] text-white'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
               }`}
             >
               <span className="mr-3">{item.icon}</span>

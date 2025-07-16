@@ -576,7 +576,7 @@ export default function PaymentsPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex items-center space-x-2">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00365a]"></div>
           <span className="text-gray-600">Ödeme verileri yükleniyor...</span>
         </div>
       </div>
@@ -594,7 +594,7 @@ export default function PaymentsPage() {
           </div>
           <button
             onClick={() => setPaymentModalOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-md hover:shadow-lg flex items-center space-x-2"
+            className="bg-[#00365a] hover:bg-[#004170] text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-md hover:shadow-lg flex items-center space-x-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
@@ -613,7 +613,7 @@ export default function PaymentsPage() {
                 placeholder="Ödeme no, müşteri adı veya açıklama..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#00365a] focus:border-[#00365a]"
               />
             </div>
             <div>
@@ -621,7 +621,7 @@ export default function PaymentsPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#00365a] focus:border-[#00365a]"
               >
                 <option value="">Tüm Durumlar</option>
                 <option value="success">Başarılı</option>
@@ -705,7 +705,7 @@ export default function PaymentsPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
                         onClick={() => handleViewDetails(payment)}
-                        className="text-blue-600 hover:text-blue-900 hover:underline mr-3"
+                        className="text-[#00365a] hover:text-[#004170] hover:underline mr-3"
                       >
                         Detay
                       </button>
@@ -763,7 +763,7 @@ export default function PaymentsPage() {
           <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
               {/* Header with gradient */}
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-t-2xl p-6">
+              <div className="bg-gradient-to-r from-blue-800 to-blue-900 text-white rounded-t-2xl p-6">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center space-x-3">
                     <div className="bg-white bg-opacity-20 rounded-full p-3">
@@ -795,7 +795,7 @@ export default function PaymentsPage() {
                     <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
                       <div className="flex items-center mb-4">
                         <div className="bg-blue-100 rounded-full p-2 mr-3">
-                          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                         </div>
@@ -943,7 +943,7 @@ export default function PaymentsPage() {
                   <div className="flex space-x-3">
                     <button
                       onClick={() => handlePrintPayment(selectedPayment)}
-                      className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg"
+                      className="flex items-center px-4 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors shadow-md hover:shadow-lg"
                     >
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -971,7 +971,7 @@ export default function PaymentsPage() {
           <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl">
               {/* Header */}
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-t-2xl p-6 relative">
+              <div className="bg-gradient-to-r from-blue-800 to-blue-900 text-white rounded-t-2xl p-6 relative">
                 <button
                   onClick={() => setPaymentModalOpen(false)}
                   className="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors"
@@ -1149,7 +1149,7 @@ export default function PaymentsPage() {
                   <div className="flex space-x-3 pt-4">
                     <button
                       type="submit"
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                      className="flex-1 bg-[#00365a] hover:bg-[#004170] text-white py-3 px-4 rounded-lg font-medium transition-colors"
                     >
                       Ödeme Yap
                     </button>

@@ -1428,7 +1428,7 @@ export default function ProductList() {
           <h2 className="text-xl font-semibold text-gray-800">Ürün Listesi</h2>
           {isAdmin && (
             <button
-              className="bg-blue-900 text-white rounded-full px-4 py-2 flex items-center justify-center shadow-sm hover:bg-blue-800 transition-colors"
+              className="bg-[#00365a] text-white rounded-full px-4 py-2 flex items-center justify-center shadow-sm hover:bg-[#004170] transition-colors"
               onClick={() => setModalOpen(true)}
             >
               <span className="mr-1">+</span> Yeni Ürün
@@ -1574,7 +1574,7 @@ export default function ProductList() {
                   <div key={product.productId} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow relative">
                     {/* Koleksiyon adı - sol üst */}
                     <div className="absolute top-2 left-2 z-10">
-                      <span className="bg-blue-900 text-white text-xs px-2 py-1 rounded-md font-medium">
+                      <span className="bg-[#00365a] text-white text-xs px-2 py-1 rounded-md font-medium">
                         {product.collection?.name || collections.find(c => c.collectionId === product.collectionId)?.name || "SERİSİ"}
                       </span>
                     </div>
@@ -1609,7 +1609,7 @@ export default function ProductList() {
                         
                         <div className="flex items-center gap-2 ml-2">
                           <button 
-                            className="px-3 py-2 bg-blue-900 text-white rounded-md flex items-center gap-2 text-sm shadow-sm hover:bg-blue-800 transition-colors"
+                            className="px-3 py-2 bg-[#00365a] text-white rounded-md flex items-center gap-2 text-sm shadow-sm hover:bg-[#004170] transition-colors"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedProductId(product.productId);
@@ -1702,7 +1702,7 @@ export default function ProductList() {
           <button className="w-8 h-8 border rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100">
             <span>&lt;</span>
           </button>
-          <button className="w-8 h-8 border rounded-full flex items-center justify-center bg-blue-900 text-white">
+          <button className="w-8 h-8 border rounded-full flex items-center justify-center bg-[#00365a] text-white">
             <span>1</span>
           </button>
           <button className="w-8 h-8 border rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100">

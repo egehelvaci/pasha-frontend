@@ -158,7 +158,7 @@ const EKatalogPage = () => {
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6">
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00365a]"></div>
           </div>
         </div>
       </div>
@@ -172,7 +172,7 @@ const EKatalogPage = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#00365a] mx-auto mb-4"></div>
                 <h3 className="text-lg font-semibold mb-2">Katalog Oluşturuluyor</h3>
                 <p className="text-gray-600 mb-4">
                   Katalog oluşturma işlemi yaklaşık 15 saniye sürebilir. Lütfen bekleyiniz...
@@ -200,14 +200,14 @@ const EKatalogPage = () => {
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={selectAllProducts}
-                  className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-[#00365a] bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
                 >
                   {selectedProducts.size === products.length ? 'Tümünü Kaldır' : 'Tümünü Seç'}
                 </button>
                 <button
                   onClick={generateCatalog}
                   disabled={selectedProducts.size === 0 || generateLoading}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
+                  className="px-6 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
                 >
                   {generateLoading ? 'Oluşturuluyor...' : `Katalog Oluştur (${selectedProducts.size})`}
                 </button>
@@ -216,7 +216,7 @@ const EKatalogPage = () => {
             
             {selectedProducts.size > 0 && (
               <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                <p className="text-sm text-blue-800">
+                <p className="text-sm text-[#00365a]">
                   <span className="font-medium">{selectedProducts.size}</span> ürün seçildi
                   {selectedProducts.size === products.length && ' (Tüm ürünler)'}
                 </p>
@@ -239,7 +239,7 @@ const EKatalogPage = () => {
                     key={product.productId}
                     className={`relative bg-white border rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
                       selectedProducts.has(product.productId)
-                        ? 'border-blue-500 ring-2 ring-blue-500 ring-opacity-20 bg-blue-50'
+                        ? 'border-[#00365a] ring-2 ring-[#00365a] ring-opacity-20 bg-blue-50'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                     onClick={() => toggleProductSelection(product.productId)}
@@ -248,7 +248,7 @@ const EKatalogPage = () => {
                     <div className="absolute top-3 right-3">
                       <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
                         selectedProducts.has(product.productId)
-                          ? 'bg-blue-600 border-blue-600'
+                          ? 'bg-[#00365a] border-[#00365a]'
                           : 'border-gray-300 bg-white'
                       }`}>
                         {selectedProducts.has(product.productId) && (
@@ -282,7 +282,7 @@ const EKatalogPage = () => {
                         {product.name}
                       </h3>
                       {product.collection && (
-                        <p className="text-xs text-blue-600 font-medium">
+                        <p className="text-xs text-[#00365a] font-medium">
                           {product.collection.name}
                         </p>
                       )}

@@ -1,0 +1,10 @@
+User-agent: *
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /_next/
+Disallow: /reset-password/
+Disallow: /forgot-password/
+
+# Sitemap
+Sitemap: https://pasha-frontend.vercel.app/sitemap.xml 

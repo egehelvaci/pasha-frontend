@@ -70,10 +70,7 @@ const Header = ({ title, user }: HeaderProps) => {
       const balance = await getMyBalance();
       setBalanceInfo(balance);
       setLastBalanceUpdate(Date.now());
-      console.log('Bakiye bilgileri güncellendi:', balance);
     } catch (error: any) {
-      console.error("Bakiye bilgileri alınamadı:", error);
-      // Hata durumunda mevcut store verisini kullan
       if (authUser?.store) {
         setBalanceInfo({
           bakiye: authUser.store.bakiye || 0,
@@ -89,60 +86,15 @@ const Header = ({ title, user }: HeaderProps) => {
     }
   };
   
-  // Bakiye bilgilerini getir - İlk yükleme ve user değişikliklerinde
+  // Bakiye bilgilerini getir - Sadece ilk yükleme
   useEffect(() => {
     if (!isMounted || !authUser?.store) {
       return;
     }
 
-    // İlk yükleme
+    // Sadece ilk yükleme - otomatik yenileme yok
     refreshBalance();
-  }, [isMounted, authUser?.userId]); // Sadece user ID'ye bağlı - store objesi değişse de yeniden çalışmaz
-  
-  // Otomatik yenileme interval'ı
-  useEffect(() => {
-    if (!isMounted || !authUser?.store) {
-      return;
-    }
-
-    // 2 dakikada bir bakiye bilgilerini yenile (5 dakika yerine)
-    const intervalId = setInterval(() => {
-      console.log('Otomatik bakiye yenileme tetiklendi');
-      refreshBalance();
-    }, 120000);
-    
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [isMounted, authUser?.userId]); // User değiştiğinde interval'ı yeniden başlat
-
-  // Sayfa odak ve görünürlük değişikliklerinde bakiye yenile
-  useEffect(() => {
-    if (!isMounted || !authUser?.store) {
-      return;
-    }
-
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        console.log('Sayfa tekrar görünür oldu - bakiye yenileniyor');
-        refreshBalance();
-      }
-    };
-
-    const handleFocus = () => {
-      console.log('Sayfa odak aldı - bakiye yenileniyor');
-      refreshBalance();
-    };
-
-    // Event listener'ları ekle
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, [isMounted, authUser?.userId]);
+  }, [isMounted, authUser?.userId]); // Sadece user ID'ye bağlı
 
   // Sepet verilerini getir
   useEffect(() => {
@@ -203,15 +155,8 @@ const Header = ({ title, user }: HeaderProps) => {
       }
     };
 
-    // İlk yükleme
+    // Sadece ilk yükleme - otomatik yenileme yok
     fetchCartData();
-    
-    // 2 dakikada bir sepeti yenile (daha az sıklık)
-    const intervalId = setInterval(fetchCartData, 120000);
-    
-    return () => {
-      clearInterval(intervalId);
-    };
   }, [isMounted]); // isMounted dependency'si eklendi
 
   const handleLogout = async () => {
@@ -380,6 +325,17 @@ const Header = ({ title, user }: HeaderProps) => {
         </svg>
       ),
     },
+    {
+      name: 'Muhasebe',
+      href: '/dashboard/muhasebe',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+          <path d="M10.464 8.746c.227-.18.497-.311.786-.394v2.795a2.252 2.252 0 01-.786-.393c-.394-.313-.546-.681-.546-1.004 0-.323.152-.691.546-1.004zM12.75 15.662v-2.824c.347.085.664.228.921.421.427.32.579.686.579.991 0 .305-.152.671-.579.991a2.534 2.534 0 01-.921.42z" />
+          <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v.816a3.836 3.836 0 00-1.72.756c-.712.566-1.112 1.35-1.112 2.178 0 .829.4 1.612 1.118 2.178.502.395 1.101.647 1.714.756V15.75a.75.75 0 001.5 0v-.774a3.836 3.836 0 001.72-.755c.712-.566 1.112-1.35 1.112-2.178 0-.829-.4-1.612-1.118-2.178A3.836 3.836 0 0012.75 8.09V6z" clipRule="evenodd" />
+        </svg>
+      ),
+      adminOnly: true,
+    },
   ];
 
   return (
@@ -405,7 +361,7 @@ const Header = ({ title, user }: HeaderProps) => {
               <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
                 {isLoadingBalance ? (
                   <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#00365a]"></div>
                     <span className="text-sm text-gray-600">Güncelleniyor...</span>
                   </div>
                 ) : (
@@ -418,7 +374,7 @@ const Header = ({ title, user }: HeaderProps) => {
                     </div>
                     <div className="text-center">
                       <span className="block font-semibold text-gray-700">Açık Hesap</span>
-                      <span className="text-blue-600 font-medium">
+                      <span className="text-[#00365a] font-medium">
                         {financialInfo.limitsizAcikHesap 
                           ? 'Limitsiz' 
                           : `${financialInfo.acikHesapLimiti.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`
@@ -450,7 +406,7 @@ const Header = ({ title, user }: HeaderProps) => {
                       viewBox="0 0 24 24" 
                       strokeWidth={1.5} 
                       stroke="currentColor" 
-                      className={`w-4 h-4 text-gray-600 ${isLoadingBalance ? 'animate-spin' : ''}`}
+                      className={`w-4 h-4 text-[#00365a] ${isLoadingBalance ? 'animate-spin' : ''}`}
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
                     </svg>
@@ -462,11 +418,11 @@ const Header = ({ title, user }: HeaderProps) => {
                     title={isBlurred ? 'Bilgileri Göster' : 'Bilgileri Gizle'}
                   >
                     {isBlurred ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-gray-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-[#00365a]">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12.001C3.226 15.376 7.113 19.5 12 19.5c1.772 0 3.432-.457 4.899-1.277M6.228 6.228A10.45 10.45 0 0112 4.5c4.887 0 8.774 4.124 10.066 7.499a10.523 10.523 0 01-4.293 5.226M6.228 6.228l11.544 11.544M6.228 6.228L3 3m15 15l-3-3" />
                       </svg>
                     ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-gray-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-[#00365a]">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12S5.25 6.75 12 6.75 21.75 12 21.75 12S18.75 17.25 12 17.25 2.25 12 2.25 12z" />
                         <circle cx="12" cy="12" r="3" />
                       </svg>
@@ -493,7 +449,7 @@ const Header = ({ title, user }: HeaderProps) => {
             {/* Kullanıcı dropdown */}
             <div className="relative group">
               <div className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
-                <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-medium">
+                <div className="h-8 w-8 rounded-full bg-[#00365a] flex items-center justify-center text-white text-sm font-medium">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
                 <span className="text-sm font-medium text-gray-700 hidden xl:block">{user.name}</span>
@@ -586,28 +542,66 @@ const Header = ({ title, user }: HeaderProps) => {
         
         {/* Desktop navigasyon */}
         <nav className="hidden lg:block py-2">
-          <div className="flex space-x-1 ">
-            {navigation.map((item) => {
-              const isActive = pathname === item.href;
-              // Admin kullanıcılar için sadece adminOnly: true olan öğeleri göster
-              // Admin olmayan kullanıcılar için sadece adminOnly: false olan öğeleri göster
-              if (isAdmin && item.adminOnly === false) return null;
-              if (!isAdmin && item.adminOnly === true) return null;
+          <div className="space-y-1">
+            {(() => {
+              // Kullanıcı tipine göre menü öğelerini filtrele
+              const filteredNavigation = navigation.filter((item) => {
+                if (isAdmin && item.adminOnly === false) return false;
+                if (!isAdmin && item.adminOnly === true) return false;
+                return true;
+              });
+
+              // Menü öğelerini 2 eşit sıraya böl
+              const midIndex = Math.ceil(filteredNavigation.length / 2);
+              const firstRow = filteredNavigation.slice(0, midIndex);
+              const secondRow = filteredNavigation.slice(midIndex);
+
               return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
-                    isActive
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                  }`}
-                >
-                  <span className="mr-2">{item.icon}</span>
-                  {item.name}
-                </Link>
+                <>
+                  {/* İlk sıra */}
+                  <div className="flex justify-center gap-1">
+                    {firstRow.map((item) => {
+                      const isActive = pathname === item.href;
+                      return (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors outline-none focus:ring-2 focus:ring-gray-200 ${
+                            isActive
+                              ? 'bg-[#00365a] text-white'
+                              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                          }`}
+                        >
+                          <span className="mr-2">{item.icon}</span>
+                          {item.name}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* İkinci sıra */}
+                  <div className="flex justify-center gap-1">
+                    {secondRow.map((item) => {
+                      const isActive = pathname === item.href;
+                      return (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors outline-none focus:ring-2 focus:ring-gray-200 ${
+                            isActive
+                              ? 'bg-[#00365a] text-white'
+                              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                          }`}
+                        >
+                          <span className="mr-2">{item.icon}</span>
+                          {item.name}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </>
               );
-            })}            
+            })()}
           </div>
         </nav>
       </div>
@@ -627,7 +621,7 @@ const Header = ({ title, user }: HeaderProps) => {
               {/* Menü başlığı */}
               <div className="flex items-center justify-between p-4 border-b border-gray-200">
                 <div className="flex items-center space-x-3">
-                  <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium">
+                  <div className="h-10 w-10 rounded-full bg-[#00365a] flex items-center justify-center text-white font-medium">
                     {user.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
@@ -666,7 +660,7 @@ const Header = ({ title, user }: HeaderProps) => {
                         </div>
                         <div className={`${isBlurred ? 'blur-sm' : ''} transition-all duration-200`}>
                           <div className="text-xs font-semibold text-gray-600 mb-1">Açık Hesap</div>
-                          <div className="text-sm font-bold text-blue-600">
+                          <div className="text-sm font-bold text-[#00365a]">
                             {financialInfo.limitsizAcikHesap 
                               ? 'Limitsiz' 
                               : `${financialInfo.acikHesapLimiti.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`
@@ -687,7 +681,7 @@ const Header = ({ title, user }: HeaderProps) => {
                         <button
                           onClick={refreshBalance}
                           disabled={isLoadingBalance}
-                          className="flex-1 px-3 py-2 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                          className="flex-1 px-3 py-2 text-xs bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors disabled:opacity-50"
                         >
                           {isLoadingBalance ? 'Güncelleniyor...' : 'Yenile'}
                         </button>
@@ -717,10 +711,10 @@ const Header = ({ title, user }: HeaderProps) => {
                         key={item.name}
                         href={item.href}
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-                          isActive
-                            ? 'bg-blue-600 text-white'
-                            : 'text-gray-700 hover:bg-gray-100'
+                        className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors outline-none focus:ring-2 focus:ring-gray-200 ${
+                                                  isActive
+                          ? 'bg-[#00365a] text-white'
+                          : 'text-gray-700 hover:bg-gray-100'
                         }`}
                       >
                         <span className="mr-3">{item.icon}</span>
@@ -733,9 +727,9 @@ const Header = ({ title, user }: HeaderProps) => {
                     <Link
                       href="/dashboard/ayarlar"
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                      className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors outline-none focus:ring-2 focus:ring-gray-200 ${
                         pathname === '/dashboard/ayarlar'
-                          ? 'bg-blue-600 text-white'
+                          ? 'bg-[#00365a] text-white'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
@@ -787,7 +781,7 @@ const Header = ({ title, user }: HeaderProps) => {
             <div className="p-6">
               {/* Profil Fotoğrafı */}
               <div className="flex justify-center mb-6">
-                <div className="h-20 w-20 rounded-full bg-blue-600 flex items-center justify-center text-white text-2xl font-bold">
+                <div className="h-20 w-20 rounded-full bg-[#00365a] flex items-center justify-center text-white text-2xl font-bold">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
               </div>
@@ -816,7 +810,7 @@ const Header = ({ title, user }: HeaderProps) => {
                     
                     {isLoadingBalance ? (
                       <div className="flex items-center justify-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00365a]"></div>
                         <span className="ml-3 text-gray-600">Bilgiler güncelleniyor...</span>
                       </div>
                     ) : (
@@ -831,7 +825,7 @@ const Header = ({ title, user }: HeaderProps) => {
                           
                           <div className="bg-gray-50 rounded-lg p-4">
                             <label className="block text-sm font-medium text-gray-600 mb-1">Açık Hesap</label>
-                            <p className="text-blue-600 font-bold">
+                            <p className="text-[#00365a] font-bold">
                               {financialInfo.limitsizAcikHesap 
                                 ? 'Limitsiz' 
                                 : `${financialInfo.acikHesapLimiti.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`
@@ -860,7 +854,7 @@ const Header = ({ title, user }: HeaderProps) => {
             <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
               <button
                 onClick={() => setIsProfileModalOpen(false)}
-                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                className="w-full px-4 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors font-medium"
               >
                 Kapat
               </button>
