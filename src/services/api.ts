@@ -885,6 +885,33 @@ export interface ResetPasswordResponse {
   message: string;
 }
 
+// Bakiye bilgileri interface'leri
+export interface BalanceInfo {
+  bakiye: number;
+  acik_hesap_tutari: number;
+  toplam_kullanilabilir: number;
+  maksimum_taksit: number;
+  limitsiz_acik_hesap: boolean;
+  currency: string;
+}
+
+export interface StoreInfo {
+  store_id: string;
+  kurum_adi: string;
+  vergi_numarasi: string;
+  telefon: string;
+  eposta: string;
+  adres: string;
+}
+
+export interface BalanceResponse {
+  success: boolean;
+  data: {
+    store_info: StoreInfo;
+    balance_info: BalanceInfo;
+  };
+}
+
 // Şifre sıfırlama API fonksiyonları
 export async function forgotPassword(data: ForgotPasswordData): Promise<ForgotPasswordResponse> {
   const response = await fetch('https://pasha-backend-production.up.railway.app/api/auth/forgot-password', {
@@ -1369,6 +1396,33 @@ export const deleteCutType = async (cutTypeId: number): Promise<void> => {
     }
   } catch (error) {
     console.error('Kesim türü silme hatası:', error);
+    throw error;
+  }
+}; 
+
+// Bakiye bilgilerini çeken API fonksiyonu
+export const getMyBalance = async (): Promise<BalanceInfo> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Token bulunamadı');
+
+    const response = await fetch(`${API_BASE_URL}/api/my-statistics/balance`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Bakiye bilgileri alınamadı');
+    }
+
+    const result: BalanceResponse = await response.json();
+    return result.data.balance_info;
+  } catch (error) {
+    console.error('Bakiye bilgileri getirme hatası:', error);
     throw error;
   }
 }; 
