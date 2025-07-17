@@ -16,21 +16,29 @@ interface StoreBreakdown {
     store_id: string;
     store_name: string;
     balance: number;
-    status: 'ALACAKLI' | 'BORÇLU';
+    status: 'ALACAKLI' | 'BORÇLU' | 'NÖTR';
 }
 
 interface AdminStatus {
     description: string;
-    type: 'ALACAK' | 'BORÇ';
+    type: 'ALACAKLI' | 'BORÇLU';
     amount: number;
+}
+
+interface AdminStore {
+    store_id: string;
+    store_name: string;
+    balance: number;
+    status: 'ALACAKLI' | 'BORÇLU' | 'NÖTR';
 }
 
 interface FinancialSummary {
     total_stores: number;
-    total_debt: number;
-    total_credit: number;
+    admin_debt: number;
+    admin_credit: number;
     net_balance: number;
     admin_status: AdminStatus;
+    admin_store?: AdminStore;
     store_breakdown: StoreBreakdown[];
 }
 
@@ -285,8 +293,9 @@ const MuhasebePage = () => {
     // Tutarı hesapla
     const calculateAmount = () => {
         const selectedProduct = collections.find(c => c.id === formData.collection_id);
-        if (selectedProduct && formData.square_meters && formData.square_meters > 0) {
-            const calculatedAmount = selectedProduct.price_per_square_meter * formData.square_meters;
+        const squareMeters = typeof formData.square_meters === 'string' ? parseFloat(formData.square_meters) : formData.square_meters;
+        if (selectedProduct && squareMeters && squareMeters > 0) {
+            const calculatedAmount = selectedProduct.price_per_square_meter * squareMeters;
             setFormData(prev => ({ ...prev, amount: calculatedAmount }));
         }
     };
@@ -386,11 +395,11 @@ const MuhasebePage = () => {
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'ALACAKLI':
-            case 'ALACAK':
                 return 'text-green-600 bg-green-50';
             case 'BORÇLU':
-            case 'BORÇ':
                 return 'text-red-600 bg-red-50';
+            case 'NÖTR':
+                return 'text-blue-600 bg-blue-50';
             default:
                 return 'text-gray-600 bg-gray-50';
         }
@@ -488,7 +497,7 @@ const MuhasebePage = () => {
                     </div>
                 </div>
 
-                {/* Toplam Borç */}
+                {/* Admin Mağaza Borç */}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                     <div className="flex items-center">
                         <div className="flex-shrink-0">
@@ -498,8 +507,13 @@ const MuhasebePage = () => {
                         </div>
                         <div className="ml-5 w-0 flex-1">
                             <dl>
-                                <dt className="text-sm font-medium text-gray-500 truncate">Toplam Borç</dt>
-                                <dd className="text-lg font-medium text-red-600">{formatCurrency(financial_summary.total_debt)}</dd>
+                                <dt className="text-sm font-medium text-gray-500 truncate">Admin Borç</dt>
+                                <dd className="text-lg font-medium text-red-600">
+                                    {financial_summary.admin_store && financial_summary.admin_store.balance < 0 
+                                        ? formatCurrency(Math.abs(financial_summary.admin_store.balance))
+                                        : formatCurrency(0)
+                                    }
+                                </dd>
                             </dl>
                         </div>
                     </div>
@@ -515,8 +529,8 @@ const MuhasebePage = () => {
                         </div>
                         <div className="ml-5 w-0 flex-1">
                             <dl>
-                                <dt className="text-sm font-medium text-gray-500 truncate">Toplam Alacak</dt>
-                                <dd className="text-lg font-medium text-green-600">{formatCurrency(financial_summary.total_credit)}</dd>
+                                <dt className="text-sm font-medium text-gray-500 truncate">Admin Alacak</dt>
+                                <dd className="text-lg font-medium text-green-600">{formatCurrency(financial_summary.admin_credit)}</dd>
                             </dl>
                         </div>
                     </div>
@@ -543,16 +557,44 @@ const MuhasebePage = () => {
             </div>
 
             {/* Admin Durumu */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">Admin Finansal Durumu</h2>
-                <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(financial_summary.admin_status.type)}`}>
-                    <span className="mr-2">
-                        {financial_summary.admin_status.type === 'ALACAK' ? '↗️' : '↘️'}
-                    </span>
-                    {financial_summary.admin_status.description}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                {/* Genel Admin Durumu */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h2 className="text-lg font-medium text-gray-900 mb-4">Admin Finansal Durumu</h2>
+                    <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(financial_summary.admin_status.type)}`}>
+                        <span className="mr-2">
+                            {financial_summary.admin_status.type === 'ALACAKLI' ? '↗️' : '↘️'}
+                        </span>
+                        {financial_summary.admin_status.description}
+                    </div>
+                    <div className={`text-2xl font-bold mt-2 ${financial_summary.admin_status.type === 'ALACAKLI' ? 'text-green-600' : 'text-red-600'}`}>
+                        {formatCurrency(financial_summary.admin_status.amount)}
+                    </div>
                 </div>
-                <div className={`text-2xl font-bold mt-2 ${financial_summary.admin_status.type === 'ALACAK' ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatCurrency(financial_summary.admin_status.amount)}
+
+                {/* Admin Mağaza Durumu */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h2 className="text-lg font-medium text-gray-900 mb-4">Admin Mağaza Durumu</h2>
+                    {financial_summary.admin_store ? (
+                        <>
+                            <div className="mb-2">
+                                <span className="text-sm text-gray-500">{financial_summary.admin_store.store_name}</span>
+                            </div>
+                            <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(financial_summary.admin_store.status)}`}>
+                                <span className="mr-2">
+                                    {financial_summary.admin_store.status === 'ALACAKLI' ? '↗️' : financial_summary.admin_store.status === 'BORÇLU' ? '↘️' : '→'}
+                                </span>
+                                {financial_summary.admin_store.status}
+                            </div>
+                            <div className={`text-2xl font-bold mt-2 ${financial_summary.admin_store.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {formatCurrency(Math.abs(financial_summary.admin_store.balance))}
+                            </div>
+                        </>
+                    ) : (
+                        <div className="text-center py-8">
+                            <div className="text-gray-400 text-sm">Admin mağaza bilgisi bulunamadı</div>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -606,6 +648,85 @@ const MuhasebePage = () => {
                                         <button className="text-green-600 hover:text-green-900">
                                             Hareket
                                         </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* İşlem Geçmişi */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 mt-8">
+                <div className="px-6 py-4 border-b border-gray-200">
+                    <h2 className="text-lg font-medium text-gray-900">Son İşlemler</h2>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Tarih
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Mağaza
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    İşlem Türü
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Koleksiyon
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Tutar
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Açıklama
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Durum
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {data.transactions.map((transaction: any) => (
+                                <tr key={transaction.id} className="hover:bg-gray-50">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {new Date(transaction.transaction_date).toLocaleDateString('tr-TR')}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-sm font-medium text-gray-900">
+                                            {transaction.store?.kurum_adi || 'Bilinmeyen Mağaza'}
+                                        </div>
+                                        <div className="text-sm text-gray-500">{transaction.store_id}</div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {transaction.transaction_type}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        {transaction.collection ? (
+                                            <div>
+                                                <div className="text-sm font-medium text-gray-900">{transaction.collection.name}</div>
+                                                <div className="text-sm text-gray-500">
+                                                    {transaction.square_meters ? `${transaction.square_meters} m²` : 'Metrekare belirtilmemiş'}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <span className="text-sm text-gray-400">-</span>
+                                        )}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className={`text-sm font-medium ${transaction.is_expense ? 'text-red-600' : 'text-green-600'}`}>
+                                            {transaction.is_expense ? '-' : '+'}{formatCurrency(parseFloat(transaction.amount))}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
+                                        {transaction.description}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${transaction.is_expense ? 'text-red-600 bg-red-50' : 'text-green-600 bg-green-50'}`}>
+                                            {transaction.is_expense ? 'Gider' : 'Gelir'}
+                                        </span>
                                     </td>
                                 </tr>
                             ))}
@@ -693,7 +814,7 @@ const MuhasebePage = () => {
                                             type="number"
                                             step="0.01"
                                             min="0"
-                                            value={formData.square_meters}
+                                            value={formData.square_meters || ''}
                                             onChange={(e) => setFormData(prev => ({ ...prev, square_meters: parseFloat(e.target.value) || 0 }))}
                                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a]"
                                         placeholder="0.00"
