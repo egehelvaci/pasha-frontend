@@ -236,7 +236,6 @@ const Siparisler = () => {
   const fetchOrders = useCallback(async (page: number = 1, status: string = '', search: string = '') => {
     // AuthContext yüklemesi tamamlanmadıysa fetch yapma
     if (authLoading) {
-      console.log('AuthContext hala yükleniyor, fetch iptal ediliyor...');
       return;
     }
 
@@ -259,11 +258,9 @@ const Siparisler = () => {
       // Admin ise sadece admin/orders endpoint'ini kullan, my-orders asla kullanma
       if (isAdmin) {
         endpoint = `https://pasha-backend-production.up.railway.app/api/admin/orders?${queryParams.toString()}`;
-        console.log('Admin kullanıcısı: admin/orders endpoint kullanılıyor');
       } else {
         // Admin değilse my-orders endpoint'ini kullan - kesinlikle admin endpoint kullanma
         endpoint = `https://pasha-backend-production.up.railway.app/api/orders/my-orders?${queryParams.toString()}`;
-        console.log('Normal kullanıcı: my-orders endpoint kullanılıyor');
         
         // Güvenlik kontrolü: Admin olmayan kullanıcılar asla admin endpoint'i kullanmamalı
         if (endpoint.includes('/admin/')) {
@@ -295,7 +292,7 @@ const Siparisler = () => {
         throw new Error(data.message || 'Siparişler alınamadı');
       }
     } catch (error) {
-      console.error('Siparişler alınırken hata:', error);
+
       setError('Siparişler alınamadı. Lütfen tekrar deneyiniz.');
     } finally {
       setLoading(false);
@@ -305,11 +302,9 @@ const Siparisler = () => {
   useEffect(() => {
     // AuthContext yüklemesi tamamlanana kadar bekle
     if (authLoading) {
-      console.log('AuthContext yükleniyor, fetch işlemi bekleniyor...');
       return;
     }
     
-    console.log('AuthContext yüklendi, isAdmin:', isAdmin);
     fetchOrders(currentPage, statusFilter, searchQuery);
   }, [fetchOrders, currentPage, statusFilter, searchQuery, authLoading]);
 
@@ -322,11 +317,11 @@ const Siparisler = () => {
       // Admin ise sadece admin/orders endpoint'ini kullan
       if (isAdmin) {
         endpoint = `https://pasha-backend-production.up.railway.app/api/admin/orders/${orderId}`;
-        console.log('Admin kullanıcısı: admin/orders detay endpoint kullanılıyor');
+
       } else {
         // Admin değilse normal orders endpoint'ini kullan - kesinlikle admin endpoint kullanma
         endpoint = `https://pasha-backend-production.up.railway.app/api/orders/${orderId}`;
-        console.log('Normal kullanıcı: orders detay endpoint kullanılıyor');
+
         
         // Güvenlik kontrolü: Admin olmayan kullanıcılar asla admin endpoint'i kullanmamalı
         if (endpoint.includes('/admin/')) {
@@ -352,7 +347,7 @@ const Siparisler = () => {
         throw new Error(data.message || 'Sipariş detayı alınamadı');
       }
     } catch (error) {
-      console.error('Sipariş detayı alınırken hata:', error);
+
       alert('Sipariş detayı alınamadı. Lütfen tekrar deneyiniz.');
     }
   };
@@ -378,7 +373,7 @@ const Siparisler = () => {
         throw new Error(data.message || 'QR kodları oluşturulamadı');
       }
 
-      console.log('QR kodları başarıyla oluşturuldu:', data.data);
+
       return data.data;
     } catch (error) {
       console.error('QR kod oluşturma hatası:', error);
@@ -415,13 +410,10 @@ const Siparisler = () => {
         // Eğer sipariş CONFIRMED durumuna geçiyorsa QR kodları oluştur
         if (newStatus === 'CONFIRMED') {
           try {
-            console.log('Sipariş onaylandı, QR kodları oluşturuluyor...');
             await generateQRCodes(orderId);
-            console.log('QR kodları başarıyla oluşturuldu');
             // QR kodları oluşturulduktan sonra alert mesajını güncelle
             alert('Sipariş durumu güncellendi ve QR kodları oluşturuldu!');
           } catch (qrError) {
-            console.error('QR kod oluşturma hatası:', qrError);
             // QR kod hatası sipariş güncellemeyi engellemez, sadece uyarı verelim
             alert('Sipariş durumu güncellendi ancak QR kodları oluşturulurken bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
           }
@@ -820,7 +812,6 @@ const Siparisler = () => {
                     <h3 className="text-2xl font-bold text-gray-900">
                       Sipariş Detayları
                     </h3>
-                    <p className="text-gray-600">Sipariş #{selectedOrder.id}</p>
                   </div>
                   <button
                     onClick={() => setSelectedOrder(null)}
@@ -1370,7 +1361,7 @@ const Siparisler = () => {
                                 await handleViewOrderDetail(selectedOrder.id);
                                 alert('QR kodları başarıyla oluşturuldu!');
                               } catch (error) {
-                                console.error('QR kod oluşturma hatası:', error);
+
                                 alert('QR kodları oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.');
                               } finally {
                                 setUpdatingStatus(false);

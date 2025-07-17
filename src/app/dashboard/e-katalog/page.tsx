@@ -104,8 +104,6 @@ const EKatalogPage = () => {
         };
       }
 
-      console.log('Katalog API isteği gönderiliyor:', requestBody);
-
       const response = await fetch('https://pasha-backend-production.up.railway.app/api/catalog/generate', {
         method: 'POST',
         headers: {
@@ -121,8 +119,6 @@ const EKatalogPage = () => {
       }
 
       const blob = await response.blob();
-      console.log('PDF blob alındı, boyut:', blob.size);
-
       // PDF'i indir
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -133,8 +129,6 @@ const EKatalogPage = () => {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-
-      console.log('Katalog başarıyla indirildi');
       
       // Beforeunload event'ini temizle
       window.removeEventListener('beforeunload', handleBeforeUnload);

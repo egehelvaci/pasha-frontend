@@ -63,7 +63,6 @@ const Header = ({ title, user }: HeaderProps) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        console.log('Token bulunamadı, bakiye verisi çekilmiyor');
         return;
       }
       
@@ -108,7 +107,6 @@ const Header = ({ title, user }: HeaderProps) => {
         // Token kontrolü
         const token = localStorage.getItem('token');
         if (!token) {
-          console.log('Token bulunamadı, sepet verisi çekilmiyor');
           return;
         }
         
@@ -137,20 +135,9 @@ const Header = ({ title, user }: HeaderProps) => {
           // Ürün çeşidi sayısını göster (toplam adet değil)
           setCartItems(data.data.items?.length || 0);
         } else {
-          console.warn('Sepet verisi alınamadı:', data.message || 'Bilinmeyen hata');
           setCartItems(0);
         }
       } catch (error: any) {
-        if (error.name === 'AbortError') {
-          console.warn('Sepet verisi çekme işlemi zaman aşımına uğradı');
-        } else if (error.message?.includes('Failed to fetch')) {
-          console.warn('Ağ bağlantısı sorunu: Sepet verisi çekilemedi');
-        } else if (error.message?.includes('NetworkError')) {
-          console.warn('Network hatası: Sepet verisi çekilemedi');
-        } else {
-          console.error("Sepet bilgileri alınamadı:", error);
-        }
-        // Hata durumunda sepet sayısını sıfırla
         setCartItems(0);
       }
     };

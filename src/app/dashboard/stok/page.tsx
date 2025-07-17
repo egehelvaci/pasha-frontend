@@ -130,11 +130,7 @@ export default function StokPage() {
       
       if (response.ok) {
         const data: ProductsResponse = await response.json();
-        console.log('API Response:', data);
         if (data.success) {
-          console.log('First product:', data.data[0]);
-          console.log('First product sizeOptions:', data.data[0]?.sizeOptions);
-          // Ürünleri alfabetik sıraya göre düzenle
           const sortedProducts = data.data.sort((a, b) => a.name.localeCompare(b.name, 'tr'));
           setProducts(sortedProducts);
         }
@@ -151,13 +147,7 @@ export default function StokPage() {
     try {
       setIsLoadingProductDetail(true);
       
-      console.log('=== ÜRÜN DETAY ÇEKME BAŞLIYOR ===');
-      console.log('Product ID:', productId);
-      
-      // Önce normal product endpoint'ini deneyelim
       const normalUrl = `https://pasha-backend-production.up.railway.app/api/products/${productId}`;
-      console.log('Normal GET URL:', normalUrl);
-      console.log('Token mevcut:', !!token);
       
       const response = await fetch(normalUrl, {
         method: 'GET',
@@ -166,24 +156,15 @@ export default function StokPage() {
         }
       });
       
-      console.log('=== GET RESPONSE ===');
-      console.log('GET Response status:', response.status);
-      
       if (response.ok) {
         const data: ProductDetailResponse = await response.json();
-        console.log('GET Response data:', data);
         
         if (data.success && data.data) {
-          console.log('✅ GET başarılı - Product ID:', data.data.productId);
-          console.log('Product name:', data.data.name);
-          console.log('SizeOptions count:', data.data.sizeOptions?.length || 0);
-          console.log('Variations count:', data.data.variations?.length || 0);
           return data.data;
         } else {
           console.error('❌ GET başarısız veya data boş:', data);
           
           // Eğer normal endpoint çalışmazsa variations endpoint'ini deneyelim
-          console.log('Normal endpoint başarısız, variations endpoint deneniyor...');
           return await fetchProductDetailVariations(productId);
         }
       } else {
@@ -195,14 +176,12 @@ export default function StokPage() {
         });
         
         // Normal endpoint başarısızsa variations endpoint'ini deneyelim
-        console.log('Normal endpoint HTTP hatası, variations endpoint deneniyor...');
         return await fetchProductDetailVariations(productId);
       }
     } catch (error) {
       console.error('❌ GET Network Error:', error);
       
       // Network hatası durumunda da variations endpoint'ini deneyelim
-      console.log('Network hatası, variations endpoint deneniyor...');
       return await fetchProductDetailVariations(productId);
     } finally {
       setIsLoadingProductDetail(false);
@@ -213,7 +192,6 @@ export default function StokPage() {
   const fetchProductDetailVariations = async (productId: string): Promise<Product | null> => {
     try {
       const variationsUrl = `https://pasha-backend-production.up.railway.app/api/products/${productId}/variations`;
-      console.log('Variations GET URL:', variationsUrl);
       
       const response = await fetch(variationsUrl, {
         method: 'GET',
@@ -222,14 +200,10 @@ export default function StokPage() {
         }
       });
       
-      console.log('Variations Response status:', response.status);
-      
       if (response.ok) {
         const data: ProductDetailResponse = await response.json();
-        console.log('Variations Response data:', data);
         
         if (data.success && data.data) {
-          console.log('✅ Variations GET başarılı - Product ID:', data.data.productId);
           return data.data;
         } else {
           console.error('❌ Variations GET başarısız veya data boş:', data);
@@ -254,48 +228,26 @@ export default function StokPage() {
   };
 
   const openStockModal = async (product: Product) => {
-    console.log('=== MODAL AÇILIYOR ===');
-    console.log('Seçilen ürün:', product.name);
-    console.log('Seçilen ürün ID:', product.productId);
-    console.log('Product object:', product);
-    
-    // Product ID kontrolü
     if (!product.productId) {
       console.error('❌ KRITIK HATA: Gelen product ID undefined!', product);
       alert('Ürün ID\'si bulunamadı! Lütfen sayfayı yenileyip tekrar deneyin.');
       return;
     }
     
-    // Önce ürün detaylarını GET ile çek
     const detailedProduct = await fetchProductDetail(product.productId);
     
-    // Eğer detaylı ürün bilgisi alınamazsa, mevcut ürün bilgisiyle devam et
     let productToUse: Product;
     
     if (!detailedProduct || !detailedProduct.productId) {
-      console.log('⚠️ Detaylı ürün bilgisi alınamadı, mevcut ürün bilgisiyle devam ediliyor');
       productToUse = product;
     } else {
-      console.log('✅ Detaylı ürün bilgisi alındı');
-      console.log('Original Product ID:', product.productId);
-      console.log('Detailed Product ID:', detailedProduct.productId);
-      console.log('ID\'ler eşit mi?:', product.productId === detailedProduct.productId);
       productToUse = detailedProduct;
     }
     
-    console.log('Kullanılacak ürün:', productToUse);
-    console.log('Kullanılacak ürün ID:', productToUse.productId);
-    
-    // selectedProduct'ı set et
     setSelectedProduct(productToUse);
     
-    // Set edildikten sonra kontrol et
-    console.log('selectedProduct set edildi, kontrol ediliyor...');
-    
-    // İlk boyut seçeneğini varsayılan olarak seç
     if (productToUse.sizeOptions && productToUse.sizeOptions.length > 0) {
       const firstOption = productToUse.sizeOptions[0];
-      console.log('İlk size option seçildi:', firstOption);
       setSelectedSizeOption(firstOption);
       setStockForm({
         width: firstOption.width,
@@ -303,9 +255,7 @@ export default function StokPage() {
         quantity: 1
       });
     } else if (productToUse.variations && productToUse.variations.length > 0) {
-      // Eğer sizeOptions yoksa variations'ı kullan
       const firstVariation = productToUse.variations[0];
-      console.log('İlk variation seçildi:', firstVariation);
       setSelectedSizeOption(null);
       setStockForm({
         width: firstVariation.width,
@@ -313,7 +263,6 @@ export default function StokPage() {
         quantity: 1
       });
     } else {
-      console.log('Ne sizeOptions ne de variations mevcut, manuel giriş');
       setSelectedSizeOption(null);
       setStockForm({
         width: 100,
@@ -323,26 +272,13 @@ export default function StokPage() {
     }
     
     setIsModalOpen(true);
-    
-    // Modal açıldıktan sonra selectedProduct'ı tekrar kontrol et
-    setTimeout(() => {
-      console.log('Modal açıldı, selectedProduct kontrol:', {
-        selectedProductExists: !!selectedProduct,
-        selectedProductId: selectedProduct?.productId
-      });
-    }, 100);
   };
 
   const closeStockModal = () => {
-    console.log('=== MODAL KAPANIYOR ===');
-    console.log('selectedProduct temizleniyor:', selectedProduct?.productId);
-    
     setIsModalOpen(false);
     setSelectedProduct(null);
     setSelectedSizeOption(null);
     setStockForm({ width: 0, height: 0, quantity: 0 });
-    
-    console.log('Modal kapatıldı ve state temizlendi');
   };
 
   const handleSizeOptionChange = (sizeOption: SizeOption) => {
@@ -364,7 +300,6 @@ export default function StokPage() {
       return;
     }
 
-    // Product ID kontrolü
     if (!selectedProduct.productId) {
       console.error('❌ KRITIK HATA: Product ID undefined!', {
         selectedProduct: selectedProduct,
@@ -374,23 +309,8 @@ export default function StokPage() {
       return;
     }
 
-    console.log('=== STOK GÜNCELLEME BAŞLIYOR ===');
-    console.log('Selected Product:', selectedProduct);
-    console.log('Product ID:', selectedProduct.productId);
-    console.log('Product ID type:', typeof selectedProduct.productId);
-    console.log('Product ID length:', selectedProduct.productId?.length);
-    console.log('Token mevcut:', !!token);
-    console.log('Token başlangıcı:', token.substring(0, 20) + '...');
-    console.log('Request Body:', {
-      width: stockForm.width,
-      height: stockForm.height,
-      quantity: stockForm.quantity
-    });
-
     const apiUrl = `https://pasha-backend-production.up.railway.app/api/products/${selectedProduct.productId}/stock`;
-    console.log('API URL:', apiUrl);
 
-    // Form validasyonu
     if (stockForm.width <= 0 || stockForm.height <= 0 || stockForm.quantity <= 0) {
       alert('Lütfen geçerli boyut ve miktar değerleri girin!');
       return;
@@ -404,8 +324,6 @@ export default function StokPage() {
         quantity: stockForm.quantity
       };
 
-      console.log('Gönderilen request body:', JSON.stringify(requestBody, null, 2));
-
       const response = await fetch(apiUrl, {
         method: 'PATCH',
         headers: {
@@ -415,20 +333,11 @@ export default function StokPage() {
         body: JSON.stringify(requestBody)
       });
       
-      console.log('=== API RESPONSE ===');
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-      
-      const responseText = await response.text();
-      console.log('Response text:', responseText);
-      
       if (response.ok) {
         try {
-          const data: StockUpdateResponse = JSON.parse(responseText);
-          console.log('Parsed response data:', data);
+          const data: StockUpdateResponse = await response.json();
           
           if (data.success) {
-            // Ürün listesini güncelle
             setProducts(prevProducts => 
               prevProducts.map(product => 
                 product.productId === selectedProduct.productId 
@@ -437,13 +346,11 @@ export default function StokPage() {
               )
             );
             
-            // selectedProduct'ı da güncelle (modal içindeki güncel stok bilgileri için)
             setSelectedProduct(data.data);
             
-            // Stok form'unu sıfırla (yeni stok eklemek için)
             setStockForm(prev => ({
               ...prev,
-              quantity: 1 // Sadece quantity'yi sıfırla, boyutlar aynı kalsın
+              quantity: 1
             }));
             
             alert('Stok başarıyla güncellendi!');
@@ -456,13 +363,13 @@ export default function StokPage() {
           alert('Sunucu yanıtı işlenirken hata oluştu!');
         }
       } else {
+        const errorText = await response.text();
         console.error('HTTP Error:', {
           status: response.status,
           statusText: response.statusText,
-          response: responseText
+          response: errorText
         });
         
-        // Özel hata mesajları
         if (response.status === 404) {
           alert('Ürün bulunamadı! Lütfen sayfayı yenileyip tekrar deneyin.');
         } else if (response.status === 401) {
@@ -470,7 +377,7 @@ export default function StokPage() {
         } else if (response.status === 403) {
           alert('Bu işlem için yetkiniz bulunmuyor!');
         } else {
-          alert(`Stok güncellenirken hata oluştu! Status: ${response.status}, Mesaj: ${responseText}`);
+          alert(`Stok güncellenirken hata oluştu! Status: ${response.status}, Mesaj: ${errorText}`);
         }
       }
     } catch (error) {
@@ -485,12 +392,10 @@ export default function StokPage() {
   const getTotalStock = (product: Product) => {
     let total = 0;
     
-    // sizeOptions'dan stok hesapla
     if (product.sizeOptions && Array.isArray(product.sizeOptions)) {
       total += product.sizeOptions.reduce((sum, option) => sum + (option.stockQuantity || 0), 0);
     }
     
-    // variations'dan da stok hesapla
     if (product.variations && Array.isArray(product.variations)) {
       total += product.variations.reduce((sum, variation) => sum + (variation.stockQuantity || 0), 0);
     }
@@ -505,9 +410,6 @@ export default function StokPage() {
       return;
     }
 
-    console.log('=== TOKEN TEST ===');
-    console.log('Token:', token.substring(0, 50) + '...');
-    
     try {
       const response = await fetch('https://pasha-backend-production.up.railway.app/api/products', {
         headers: {
@@ -515,11 +417,8 @@ export default function StokPage() {
         }
       });
       
-      console.log('Token test response status:', response.status);
-      
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Token geçerli - Ürün sayısı:', data.data?.length || 0);
       } else {
         console.error('❌ Token geçersiz veya API hatası');
         const errorText = await response.text();

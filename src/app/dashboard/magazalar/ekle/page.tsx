@@ -49,11 +49,6 @@ export default function AddStorePage() {
       setLoading(false);
     }
   };
-
-  const onValuesChange = (changedValues: any, allValues: any) => {
-    console.log('Form değerleri değişti:', changedValues);
-  };
-
   if (!isAdmin) return null;
 
   return (

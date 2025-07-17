@@ -589,7 +589,7 @@ export async function getStores(): Promise<Store[]> {
     const token = localStorage.getItem('token');
     
     if (!token) {
-      console.error('Token bulunamadı, kullanıcı girişi gerekiyor');
+
       throw new Error('Oturum açmanız gerekiyor');
     }
     
@@ -603,20 +603,20 @@ export async function getStores(): Promise<Store[]> {
     if (!response.ok) {
       const errorData = await response.json();
       const errorMessage = errorData.message || 'Mağazalar getirilemedi';
-      console.error('API Hatası:', errorMessage, 'Durum Kodu:', response.status);
+
       throw new Error(errorMessage);
     }
     
     const data: GetStoresResponse = await response.json();
     
     if (!data.success) {
-      console.error('API başarı durumu false:', data);
+
       throw new Error(data.message || 'Mağazalar getirilemedi');
     }
     
     return data.data || [];
   } catch (error) {
-    console.error('Mağazaları getirirken hata oluştu:', error);
+    
     throw error;
   }
 }
@@ -641,7 +641,7 @@ export async function createStore(data: CreateStoreData): Promise<Store> {
     const result: CreateStoreResponse = await response.json();
     return result.data;
   } catch (error) {
-    console.error('Mağaza oluşturulurken hata oluştu:', error);
+    
     throw error;
   }
 }
@@ -666,7 +666,7 @@ export async function updateStore(id: string, data: UpdateStoreData): Promise<St
     const result: UpdateStoreResponse = await response.json();
     return result.data;
   } catch (error) {
-    console.error('Mağaza güncellenirken hata oluştu:', error);
+    
     throw error;
   }
 }
@@ -688,7 +688,7 @@ export async function deleteStore(id: string): Promise<DeleteStoreResponse> {
 
     return await response.json();
   } catch (error) {
-    console.error('Mağaza silinirken hata oluştu:', error);
+    
     throw error;
   }
 }
@@ -713,7 +713,7 @@ export async function createPriceList(data: CreatePriceListData): Promise<PriceL
     const result: CreatePriceListResponse = await response.json();
     return result.data;
   } catch (error) {
-    console.error('Fiyat listesi oluştururken hata oluştu:', error);
+    
     throw error;
   }
 }
@@ -738,7 +738,7 @@ export async function assignPriceList(data: AssignPriceListData): Promise<PriceL
     const result: AssignPriceListResponse = await response.json();
     return result.data;
   } catch (error) {
-    console.error('Fiyat listesi atanırken hata oluştu:', error);
+    
     throw error;
   }
 }
@@ -763,7 +763,7 @@ export async function assignStorePriceList(data: AssignStorePriceListData): Prom
     const result: AssignStorePriceListResponse = await response.json();
     return result.data;
   } catch (error) {
-    console.error('Fiyat listesi mağazaya atanırken hata oluştu:', error);
+    
     throw error;
   }
 }
@@ -785,7 +785,7 @@ export async function getStorePriceLists(storeId: string): Promise<StorePriceLis
     const result: GetStorePriceListsResponse = await response.json();
     return result.data;
   } catch (error) {
-    console.error('Mağaza fiyat listeleri getirilirken hata oluştu:', error);
+    
     throw error;
   }
 }
@@ -807,7 +807,7 @@ export async function getMyStorePriceList(): Promise<any> {
     const result = await response.json();
     return result.data;
   } catch (error) {
-    console.error('Mağaza fiyat listesi getirilirken hata oluştu:', error);
+    
     throw error;
   }
 }
@@ -832,7 +832,7 @@ export async function assignUserToStore(userId: string, data: AssignUserToStoreD
     const result: AssignUserToStoreResponse = await response.json();
     return result;
   } catch (error) {
-    console.error('Kullanıcı mağazaya atanırken hata oluştu:', error);
+    
     throw error;
   }
 }
@@ -856,7 +856,7 @@ export async function removeUserFromStore(userId: string): Promise<RemoveUserFro
     const result: RemoveUserFromStoreResponse = await response.json();
     return result;
   } catch (error) {
-    console.error('Kullanıcının mağaza ataması kaldırılırken hata oluştu:', error);
+    
     throw error;
   }
 }
@@ -1072,7 +1072,7 @@ export const getProductRules = async (isActive?: boolean, search?: string): Prom
     const result = await response.json();
     return result.data;
   } catch (error) {
-    console.error('Ürün kuralları getirme hatası:', error);
+    
     throw error;
   }
 };
@@ -1094,7 +1094,7 @@ export const getProductRule = async (ruleId: number): Promise<ProductRule> => {
     const result = await response.json();
     return result.data;
   } catch (error) {
-    console.error('Ürün kuralı getirme hatası:', error);
+    
     throw error;
   }
 };
@@ -1118,7 +1118,7 @@ export const createProductRule = async (data: CreateProductRuleData): Promise<Pr
     const result = await response.json();
     return result.data;
   } catch (error) {
-    console.error('Ürün kuralı oluşturma hatası:', error);
+    
     throw error;
   }
 };
@@ -1142,7 +1142,7 @@ export const updateProductRule = async (ruleId: number, data: UpdateProductRuleD
     const result = await response.json();
     return result.data;
   } catch (error) {
-    console.error('Ürün kuralı güncelleme hatası:', error);
+    
     throw error;
   }
 };
@@ -1165,7 +1165,7 @@ export const deleteProductRule = async (ruleId: number): Promise<void> => {
       throw new Error(result.message || 'Ürün kuralı silinemedi');
     }
   } catch (error) {
-    console.error('Ürün kuralı silme hatası:', error);
+    
     throw error;
   }
 };
@@ -1190,7 +1190,7 @@ export const addSizeOption = async (ruleId: number, data: CreateSizeOptionData):
     const result = await response.json();
     return result.data;
   } catch (error) {
-    console.error('Boyut seçeneği ekleme hatası:', error);
+    
     throw error;
   }
 };
@@ -1214,7 +1214,7 @@ export const updateSizeOption = async (ruleId: number, sizeId: number, data: Cre
     const result = await response.json();
     return result.data;
   } catch (error) {
-    console.error('Boyut seçeneği güncelleme hatası:', error);
+    
     throw error;
   }
 };
@@ -1234,7 +1234,7 @@ export const deleteSizeOption = async (ruleId: number, sizeId: number): Promise<
 
     if (!response.ok) throw new Error('Boyut seçeneği silinemedi');
   } catch (error) {
-    console.error('Boyut seçeneği silme hatası:', error);
+    
     throw error;
   }
 };
@@ -1259,7 +1259,7 @@ export const assignCutTypes = async (ruleId: number, cutTypeIds: number[]): Prom
     const result = await response.json();
     return result.data;
   } catch (error) {
-    console.error('Kesim türleri atama hatası:', error);
+    
     throw error;
   }
 };
@@ -1279,7 +1279,7 @@ export const removeCutType = async (ruleId: number, cutTypeId: number): Promise<
 
     if (!response.ok) throw new Error('Kesim türü ataması kaldırılamadı');
   } catch (error) {
-    console.error('Kesim türü atama kaldırma hatası:', error);
+    
     throw error;
   }
 };
@@ -1305,7 +1305,7 @@ export const getCutTypes = async (search?: string): Promise<CutType[]> => {
     const result = await response.json();
     return result.data;
   } catch (error) {
-    console.error('Kesim türleri getirme hatası:', error);
+    
     throw error;
   }
 };
@@ -1327,7 +1327,7 @@ export const getCutType = async (cutTypeId: number): Promise<CutType> => {
     const result = await response.json();
     return result.data;
   } catch (error) {
-    console.error('Kesim türü getirme hatası:', error);
+    
     throw error;
   }
 };
@@ -1351,7 +1351,7 @@ export const createCutType = async (data: CreateCutTypeData): Promise<CutType> =
     const result = await response.json();
     return result.data;
   } catch (error) {
-    console.error('Kesim türü oluşturma hatası:', error);
+    
     throw error;
   }
 };

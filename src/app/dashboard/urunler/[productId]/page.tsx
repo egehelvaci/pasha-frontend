@@ -61,32 +61,14 @@ export default function ProductDetail() {
   
   // Seçimler değiştiğinde fiyat hesaplama
   useEffect(() => {
-    console.log('Fiyat hesaplama useEffect çalışıyor', { product: !!product, selectedSize: !!selectedSize, quantity });
-    if (product && selectedSize) {
-      // Metrekare hesapla (yükseklik değişken ise 1 metre yükseklik kabul et)
-      let squareMeters;
-      if (selectedSize.is_optional_height) {
-        // İsteğe bağlı yükseklik için kullanıcının girdiği değeri kullan
-        squareMeters = (selectedSize.width * customHeight) / 10000; // cm² -> m²
-      } else {
-        // Sabit yükseklik için metrekare hesapla
-        squareMeters = (selectedSize.width * selectedSize.height) / 10000; // cm² -> m²
-      }
-      
-      // Birim fiyat ve toplam fiyat hesapla (quantity ile çarp)
-      const unitPrice = product.pricing?.price || 0;
-      const calculatedPrice = squareMeters * unitPrice * quantity;
-      
-      console.log('Fiyat hesaplama detayları:', { 
-        squareMeters, 
-        unitPrice, 
-        quantity, 
-        calculatedPrice 
-      });
-      
-      setTotalPrice(calculatedPrice);
+    if (product && selectedSize && quantity > 0) {
+      // Fiyat hesaplama
+      const basePrice = selectedSize.price || 0;
+      const totalArea = (parseFloat(selectedSize.width) * parseFloat(selectedSize.height)) / 10000; // m2 cinsinden
+      const totalPrice = basePrice * totalArea * quantity;
+      setTotalPrice(totalPrice);
     }
-  }, [product, selectedSize, customHeight, quantity]);
+  }, [product, selectedSize, quantity]);
 
   const fetchProduct = async () => {
     try {
@@ -99,7 +81,6 @@ export default function ProductDetail() {
       if (!res.ok) throw new Error("Ürün bulunamadı");
       const data = await res.json();
       setProduct(data.data || data);
-      console.log("Ürün detayları:", data.data || data);
     } catch (err: any) {
       setError(err.message || "Bir hata oluştu");
     } finally {
@@ -390,7 +371,6 @@ export default function ProductDetail() {
                     className="w-8 h-8 border border-gray-300 flex items-center justify-center rounded-l-md text-gray-500 hover:bg-gray-50"
                     onClick={() => {
                       if (quantity > 1) {
-                        console.log('Quantity azalıyor:', { eskiQuantity: quantity, yeniQuantity: quantity - 1 });
                         setQuantity(quantity - 1);
                       }
                     }}
@@ -404,7 +384,6 @@ export default function ProductDetail() {
                     onChange={(e) => {
                       const value = e.target.value;
                       const newQuantity = value === '' ? 1 : Math.max(1, parseInt(value) || 1);
-                      console.log('Quantity değişiyor:', { eskiQuantity: quantity, yeniQuantity: newQuantity });
                       setQuantity(newQuantity);
                     }}
                     className="w-16 border-y border-gray-300 py-1 px-2 text-center text-black"
@@ -413,7 +392,6 @@ export default function ProductDetail() {
                     type="button"
                     className="w-8 h-8 border border-gray-300 flex items-center justify-center rounded-r-md text-gray-500 hover:bg-gray-50"
                     onClick={() => {
-                      console.log('Quantity artıyor:', { eskiQuantity: quantity, yeniQuantity: quantity + 1 });
                       setQuantity(quantity + 1);
                     }}
                   >

@@ -73,13 +73,11 @@ const SiparisOlustur = () => {
         const data = await response.json();
         if (data.success) {
           setCartData(data.data);
-          // Sepet verisi alındıktan sonra limit kontrolü yap
           await performLimitCheck();
         } else {
           throw new Error(data.message || 'Sepet verisi alınamadı');
         }
       } catch (error) {
-        console.error('Sepet verisi alınırken hata:', error);
         router.push('/dashboard/sepetim');
       } finally {
         setLoading(false);

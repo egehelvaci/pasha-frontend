@@ -58,12 +58,12 @@ export default function ProductList() {
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) {
         setProducts(data.data);
-        console.log("Ürünler:", data.data);
+
       } else {
         setProducts([]);
       }
     } catch (error) {
-      console.error("Ürünler yüklenirken hata oluştu:", error);
+
       setProducts([]);
     } finally {
       setLoading(false);
@@ -88,7 +88,7 @@ export default function ProductList() {
         setCollections([]);
       }
     } catch (error) {
-      console.error("Koleksiyonlar yüklenirken hata oluştu:", error);
+
       setCollections([]);
     }
   };
@@ -98,7 +98,7 @@ export default function ProductList() {
       const rules = await getProductRules();
       setProductRules(rules);
     } catch (error) {
-      console.error("Ürün kuralları yüklenirken hata oluştu:", error);
+
       setProductRules([]);
     }
   };
@@ -249,7 +249,6 @@ export default function ProductList() {
           const ruleIdNumber = parseInt(form.rule_id);
           if (!isNaN(ruleIdNumber)) {
             fd.append('rule_id', ruleIdNumber.toString());
-            console.log('Gönderilen rule_id (number):', ruleIdNumber);
           }
         }
         
@@ -662,9 +661,6 @@ export default function ProductList() {
         cutTypeValue = "post kesim";
       }
       
-      console.log('Seçilen kesim türü:', selectedCutType.name);
-      console.log('API\'ye gönderilecek cutType:', cutTypeValue);
-      
       setAddToCartLoading(true);
       setAddToCartError("");
       setAddToCartSuccess(false);
@@ -1075,12 +1071,10 @@ export default function ProductList() {
             const ruleIdNumber = parseInt(form.rule_id);
             if (!isNaN(ruleIdNumber)) {
               fd.append('rule_id', ruleIdNumber.toString());
-              console.log('Update - Gönderilen rule_id (number):', ruleIdNumber);
             }
           } else {
             // Boş string gönder (rule_id'yi kaldırmak için)
             fd.append('rule_id', '');
-            console.log('Update - rule_id kaldırılıyor');
           }
         }
         

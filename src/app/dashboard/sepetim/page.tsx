@@ -35,14 +35,12 @@ export default function CartPage() {
       const data = await res.json();
       
       if (data.success) {
-        console.log("Sepet verisi:", data.data);
-        console.log("İlk ürün detayı:", data.data.items[0]);
         setCartData(data.data);
       } else {
         setError("Sepet bilgileri alınamadı");
       }
     } catch (error) {
-      console.error("Sepet bilgileri alınamadı:", error);
+
       setError("Sepet bilgileri alınamadı. Lütfen daha sonra tekrar deneyin.");
     } finally {
       setLoading(false);
@@ -77,7 +75,7 @@ export default function CartPage() {
         setError(data.message || "Ürün sepetten çıkarılamadı");
       }
     } catch (error) {
-      console.error("Ürün sepetten çıkarılırken hata oluştu:", error);
+
       setError("Ürün sepetten çıkarılırken bir hata oluştu. Lütfen tekrar deneyin.");
     } finally {
       // Loading state'i sonlandır
@@ -124,7 +122,7 @@ export default function CartPage() {
         setError(data.message || "Ürün miktarı güncellenemedi");
       }
     } catch (error) {
-      console.error("Ürün miktarı güncellenirken hata oluştu:", error);
+
       setError("Ürün miktarı güncellenirken bir hata oluştu. Lütfen tekrar deneyin.");
     } finally {
       // Loading state'i sonlandır
@@ -161,7 +159,7 @@ export default function CartPage() {
         setError(data.message || "Sepet temizlenemedi");
       }
     } catch (error) {
-      console.error("Sepet temizlenirken hata oluştu:", error);
+
       setError("Sepet temizlenirken bir hata oluştu");
     }
   };
