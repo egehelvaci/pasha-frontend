@@ -9,6 +9,28 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  outline: none !important;
+}
+
+/* Tüm elementler için outline'ı kaldır */
+* {
+  outline: none !important;
+}
+
+/* Focus durumunda outline yerine ring efekti kullan */
+*:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+*:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Focus-within durumunda outline'ı kaldır */
+*:focus-within {
+  outline: none !important;
 }
 
 html {
@@ -114,12 +136,6 @@ input[type="button"],
 button {
   -webkit-appearance: none;
   border-radius: 0;
-}
-
-/* Focus stilleri */
-*:focus {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
 }
 
 /* Scrollbar stilleri (Webkit tarayıcılar için) */
