@@ -18,6 +18,11 @@ export default function AddStorePage() {
     }
   }, [isAdmin, router]);
 
+  const onValuesChange = (changedValues: any, allValues: any) => {
+    // Form değerleri değiştiğinde çalışır
+    // Gerekirse burada ek işlemler yapılabilir
+  };
+
   const onFinish = async (values: CreateStoreData) => {
     setLoading(true);
     try {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -14,7 +14,7 @@ interface PaymentError {
   retryAttempts?: string;
 }
 
-export default function OdemeBasarisizPage() {
+function OdemeBasarisizContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [paymentData, setPaymentData] = useState<PaymentError>({});
@@ -288,5 +288,13 @@ export default function OdemeBasarisizPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OdemeBasarisizPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center min-h-screen">Yükleniyor...</div>}>
+      <OdemeBasarisizContent />
+    </Suspense>
   );
 } 

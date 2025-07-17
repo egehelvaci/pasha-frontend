@@ -112,10 +112,10 @@ export default function PaymentsPage() {
         } catch (error) {
           console.error('localStorage\'dan kullanıcı verisi alınırken hata:', error);
           // Fallback olarak AuthContext'ten al
-          if (user.store) {
-            setStores([user.store]);
-            setPaymentForm(prev => ({ ...prev, storeId: user.store.store_id }));
-          }
+                  if (user.store) {
+          setStores([user.store]);
+          setPaymentForm(prev => ({ ...prev, storeId: user.store!.store_id }));
+        }
         }
       }
     }

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import FinancialSummaryMobile from '../components/FinancialSummaryMobile';
@@ -326,18 +327,22 @@ const Header = ({ title, user }: HeaderProps) => {
   ];
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <header className="bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50 shadow-sm">
       <div className="container-responsive">
         {/* Ana Header Kısmı */}
-        <div className="flex items-center justify-between py-3">
+        <div className="flex items-center justify-between py-4">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/dashboard" className="flex-shrink-0">
-              <img 
-                src="/black-logo.svg" 
-                alt="Paşa Home" 
-                className="h-8 w-auto cursor-pointer" 
-              />
+            <Link href="/dashboard" className="flex-shrink-0 group">
+              <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-all duration-200">
+                <Image 
+                  src="/black-logo.svg" 
+                  alt="Paşa Home" 
+                  width={120}
+                  height={48}
+                  className="h-12 w-auto group-hover:scale-105 transition-transform duration-200" 
+                />
+              </div>
             </Link>
           </div>
           
@@ -421,12 +426,12 @@ const Header = ({ title, user }: HeaderProps) => {
             
             {/* Sepet ikonu */}
             <Link href="/dashboard/sepetim" className="relative group">
-              <div className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-gray-700">
+              <div className="p-3 hover:bg-gray-50 rounded-xl transition-all duration-200 border border-transparent hover:border-gray-200 shadow-sm hover:shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-gray-600 group-hover:text-[#00365a] transition-colors">
                   <path fillRule="evenodd" d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 004.25 22.5h15.5a1.875 1.875 0 001.865-2.071l-1.263-12a1.875 1.875 0 00-1.865-1.679H16.5V6a4.5 4.5 0 10-9 0zM12 3a3 3 0 00-3 3v.75h6V6a3 3 0 00-3-3zm-3 8.25a3 3 0 106 0v-.75a.75.75 0 011.5 0v.75a4.5 4.5 0 11-9 0v-.75a.75.75 0 011.5 0v.75z" clipRule="evenodd" />
                 </svg>
                 {cartItems > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg animate-pulse">
                     {cartItems > 99 ? '99+' : cartItems}
                   </span>
                 )}
@@ -435,12 +440,15 @@ const Header = ({ title, user }: HeaderProps) => {
             
             {/* Kullanıcı dropdown */}
             <div className="relative group">
-              <div className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
-                <div className="h-8 w-8 rounded-full bg-[#00365a] flex items-center justify-center text-white text-sm font-medium">
+              <div className="flex items-center space-x-3 px-4 py-2 rounded-xl hover:bg-gray-50 cursor-pointer transition-all duration-200 border border-transparent hover:border-gray-200 shadow-sm hover:shadow-md">
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#00365a] to-[#004170] flex items-center justify-center text-white text-sm font-bold shadow-lg">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
-                <span className="text-sm font-medium text-gray-700 hidden xl:block">{user.name}</span>
-                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="hidden xl:block">
+                  <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                  <div className="text-xs text-gray-500">{isAdmin ? 'Admin' : 'Kullanıcı'}</div>
+                </div>
+                <svg className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
@@ -492,12 +500,12 @@ const Header = ({ title, user }: HeaderProps) => {
           {/* Mobil: Sağ taraf kontrolleri */}
           <div className="flex lg:hidden items-center space-x-2">
             {/* Sepet ikonu */}
-            <Link href="/dashboard/sepetim" className="relative p-2">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-gray-700">
+            <Link href="/dashboard/sepetim" className="relative p-2 rounded-lg hover:bg-gray-50 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-gray-600">
                 <path fillRule="evenodd" d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 004.25 22.5h15.5a1.875 1.875 0 001.865-2.071l-1.263-12a1.875 1.875 0 00-1.865-1.679H16.5V6a4.5 4.5 0 10-9 0zM12 3a3 3 0 00-3 3v.75h6V6a3 3 0 00-3-3zm-3 8.25a3 3 0 106 0v-.75a.75.75 0 011.5 0v.75a4.5 4.5 0 11-9 0v-.75a.75.75 0 011.5 0v.75z" clipRule="evenodd" />
               </svg>
               {cartItems > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
                   {cartItems > 99 ? '99+' : cartItems}
                 </span>
               )}
@@ -506,12 +514,14 @@ const Header = ({ title, user }: HeaderProps) => {
             {/* Hamburger menü */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className={`hamburger p-2 ${isMobileMenuOpen ? 'active' : ''}`}
+              className="p-3 rounded-lg hover:bg-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#00365a]/20"
               aria-label="Menüyü aç/kapat"
             >
-              <span></span>
-              <span></span>
-              <span></span>
+              <div className="w-6 h-6 flex flex-col justify-center items-center">
+                <span className={`block w-6 h-0.5 bg-[#00365a] transition-all duration-300 ${isMobileMenuOpen ? 'rotate-45 translate-y-1.5' : 'mb-1'}`}></span>
+                <span className={`block w-6 h-0.5 bg-[#00365a] transition-all duration-300 ${isMobileMenuOpen ? 'opacity-0' : 'mb-1'}`}></span>
+                <span className={`block w-6 h-0.5 bg-[#00365a] transition-all duration-300 ${isMobileMenuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
+              </div>
             </button>
           </div>
         </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -12,7 +12,7 @@ interface PaymentSuccess {
   date?: string;
 }
 
-export default function OdemeBasariliPage() {
+function OdemeBasariliContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [paymentData, setPaymentData] = useState<PaymentSuccess>({});
@@ -215,5 +215,13 @@ export default function OdemeBasariliPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function OdemeBasariliPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center min-h-screen">Yükleniyor...</div>}>
+      <OdemeBasariliContent />
+    </Suspense>
   );
 } 
