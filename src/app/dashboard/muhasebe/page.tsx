@@ -12,51 +12,55 @@ interface ExtendedPriceListProduct extends PriceListProduct {
     metreKareFiyati?: number;
 }
 
-interface StoreBreakdown {
+interface MagazaBakiye {
     store_id: string;
-    store_name: string;
-    balance: number;
-    status: 'ALACAKLI' | 'BORÇLU' | 'NÖTR';
+    kurum_adi: string;
+    bakiye: number;
+    durum: 'ALACAKLI' | 'BORCLU' | 'DENGEDE';
+    tutar: number;
+    is_active: boolean;
 }
 
-interface AdminStatus {
-    description: string;
-    type: 'ALACAKLI' | 'BORÇLU';
-    amount: number;
+interface Transaction {
+    id: number;
+    storeId: string;
+    islemTuru: string;
+    tutar: string;
+    harcama: boolean;
+    tarih: string;
+    aciklama: string;
+    createdAt: string;
+    store: {
+        store_id: string;
+        kurum_adi: string;
+        bakiye: number;
+        durum: 'ALACAKLI' | 'BORCLU' | 'DENGEDE';
+        tutar: number;
+    };
 }
 
-interface AdminStore {
-    store_id: string;
-    store_name: string;
-    balance: number;
-    status: 'ALACAKLI' | 'BORÇLU' | 'NÖTR';
-}
-
-interface FinancialSummary {
-    total_stores: number;
-    admin_debt: number;
-    admin_credit: number;
-    net_balance: number;
-    admin_status: AdminStatus;
-    admin_store?: AdminStore;
-    store_breakdown: StoreBreakdown[];
+interface AccountingResponseData {
+    hareketler: Transaction[];
+    magazaBakiyeleri: MagazaBakiye[];
+    adminKasaBakiyesi: string;
+    toplamAlacak: number;
+    adminVerecekMagazaSayisi: number;
+    adminAlacakliMagazaSayisi: number;
 }
 
 interface AccountingData {
-    transactions: any[];
-    pagination: any;
-    financial_summary: FinancialSummary;
+    responseData?: AccountingResponseData;
 }
 
 interface TransactionFormData {
-    store_id: string;
+    storeId: string;
+    islemTuru: string;
+    tutar: number;
+    tarih: string;
+    aciklama: string;
+    // UI için gerekli ama API'ye gönderilmeyen alanlar
     collection_id?: string;
     square_meters?: number;
-    transaction_type: string;
-    amount: number;
-    is_expense: boolean;
-    transaction_date: string;
-    description: string;
 }
 
 const MuhasebePage = () => {
@@ -74,15 +78,23 @@ const MuhasebePage = () => {
     const [selectedCustomer, setSelectedCustomer] = useState<string>('');
     const [selectedCollection, setSelectedCollection] = useState<string>('');
     const [collections, setCollections] = useState<any[]>([]);
+    const [incomeTypes, setIncomeTypes] = useState<string[]>([]);
+    const [expenseTypes, setExpenseTypes] = useState<string[]>([]);
+    
+    // Filtreleme state'i
+    const [selectedStoreFilter, setSelectedStoreFilter] = useState<string>('');
+    const [startDate, setStartDate] = useState<string>('');
+    const [endDate, setEndDate] = useState<string>('');
+    const [transactionTypeFilter, setTransactionTypeFilter] = useState<string>(''); // 'gelir', 'gider', veya ''
+    
     const [formData, setFormData] = useState<TransactionFormData>({
-        store_id: '',
+        storeId: '',
+        islemTuru: '',
+        tutar: 0,
+        tarih: new Date().toISOString().slice(0, 16),
+        aciklama: '',
         collection_id: '',
-        square_meters: 0,
-        transaction_type: '',
-        amount: 0,
-        is_expense: false,
-        transaction_date: new Date().toISOString().slice(0, 16),
-        description: ''
+        square_meters: 0
     });
 
     // İstek kontrolü için ref
@@ -99,6 +111,9 @@ const MuhasebePage = () => {
         if (!hasFetchedRef.current) {
             hasFetchedRef.current = true;
             fetchAccountingData(false);
+            fetchStores();
+            fetchIncomeTypes();
+            fetchExpenseTypes();
         }
     }, [isAdmin]);
 
@@ -112,7 +127,8 @@ const MuhasebePage = () => {
                 throw new Error('Token bulunamadı');
             }
 
-            const response = await fetch('https://pasha-backend-production.up.railway.app/api/admin/accounting-transactions', {
+            // Yeni API - tek endpoint'ten hem transactions hem bakiye bilgileri
+            const response = await fetch('https://pasha-backend-production.up.railway.app/api/admin/muhasebe-hareketleri', {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -129,9 +145,10 @@ const MuhasebePage = () => {
                 throw new Error(result.message || 'Veriler alınamadı');
             }
 
-            setData(result.data);
+            setData({
+                responseData: result.data
+            });
         } catch (error: any) {
-
             setError(error.message || 'Bir hata oluştu');
         } finally {
             setLoading(false);
@@ -145,6 +162,54 @@ const MuhasebePage = () => {
             setStores(storesData);
         } catch (error) {
             console.error('Mağazalar alınamadı:', error);
+        }
+    };
+
+    // Gelir türlerini getir
+    const fetchIncomeTypes = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const response = await fetch('https://pasha-backend-production.up.railway.app/api/admin/muhasebe/income-types', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
+                    setIncomeTypes(result.data);
+                }
+            }
+        } catch (error) {
+            console.error('Gelir türleri alınamadı:', error);
+        }
+    };
+
+    // Gider türlerini getir
+    const fetchExpenseTypes = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const response = await fetch('https://pasha-backend-production.up.railway.app/api/admin/muhasebe/expense-types', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
+                    setExpenseTypes(result.data);
+                }
+            }
+        } catch (error) {
+            console.error('Gider türleri alınamadı:', error);
         }
     };
 
@@ -179,7 +244,7 @@ const MuhasebePage = () => {
                         
                         const collection = item.Collection;
                         return {
-                            id: item.price_list_detail_id || item.id || index,
+                            id: collection?.collectionId || item.price_list_detail_id || item.id || index,
                             name: collection?.name || 'Koleksiyon',
                             price_per_square_meter: parseFloat(item.price_per_square_meter) || 0,
                             collection_code: collection?.code,
@@ -196,7 +261,7 @@ const MuhasebePage = () => {
                         const pricePerSquareMeter = parseFloat(item.price_per_square_meter) || 0;
                         
                         return {
-                            id: item.price_list_detail_id || item.id || index,
+                            id: collection?.collectionId || item.price_list_detail_id || item.id || index,
                             name: collectionName,
                             price: pricePerSquareMeter,
                             description: collection?.description || '',
@@ -227,43 +292,6 @@ const MuhasebePage = () => {
 
     // İşlem türüne göre gelir/harcama belirle
     const getTransactionExpenseType = (transactionType: string): boolean => {
-        // GELİR kategorisi (is_expense = false)
-        const incomeTypes = [
-            'Parekende Satış',
-            'Parekende Tahsilat',
-            'Alacak ve/veya Tahsilat',
-            'Nakit, Döviz ve/veya Değerli Kağıt Tahsilatı',
-            'Borç Tahsilatı',
-            'Paşaoğlu Halı Moka Post Tahsilatı',
-            'Devreden Alacak Bakiyesi'
-        ];
-
-        // HARCAMA kategorisi (is_expense = true)
-        const expenseTypes = [
-            'Araç Bakım / Yakıt / Araç Sigorta / HGS Giderleri',
-            'Mutfak Gideri',
-            'Mal ve/veya Tamir, Servis vb. Hizmet Alımı',
-            'Nakit, Döviz ve/veya Değerli Kağıt Ödemesi',
-            'Personel Maaş Ödemesi',
-            'Nakliye ve/veya Kargo Ödemesi',
-            'Borç Verme',
-            'Elektrik / Su / Isınma / Telefon / İnternet Giderleri',
-            'İşletme İçi Sarf Malzeme ve/veya Kırtasiye Giderleri',
-            'Kira / Aidat Giderleri',
-            'Vergi / SSK / Bağkur / Muhasebe Giderleri',
-            'Seyhat ve/veya Konaklama Giderleri',
-            'Bilgi İşlem ve/veya Yazılım Hizmet Ödemesi',
-            'Personel Maaş Hakkedişi',
-            'Personel İkramiye Hakkedişi',
-            'Personel Mesai Hakkedişi',
-            'Personel İkramiye Ödemesi',
-            'Personel Mesai Ödemesi',
-            'Mal ve/veya Tamir, Servis vb. Hizmet Ödemesi',
-            'Devreden Borç Bakiyesi',
-            'Ürün ve/veya Hizmet İadesi',
-            'Bilgi İşlem ve/veya Yazılım Hizmet Hakedişi'
-        ];
-
         if (incomeTypes.includes(transactionType)) {
             return false; // Gelir
         } else if (expenseTypes.includes(transactionType)) {
@@ -277,7 +305,7 @@ const MuhasebePage = () => {
     const handleCustomerChange = (customerId: string) => {
         setSelectedCustomer(customerId);
         setSelectedCollection('');
-        setFormData(prev => ({ ...prev, store_id: customerId, collection_id: '', amount: 0 }));
+        setFormData(prev => ({ ...prev, storeId: customerId, collection_id: '', tutar: 0 }));
 
         if (customerId) {
             // Sadece bir kez çağır
@@ -296,7 +324,7 @@ const MuhasebePage = () => {
         const squareMeters = typeof formData.square_meters === 'string' ? parseFloat(formData.square_meters) : formData.square_meters;
         if (selectedProduct && squareMeters && squareMeters > 0) {
             const calculatedAmount = selectedProduct.price_per_square_meter * squareMeters;
-            setFormData(prev => ({ ...prev, amount: calculatedAmount }));
+            setFormData(prev => ({ ...prev, tutar: calculatedAmount }));
         }
     };
 
@@ -310,14 +338,13 @@ const MuhasebePage = () => {
     const closeModal = () => {
         setIsModalOpen(false);
         setFormData({
-            store_id: '',
+            storeId: '',
+            islemTuru: '',
+            tutar: 0,
+            tarih: new Date().toISOString().slice(0, 16),
+            aciklama: '',
             collection_id: '',
-            square_meters: 0,
-            transaction_type: '',
-            amount: 0,
-            is_expense: false,
-            transaction_date: new Date().toISOString().slice(0, 16),
-            description: ''
+            square_meters: 0
         });
         setSelectedCustomer('');
         setSelectedCollection('');
@@ -329,7 +356,7 @@ const MuhasebePage = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!formData.store_id || !formData.amount || !formData.description) {
+        if (!formData.storeId || !formData.tutar || !formData.aciklama || !formData.islemTuru) {
             alert('Lütfen gerekli alanları doldurun');
             return;
         }
@@ -338,25 +365,18 @@ const MuhasebePage = () => {
             setFormLoading(true);
             const token = localStorage.getItem('token');
 
-            // API formatına uygun olarak veri hazırla
-            const submitData: any = {
-                store_id: formData.store_id,
-                transaction_type: formData.transaction_type,
-                amount: formData.amount,
-                is_expense: formData.is_expense,
-                transaction_date: new Date(formData.transaction_date).toISOString(),
-                description: formData.description
+            // API formatına uygun olarak veri hazırla (yeni API dokümantasyonuna göre)
+            const submitData = {
+                storeId: formData.storeId,
+                islemTuru: formData.islemTuru,
+                tutar: formData.tutar,
+                tarih: new Date(formData.tarih).toISOString(),
+                aciklama: formData.aciklama
             };
 
-            // Eğer koleksiyon seçildiyse collection_id ve square_meters ekle
-            if (formData.collection_id) {
-                submitData.collection_id = formData.collection_id;
-                if (formData.square_meters && formData.square_meters > 0) {
-                    submitData.square_meters = formData.square_meters;
-                }
-            }
 
-            const response = await fetch('https://pasha-backend-production.up.railway.app/api/admin/accounting-transactions', {
+
+            const response = await fetch('https://pasha-backend-production.up.railway.app/api/admin/muhasebe-hareketleri', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -446,286 +466,525 @@ const MuhasebePage = () => {
         return null;
     }
 
-    const { financial_summary } = data;
+    const { responseData } = data;
+
+    // Filtrelenmiş verileri hesapla
+    const getFilteredData = () => {
+        if (!responseData) return null;
+
+        let filteredTransactions = responseData.hareketler;
+
+        // Mağaza filtrelemesi
+        if (selectedStoreFilter) {
+            filteredTransactions = filteredTransactions.filter(
+                transaction => transaction.storeId === selectedStoreFilter
+            );
+        }
+
+        // Tarih aralığı filtrelemesi
+        if (startDate) {
+            const startDateTime = new Date(startDate);
+            filteredTransactions = filteredTransactions.filter(
+                transaction => new Date(transaction.tarih) >= startDateTime
+            );
+        }
+
+        if (endDate) {
+            const endDateTime = new Date(endDate);
+            // Bitiş tarihini günün sonuna ayarla
+            endDateTime.setHours(23, 59, 59, 999);
+            filteredTransactions = filteredTransactions.filter(
+                transaction => new Date(transaction.tarih) <= endDateTime
+            );
+        }
+
+        // Gelir/Gider filtrelemesi
+        if (transactionTypeFilter === 'gelir') {
+            filteredTransactions = filteredTransactions.filter(
+                transaction => !transaction.harcama
+            );
+        } else if (transactionTypeFilter === 'gider') {
+            filteredTransactions = filteredTransactions.filter(
+                transaction => transaction.harcama
+            );
+        }
+
+        return {
+            ...responseData,
+            hareketler: filteredTransactions,
+            // magazaBakiyeleri filtrelenmeyecek - hep orijinal veri
+        };
+    };
+
+    const filteredData = getFilteredData();
 
     return (
         <div className="container-responsive py-6">
             {/* Başlık */}
-            <div className="flex items-center justify-between mb-6 mt-8">
-                <h1 className="text-2xl font-bold text-gray-900">Muhasebe Dashboard</h1>
-                <div className="flex gap-3">
-                    <button
-                        onClick={openModal}
-                        className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                    >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        Yeni Muhasebe Hareketi
-                    </button>
-                    <button
-                        onClick={() => fetchAccountingData(true)}
-                        className="flex items-center px-4 py-2 text-white rounded-lg transition-colors"
-                        style={{backgroundColor: '#00365a'}}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#002847'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#00365a'}
-                    >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Yenile
-                    </button>
-                </div>
-            </div>
-
-            {/* Özet Kartları */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                {/* Toplam Mağaza */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{color: '#00365a'}}>
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            <div className="flex flex-col gap-4 mb-6 mt-8">
+                <div className="flex items-center justify-between">
+                    <h1 className="text-2xl font-bold text-gray-900">Muhasebe Dashboard</h1>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={openModal}
+                            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                        >
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                             </svg>
-                        </div>
-                        <div className="ml-5 w-0 flex-1">
-                            <dl>
-                                <dt className="text-sm font-medium text-gray-500 truncate">Toplam Mağaza</dt>
-                                <dd className="text-lg font-medium text-gray-900">{financial_summary.total_stores}</dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Admin Mağaza Borç */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                            Yeni Muhasebe Hareketi
+                        </button>
+                        <button
+                            onClick={() => fetchAccountingData(true)}
+                            className="flex items-center px-4 py-2 text-white rounded-lg transition-colors"
+                            style={{backgroundColor: '#00365a'}}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#002847'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#00365a'}
+                        >
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             </svg>
-                        </div>
-                        <div className="ml-5 w-0 flex-1">
-                            <dl>
-                                <dt className="text-sm font-medium text-gray-500 truncate">Admin Borç</dt>
-                                <dd className="text-lg font-medium text-red-600">
-                                    {financial_summary.admin_store && financial_summary.admin_store.balance < 0 
-                                        ? formatCurrency(Math.abs(financial_summary.admin_store.balance))
-                                        : formatCurrency(0)
-                                    }
-                                </dd>
-                            </dl>
-                        </div>
+                            Yenile
+                        </button>
                     </div>
                 </div>
 
-                {/* Toplam Alacak */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                            </svg>
+                {/* Filtreleme */}
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 items-end">
+                        {/* Mağaza Filtresi */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Mağaza</label>
+                            <select
+                                value={selectedStoreFilter}
+                                onChange={(e) => setSelectedStoreFilter(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a]"
+                            >
+                                <option value="">Tüm Mağazalar</option>
+                                {responseData?.magazaBakiyeleri?.map((magaza) => (
+                                    <option key={magaza.store_id} value={magaza.store_id}>
+                                        {magaza.kurum_adi}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
-                        <div className="ml-5 w-0 flex-1">
-                            <dl>
-                                <dt className="text-sm font-medium text-gray-500 truncate">Admin Alacak</dt>
-                                <dd className="text-lg font-medium text-green-600">{formatCurrency(financial_summary.admin_credit)}</dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
 
-                {/* Net Bakiye */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <div className="flex items-center">
-                        <div className="flex-shrink-0" style={{color: '#00365a'}}>
-                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            </svg>
+                        {/* Başlangıç Tarihi */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Başlangıç Tarihi</label>
+                            <input
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a]"
+                            />
                         </div>
-                        <div className="ml-5 w-0 flex-1">
-                            <dl>
-                                <dt className="text-sm font-medium text-gray-500 truncate">Net Bakiye</dt>
-                                <dd className={`text-lg font-medium ${financial_summary.net_balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                    {formatCurrency(financial_summary.net_balance)}
-                                </dd>
-                            </dl>
+
+                        {/* Bitiş Tarihi */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Bitiş Tarihi</label>
+                            <input
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a]"
+                            />
+                        </div>
+
+                        {/* İşlem Türü Filtresi */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">İşlem Türü</label>
+                            <select
+                                value={transactionTypeFilter}
+                                onChange={(e) => setTransactionTypeFilter(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a]"
+                            >
+                                <option value="">Tüm İşlemler</option>
+                                <option value="gelir">Sadece Gelir</option>
+                                <option value="gider">Sadece Gider</option>
+                            </select>
+                        </div>
+
+                        {/* Filtreleri Temizle Butonu */}
+                        <div>
+                            {(selectedStoreFilter || startDate || endDate || transactionTypeFilter) && (
+                                <button
+                                    onClick={() => {
+                                        setSelectedStoreFilter('');
+                                        setStartDate('');
+                                        setEndDate('');
+                                        setTransactionTypeFilter('');
+                                    }}
+                                    className="w-full px-3 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                                >
+                                    Filtreleri Temizle
+                                </button>
+                            )}
                         </div>
                     </div>
-                </div>
-            </div>
 
-            {/* Admin Durumu */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                {/* Genel Admin Durumu */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h2 className="text-lg font-medium text-gray-900 mb-4">Admin Finansal Durumu</h2>
-                    <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(financial_summary.admin_status.type)}`}>
-                        <span className="mr-2">
-                            {financial_summary.admin_status.type === 'ALACAKLI' ? '↗️' : '↘️'}
-                        </span>
-                        {financial_summary.admin_status.description}
-                    </div>
-                    <div className={`text-2xl font-bold mt-2 ${financial_summary.admin_status.type === 'ALACAKLI' ? 'text-green-600' : 'text-red-600'}`}>
-                        {formatCurrency(financial_summary.admin_status.amount)}
-                    </div>
-                </div>
-
-                {/* Admin Mağaza Durumu */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h2 className="text-lg font-medium text-gray-900 mb-4">Admin Mağaza Durumu</h2>
-                    {financial_summary.admin_store ? (
-                        <>
-                            <div className="mb-2">
-                                <span className="text-sm text-gray-500">{financial_summary.admin_store.store_name}</span>
-                            </div>
-                            <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(financial_summary.admin_store.status)}`}>
-                                <span className="mr-2">
-                                    {financial_summary.admin_store.status === 'ALACAKLI' ? '↗️' : financial_summary.admin_store.status === 'BORÇLU' ? '↘️' : '→'}
+                    {/* Aktif Filtreler Gösterimi */}
+                    {(selectedStoreFilter || startDate || endDate || transactionTypeFilter) && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                            <span className="text-sm text-gray-600">Aktif Filtreler:</span>
+                            {selectedStoreFilter && (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    Mağaza: {responseData?.magazaBakiyeleri?.find(m => m.store_id === selectedStoreFilter)?.kurum_adi}
                                 </span>
-                                {financial_summary.admin_store.status}
-                            </div>
-                            <div className={`text-2xl font-bold mt-2 ${financial_summary.admin_store.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                {formatCurrency(Math.abs(financial_summary.admin_store.balance))}
-                            </div>
-                        </>
-                    ) : (
-                        <div className="text-center py-8">
-                            <div className="text-gray-400 text-sm">Admin mağaza bilgisi bulunamadı</div>
+                            )}
+                            {startDate && (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Başlangıç: {new Date(startDate).toLocaleDateString('tr-TR')}
+                                </span>
+                            )}
+                            {endDate && (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Bitiş: {new Date(endDate).toLocaleDateString('tr-TR')}
+                                </span>
+                            )}
+                            {transactionTypeFilter && (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                    Tür: {transactionTypeFilter === 'gelir' ? 'Gelir' : 'Gider'}
+                                </span>
+                            )}
                         </div>
                     )}
                 </div>
             </div>
 
+            {/* Özet Kartları */}
+            {responseData && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+                    {/* Toplam Mağaza */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                        <div className="flex flex-col space-y-2">
+                            <div className="flex items-center space-x-2">
+                                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                                <span className="text-xs font-medium text-gray-500">Toplam Mağaza</span>
+                            </div>
+                            <div className="text-xl font-bold text-gray-900">
+                                {responseData.magazaBakiyeleri.length}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Kasa Bakiyesi */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                        <div className="flex flex-col space-y-2">
+                            <div className="flex items-center space-x-2">
+                                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                </svg>
+                                <span className="text-xs font-medium text-gray-500">Kasa Bakiyesi</span>
+                            </div>
+                            <div className="text-lg font-bold text-blue-600">
+                                {formatCurrency(parseFloat(responseData.adminKasaBakiyesi))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Toplam Alacak */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                        <div className="flex flex-col space-y-2">
+                            <div className="flex items-center space-x-2">
+                                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                </svg>
+                                <span className="text-xs font-medium text-gray-500">Toplam Alacak</span>
+                            </div>
+                            <div className="text-lg font-bold text-red-600">
+                                {formatCurrency(
+                                    responseData.magazaBakiyeleri?.filter(m => m.durum === 'BORCLU')
+                                        .reduce((sum, m) => sum + Math.abs(m.bakiye), 0) || 0
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Borçlu Mağazalar */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                        <div className="flex flex-col space-y-2">
+                            <div className="flex items-center space-x-2">
+                                <svg className="w-5 h-5" style={{color: '#00365a'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 002 2z" />
+                                </svg>
+                                <span className="text-xs font-medium text-gray-500">Borçlu Mağazalar</span>
+                            </div>
+                            <div className="text-xl font-bold text-red-600">
+                                {responseData.magazaBakiyeleri?.filter(m => m.durum === 'BORCLU').length || 0}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Alacaklı Mağazalar */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                        <div className="flex flex-col space-y-2">
+                            <div className="flex items-center space-x-2">
+                                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                </svg>
+                                <span className="text-xs font-medium text-gray-500">Alacaklı Mağazalar</span>
+                            </div>
+                            <div className="text-xl font-bold text-green-600">
+                                {responseData.magazaBakiyeleri?.filter(m => m.durum === 'ALACAKLI').length || 0}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Toplam Verecek */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                        <div className="flex flex-col space-y-2">
+                            <div className="flex items-center space-x-2">
+                                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                </svg>
+                                <span className="text-xs font-medium text-gray-500">Toplam Verecek</span>
+                            </div>
+                            <div className="text-lg font-bold text-blue-600">
+                                {formatCurrency(
+                                    responseData.magazaBakiyeleri?.filter(m => m.durum === 'ALACAKLI')
+                                        .reduce((sum, m) => sum + m.bakiye, 0) || 0
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Mağaza Detayları */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div className="px-6 py-4 border-b border-gray-200">
-                    <h2 className="text-lg font-medium text-gray-900">Mağaza Bazında Finansal Durum</h2>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Mağaza Adı
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Bakiye
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Durum
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    İşlemler
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {financial_summary.store_breakdown.map((store) => (
-                                <tr key={store.store_id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm font-medium text-gray-900">{store.store_name}</div>
-                                        <div className="text-sm text-gray-500">{store.store_id}</div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className={`text-sm font-medium ${store.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                            {formatCurrency(Math.abs(store.balance))}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(store.status)}`}>
-                                            {store.status}
+            {responseData && responseData.magazaBakiyeleri && responseData.magazaBakiyeleri.length > 0 && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    {/* Borçlu Mağazalar */}
+                    {responseData.magazaBakiyeleri.filter(m => m.durum === 'BORCLU').length > 0 && (
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                            <h2 className="text-lg font-medium text-gray-900 mb-4">Borçlu Mağazalar</h2>
+                            <div className="space-y-3">
+                                {responseData.magazaBakiyeleri.filter(m => m.durum === 'BORCLU').map((magaza: MagazaBakiye) => (
+                                    <div key={magaza.store_id} className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+                                        <span className="text-sm font-medium text-gray-900">{magaza.kurum_adi}</span>
+                                        <span className="text-sm font-bold text-red-600">
+                                            {formatCurrency(magaza.tutar)}
                                         </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <button className="mr-3" 
-                                            style={{color: '#00365a'}}
-                                            onMouseEnter={(e) => e.currentTarget.style.color = '#002847'}
-                                            onMouseLeave={(e) => e.currentTarget.style.color = '#00365a'}>
-                                            Detay
-                                        </button>
-                                        <button className="text-green-600 hover:text-green-900">
-                                            Hareket
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Alacaklı Mağazalar */}
+                    {responseData.magazaBakiyeleri.filter(m => m.durum === 'ALACAKLI').length > 0 && (
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                            <h2 className="text-lg font-medium text-gray-900 mb-4">Alacaklı Mağazalar</h2>
+                            <div className="space-y-3">
+                                {responseData.magazaBakiyeleri.filter(m => m.durum === 'ALACAKLI').map((magaza: MagazaBakiye) => (
+                                    <div key={magaza.store_id} className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                                        <span className="text-sm font-medium text-gray-900">{magaza.kurum_adi}</span>
+                                        <span className="text-sm font-bold text-green-600">
+                                            {formatCurrency(magaza.tutar)}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Dengede Mağazalar */}
+                    {responseData.magazaBakiyeleri.filter(m => m.durum === 'DENGEDE').length > 0 && (
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                            <h2 className="text-lg font-medium text-gray-900 mb-4">Dengede Mağazalar</h2>
+                            <div className="space-y-3">
+                                {responseData.magazaBakiyeleri.filter(m => m.durum === 'DENGEDE').map((magaza: MagazaBakiye) => (
+                                    <div key={magaza.store_id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                        <span className="text-sm font-medium text-gray-900">{magaza.kurum_adi}</span>
+                                        <span className="text-sm font-medium text-gray-600">
+                                            Bakiye: {formatCurrency(magaza.bakiye)}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
-            </div>
+            )}
+
+
+
+            {/* Filtrelenmiş Veriler Özeti */}
+            {(selectedStoreFilter || startDate || endDate || transactionTypeFilter) && filteredData && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
+                    <h3 className="text-sm font-medium text-blue-900 mb-3">Filtrelenmiş Veriler Özeti</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="text-center">
+                            <div className="text-lg font-bold text-blue-900">{filteredData.hareketler.length}</div>
+                            <div className="text-xs text-blue-700">Toplam İşlem</div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-lg font-bold text-green-600">
+                                {formatCurrency(
+                                    filteredData.hareketler
+                                        .filter(t => !t.harcama)
+                                        .reduce((sum, t) => sum + parseFloat(t.tutar), 0)
+                                )}
+                            </div>
+                            <div className="text-xs text-green-700">Toplam Gelir</div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-lg font-bold text-red-600">
+                                {formatCurrency(
+                                    filteredData.hareketler
+                                        .filter(t => t.harcama)
+                                        .reduce((sum, t) => sum + parseFloat(t.tutar), 0)
+                                )}
+                            </div>
+                            <div className="text-xs text-red-700">Toplam Gider</div>
+                        </div>
+                        <div className="text-center">
+                            <div className={`text-lg font-bold ${
+                                (filteredData.hareketler.filter(t => !t.harcama).reduce((sum, t) => sum + parseFloat(t.tutar), 0) -
+                                 filteredData.hareketler.filter(t => t.harcama).reduce((sum, t) => sum + parseFloat(t.tutar), 0)) >= 0
+                                ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                                {formatCurrency(
+                                    filteredData.hareketler.filter(t => !t.harcama).reduce((sum, t) => sum + parseFloat(t.tutar), 0) -
+                                    filteredData.hareketler.filter(t => t.harcama).reduce((sum, t) => sum + parseFloat(t.tutar), 0)
+                                )}
+                            </div>
+                            <div className="text-xs text-gray-700">Net Durum</div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* İşlem Geçmişi */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 mt-8">
-                <div className="px-6 py-4 border-b border-gray-200">
-                    <h2 className="text-lg font-medium text-gray-900">Son İşlemler</h2>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 mt-8" id="son-islemler">
+                <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <div>
+                        <h2 className="text-lg font-medium text-gray-900">
+                            Son İşlemler
+                            {filteredData && filteredData.hareketler.length !== responseData?.hareketler.length && (
+                                <span className="ml-2 text-sm text-gray-500">
+                                    ({filteredData.hareketler.length} / {responseData?.hareketler.length} kayıt)
+                                </span>
+                            )}
+                        </h2>
+                        {filteredData && filteredData.hareketler.length === 0 && (selectedStoreFilter || startDate || endDate || transactionTypeFilter) && (
+                            <p className="text-sm text-gray-500 mt-1">Filtreye uygun kayıt bulunamadı</p>
+                        )}
+                    </div>
+                    <button
+                        onClick={() => {
+                            const printContent = document.getElementById('son-islemler');
+                            if (printContent) {
+                                const newWindow = window.open('', '_blank');
+                                if (newWindow) {
+                                    newWindow.document.write(`
+                                        <html>
+                                            <head>
+                                                <title>Son İşlemler</title>
+                                                <style>
+                                                    body { font-family: Arial, sans-serif; margin: 20px; }
+                                                    table { width: 100%; border-collapse: collapse; }
+                                                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                                                    th { background-color: #f5f5f5; font-weight: bold; }
+                                                    .bg-red-50 { background-color: #fef2f2; }
+                                                    .bg-green-50 { background-color: #f0fdf4; }
+                                                    .bg-gray-50 { background-color: #f9fafb; }
+                                                    .text-red-600 { color: #dc2626; }
+                                                    .text-green-600 { color: #16a34a; }
+                                                    .text-gray-600 { color: #4b5563; }
+                                                    h2 { margin-bottom: 20px; color: #1f2937; }
+                                                </style>
+                                            </head>
+                                            <body>
+                                                ${printContent.innerHTML}
+                                            </body>
+                                        </html>
+                                    `);
+                                    newWindow.document.close();
+                                    newWindow.print();
+                                    newWindow.close();
+                                }
+                            }
+                        }}
+                        className="flex items-center px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        Yazdır
+                    </button>
                 </div>
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto max-h-96 overflow-y-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
                                     Tarih
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                                     Mağaza
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
                                     İşlem Türü
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Koleksiyon
+                                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                                    Mağaza Durumu
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                                     Tutar
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Açıklama
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
                                     Durum
                                 </th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {data.transactions.map((transaction: any) => (
+                            {filteredData?.hareketler.map((transaction: Transaction) => (
                                 <tr key={transaction.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {new Date(transaction.transaction_date).toLocaleDateString('tr-TR')}
+                                    <td className="px-3 py-3 text-sm text-gray-900">
+                                        {new Date(transaction.tarih).toLocaleDateString('tr-TR')}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm font-medium text-gray-900">
+                                    <td className="px-3 py-3">
+                                        <div className="text-sm font-medium text-gray-900 truncate max-w-32">
                                             {transaction.store?.kurum_adi || 'Bilinmeyen Mağaza'}
                                         </div>
-                                        <div className="text-sm text-gray-500">{transaction.store_id}</div>
+                                        <div className="text-xs text-gray-500 truncate">{transaction.storeId}</div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {transaction.transaction_type}
+                                    <td className="px-3 py-3 text-sm text-gray-900">
+                                        <span className="truncate block max-w-28">{transaction.islemTuru}</span>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        {transaction.collection ? (
-                                            <div>
-                                                <div className="text-sm font-medium text-gray-900">{transaction.collection.name}</div>
-                                                <div className="text-sm text-gray-500">
-                                                    {transaction.square_meters ? `${transaction.square_meters} m²` : 'Metrekare belirtilmemiş'}
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <span className="text-sm text-gray-400">-</span>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className={`text-sm font-medium ${transaction.is_expense ? 'text-red-600' : 'text-green-600'}`}>
-                                            {transaction.is_expense ? '-' : '+'}{formatCurrency(parseFloat(transaction.amount))}
+                                    <td className="px-3 py-3">
+                                        <div className="text-sm">
+                                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                                transaction.store.durum === 'ALACAKLI' ? 'text-green-600 bg-green-50' :
+                                                transaction.store.durum === 'BORCLU' ? 'text-red-600 bg-red-50' :
+                                                'text-gray-600 bg-gray-50'
+                                            }`}>
+                                                {transaction.store.durum}
+                                            </span>
+                                                                                         <div className="text-xs text-gray-500 mt-1">
+                                                 Bakiye: {formatCurrency(transaction.store.bakiye)}
+                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
-                                        {transaction.description}
+                                    <td className="px-3 py-3">
+                                        <div className={`text-sm font-medium ${transaction.harcama ? 'text-red-600' : 'text-green-600'}`}>
+                                            {transaction.harcama ? '-' : '+'}{formatCurrency(parseFloat(transaction.tutar))}
+                                        </div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${transaction.is_expense ? 'text-red-600 bg-red-50' : 'text-green-600 bg-green-50'}`}>
-                                            {transaction.is_expense ? 'Gider' : 'Gelir'}
+                                    <td className="px-3 py-3 text-sm text-gray-900">
+                                        <span className="truncate block max-w-48" title={transaction.aciklama}>
+                                            {transaction.aciklama}
+                                        </span>
+                                    </td>
+                                    <td className="px-3 py-3">
+                                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${transaction.harcama ? 'text-red-600 bg-red-50' : 'text-green-600 bg-green-50'}`}>
+                                            {transaction.harcama ? 'Gider' : 'Gelir'}
                                         </span>
                                     </td>
                                 </tr>
@@ -841,14 +1100,11 @@ const MuhasebePage = () => {
                                     İşlem Türü <span className="text-red-500">*</span>
                                 </label>
                                                                     <select
-                                        value={formData.transaction_type}
+                                        value={formData.islemTuru}
                                         onChange={(e) => {
-                                            const newTransactionType = e.target.value;
-                                            const isExpense = getTransactionExpenseType(newTransactionType);
                                             setFormData(prev => ({ 
                                                 ...prev, 
-                                                transaction_type: newTransactionType,
-                                                is_expense: isExpense 
+                                                islemTuru: e.target.value
                                             }));
                                         }}
                                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a]"
@@ -856,37 +1112,24 @@ const MuhasebePage = () => {
                                     disabled={formLoading}
                                 >
                                     <option value="">İşlem türü seçin...</option>
-                                    <option value="Parekende Satış">Parekende Satış</option>
-                                    <option value="Parekende Tahsilat">Parekende Tahsilat</option>
-                                    <option value="Araç Bakım / Yakıt / Araç Sigorta / HGS Giderleri">Araç Bakım / Yakıt / Araç Sigorta / HGS Giderleri</option>
-                                    <option value="Mutfak Gideri">Mutfak Gideri</option>
-                                    <option value="Alacak ve/veya Tahsilat">Alacak ve/veya Tahsilat</option>
-                                    <option value="Mal ve/veya Tamir, Servis vb. Hizmet Alımı">Mal ve/veya Tamir, Servis vb. Hizmet Alımı</option>
-                                    <option value="Nakit, Döviz ve/veya Değerli Kağıt Tahsilatı">Nakit, Döviz ve/veya Değerli Kağıt Tahsilatı</option>
-                                    <option value="Nakit, Döviz ve/veya Değerli Kağıt Ödemesi">Nakit, Döviz ve/veya Değerli Kağıt Ödemesi</option>
-                                    <option value="Personel Maaş Ödemesi">Personel Maaş Ödemesi</option>
-                                    <option value="Nakliye ve/veya Kargo Ödemesi">Nakliye ve/veya Kargo Ödemesi</option>
-                                    <option value="Borç Verme">Borç Verme</option>
-                                    <option value="Borç Tahsilatı">Borç Tahsilatı</option>
-                                    <option value="Paşaoğlu Halı Moka Post Tahsilatı">Paşaoğlu Halı Moka Post Tahsilatı</option>
-                                    <option value="Tanımsız Fiyat İşlemi">Tanımsız Fiyat İşlemi</option>
-                                    <option value="Teslimat Fişi Otomatik Kaydı">Teslimat Fişi Otomatik Kaydı</option>
-                                    <option value="Elektrik / Su / Isınma / Telefon / İnternet Giderleri">Elektrik / Su / Isınma / Telefon / İnternet Giderleri</option>
-                                    <option value="İşletme İçi Sarf Malzeme ve/veya Kırtasiye Giderleri">İşletme İçi Sarf Malzeme ve/veya Kırtasiye Giderleri</option>
-                                    <option value="Kira / Aidat Giderleri">Kira / Aidat Giderleri</option>
-                                    <option value="Vergi / SSK / Bağkur / Muhasebe Giderleri">Vergi / SSK / Bağkur / Muhasebe Giderleri</option>
-                                    <option value="Seyhat ve/veya Konaklama Giderleri">Seyhat ve/veya Konaklama Giderleri</option>
-                                    <option value="Bilgi İşlem ve/veya Yazılım Hizmet Ödemesi">Bilgi İşlem ve/veya Yazılım Hizmet Ödemesi</option>
-                                    <option value="Personel Maaş Hakkedişi">Personel Maaş Hakkedişi</option>
-                                    <option value="Personel İkramiye Hakkedişi">Personel İkramiye Hakkedişi</option>
-                                    <option value="Personel Mesai Hakkedişi">Personel Mesai Hakkedişi</option>
-                                    <option value="Personel İkramiye Ödemesi">Personel İkramiye Ödemesi</option>
-                                    <option value="Personel Mesai Ödemesi">Personel Mesai Ödemesi</option>
-                                    <option value="Mal ve/veya Tamir, Servis vb. Hizmet Ödemesi">Mal ve/veya Tamir, Servis vb. Hizmet Ödemesi</option>
-                                    <option value="Devreden Alacak Bakiyesi">Devreden Alacak Bakiyesi</option>
-                                    <option value="Devreden Borç Bakiyesi">Devreden Borç Bakiyesi</option>
-                                    <option value="Ürün ve/veya Hizmet İadesi">Ürün ve/veya Hizmet İadesi</option>
-                                    <option value="Bilgi İşlem ve/veya Yazılım Hizmet Hakedişi">Bilgi İşlem ve/veya Yazılım Hizmet Hakedişi</option>
+                                    
+                                    {/* Gelir Türleri */}
+                                    {incomeTypes.length > 0 && (
+                                        <optgroup label="Gelir Türleri">
+                                            {incomeTypes.map((type) => (
+                                                <option key={type} value={type}>{type}</option>
+                                            ))}
+                                        </optgroup>
+                                    )}
+                                    
+                                    {/* Gider Türleri */}
+                                    {expenseTypes.length > 0 && (
+                                        <optgroup label="Gider Türleri">
+                                            {expenseTypes.map((type) => (
+                                                <option key={type} value={type}>{type}</option>
+                                            ))}
+                                        </optgroup>
+                                    )}
                                 </select>
                             </div>
 
@@ -899,8 +1142,8 @@ const MuhasebePage = () => {
                                     type="number"
                                     step="0.01"
                                     min="0"
-                                    value={formData.amount}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+                                    value={formData.tutar}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, tutar: parseFloat(e.target.value) || 0 }))}
                                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a]"
                                     placeholder="0.00"
                                     required
@@ -915,8 +1158,8 @@ const MuhasebePage = () => {
                                 </label>
                                 <input
                                     type="datetime-local"
-                                    value={formData.transaction_date}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, transaction_date: e.target.value }))}
+                                    value={formData.tarih}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, tarih: e.target.value }))}
                                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a]"
                                     required
                                     disabled={formLoading}
@@ -929,8 +1172,8 @@ const MuhasebePage = () => {
                                     Açıklama <span className="text-red-500">*</span>
                                 </label>
                                 <textarea
-                                    value={formData.description}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                                    value={formData.aciklama}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, aciklama: e.target.value }))}
                                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a]"
                                     rows={3}
                                     placeholder="İşlem açıklaması... Fiş no, Fatura no, Nakliye, Kargo, vb."
