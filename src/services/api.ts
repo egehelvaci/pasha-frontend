@@ -1680,3 +1680,52 @@ export const changePassword = async (passwordData: PasswordChangeData): Promise<
     throw error;
   }
 }; 
+
+// Ödeme interface'leri
+export interface PaymentRequest {
+  storeId: string;
+  amount: number;
+  aciklama: string;
+}
+
+export interface PaymentResponse {
+  success: boolean;
+  data: {
+    paymentUrl: string;
+    sellerReference: string;
+    apiReferenceNumber: string;
+    amount: number;
+  } | null;
+  message?: string;
+}
+
+// Ödeme işlemi başlatma
+export async function processPayment(paymentData: PaymentRequest): Promise<PaymentResponse> {
+  try {
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      throw new Error('Oturum açmanız gerekiyor');
+    }
+    
+    const response = await fetch(`${API_BASE_URL}/api/payments/process`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(paymentData)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Ödeme işlemi başlatılamadı');
+    }
+    
+    const result: PaymentResponse = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Ödeme işlemi başlatılırken hata:', error);
+    throw error;
+  }
+} 

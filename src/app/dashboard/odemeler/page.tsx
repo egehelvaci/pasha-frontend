@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { processPayment, PaymentRequest } from '../../../services/api';
 
 interface Payment {
   id: string;
@@ -24,12 +25,28 @@ interface Payment {
   is3D?: boolean;
 }
 
-interface Customer {
-  id: string;
-  name: string;
-  surname: string;
-  email: string;
-  phone: string;
+
+
+interface Store {
+  store_id: string;
+  kurum_adi: string;
+  vergi_numarasi: string;
+  vergi_dairesi: string;
+  yetkili_adi: string;
+  yetkili_soyadi: string;
+  telefon: string;
+  eposta: string;
+  adres: string;
+  faks_numarasi: string;
+  aciklama: string;
+  tckn: string;
+  limitsiz_acik_hesap: boolean;
+  acik_hesap_tutari: number;
+  bakiye: number;
+  maksimum_taksit: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 const statusLabels = {
@@ -45,10 +62,11 @@ const statusColors = {
 };
 
 export default function PaymentsPage() {
-  const { user, token } = useAuth();
+  const { user, token, isAdmin } = useAuth();
   const router = useRouter();
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
+
+  const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
@@ -61,15 +79,9 @@ export default function PaymentsPage() {
 
   // Ödeme formu state'leri
   const [paymentForm, setPaymentForm] = useState({
-    customerId: '',
-    customerName: '',
-    cardOwner: '',
-    cardNumber: '',
-    cardMonth: '',
-    cardYear: '',
-    securityCode: '',
     amount: '',
-    description: ''
+    description: '',
+    storeId: ''
   });
 
   useEffect(() => {
@@ -78,63 +90,69 @@ export default function PaymentsPage() {
       return;
     }
     fetchPayments();
-    fetchCustomers();
-  }, [user, router]);
+    initializeStores();
+  }, [user, router, isAdmin]);
 
-  const fetchCustomers = async () => {
-    try {
-      if (!token) return;
-
-      // API çağrısı (şimdilik dummy data kullanacağız)
-      // const response = await fetch('https://pasha-backend-production.up.railway.app/api/customers', {
-      //   headers: {
-      //     'Authorization': `Bearer ${token}`,
-      //     'Content-Type': 'application/json'
-      //   }
-      // });
-
-      // Dummy customer data
-      const dummyCustomers: Customer[] = [
-        {
-          id: '1',
-          name: 'Ahmet',
-          surname: 'Yılmaz',
-          email: 'ahmet.yilmaz@example.com',
-          phone: '0532 123 45 67'
-        },
-        {
-          id: '2',
-          name: 'Fatma',
-          surname: 'Kaya',
-          email: 'fatma.kaya@example.com',
-          phone: '0535 987 65 43'
-        },
-        {
-          id: '3',
-          name: 'Mehmet',
-          surname: 'Özkan',
-          email: 'mehmet.ozkan@example.com',
-          phone: '0543 555 77 88'
-        },
-        {
-          id: '4',
-          name: 'Ayşe',
-          surname: 'Demir',
-          email: 'ayse.demir@example.com',
-          phone: '0536 444 22 33'
-        },
-        {
-          id: '5',
-          name: 'Ali',
-          surname: 'Çelik',
-          email: 'ali.celik@example.com',
-          phone: '0542 666 88 99'
+  const initializeStores = async () => {
+    if (isAdmin) {
+      // Admin için API'den mağazaları çek
+      await fetchStores();
+    } else if (user?.store) {
+      // Normal kullanıcı için localStorage'dan mağaza bilgisini al
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const userData = JSON.parse(storedUser);
+          if (userData.store) {
+            // Mağaza bilgisini stores state'ine ekle
+            setStores([userData.store]);
+            // Form'da mağazayı otomatik seç
+            setPaymentForm(prev => ({ ...prev, storeId: userData.store.store_id }));
+          }
+        } catch (error) {
+          console.error('localStorage\'dan kullanıcı verisi alınırken hata:', error);
+          // Fallback olarak AuthContext'ten al
+          if (user.store) {
+            setStores([user.store]);
+            setPaymentForm(prev => ({ ...prev, storeId: user.store.store_id }));
+          }
         }
-      ];
+      }
+    }
+  };
 
-      setCustomers(dummyCustomers);
-    } catch (error: any) {
-      console.error('Müşteri verileri alınırken hata:', error);
+
+
+  const fetchStores = async () => {
+    try {
+      if (!token) {
+        console.error('Token bulunamadı');
+        return;
+      }
+
+      const response = await fetch('https://pasha-backend-production.up.railway.app/api/stores', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`API Hatası: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.data) {
+        setStores(data.data);
+      } else {
+        console.error('API başarı durumu false:', data);
+        throw new Error(data.message || 'Mağazalar getirilemedi');
+      }
+    } catch (error) {
+      console.error('Mağazalar getirilemedi:', error);
+      // Admin için hata durumunda boş liste göster
+      setStores([]);
     }
   };
 
@@ -295,53 +313,58 @@ export default function PaymentsPage() {
     }
   };
 
-  const handleCustomerChange = (customerId: string) => {
-    const customer = customers.find(c => c.id === customerId);
-    if (customer) {
-      setPaymentForm(prev => ({
-        ...prev,
-        customerId,
-        customerName: `${customer.name} ${customer.surname}`
-      }));
-    }
-  };
+
 
   const handlePaymentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      // API çağrısı yapılacak
-      // const response = await fetch('https://pasha-backend-production.up.railway.app/api/payments/process', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Authorization': `Bearer ${token}`,
-      //     'Content-Type': 'application/json'
-      //   },
-      //   body: JSON.stringify(paymentForm)
-      // });
+      // Form validasyonu
+      if (!paymentForm.storeId || !paymentForm.amount || !paymentForm.description.trim()) {
+        alert('Lütfen tüm alanları doldurun!');
+        return;
+      }
 
-      // Şimdilik başarılı olduğunu varsayıyoruz
-      alert('Ödeme başarıyla işlendi!');
-      setPaymentModalOpen(false);
+      const amount = parseFloat(paymentForm.amount);
+      if (isNaN(amount) || amount <= 0) {
+        alert('Lütfen geçerli bir tutar girin!');
+        return;
+      }
+
+      const paymentRequest: PaymentRequest = {
+        storeId: paymentForm.storeId,
+        amount: amount,
+        aciklama: paymentForm.description
+      };
+
+      // API çağrısı yap
+      const response = await processPayment(paymentRequest);
       
-      // Formu temizle
-      setPaymentForm({
-        customerId: '',
-        customerName: '',
-        cardOwner: '',
-        cardNumber: '',
-        cardMonth: '',
-        cardYear: '',
-        securityCode: '',
-        amount: '',
-        description: ''
-      });
-      
-      // Ödemeleri yeniden yükle
-      fetchPayments();
+      if (response.success && response.data) {
+        // Ödeme URL'ini yeni sekmede aç
+        window.open(response.data.paymentUrl, '_blank');
+        
+        // Başarı mesajı göster
+        alert(`Ödeme sayfası açıldı! 
+Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`);
+        
+        setPaymentModalOpen(false);
+        
+        // Formu temizle
+        setPaymentForm({
+          amount: '',
+          description: '',
+          storeId: isAdmin ? '' : (stores.length > 0 ? stores[0].store_id : '')
+        });
+        
+        // Ödemeleri yeniden yükle
+        fetchPayments();
+      } else {
+        throw new Error(response.message || 'Ödeme işlemi başlatılamadı');
+      }
     } catch (error: any) {
       console.error('Ödeme işlenirken hata:', error);
-      alert('Ödeme işlenirken bir hata oluştu!');
+      alert(`Ödeme işlenirken bir hata oluştu: ${error.message}`);
     }
   };
 
@@ -982,165 +1005,82 @@ export default function PaymentsPage() {
                 </button>
                 
                 <div className="text-center">
-                  <div className="w-16 h-10 bg-white bg-opacity-20 rounded-lg mx-auto mb-4 flex items-center justify-center">
-                    <div className="w-12 h-8 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded"></div>
+                  <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-3a2 2 0 00-2-2H9a2 2 0 00-2 2v3a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
                   </div>
-                  <h2 className="text-xl font-bold">Paşa Home Sanal Pos Ekranı</h2>
+                  <h2 className="text-xl font-bold">Ödeme İşlemi</h2>
+                  <p className="text-blue-100 text-sm mt-1">Ödeme bilgilerini girin</p>
                 </div>
               </div>
 
-              {/* Card Visual */}
-              <div className="p-6 bg-gray-50">
-                <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl p-6 text-white mb-6 relative overflow-hidden">
-                  <div className="absolute top-4 right-4 w-12 h-8 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded opacity-80"></div>
-                  <div className="mt-8">
-                    <div className="text-lg font-mono tracking-wider mb-2">
-                      {paymentForm.cardNumber || '0000 0000 0000 0000'}
-                    </div>
-                    <div className="text-xs text-blue-200 mb-1">Kart sahibi</div>
-                    <div className="text-sm">
-                      {paymentForm.cardOwner || 'Ay / Yıl'}
-                    </div>
-                  </div>
-                </div>
-
-                <form onSubmit={handlePaymentSubmit} className="space-y-4">
-                  {/* Müşteri Seçimi */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      <span className="text-red-500">*</span> Müşteriler
-                    </label>
-                    <select
-                      value={paymentForm.customerId}
-                      onChange={(e) => handleCustomerChange(e.target.value)}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Müşteri Seçiniz</option>
-                      {customers.map((customer) => (
-                        <option key={customer.id} value={customer.id}>
-                          {customer.name} {customer.surname}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Kart Numarası */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Kart Numarası</label>
-                    <input
-                      type="text"
-                      placeholder="•••• •••• •••• ••••"
-                      value={paymentForm.cardNumber}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
-                        if (value.replace(/\s/g, '').length <= 16) {
-                          setPaymentForm(prev => ({ ...prev, cardNumber: value }));
-                        }
-                      }}
-                      maxLength={19}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-
-                  {/* Kart üzerindeki isim */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Kart üzerindeki isim</label>
-                    <input
-                      type="text"
-                      placeholder="Kart sahibinin adı ve soyadı"
-                      value={paymentForm.cardOwner}
-                      onChange={(e) => setPaymentForm(prev => ({ ...prev, cardOwner: e.target.value }))}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-
-                  {/* Son kullanma tarihi ve güvenlik kodu */}
-                  <div className="grid grid-cols-2 gap-3">
+              {/* Form Content */}
+              <div className="p-6">
+                <form onSubmit={handlePaymentSubmit} className="space-y-6">
+                  {/* Mağaza Seçimi - Sadece admin için göster */}
+                  {isAdmin && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Son kullanım tarihi</label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <select
-                          value={paymentForm.cardMonth}
-                          onChange={(e) => setPaymentForm(prev => ({ ...prev, cardMonth: e.target.value }))}
-                          required
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          <option value="">Ay / Yıl</option>
-                          {Array.from({ length: 12 }, (_, i) => (
-                            <option key={i + 1} value={String(i + 1).padStart(2, '0')}>
-                              {String(i + 1).padStart(2, '0')}
-                            </option>
-                          ))}
-                        </select>
-                        <select
-                          value={paymentForm.cardYear}
-                          onChange={(e) => setPaymentForm(prev => ({ ...prev, cardYear: e.target.value }))}
-                          required
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          <option value="">CVV/CV</option>
-                          {Array.from({ length: 10 }, (_, i) => (
-                            <option key={2024 + i} value={String(2024 + i)}>
-                              {2024 + i}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Güvenlik kodu</label>
-                      <input
-                        type="text"
-                        placeholder="CVC/CVV"
-                        value={paymentForm.securityCode}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, '');
-                          if (value.length <= 3) {
-                            setPaymentForm(prev => ({ ...prev, securityCode: value }));
-                          }
-                        }}
-                        maxLength={3}
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <span className="text-red-500">*</span> Mağaza
+                      </label>
+                      <select
+                        value={paymentForm.storeId}
+                        onChange={(e) => setPaymentForm(prev => ({ ...prev, storeId: e.target.value }))}
                         required
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      />
+                      >
+                        <option value="">Mağaza Seçiniz</option>
+                        {stores.map((store) => (
+                          <option key={store.store_id} value={store.store_id}>
+                            {store.kurum_adi} - {store.vergi_numarasi}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                  </div>
+                  )}
+
+                  {/* Admin değilse mağaza bilgisini göster */}
+                  {!isAdmin && stores.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Mağaza</label>
+                      <div className="w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm bg-gray-50 text-gray-600">
+                        {stores[0].kurum_adi} - {stores[0].vergi_numarasi}
+                      </div>
+                      <div className="mt-1 text-xs text-gray-500">
+                        Yetkili: {stores[0].yetkili_adi} {stores[0].yetkili_soyadi}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Ödenecek tutar */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Ödenecek tutar</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <input
-                        type="text"
-                        placeholder="0"
-                        value={paymentForm.amount}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/[^\d.,]/g, '');
-                          setPaymentForm(prev => ({ ...prev, amount: value }));
-                        }}
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      />
-                      <input
-                        type="text"
-                        placeholder="00"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        disabled
-                      />
-                    </div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <span className="text-red-500">*</span> Ödenecek Tutar (₺)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      value={paymentForm.amount}
+                      onChange={(e) => setPaymentForm(prev => ({ ...prev, amount: e.target.value }))}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    />
                   </div>
 
                   {/* Ödeme Açıklaması */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Ödeme Açıklaması</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <span className="text-red-500">*</span> Ödeme Açıklaması
+                    </label>
                     <textarea
-                      placeholder="Açıklama"
+                      placeholder="Ödeme açıklamasını giriniz..."
                       value={paymentForm.description}
                       onChange={(e) => setPaymentForm(prev => ({ ...prev, description: e.target.value }))}
                       rows={3}
+                      required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
