@@ -313,7 +313,7 @@ export default function ProductDetail() {
                       <input
                         type="number"
                         min="10"
-                        max="500"
+                        max="10000"
                         value={customHeight}
                         onChange={(e) => {
                           const value = e.target.value;

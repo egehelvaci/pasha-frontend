@@ -1,8 +1,94 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
+
+// API Base URL
+const API_BASE_URL = "https://pasha-backend-production.up.railway.app";
+
+// Sayfalama Komponenti
+const Pagination = ({ pagination, onPageChange, searchTerm = '' }: {
+  pagination: any;
+  onPageChange: (page: number, search?: string) => void;
+  searchTerm?: string;
+}) => {
+  if (!pagination) return null;
+
+  return (
+    <div style={{ 
+      marginTop: '20px', 
+      textAlign: 'center',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: '15px'
+    }}>
+      <button 
+        disabled={pagination.page <= 1}
+        onClick={() => onPageChange(pagination.page - 1, searchTerm)}
+        style={{
+          padding: '8px 16px',
+          border: '1px solid #ddd',
+          borderRadius: '4px',
+          cursor: pagination.page <= 1 ? 'not-allowed' : 'pointer',
+          opacity: pagination.page <= 1 ? 0.5 : 1,
+          backgroundColor: pagination.page <= 1 ? '#f5f5f5' : '#fff'
+        }}
+      >
+        ← Önceki
+      </button>
+      
+      <span style={{ 
+        fontSize: '14px',
+        color: '#666',
+        minWidth: '200px'
+      }}>
+        Sayfa {pagination.page} / {pagination.totalPages} 
+        (Toplam {pagination.total} ürün)
+      </span>
+      
+      <button 
+        disabled={!pagination.hasMore}
+        onClick={() => onPageChange(pagination.page + 1, searchTerm)}
+        style={{
+          padding: '8px 16px',
+          border: '1px solid #ddd',
+          borderRadius: '4px',
+          cursor: !pagination.hasMore ? 'not-allowed' : 'pointer',
+          opacity: !pagination.hasMore ? 0.5 : 1,
+          backgroundColor: !pagination.hasMore ? '#f5f5f5' : '#fff'
+        }}
+      >
+        Sonraki →
+      </button>
+    </div>
+  );
+};
+
+// Loading Spinner Komponenti
+const LoadingSpinner = () => (
+  <div style={{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: '40px',
+    fontSize: '16px',
+    color: '#666'
+  }}>
+    <div className="w-12 h-12 border-4 border-blue-900 border-t-transparent rounded-full animate-spin"></div>
+    <div style={{ marginLeft: '15px' }}>Ürünler yükleniyor...</div>
+  </div>
+);
+
+// Responsive sayfa boyutu fonksiyonu
+const getPageSize = () => {
+  if (typeof window === 'undefined') return 20;
+  const width = window.innerWidth;
+  if (width < 768) return 10;      // Mobil: 10 ürün
+  if (width < 1024) return 15;     // Tablet: 15 ürün
+  return 20;                       // Desktop: 20 ürün
+};
 
 interface Collection {
   collectionId: string;
@@ -54,6 +140,13 @@ interface ProductsResponse {
   success: boolean;
   data: Product[];
   message?: string;
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasMore: boolean;
+  };
 }
 
 interface ProductDetailResponse {
@@ -79,6 +172,10 @@ export default function StokPage() {
   const router = useRouter();
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [pagination, setPagination] = useState<any>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -90,6 +187,9 @@ export default function StokPage() {
   });
   const [isUpdatingStock, setIsUpdatingStock] = useState(false);
   const [isLoadingProductDetail, setIsLoadingProductDetail] = useState(false);
+  
+  // Debounce timer için ref
+  const searchTimeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     // Auth loading tamamlandığında user yoksa login'e yönlendir
@@ -111,33 +211,38 @@ export default function StokPage() {
     fetchProducts();
   }, [token]);
 
-  // Auth yüklenirken loading göster
-  if (isLoading) {
-    return (
-      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="relative">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[#00365a]"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <svg className="w-6 h-6 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-              </div>
-            </div>
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-900">Yetkilendirme Kontrol Ediliyor</h3>
-              <p className="text-sm text-gray-500 mt-1">Lütfen bekleyiniz...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Arama değiştiğinde debounce ile API çağrısı
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    searchTimeoutRef.current = setTimeout(() => {
+      setSearchTerm(search);
+      setCurrentPage(1); // Arama değiştiğinde ilk sayfaya dön
+      fetchProducts(1, search);
+    }, 300); // 300ms debounce
 
-  const fetchProducts = async () => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [search]);
+
+  // Optimizasyonlu ürün getirme fonksiyonu
+  const fetchProducts = async (page: number = 1, searchQuery: string = '') => {
     try {
-      const response = await fetch('https://pasha-backend-production.up.railway.app/api/products', {
+      setIsLoadingProducts(true);
+      const limit = getPageSize();
+      
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        ...(searchQuery && { search: searchQuery })
+      });
+      
+      const response = await fetch(`${API_BASE_URL}/api/products?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -148,13 +253,22 @@ export default function StokPage() {
         if (data.success) {
           const sortedProducts = data.data.sort((a, b) => a.name.localeCompare(b.name, 'tr'));
           setProducts(sortedProducts);
+          setPagination(data.pagination); // Yeni pagination bilgisi
+          setCurrentPage(page);
         }
       }
     } catch (error) {
       console.error('Ürünler çekme hatası:', error);
+      setProducts([]);
+      setPagination(null);
     } finally {
       setIsLoadingProducts(false);
     }
+  };
+
+  // Sayfa değişikliği handler'ı
+  const handlePageChange = (newPage: number, search: string = searchTerm) => {
+    fetchProducts(newPage, search);
   };
 
   // Ürün detaylarını GET ile çek
@@ -162,7 +276,7 @@ export default function StokPage() {
     try {
       setIsLoadingProductDetail(true);
       
-      const normalUrl = `https://pasha-backend-production.up.railway.app/api/products/${productId}`;
+      const normalUrl = `${API_BASE_URL}/api/products/${productId}`;
       
       const response = await fetch(normalUrl, {
         method: 'GET',
@@ -206,7 +320,7 @@ export default function StokPage() {
   // Variations endpoint'ini deneyen yardımcı fonksiyon
   const fetchProductDetailVariations = async (productId: string): Promise<Product | null> => {
     try {
-      const variationsUrl = `https://pasha-backend-production.up.railway.app/api/products/${productId}/variations`;
+      const variationsUrl = `${API_BASE_URL}/api/products/${productId}/variations`;
       
       const response = await fetch(variationsUrl, {
         method: 'GET',
@@ -324,7 +438,7 @@ export default function StokPage() {
       return;
     }
 
-    const apiUrl = `https://pasha-backend-production.up.railway.app/api/products/${selectedProduct.productId}/stock`;
+    const apiUrl = `${API_BASE_URL}/api/products/${selectedProduct.productId}/stock`;
 
     if (stockForm.width <= 0 || stockForm.height <= 0 || stockForm.quantity <= 0) {
       alert('Lütfen geçerli boyut ve miktar değerleri girin!');
@@ -418,38 +532,29 @@ export default function StokPage() {
     return total;
   };
 
-  // Token'ı test et
-  const testToken = async () => {
-    if (!token) {
-      console.error('Token mevcut değil');
-      return;
-    }
-
-    try {
-      const response = await fetch('https://pasha-backend-production.up.railway.app/api/products', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-      } else {
-        console.error('❌ Token geçersiz veya API hatası');
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-      }
-    } catch (error) {
-      console.error('❌ Token test hatası:', error);
-    }
-  };
-
-  // Test için useEffect ekle
-  useEffect(() => {
-    if (token) {
-      testToken();
-    }
-  }, [token]);
+  // Auth yüklenirken loading göster
+  if (isLoading) {
+    return (
+      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="relative">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[#00365a]"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <svg className="w-6 h-6 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-gray-900">Yetkilendirme Kontrol Ediliyor</h3>
+              <p className="text-sm text-gray-500 mt-1">Lütfen bekleyiniz...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading || !user) {
     return (
@@ -525,24 +630,71 @@ export default function StokPage() {
               <h2 className="text-lg font-semibold text-white">Tüm Ürünler</h2>
             </div>
           </div>
-          <div className="p-6">
-            {isLoadingProducts ? (
-              <div className="flex flex-col items-center justify-center h-48">
+          
+          {/* Arama ve Filtreler */}
+          <div className="p-4 border-b border-gray-200 bg-gray-50">
+            <div className="flex flex-wrap gap-4">
+              <div className="w-full md:w-auto">
+                <label htmlFor="search-input" className="block text-sm font-medium text-gray-700 mb-1">
+                  Ara
+                </label>
                 <div className="relative">
-                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[#00365a]"></div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="text-center mt-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Ürünler Yükleniyor</h3>
-                  <p className="text-sm text-gray-500 mt-1">Lütfen bekleyiniz...</p>
+                  <input
+                    id="search-input"
+                    type="text"
+                    className="w-full md:w-80 lg:w-96 border border-gray-300 rounded-md pl-9 pr-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900 text-sm"
+                    placeholder="Ürün adı, açıklama veya ID ara..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    autoComplete="off"
+                    spellCheck="false"
+                  />
+                  <svg
+                    className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
                 </div>
               </div>
+              
+              {search && (
+                <div className="w-full md:w-auto flex items-end">
+                  <button
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-600 hover:bg-gray-50"
+                    onClick={() => setSearch("")}
+                  >
+                    Filtreleri Temizle
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="p-6">
+            {isLoadingProducts ? (
+              <LoadingSpinner />
             ) : products.length > 0 ? (
               <>
+                {/* Arama Sonuçları Bilgisi */}
+                {searchTerm && pagination && (
+                  <div className="mb-4 p-3 border-b text-sm text-gray-600 bg-blue-50 rounded-lg">
+                    <span className="font-medium">{pagination.total}</span> adet ürün bulundu 
+                    {searchTerm && <span> (arama: <span className="italic">"{searchTerm}"</span>)</span>}
+                    <span className="ml-2 text-xs text-gray-500">
+                      (Sayfa {pagination.page}/{pagination.totalPages})
+                    </span>
+                  </div>
+                )}
+                
                 {/* Desktop Tablo Görünümü */}
                 <div className="hidden md:block overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
@@ -598,14 +750,14 @@ export default function StokPage() {
                               {isLoadingProductDetail ? (
                                 <>
                                   <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                                  Yükleniyor...
+                                  <span>Yükleniyor...</span>
                                 </>
                               ) : (
                                 <>
                                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                   </svg>
-                                  Stok Ekle
+                                  <span>Stok Ekle</span>
                                 </>
                               )}
                             </button>
@@ -616,12 +768,12 @@ export default function StokPage() {
                   </table>
                 </div>
 
-                {/* Mobil Card Görünümü */}
+                {/* Mobil Kart Görünümü */}
                 <div className="md:hidden space-y-4">
                   {products.map((product) => (
-                    <div key={product.productId} className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                    <div key={product.productId} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                       <div className="flex items-start space-x-4">
-                        <div className="h-20 w-20 rounded-xl bg-gray-200 flex-shrink-0 overflow-hidden shadow-sm">
+                        <div className="h-16 w-16 rounded-lg bg-gray-200 flex-shrink-0 overflow-hidden">
                           {product.productImage ? (
                             <img 
                               src={product.productImage} 
@@ -630,76 +782,74 @@ export default function StokPage() {
                             />
                           ) : (
                             <div className="h-full w-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                              <svg className="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <svg className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                               </svg>
                             </div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="mb-3">
-                            <h3 className="text-lg font-semibold text-gray-900 truncate">{product.name}</h3>
-                            <p className="text-sm text-gray-500 line-clamp-2 mt-1">{product.description}</p>
+                          <div className="text-sm font-semibold text-gray-900 truncate">{product.name}</div>
+                          <div className="text-sm text-gray-500 truncate">{product.description}</div>
+                          <div className="mt-1">
+                            <span className="text-xs font-medium text-gray-900">{product.collection?.name || 'Koleksiyon Yok'}</span>
+                            <span className="text-xs text-gray-500 ml-2">{product.collection?.code || '-'}</span>
                           </div>
-                          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                            <div className="text-xs font-medium text-gray-700 uppercase tracking-wider mb-1">Koleksiyon</div>
-                            <div className="text-sm font-medium text-gray-900">{product.collection?.name || 'Koleksiyon Yok'}</div>
-                            <div className="text-xs text-gray-500">{product.collection?.code || '-'}</div>
-                          </div>
-                          <button
-                            onClick={() => openStockModal(product)}
-                            disabled={isLoadingProductDetail}
-                            className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-semibold transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {isLoadingProductDetail ? (
-                              <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                                Yükleniyor...
-                              </>
-                            ) : (
-                              <>
-                                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
-                                Stok Ekle
-                              </>
-                            )}
-                          </button>
                         </div>
+                        <button
+                          onClick={() => openStockModal(product)}
+                          disabled={isLoadingProductDetail}
+                          className="inline-flex items-center gap-1 px-3 py-2 bg-[#00365a] hover:bg-[#004170] text-white rounded-md text-sm font-medium transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isLoadingProductDetail ? (
+                            <>
+                              <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></div>
+                              <span>...</span>
+                            </>
+                          ) : (
+                            <>
+                              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                              </svg>
+                              <span>Stok</span>
+                            </>
+                          )}
+                        </button>
                       </div>
                     </div>
                   ))}
                 </div>
+                
+                {/* Pagination */}
+                {pagination && (
+                  <Pagination 
+                    pagination={pagination} 
+                    onPageChange={handlePageChange} 
+                    searchTerm={searchTerm}
+                  />
+                )}
               </>
             ) : (
-              <div className="text-center py-16">
-                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
-                  <svg className="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">Ürün Bulunamadı</h3>
-                <p className="text-gray-600 mb-6 max-w-md mx-auto leading-relaxed">Henüz hiç ürün eklenmemiş. Stok yönetimi yapabilmek için önce ürün eklemeniz gerekmektedir.</p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <button
-                    onClick={() => router.push('/dashboard/urunler/liste')}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
-                    Ürünlere Git
-                  </button>
-                  <button
-                    onClick={() => router.push('/dashboard')}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-white hover:bg-gray-50 text-[#00365a] border-2 border-[#00365a] rounded-lg font-semibold transition-all hover:shadow-md"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
-                    </svg>
-                    Dashboard'a Dön
-                  </button>
-                </div>
+              <div className="py-16 text-center">
+                <svg 
+                  className="mx-auto h-12 w-12 text-gray-400" 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+                  />
+                </svg>
+                <p className="mt-4 text-lg font-medium text-gray-600">Ürün bulunamadı</p>
+                <p className="mt-2 text-gray-500">
+                  {searchTerm && 'Arama kriterlerinize uygun ürün bulunamadı. '}
+                  Lütfen farklı filtreler deneyin.
+                </p>
               </div>
             )}
           </div>

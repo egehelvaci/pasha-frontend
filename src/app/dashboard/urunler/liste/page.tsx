@@ -926,7 +926,7 @@ export default function ProductList() {
                             <input
                               type="number"
                               min="10"
-                              max="500"
+                              max="10000"
                               value={customHeight}
                               onChange={(e) => setCustomHeight(Number(e.target.value))}
                               className="border rounded-md p-2 text-black w-24"
