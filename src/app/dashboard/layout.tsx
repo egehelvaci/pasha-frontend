@@ -35,12 +35,41 @@ export default function DashboardLayout({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header 
-        title="Dashboard"
-        user={userInfo}
-      />
-      {children}
-    </div>
+    <>
+      <style jsx global>{`
+        @media print {
+          header,
+          nav,
+          .header,
+          .navbar,
+          .navigation,
+          *[class*="header"],
+          *[class*="nav"],
+          *[class*="cart"],
+          *[class*="sepet"],
+          *[href*="sepetim"],
+          *[href*="cart"],
+          .cart-icon,
+          .shopping-cart,
+          .FaShoppingCart,
+          svg[class*="cart"],
+          button[class*="cart"],
+          a[href*="sepetim"],
+          a[href*="cart"] {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+          }
+        }
+      `}</style>
+      <div className="min-h-screen bg-gray-50">
+        <Header 
+          title="Dashboard"
+          user={userInfo}
+          className="print:hidden"
+        />
+        {children}
+      </div>
+    </>
   );
 } 

@@ -9,9 +9,96 @@ import { getProductRules, ProductRule } from '@/services/api';
 // API Base URL
 const API_BASE_URL = "https://pasha-backend-production.up.railway.app";
 
+// Sayfalama Komponenti
+const Pagination = ({ pagination, onPageChange, searchTerm = '', collectionId = '' }: {
+  pagination: any;
+  onPageChange: (page: number, search?: string, collection?: string) => void;
+  searchTerm?: string;
+  collectionId?: string;
+}) => {
+  if (!pagination) return null;
+
+  return (
+    <div style={{ 
+      marginTop: '20px', 
+      textAlign: 'center',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: '15px'
+    }}>
+      <button 
+        disabled={pagination.page <= 1}
+        onClick={() => onPageChange(pagination.page - 1, searchTerm, collectionId)}
+        style={{
+          padding: '8px 16px',
+          border: '1px solid #ddd',
+          borderRadius: '4px',
+          cursor: pagination.page <= 1 ? 'not-allowed' : 'pointer',
+          opacity: pagination.page <= 1 ? 0.5 : 1,
+          backgroundColor: pagination.page <= 1 ? '#f5f5f5' : '#fff'
+        }}
+      >
+        ← Önceki
+      </button>
+      
+      <span style={{ 
+        fontSize: '14px',
+        color: '#666',
+        minWidth: '200px'
+      }}>
+        Sayfa {pagination.page} / {pagination.totalPages} 
+        (Toplam {pagination.total} ürün)
+      </span>
+      
+      <button 
+        disabled={!pagination.hasMore}
+        onClick={() => onPageChange(pagination.page + 1, searchTerm, collectionId)}
+        style={{
+          padding: '8px 16px',
+          border: '1px solid #ddd',
+          borderRadius: '4px',
+          cursor: !pagination.hasMore ? 'not-allowed' : 'pointer',
+          opacity: !pagination.hasMore ? 0.5 : 1,
+          backgroundColor: !pagination.hasMore ? '#f5f5f5' : '#fff'
+        }}
+      >
+        Sonraki →
+      </button>
+    </div>
+  );
+};
+
+// Loading Spinner Komponenti
+const LoadingSpinner = () => (
+  <div style={{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: '40px',
+    fontSize: '16px',
+    color: '#666'
+  }}>
+    <div className="w-12 h-12 border-4 border-blue-900 border-t-transparent rounded-full animate-spin"></div>
+    <div style={{ marginLeft: '15px' }}>Ürünler yükleniyor...</div>
+  </div>
+);
+
+// Responsive sayfa boyutu fonksiyonu
+const getPageSize = () => {
+  if (typeof window === 'undefined') return 20;
+  const width = window.innerWidth;
+  if (width < 768) return 10;      // Mobil: 10 ürün
+  if (width < 1024) return 15;     // Tablet: 15 ürün
+  return 20;                       // Desktop: 20 ürün
+};
+
 export default function ProductList() {
   const [products, setProducts] = useState<any[]>([]);
+  const [pagination, setPagination] = useState<any>(null); // YENİ
+  const [currentPage, setCurrentPage] = useState(1); // YENİ
   const [search, setSearch] = useState("");
+  const [searchTerm, setSearchTerm] = useState(""); // YENİ - debounced search
   const [selected, setSelected] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState("id_asc");
   const [collections, setCollections] = useState<{collectionId: string, name: string}[]>([]);
@@ -32,11 +119,14 @@ export default function ProductList() {
   const [selectedProductForUpdate, setSelectedProductForUpdate] = useState<any>(null);
   const [productRules, setProductRules] = useState<ProductRule[]>([]);
   const { isAdmin } = useAuth();
+  
+  // Debounce timer için ref
+  const searchTimeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     if (!productsFetchedRef.current) {
       productsFetchedRef.current = true;
-      fetchProducts();
+      fetchProducts(); // İlk yükleme
     }
     
     if (!collectionsFetchedRef.current) {
@@ -47,25 +137,66 @@ export default function ProductList() {
     fetchProductRules();
   }, []);
 
-  const fetchProducts = async () => {
+  // Arama değiştiğinde debounce ile API çağrısı
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    searchTimeoutRef.current = setTimeout(() => {
+      setSearchTerm(search);
+      setCurrentPage(1); // Arama değiştiğinde ilk sayfaya dön
+      fetchProducts(1, search, selectedCollection);
+    }, 300); // 300ms debounce (500ms'den kısaltıldı)
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [search]);
+
+  // Koleksiyon filtresi değiştiğinde
+  useEffect(() => {
+    setCurrentPage(1);
+    fetchProducts(1, searchTerm, selectedCollection);
+  }, [selectedCollection]);
+
+  // Optimizasyonlu ürün getirme fonksiyonu
+  const fetchProducts = async (page: number = 1, searchQuery: string = '', collectionId: string = '') => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const res = await fetch("https://pasha-backend-production.up.railway.app/api/products", {
+      const limit = getPageSize();
+      
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        ...(searchQuery && { search: searchQuery }),
+        ...(collectionId && { collectionId: collectionId })
+      });
+      
+      const response = await fetch(`${API_BASE_URL}/api/products?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      const data = await res.json();
-      if (data.success && Array.isArray(data.data)) {
-        setProducts(data.data);
-
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        setProducts(result.data);
+        setPagination(result.pagination); // Yeni pagination bilgisi
+        setCurrentPage(page);
       } else {
+        console.error('Ürünler yüklenemedi:', result.message);
         setProducts([]);
+        setPagination(null);
       }
     } catch (error) {
-
+      console.error('API hatası:', error);
       setProducts([]);
+      setPagination(null);
     } finally {
       setLoading(false);
     }
@@ -89,7 +220,6 @@ export default function ProductList() {
         setCollections([]);
       }
     } catch (error) {
-
       setCollections([]);
     }
   };
@@ -99,18 +229,17 @@ export default function ProductList() {
       const rules = await getProductRules();
       setProductRules(rules);
     } catch (error) {
-
       setProductRules([]);
     }
   };
 
-  const filteredProducts = products.filter(product =>
-    (!selectedCollection || product.collectionId === selectedCollection) &&
-    (product.name.toLowerCase().includes(search.toLowerCase()) ||
-     product.description.toLowerCase().includes(search.toLowerCase()))
-  );
+  // Sayfa değişikliği handler'ı
+  const handlePageChange = (newPage: number, search: string = searchTerm, collectionId: string = selectedCollection) => {
+    fetchProducts(newPage, search, collectionId);
+  };
 
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
+  // Sıralama için frontend-side sıralama (sayfalı veri olduğu için)
+  const sortedProducts = [...products].sort((a, b) => {
     switch (sortBy) {
       case "id_asc":
         return a.productId.localeCompare(b.productId);
@@ -142,7 +271,9 @@ export default function ProductList() {
         }
       });
       if (!res.ok) throw new Error("Ürün silinemedi");
-      setProducts(products.filter(p => p.productId !== deleteId));
+      
+      // Silme başarılıysa mevcut sayfayı yenile
+      fetchProducts(currentPage, searchTerm, selectedCollection);
       setConfirmOpen(false);
       setDeleteId(null);
     } catch (err: any) {
@@ -1453,7 +1584,7 @@ export default function ProductList() {
               </label>
               <select
                 id="sort-select"
-                className="w-full md:w-64 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
+                className="w-full md:w-80 lg:w-96 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900 text-sm"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
               >
@@ -1472,7 +1603,7 @@ export default function ProductList() {
               </label>
               <select
                 id="collection-select"
-                className="w-full md:w-64 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
+                className="w-full md:w-80 lg:w-96 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900 text-sm"
                 value={selectedCollection}
                 onChange={(e) => setSelectedCollection(e.target.value)}
               >
@@ -1493,10 +1624,12 @@ export default function ProductList() {
                 <input
                   id="search-input"
                   type="text"
-                  className="w-full md:w-64 border border-gray-300 rounded-md pl-9 pr-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
-                  placeholder="Ürün adı veya açıklama..."
+                  className="w-full md:w-80 lg:w-96 border border-gray-300 rounded-md pl-9 pr-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900 text-sm"
+                  placeholder="Ürün adı, açıklama veya ID ara..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
+                  autoComplete="off"
+                  spellCheck="false"
                 />
                 <svg
                   className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
@@ -1534,10 +1667,7 @@ export default function ProductList() {
       
       <div className="bg-white rounded-lg">
         {loading ? (
-          <div className="py-16 flex flex-col items-center justify-center">
-            <div className="w-12 h-12 border-4 border-blue-900 border-t-transparent rounded-full animate-spin"></div>
-            <p className="mt-4 text-gray-600">Ürünler yükleniyor...</p>
-          </div>
+          <LoadingSpinner />
         ) : sortedProducts.length === 0 ? (
           <div className="py-16 text-center">
             <svg 
@@ -1556,20 +1686,23 @@ export default function ProductList() {
             </svg>
             <p className="mt-4 text-lg font-medium text-gray-600">Ürün bulunamadı</p>
             <p className="mt-2 text-gray-500">
-              {search && 'Arama kriterlerinize uygun ürün bulunamadı. '}
+              {searchTerm && 'Arama kriterlerinize uygun ürün bulunamadı. '}
               {selectedCollection && 'Seçtiğiniz koleksiyonda ürün bulunamadı. '}
               Lütfen farklı filtreler deneyin.
             </p>
           </div>
         ) : (
           <>
-            {(search || selectedCollection) && (
+            {(searchTerm || selectedCollection) && pagination && (
               <div className="p-4 border-b text-sm text-gray-600">
-                <span className="font-medium">{sortedProducts.length}</span> adet ürün bulundu 
-                {search && <span> (arama: <span className="italic">"{search}"</span>)</span>}
+                <span className="font-medium">{pagination.total}</span> adet ürün bulundu 
+                {searchTerm && <span> (arama: <span className="italic">"{searchTerm}"</span>)</span>}
                 {selectedCollection && (
                   <span> (koleksiyon: <span className="font-medium">{collections.find(c => c.collectionId === selectedCollection)?.name || selectedCollection}</span>)</span>
                 )}
+                <span className="ml-2 text-xs text-gray-500">
+                  (Sayfa {pagination.page}/{pagination.totalPages})
+                </span>
               </div>
             )}
             <div className="flex flex-wrap justify-center lg:justify-start gap-6 p-6">
@@ -1671,7 +1804,8 @@ export default function ProductList() {
           open={modalOpen} 
           onClose={() => setModalOpen(false)} 
           onSuccess={(newProduct) => {
-            setProducts([newProduct, ...products]);
+            // Yeni ürün eklendikten sonra ilk sayfayı yenile
+            fetchProducts(1, searchTerm, selectedCollection);
             setModalOpen(false);
           }} 
           collections={collections}
@@ -1689,48 +1823,21 @@ export default function ProductList() {
           collections={collections} 
           productRules={productRules}
           onSuccess={(updatedProduct) => {
-            if (updatedProduct.deleted) {
-              // Ürün silindiyse listeden kaldır
-              setProducts(products.filter(p => p.productId !== updatedProduct.productId));
-            } else {
-              // Ürün güncellendiyse listeyi güncelle
-              setProducts(products.map(p => p.productId === updatedProduct.productId ? updatedProduct : p));
-            }
+            // Ürün güncellendiğinde mevcut sayfayı yenile
+            fetchProducts(currentPage, searchTerm, selectedCollection);
             setUpdateModalOpen(false);
           }}
         />
       )}
-      <div className="flex items-center justify-center mt-8 text-sm">
-        <div className="flex items-center space-x-2">
-          <button className="w-8 h-8 border rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100">
-            <span>&lt;&lt;</span>
-          </button>
-          <button className="w-8 h-8 border rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100">
-            <span>&lt;</span>
-          </button>
-          <button className="w-8 h-8 border rounded-full flex items-center justify-center bg-[#00365a] text-white">
-            <span>1</span>
-          </button>
-          <button className="w-8 h-8 border rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100">
-            <span>2</span>
-          </button>
-          <button className="w-8 h-8 border rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100">
-            <span>3</span>
-          </button>
-          <button className="w-8 h-8 border rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100">
-            <span>4</span>
-          </button>
-          <button className="w-8 h-8 border rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100">
-            <span>5</span>
-          </button>
-          <button className="w-8 h-8 border rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100">
-            <span>&gt;</span>
-          </button>
-          <button className="w-8 h-8 border rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100">
-            <span>&gt;&gt;</span>
-          </button>
-        </div>
-      </div>
+      {/* Sayfalama artık yukarıda yapılıyor */}
+      {pagination && (
+        <Pagination 
+          pagination={pagination} 
+          onPageChange={handlePageChange} 
+          searchTerm={searchTerm} 
+          collectionId={selectedCollection}
+        />
+      )}
     </div>
   );
 } 

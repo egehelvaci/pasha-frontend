@@ -18,6 +18,7 @@ type HeaderProps = {
       id: number;
     };
   };
+  className?: string;
 };
 
 interface NavigationItem {
@@ -27,7 +28,7 @@ interface NavigationItem {
   adminOnly?: boolean;
 }
 
-const Header = ({ title, user }: HeaderProps) => {
+const Header = ({ title, user, className }: HeaderProps) => {
   const pathname = usePathname();
   const router = useRouter();
   const { logout, isAdmin, user: authUser } = useAuth(); // AuthContext'teki user'ı al
@@ -359,7 +360,7 @@ const Header = ({ title, user }: HeaderProps) => {
   ];
 
   return (
-    <header className="bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40 shadow-sm">
+    <header className={`bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40 shadow-sm ${className || ''}`}>
       <div className="container-responsive">
         {/* Ana Header Kısmı */}
         <div className="flex items-center justify-between py-4">

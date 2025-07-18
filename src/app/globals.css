@@ -2,6 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Line Clamp Utilities */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
 /* CSS Reset ve Normalize */
 *,
 *::before,
@@ -373,4 +395,157 @@ button {
   padding-right: env(safe-area-inset-right);
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: env(safe-area-inset-left);
+}
+
+/* Print modunda header ve sepet simgelerini gizle */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  header,
+  nav,
+  .header,
+  .navbar,
+  .navigation,
+  *[class*="header"],
+  *[class*="nav"],
+  *[class*="cart"],
+  *[class*="sepet"],
+  *[href*="sepetim"],
+  *[href*="cart"],
+  .cart-icon,
+  .shopping-cart,
+  .FaShoppingCart,
+  svg[class*="cart"],
+  button[class*="cart"],
+  a[href*="sepetim"],
+  a[href*="cart"],
+  .print\\:hidden {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Yazdırma için background renklerini zorla */
+  .print-page,
+  .cover-page {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
+/* Print Styles */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* Header ve sepet elementlerini gizle */
+  header,
+  nav,
+  .header,
+  .navbar,
+  .navigation,
+  *[class*="header"],
+  *[class*="nav"],
+  *[class*="cart"],
+  *[class*="sepet"],
+  *[href*="sepetim"],
+  *[href*="cart"],
+  .cart-icon,
+  .shopping-cart,
+  .FaShoppingCart,
+  svg[class*="cart"],
+  button[class*="cart"],
+  a[href*="sepetim"],
+  a[href*="cart"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* Print sayfa stilleri */
+  .print-page {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .cover-page {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* Header ve collection header için ekstra kurallar */
+  .page-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-bottom: 15mm !important;
+    padding: 10mm 12mm !important;
+    border-bottom: 3px solid #00365a !important;
+    background: rgba(255, 255, 255, 0.98) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    position: relative !important;
+    z-index: 10 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  .header-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10mm !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  .header-title {
+    font-size: 26px !important;
+    font-weight: bold !important;
+    color: #00365a !important;
+    letter-spacing: 1px !important;
+    line-height: 1.2 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  .collection-header {
+    background: rgba(0, 54, 90, 0.95) !important;
+    color: white !important;
+    padding: 12mm !important;
+    border-radius: 12px !important;
+    margin-bottom: 10mm !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+    position: relative !important;
+    z-index: 5 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .collection-title {
+    font-size: 24px !important;
+    font-weight: bold !important;
+    margin-bottom: 4mm !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }

@@ -175,7 +175,7 @@ export default function Dashboard() {
     if (!token) return;
     
     try {
-      const response = await fetch('https://pasha-backend-production.up.railway.app/api/products?limit=20&sort=created_at&order=desc', {
+      const response = await fetch('https://pasha-backend-production.up.railway.app/api/products?limit=20&page=1', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
