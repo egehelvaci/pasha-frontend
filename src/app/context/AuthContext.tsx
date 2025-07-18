@@ -43,7 +43,7 @@ type User = {
 
 type AuthContextType = {
   user: User;
-  login: (username: string, password: string) => Promise<{ success: boolean; message: string }>;
+  login: (username: string, password: string, rememberMe?: boolean) => Promise<{ success: boolean; message: string }>;
   logout: () => Promise<{ success: boolean; message: string }>;
   isLoading: boolean;
   token: string | null;
@@ -64,10 +64,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // LocalStorage'dan kullanıcı bilgisi ve token'ı al
-        const storedUser = localStorage.getItem("user");
-        const storedToken = localStorage.getItem("token");
-        const storedUserType = localStorage.getItem("userType");
+        // Önce localStorage'dan "beni hatırla" durumunu kontrol et
+        const rememberMe = localStorage.getItem("rememberMe") === "true";
+        console.log('🔍 Remember Me durumu:', rememberMe);
+        
+        let storedUser, storedToken, storedUserType;
+        
+        if (rememberMe) {
+          // "Beni hatırla" aktifse localStorage'dan al
+          console.log('📦 localStorage\'dan veri alınıyor');
+          storedUser = localStorage.getItem("user");
+          storedToken = localStorage.getItem("token");
+          storedUserType = localStorage.getItem("userType");
+        } else {
+          // "Beni hatırla" aktif değilse sessionStorage'dan al
+          console.log('📦 sessionStorage\'dan veri alınıyor');
+          storedUser = sessionStorage.getItem("user");
+          storedToken = sessionStorage.getItem("token");
+          storedUserType = sessionStorage.getItem("userType");
+        }
+        
+        console.log('📋 Bulunan veriler:', { storedUser: !!storedUser, storedToken: !!storedToken, storedUserType });
         
         if (storedUser && storedUser !== "undefined") {
           setUser(JSON.parse(storedUser));
@@ -81,10 +98,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setIsAdmin(true);
         }
       } catch (error) {
-        console.error("LocalStorage parse hatası:", error);
+        console.error("LocalStorage/SessionStorage parse hatası:", error);
         localStorage.removeItem("user");
         localStorage.removeItem("token");
         localStorage.removeItem("userType");
+        localStorage.removeItem("rememberMe");
+        sessionStorage.removeItem("user");
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("userType");
       } finally {
         setIsLoading(false);
       }
@@ -93,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth();
   }, []);
 
-  const login = async (username: string, password: string) => {
+  const login = async (username: string, password: string, rememberMe: boolean = false) => {
     setIsLoading(true);
     try {
       const response = await fetch(`${API_URL}/api/auth/login`, {
@@ -101,7 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, rememberMe }),
       });
 
       const result = await response.json();
@@ -127,10 +148,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setToken(result.data.token);
         setIsAdmin(result.data.user.userType === "admin");
         
-        // LocalStorage'a kaydet
-        localStorage.setItem("user", JSON.stringify(userData));
-        localStorage.setItem("token", result.data.token);
-        localStorage.setItem("userType", result.data.user.userType);
+        // "Beni hatırla" seçeneğine göre localStorage'a kaydet
+        if (rememberMe) {
+          console.log('🔐 Remember Me aktif - localStorage kullanılıyor');
+          localStorage.setItem("user", JSON.stringify(userData));
+          localStorage.setItem("token", result.data.token);
+          localStorage.setItem("userType", result.data.user.userType);
+          localStorage.setItem("rememberMe", "true");
+        } else {
+          console.log('🔑 Remember Me pasif - sessionStorage kullanılıyor');
+          // SessionStorage kullan (tarayıcı kapatıldığında silinir)
+          sessionStorage.setItem("user", JSON.stringify(userData));
+          sessionStorage.setItem("token", result.data.token);
+          sessionStorage.setItem("userType", result.data.user.userType);
+          localStorage.removeItem("rememberMe");
+        }
         
         return { success: true, message: "Giriş başarılı" };
       } else {
@@ -165,6 +197,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("user");
         localStorage.removeItem("token");
         localStorage.removeItem("userType");
+        localStorage.removeItem("rememberMe");
+        sessionStorage.removeItem("user");
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("userType");
         
         router.push("/");
         
@@ -176,6 +212,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("user");
         localStorage.removeItem("token");
         localStorage.removeItem("userType");
+        localStorage.removeItem("rememberMe");
+        sessionStorage.removeItem("user");
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("userType");
+        
         router.push("/");
         
         return { success: true, message: "Çıkış yapıldı" };
@@ -190,6 +231,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem("user");
       localStorage.removeItem("token");
       localStorage.removeItem("userType");
+      localStorage.removeItem("rememberMe");
+      sessionStorage.removeItem("user");
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("userType");
+      
       router.push("/");
       
       return { success: false, message: "Çıkış yaparken bir hata oluştu" };

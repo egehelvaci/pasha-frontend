@@ -3,24 +3,52 @@ import { NextResponse } from 'next/server';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { username, password } = body;
+    const { username, password, rememberMe } = body;
 
-    // Bu bölümde gerçek bir API isteği yapılabilir
-    // Şimdilik sadece basit bir doğrulama yapıyoruz
+    // Test için geçici login mantığı
     if (username === 'admin' && password === 'password') {
-      return NextResponse.json(
-        { 
-          success: true, 
-          message: 'Giriş başarılı', 
-          user: { name: 'Özkan ADIGÜZEL', username: 'admin' } 
-        }, 
-        { status: 200 }
-      );
+      const userData = {
+        userId: '1',
+        username: 'admin',
+        name: 'Admin',
+        surname: 'User',
+        email: 'admin@example.com',
+        phoneNumber: '1234567890',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        avatar: null,
+        userType: 'admin',
+        userTypeId: 1,
+        store: null
+      };
+
+      const token = 'test-token-' + Date.now();
+
+      return NextResponse.json({
+        success: true,
+        message: 'Giriş başarılı',
+        data: {
+          user: userData,
+          token: token
+        }
+      }, { status: 200 });
+    }
+
+    // Gerçek API'ye istek gönder
+    const response = await fetch('https://pasha-backend-production.up.railway.app/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username, password, rememberMe }),
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      return NextResponse.json(result, { status: 200 });
     } else {
-      return NextResponse.json(
-        { success: false, message: 'Kullanıcı adı veya şifre hatalı' }, 
-        { status: 401 }
-      );
+      return NextResponse.json(result, { status: response.status });
     }
   } catch (error) {
     console.error('Login error:', error);
