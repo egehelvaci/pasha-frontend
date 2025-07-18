@@ -114,8 +114,23 @@ export default function StokPage() {
   // Auth yüklenirken loading göster
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="relative">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[#00365a]"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <svg className="w-6 h-6 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-gray-900">Yetkilendirme Kontrol Ediliyor</h3>
+              <p className="text-sm text-gray-500 mt-1">Lütfen bekleyiniz...</p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -437,49 +452,94 @@ export default function StokPage() {
   }, [token]);
 
   if (isLoading || !user) {
-    return <div className="min-h-screen flex items-center justify-center">Yükleniyor...</div>;
-  }
-
-  // Admin olmayan kullanıcılar için erişim engeli
-  if (!isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <svg className="mx-auto h-12 w-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">Erişim Reddedildi</h3>
-          <p className="mt-1 text-sm text-gray-500">Bu sayfaya erişim yetkiniz bulunmamaktadır.</p>
-          <div className="mt-6">
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              Dashboard'a Dön
-            </button>
+      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="relative">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[#00365a]"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <svg className="w-6 h-6 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-gray-900">Sistem Yükleniyor</h3>
+              <p className="text-sm text-gray-500 mt-1">Lütfen bekleyiniz...</p>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
+  // Admin olmayan kullanıcılar için erişim engeli
+  if (!isAdmin) {
+    return (
+      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center max-w-md">
+          <div className="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
+            <svg className="h-10 w-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 mb-3">Erişim Reddedildi</h3>
+          <p className="text-gray-600 mb-8 leading-relaxed">Bu sayfaya erişim yetkiniz bulunmamaktadır. Stok yönetimi sadece admin kullanıcılar tarafından kullanılabilir.</p>
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+            </svg>
+            Dashboard'a Dön
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6">
-        {/* Başlık */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Stok Yönetimi</h1>
-          <p className="text-gray-600 mt-1">Ürün stoklarını görüntüleyin ve güncelleyin</p>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="max-w-7xl mx-auto">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-[#00365a] flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mr-3" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z" />
+              <path fillRule="evenodd" d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clipRule="evenodd" />
+            </svg>
+            Stok Yönetimi
+          </h1>
+          <p className="text-gray-600 mt-2">Ürün stoklarını görüntüleyin ve güncelleyin</p>
         </div>
 
         {/* Ürünler Listesi */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-100">
-          <div className="p-4 sm:p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Tüm Ürünler</h2>
-            
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 bg-[#00365a]">
+            <div className="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <h2 className="text-lg font-semibold text-white">Tüm Ürünler</h2>
+            </div>
+          </div>
+          <div className="p-6">
             {isLoadingProducts ? (
-              <div className="flex items-center justify-center h-48">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="flex flex-col items-center justify-center h-48">
+                <div className="relative">
+                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[#00365a]"></div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-center mt-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Ürünler Yükleniyor</h3>
+                  <p className="text-sm text-gray-500 mt-1">Lütfen bekleyiniz...</p>
+                </div>
               </div>
             ) : products.length > 0 ? (
               <>
@@ -488,23 +548,23 @@ export default function StokPage() {
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                           Ürün
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                           Koleksiyon
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                           İşlemler
                         </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {products.map((product) => (
-                        <tr key={product.productId} className="hover:bg-gray-50">
+                        <tr key={product.productId} className="hover:bg-gray-50 transition-colors">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
-                              <div className="h-12 w-12 rounded-lg bg-gray-200 flex-shrink-0 overflow-hidden">
+                              <div className="h-14 w-14 rounded-xl bg-gray-200 flex-shrink-0 overflow-hidden shadow-sm">
                                 {product.productImage ? (
                                   <img 
                                     src={product.productImage} 
@@ -512,7 +572,7 @@ export default function StokPage() {
                                     className="h-full w-full object-cover"
                                   />
                                 ) : (
-                                  <div className="h-full w-full bg-gray-300 flex items-center justify-center">
+                                  <div className="h-full w-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
                                     <svg className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
@@ -520,29 +580,29 @@ export default function StokPage() {
                                 )}
                               </div>
                               <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                                <div className="text-sm font-semibold text-gray-900">{product.name}</div>
                                 <div className="text-sm text-gray-500">{product.description}</div>
                               </div>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{product.collection?.name || 'Koleksiyon Yok'}</div>
+                            <div className="text-sm font-medium text-gray-900">{product.collection?.name || 'Koleksiyon Yok'}</div>
                             <div className="text-sm text-gray-500">{product.collection?.code || '-'}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <button
                               onClick={() => openStockModal(product)}
                               disabled={isLoadingProductDetail}
-                              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="inline-flex items-center gap-2 px-4 py-2 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {isLoadingProductDetail ? (
                                 <>
-                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
+                                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
                                   Yükleniyor...
                                 </>
                               ) : (
                                 <>
-                                  <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                   </svg>
                                   Stok Ekle
@@ -559,9 +619,9 @@ export default function StokPage() {
                 {/* Mobil Card Görünümü */}
                 <div className="md:hidden space-y-4">
                   {products.map((product) => (
-                    <div key={product.productId} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                      <div className="flex items-start space-x-3">
-                        <div className="h-16 w-16 rounded-lg bg-gray-200 flex-shrink-0 overflow-hidden">
+                    <div key={product.productId} className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex items-start space-x-4">
+                        <div className="h-20 w-20 rounded-xl bg-gray-200 flex-shrink-0 overflow-hidden shadow-sm">
                           {product.productImage ? (
                             <img 
                               src={product.productImage} 
@@ -569,7 +629,7 @@ export default function StokPage() {
                               className="h-full w-full object-cover"
                             />
                           ) : (
-                            <div className="h-full w-full bg-gray-300 flex items-center justify-center">
+                            <div className="h-full w-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
                               <svg className="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                               </svg>
@@ -577,30 +637,28 @@ export default function StokPage() {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <h3 className="text-lg font-medium text-gray-900 truncate">{product.name}</h3>
-                              <p className="text-sm text-gray-500 line-clamp-2">{product.description}</p>
-                            </div>
-                          </div>
                           <div className="mb-3">
-                            <div className="text-sm font-medium text-gray-700">Koleksiyon</div>
-                            <div className="text-sm text-gray-900">{product.collection?.name || 'Koleksiyon Yok'}</div>
+                            <h3 className="text-lg font-semibold text-gray-900 truncate">{product.name}</h3>
+                            <p className="text-sm text-gray-500 line-clamp-2 mt-1">{product.description}</p>
+                          </div>
+                          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                            <div className="text-xs font-medium text-gray-700 uppercase tracking-wider mb-1">Koleksiyon</div>
+                            <div className="text-sm font-medium text-gray-900">{product.collection?.name || 'Koleksiyon Yok'}</div>
                             <div className="text-xs text-gray-500">{product.collection?.code || '-'}</div>
                           </div>
                           <button
                             onClick={() => openStockModal(product)}
                             disabled={isLoadingProductDetail}
-                            className="w-full inline-flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-semibold transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {isLoadingProductDetail ? (
                               <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
                                 Yükleniyor...
                               </>
                             ) : (
                               <>
-                                <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                 </svg>
                                 Stok Ekle
@@ -614,12 +672,34 @@ export default function StokPage() {
                 </div>
               </>
             ) : (
-              <div className="text-center py-12">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-                <h3 className="mt-2 text-sm font-medium text-gray-900">Ürün bulunamadı</h3>
-                <p className="mt-1 text-sm text-gray-500">Henüz hiç ürün eklenmemiş.</p>
+              <div className="text-center py-16">
+                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
+                  <svg className="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Ürün Bulunamadı</h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto leading-relaxed">Henüz hiç ürün eklenmemiş. Stok yönetimi yapabilmek için önce ürün eklemeniz gerekmektedir.</p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <button
+                    onClick={() => router.push('/dashboard/urunler/liste')}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    Ürünlere Git
+                  </button>
+                  <button
+                    onClick={() => router.push('/dashboard')}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-white hover:bg-gray-50 text-[#00365a] border-2 border-[#00365a] rounded-lg font-semibold transition-all hover:shadow-md"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+                    </svg>
+                    Dashboard'a Dön
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -627,22 +707,31 @@ export default function StokPage() {
 
         {/* Gelişmiş Stok Ekleme Modalı */}
         {isModalOpen && selectedProduct && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 p-4">
-            <div className="relative min-h-screen md:min-h-0 md:top-10 mx-auto md:p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white md:mb-10">
+          <div className="fixed inset-0 bg-black bg-opacity-60 overflow-y-auto h-full w-full z-50 p-4">
+            <div className="relative min-h-screen md:min-h-0 md:top-10 mx-auto md:p-5 w-full max-w-3xl shadow-2xl rounded-2xl bg-white md:mb-10">
               {/* Modal Header - Sticky */}
-              <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-4 md:p-6 rounded-t-md">
+              <div className="sticky top-0 bg-[#00365a] text-white border-b border-gray-200 px-6 py-6 rounded-t-2xl">
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-lg md:text-xl font-medium text-gray-900 truncate">
-                      Stok Ekle: {selectedProduct.name}
-                    </h3>
-                    <p className="text-sm text-gray-500 mt-1 truncate">
-                      Koleksiyon: {selectedProduct.collection?.name || 'Koleksiyon Yok'}
-                    </p>
+                    <div className="flex items-center gap-3">
+                      <div className="bg-white bg-opacity-20 rounded-xl p-2">
+                        <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold truncate">
+                          Stok Ekle: {selectedProduct.name}
+                        </h3>
+                        <p className="text-blue-100 text-sm mt-1 truncate">
+                          Koleksiyon: {selectedProduct.collection?.name || 'Koleksiyon Yok'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                   <button
                     onClick={closeStockModal}
-                    className="ml-4 text-gray-400 hover:text-gray-600 p-2 -mr-2"
+                    className="ml-4 text-blue-100 hover:text-white p-2 hover:bg-white hover:bg-opacity-20 rounded-xl transition-all"
                   >
                     <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

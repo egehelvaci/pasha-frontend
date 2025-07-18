@@ -2,7 +2,7 @@
 const nextConfig = {
   output: 'standalone',
   images: {
-    domains: ['localhost'],
+    domains: ['localhost', 's3.tebi.io', 'tebi.io'],
     unoptimized: false,
   },
   eslint: {

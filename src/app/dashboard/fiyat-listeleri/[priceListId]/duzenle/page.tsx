@@ -3,16 +3,15 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { PriceList, CreatePriceListData, getPriceLists, updatePriceList } from '@/services/api';
-import { Button, Form, Input, InputNumber, DatePicker, Modal, message, Select, Switch } from 'antd';
 import { useAuth } from '@/app/context/AuthContext';
-import dayjs from 'dayjs';
 import type { Collection } from '@/services/api';
 
 // Form için değerlerin tipini tanımla
 interface FormValues {
   name: string;
   description: string;
-  validity: [dayjs.Dayjs, dayjs.Dayjs] | undefined;
+  validFrom: string;
+  validTo: string;
   limitAmount?: number;
   currency: string;
   isActive: boolean;
@@ -63,17 +62,27 @@ interface PriceListDetailResponse {
   }
 }
 
-const { RangePicker } = DatePicker;
-
 export default function EditPriceListPage() {
   const router = useRouter();
   const params = useParams();
   const { isAdmin } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [priceList, setPriceList] = useState<PriceList | null>(null);
-  const [antForm] = Form.useForm();
-  const [collectionPricesData, setCollectionPricesData] = useState<Record<string, number>>({});
+  const [formData, setFormData] = useState<FormValues>({
+    name: '',
+    description: '',
+    validFrom: '',
+    validTo: '',
+    limitAmount: undefined,
+    currency: 'TRY',
+    isActive: true,
+    collectionPrices: {},
+    adjustmentType: 'increase',
+    adjustmentRate: undefined,
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   
   // API çağrısını takip etmek için ref oluştur
   const priceListsFetchedRef = useRef(false);
@@ -102,41 +111,68 @@ export default function EditPriceListPage() {
     }
   }, [isAdmin, router]);
 
-  // Form değerlerinin değişimini izle
-  const onValuesChange = (changedValues: any, allValues: FormValues) => {
-    if (isInitializedRef.current) {
-      setCollectionPricesData(allValues.collectionPrices || {});
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.name.trim()) newErrors.name = 'Liste adı gereklidir';
+    if (!formData.description.trim()) newErrors.description = 'Açıklama gereklidir';
+    if (!formData.currency) newErrors.currency = 'Para birimi gereklidir';
+
+    // Tarih validasyonu
+    if (formData.validFrom && formData.validTo) {
+      const fromDate = new Date(formData.validFrom);
+      const toDate = new Date(formData.validTo);
+      if (fromDate >= toDate) {
+        newErrors.validTo = 'Bitiş tarihi başlangıç tarihinden sonra olmalıdır';
+      }
     }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleInputChange = (field: keyof FormValues, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const handleCollectionPriceChange = (collectionId: string, value: number) => {
+    setFormData(prev => ({
+      ...prev,
+      collectionPrices: {
+        ...prev.collectionPrices,
+        [collectionId]: value
+      }
+    }));
   };
 
   // Zam/indirim uygulama fonksiyonu
   const applyAdjustment = () => {
-    const adjustmentType = antForm.getFieldValue('adjustmentType');
-    const adjustmentRate = antForm.getFieldValue('adjustmentRate');
-    
-    if (!adjustmentRate || adjustmentRate <= 0) {
-      message.warning('Lütfen geçerli bir oran giriniz');
+    if (!formData.adjustmentRate || formData.adjustmentRate <= 0) {
+      alert('Lütfen geçerli bir oran giriniz');
       return;
     }
     
-    const currentPrices = antForm.getFieldValue('collectionPrices') || {};
     const updatedPrices: Record<string, number> = {};
     
-    Object.entries(currentPrices).forEach(([collectionId, price]) => {
+    Object.entries(formData.collectionPrices).forEach(([collectionId, price]) => {
       if (price && typeof price === 'number' && price > 0) {
-        const multiplier = adjustmentType === 'increase' 
-          ? (1 + adjustmentRate / 100) 
-          : (1 - adjustmentRate / 100);
+        const multiplier = formData.adjustmentType === 'increase' 
+          ? (1 + formData.adjustmentRate! / 100) 
+          : (1 - formData.adjustmentRate! / 100);
         updatedPrices[collectionId] = Math.round(Number(price) * multiplier * 100) / 100;
       }
     });
     
-    antForm.setFieldsValue({ collectionPrices: updatedPrices });
-    setCollectionPricesData(updatedPrices);
-    message.success(`%${adjustmentRate} ${adjustmentType === 'increase' ? 'zam' : 'indirim'} uygulandı`);
+    setFormData(prev => ({ ...prev, collectionPrices: updatedPrices }));
+    alert(`%${formData.adjustmentRate} ${formData.adjustmentType === 'increase' ? 'zam' : 'indirim'} uygulandı`);
   };
 
   const fetchData = async () => {
+    setLoadingData(true);
     try {
       // Koleksiyonları getir
       const collectionsResponse = await fetch('https://pasha-backend-production.up.railway.app/api/collections/');
@@ -148,7 +184,7 @@ export default function EditPriceListPage() {
       const currentPriceList = priceLists.find(p => p.price_list_id === params.priceListId);
       
       if (!currentPriceList) {
-        message.error('Fiyat listesi bulunamadı');
+        alert('Fiyat listesi bulunamadı');
         router.push('/dashboard/fiyat-listeleri');
         return;
       }
@@ -165,261 +201,423 @@ export default function EditPriceListPage() {
         const detailData = await detailResponse.json() as PriceListDetailResponse;
         
         if (detailData.success) {
-          // Form alanlarını doldur
+          // Koleksiyon fiyatlarını doldur
           const collectionPrices: Record<string, number> = {};
           
           // API'den gelen koleksiyon fiyatlarını doldur
           detailData.data.collection_prices?.forEach((detail) => {
             collectionPrices[detail.collection_id] = Number(detail.price_per_square_meter);
           });
-          
-          // Koleksiyon fiyatlarını state'e kaydet
-          setCollectionPricesData(collectionPrices);
 
-          antForm.setFieldsValue({
+          // Form verilerini güncelle
+          setFormData({
             name: detailData.data.price_list.name,
             description: detailData.data.price_list.description,
-            validity: detailData.data.price_list.valid_from && detailData.data.price_list.valid_to ? 
-              [dayjs(detailData.data.price_list.valid_from), dayjs(detailData.data.price_list.valid_to)] : undefined,
-            limitAmount: Number(detailData.data.price_list.limit_amount),
+            validFrom: detailData.data.price_list.valid_from ? 
+              new Date(detailData.data.price_list.valid_from).toISOString().split('T')[0] : '',
+            validTo: detailData.data.price_list.valid_to ? 
+              new Date(detailData.data.price_list.valid_to).toISOString().split('T')[0] : '',
+            limitAmount: detailData.data.price_list.limit_amount ? Number(detailData.data.price_list.limit_amount) : undefined,
             currency: detailData.data.price_list.currency,
             isActive: detailData.data.price_list.is_active,
             collectionPrices,
+            adjustmentType: 'increase',
+            adjustmentRate: undefined,
           });
         }
       } catch (error) {
         console.error('Fiyat listesi detayı getirilemedi:', error);
         
         // Detay getirilemezse ana fiyat listesi verilerini kullan
-        antForm.setFieldsValue({
+        setFormData({
           name: currentPriceList.name,
           description: currentPriceList.description,
-          validity: currentPriceList.valid_from && currentPriceList.valid_to ? 
-            [dayjs(currentPriceList.valid_from), dayjs(currentPriceList.valid_to)] : undefined,
-          limitAmount: currentPriceList.limit_amount,
+          validFrom: currentPriceList.valid_from ? 
+            new Date(currentPriceList.valid_from).toISOString().split('T')[0] : '',
+          validTo: currentPriceList.valid_to ? 
+            new Date(currentPriceList.valid_to).toISOString().split('T')[0] : '',
+                     limitAmount: currentPriceList.limit_amount ?? undefined,
           currency: currentPriceList.currency,
           isActive: currentPriceList.is_active,
+          collectionPrices: {},
+          adjustmentType: 'increase',
+          adjustmentRate: undefined,
         });
       }
     } catch (error) {
-      message.error('Veriler yüklenirken bir hata oluştu');
+      alert('Veriler yüklenirken bir hata oluştu');
+    } finally {
+      setLoadingData(false);
     }
   };
 
-  const onFinish = async (values: FormValues) => {
-    if (!priceList) return;
+  const onFinish = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!priceList || !validateForm()) return;
 
-    const dateRange = values.validity || [];
     // Sadece değer girilmiş olan koleksiyon fiyatlarını dahil et
-    const collectionPrices = Object.entries(values.collectionPrices || {})
-      .filter(([_, price]) => price !== undefined && price !== null)
+    const collectionPrices = Object.entries(formData.collectionPrices || {})
+      .filter(([_, price]) => price !== undefined && price !== null && price > 0)
       .map(([collectionId, price]) => ({
         collectionId,
         pricePerSquareMeter: Number(price),
       }));
       
     // Tarihler için saat bilgisini ayarla 
-    const validFrom = dateRange[0] ? dateRange[0].hour(0).minute(0).second(0).toISOString() : undefined;
-    const validTo = dateRange[1] ? dateRange[1].hour(23).minute(59).second(59).toISOString() : undefined;
+    const validFrom = formData.validFrom ? new Date(formData.validFrom + 'T00:00:00').toISOString() : undefined;
+    const validTo = formData.validTo ? new Date(formData.validTo + 'T23:59:59').toISOString() : undefined;
 
     const data: CreatePriceListData = {
-      name: values.name,
-      description: values.description,
+      name: formData.name,
+      description: formData.description,
       validFrom,
       validTo,
-      limitAmount: values.limitAmount,
-      currency: values.currency,
-      is_active: values.isActive,
+      limitAmount: formData.limitAmount,
+      currency: formData.currency,
+      is_active: formData.isActive,
       collectionPrices,
     };
 
     setLoading(true);
     try {
       await updatePriceList(priceList.price_list_id, data);
-      message.success('Fiyat listesi başarıyla güncellendi');
+      alert('Fiyat listesi başarıyla güncellendi');
       router.push('/dashboard/fiyat-listeleri');
     } catch (error: any) {
-      message.error(error.message || 'Fiyat listesi güncellenirken bir hata oluştu');
+      alert(error.message || 'Fiyat listesi güncellenirken bir hata oluştu');
     } finally {
       setLoading(false);
     }
   };
 
-  if (!isAdmin) return null;
+  if (!isAdmin) {
+    return (
+      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center max-w-md">
+          <div className="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
+            <svg className="h-10 w-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 mb-3">Erişim Reddedildi</h3>
+          <p className="text-gray-600 mb-8 leading-relaxed">Bu sayfaya erişim yetkiniz bulunmamaktadır.</p>
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+            </svg>
+            Dashboard'a Dön
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4 fixed inset-0 bg-black bg-opacity-50 z-50">
-      <Modal
-        title="Fiyat Listesi Düzenle"
-        open={true}
-        onCancel={() => router.push('/dashboard/fiyat-listeleri')}
-        footer={null}
-        width="95%"
-        style={{ maxWidth: '800px', margin: '0 auto', top: 20 }}
-        centered
-        maskClosable={false}
-        className="relative"
-      >
-        <div className="max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
-          <Form
-            form={antForm}
-            layout="vertical"
-            onFinish={onFinish}
-            onValuesChange={onValuesChange}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Form.Item
-                label="Liste Adı"
-                name="name"
-                rules={[{ required: true, message: 'Lütfen liste adını giriniz' }]}
-                className="md:col-span-2"
-              >
-                <Input disabled={priceList?.is_default} />
-              </Form.Item>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-4">
+            <button
+              onClick={() => router.push('/dashboard/fiyat-listeleri')}
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+              </svg>
+            </button>
+            <div>
+              <h1 className="text-3xl font-bold text-[#00365a] flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                </svg>
+                Fiyat Listesi Düzenle
+              </h1>
+              <p className="text-gray-600 mt-2">Fiyat listesi bilgilerini güncelleyin</p>
+            </div>
+          </div>
+        </div>
 
-              <Form.Item
-                label="Açıklama"
-                name="description"
-                rules={[{ required: true, message: 'Lütfen açıklama giriniz' }]}
-                className="md:col-span-2"
-              >
-                <Input.TextArea rows={3} disabled={priceList?.is_default} />
-              </Form.Item>
+        {/* Loading State */}
+        {loadingData ? (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12">
+            <div className="flex flex-col items-center justify-center">
+              <div className="relative">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[#00365a]"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                  </svg>
+                </div>
+              </div>
+              <div className="text-center mt-4">
+                <h3 className="text-lg font-semibold text-gray-900">Fiyat Listesi Yükleniyor</h3>
+                <p className="text-sm text-gray-500 mt-1">Lütfen bekleyiniz...</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            {/* Form Header */}
+            <div className="px-6 py-4 border-b border-gray-200 bg-[#00365a]">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  <h3 className="text-lg font-semibold text-white">Fiyat Listesi Güncelle</h3>
+                </div>
+                {priceList?.is_default && (
+                  <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                    Varsayılan
+                  </span>
+                )}
+              </div>
+            </div>
 
-              <Form.Item
-                label="Geçerlilik Tarihi"
-                name="validity"
-              >
-                <RangePicker
-                  className="w-full"
-                  format="DD.MM.YYYY"
-                  disabled={priceList?.is_default}
-                  allowEmpty={[true, true]}
-                  placeholder={['Başlangıç tarihi', 'Bitiş tarihi']}
-                />
-              </Form.Item>
+            <form onSubmit={onFinish} className="p-6">
+              <div className="space-y-8">
+                {/* Temel Bilgiler */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <svg className="w-5 h-5 mr-2 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Temel Bilgiler
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        <span className="text-red-500">*</span> Liste Adı
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) => handleInputChange('name', e.target.value)}
+                        disabled={priceList?.is_default}
+                        className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all ${priceList?.is_default ? 'bg-gray-100 cursor-not-allowed' : ''} ${errors.name ? 'border-red-300' : 'border-gray-300'}`}
+                        placeholder="Örn: 2024 Bahar Koleksiyonu"
+                      />
+                      {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+                    </div>
 
-              <Form.Item
-                label="Para Birimi"
-                name="currency"
-                rules={[{ required: true, message: 'Lütfen para birimi seçiniz' }]}
-              >
-                <Select disabled={priceList?.is_default}>
-                  <Select.Option value="TRY">TRY</Select.Option>
-                  <Select.Option value="USD">USD</Select.Option>
-                  <Select.Option value="EUR">EUR</Select.Option>
-                </Select>
-              </Form.Item>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        <span className="text-red-500">*</span> Açıklama
+                      </label>
+                      <textarea
+                        value={formData.description}
+                        onChange={(e) => handleInputChange('description', e.target.value)}
+                        disabled={priceList?.is_default}
+                        rows={3}
+                        className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all resize-none ${priceList?.is_default ? 'bg-gray-100 cursor-not-allowed' : ''} ${errors.description ? 'border-red-300' : 'border-gray-300'}`}
+                        placeholder="Fiyat listesi hakkında açıklama..."
+                      />
+                      {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
+                    </div>
 
-              {!priceList?.is_default && (
-                <Form.Item
-                  label="Durum"
-                  name="isActive"
-                  valuePropName="checked"
-                >
-                  <Switch
-                    checkedChildren="Aktif"
-                    unCheckedChildren="Pasif"
-                  />
-                </Form.Item>
-              )}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        Başlangıç Tarihi
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.validFrom}
+                        onChange={(e) => handleInputChange('validFrom', e.target.value)}
+                        disabled={priceList?.is_default}
+                        className={`w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all ${priceList?.is_default ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                      />
+                    </div>
 
-              <Form.Item
-                label="Limit Tutarı"
-                name="limitAmount"
-                className="md:col-span-2"
-              >
-                <InputNumber
-                  className="w-full"
-                  formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  min={0}
-                  disabled={priceList?.is_default}
-                />
-              </Form.Item>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        Bitiş Tarihi
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.validTo}
+                        onChange={(e) => handleInputChange('validTo', e.target.value)}
+                        disabled={priceList?.is_default}
+                        className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all ${priceList?.is_default ? 'bg-gray-100 cursor-not-allowed' : ''} ${errors.validTo ? 'border-red-300' : 'border-gray-300'}`}
+                      />
+                      {errors.validTo && <p className="mt-1 text-sm text-red-600">{errors.validTo}</p>}
+                    </div>
 
-              {/* Zam/İndirim Bölümü */}
-              <div className="md:col-span-2">
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200 mb-4">
-                  <h4 className="font-medium text-green-800 mb-3 flex items-center">
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        <span className="text-red-500">*</span> Para Birimi
+                      </label>
+                      <select
+                        value={formData.currency}
+                        onChange={(e) => handleInputChange('currency', e.target.value)}
+                        disabled={priceList?.is_default}
+                        className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all ${priceList?.is_default ? 'bg-gray-100 cursor-not-allowed' : ''} ${errors.currency ? 'border-red-300' : 'border-gray-300'}`}
+                      >
+                        <option value="TRY">TRY</option>
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                      </select>
+                      {errors.currency && <p className="mt-1 text-sm text-red-600">{errors.currency}</p>}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        Limit Tutarı
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.limitAmount || ''}
+                        onChange={(e) => handleInputChange('limitAmount', parseFloat(e.target.value) || undefined)}
+                        disabled={priceList?.is_default}
+                        className={`w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all ${priceList?.is_default ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                        placeholder="0.00"
+                      />
+                      <p className="mt-1 text-xs text-gray-500">Boş bırakılırsa limitsiz olur</p>
+                    </div>
+
+                    {!priceList?.is_default && (
+                      <div className="md:col-span-2">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="isActive"
+                            checked={formData.isActive}
+                            onChange={(e) => handleInputChange('isActive', e.target.checked)}
+                            className="h-4 w-4 text-[#00365a] focus:ring-[#00365a] border-gray-300 rounded"
+                          />
+                          <label htmlFor="isActive" className="ml-3 text-sm font-semibold text-gray-700">
+                            Aktif
+                          </label>
+                        </div>
+                        <p className="mt-1 text-xs text-gray-500">Fiyat listesinin aktif olup olmadığını belirtir</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Zam/İndirim Bölümü */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <svg className="w-5 h-5 mr-2 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                     Toplu Fiyat Güncelleme
                   </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
-                    <Form.Item
-                      label="İşlem Tipi"
-                      name="adjustmentType"
-                      className="mb-0"
-                      initialValue="increase"
-                    >
-                      <Select>
-                        <Select.Option value="increase">Zam</Select.Option>
-                        <Select.Option value="decrease">İndirim</Select.Option>
-                      </Select>
-                    </Form.Item>
-                    
-                    <Form.Item
-                      label="Oran (%)"
-                      name="adjustmentRate"
-                      className="mb-0"
-                    >
-                      <InputNumber
-                        className="w-full"
-                        min={0}
-                        max={100}
-                        step={0.1}
-                        placeholder="Örn: 10"
-                      />
-                    </Form.Item>
-                    
-                    <Button 
-                      type="primary" 
-                      onClick={applyAdjustment}
-                      className="bg-green-600 hover:bg-green-700 border-green-600"
-                    >
-                      Uygula
-                    </Button>
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-3">
+                          İşlem Tipi
+                        </label>
+                        <select
+                          value={formData.adjustmentType}
+                          onChange={(e) => handleInputChange('adjustmentType', e.target.value as 'increase' | 'decrease')}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                        >
+                          <option value="increase">Zam</option>
+                          <option value="decrease">İndirim</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-3">
+                          Oran (%)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.1"
+                          value={formData.adjustmentRate || ''}
+                          onChange={(e) => handleInputChange('adjustmentRate', parseFloat(e.target.value) || undefined)}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                          placeholder="Örn: 10"
+                        />
+                      </div>
+                      
+                      <button 
+                        type="button"
+                        onClick={applyAdjustment}
+                        className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
+                      >
+                        Uygula
+                      </button>
+                    </div>
+                    <p className="text-sm text-green-700 mt-4">
+                      Girilen oran ile mevcut fiyatlar güncellenerek yeni fiyatlar hesaplanacaktır.
+                    </p>
                   </div>
-                  <p className="text-sm text-green-700 mt-2">
-                    Girilen oran ile mevcut fiyatlar güncellenerek yeni fiyatlar hesaplanacaktır.
-                  </p>
+                </div>
+
+                {/* Koleksiyon Fiyatları */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <svg className="w-5 h-5 mr-2 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    Koleksiyon Fiyatları
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {collections.map((collection) => (
+                      <div key={collection.collectionId}>
+                        <label className="block text-sm font-semibold text-gray-700 mb-3">
+                          {collection.name}
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={formData.collectionPrices[collection.collectionId] || ''}
+                          onChange={(e) => handleCollectionPriceChange(collection.collectionId, parseFloat(e.target.value) || 0)}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all"
+                          placeholder={`${collection.code} için fiyat`}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              <div className="md:col-span-2">
-                <h3 className="font-semibold mb-4">Koleksiyon Fiyatları</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {collections.map((collection) => (
-                    <Form.Item
-                      key={collection.collectionId}
-                      label={collection.name}
-                      name={['collectionPrices', collection.collectionId]}
-                    >
-                      <InputNumber
-                        className="w-full"
-                        formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                        min={0}
-                        step={0.01}
-                        placeholder={`${collection.code}`}
-                      />
-                    </Form.Item>
-                  ))}
-                </div>
+              {/* Form Footer */}
+              <div className="flex justify-end gap-4 pt-8 border-t border-gray-200 mt-8">
+                <button
+                  type="button"
+                  onClick={() => router.push('/dashboard/fiyat-listeleri')}
+                  className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition-all"
+                >
+                  İptal
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-8 py-3 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                      Güncelleniyor...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Fiyat Listesi Güncelle
+                    </>
+                  )}
+                </button>
               </div>
-            </div>
-
-            <div className="flex justify-end gap-2 mt-4 sticky bottom-0 bg-white py-4 border-t">
-              <Button onClick={() => router.push('/dashboard/fiyat-listeleri')}>
-                İptal
-              </Button>
-              <Button type="primary" htmlType="submit" loading={loading}>
-                Kaydet
-              </Button>
-            </div>
-          </Form>
-        </div>
-      </Modal>
+            </form>
+          </div>
+        )}
+      </div>
     </div>
   );
 } 

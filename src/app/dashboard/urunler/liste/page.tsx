@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { FaTrash } from "react-icons/fa";
 import { useAuth } from '@/app/context/AuthContext';
 import { getProductRules, ProductRule } from '@/services/api';
@@ -400,11 +401,13 @@ export default function ProductList() {
                     />
                     
                     {imagePreview ? (
-                      <div className="space-y-3">
+                                              <div className="space-y-3">
                         <div className="relative inline-block">
-                          <img 
+                          <Image 
                             src={imagePreview} 
                             alt="Önizleme" 
+                            width={96}
+                            height={96}
                             className="h-24 w-24 object-cover rounded-lg border border-gray-200"
                           />
                           <button
@@ -758,9 +761,11 @@ export default function ProductList() {
               <div className="flex flex-col md:flex-row gap-8">
                 <div className="w-full md:w-1/2">
                   <div className="aspect-[4/3] relative overflow-hidden bg-gray-50 rounded-lg border border-gray-200">
-                    <img 
+                    <Image 
                       src={product.productImage || "https://tebi.io/pashahome/products/ornek-urun.jpg"} 
                       alt={product.name} 
+                      width={400}
+                      height={300}
                       className="w-full h-full object-contain p-4" 
                     />
                   </div>
@@ -1169,243 +1174,253 @@ export default function ProductList() {
     
     return (
       <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl p-6 w-full max-w-6xl shadow-lg relative overflow-y-auto max-h-[90vh]">
-          <button 
-            className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-xl" 
-            onClick={onClose}
-          >
-            &times;
-          </button>
-          
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-black">Ürünü Düzenle</h2>
+        <div className="bg-white rounded-xl w-full max-w-6xl shadow-lg relative overflow-y-auto max-h-[90vh]">
+          {/* Header */}
+          <div className="bg-[#00365a] rounded-t-xl px-6 py-4 relative">
+            <button 
+              className="absolute top-3 right-3 text-white hover:text-gray-200 text-xl" 
+              onClick={onClose}
+            >
+              &times;
+            </button>
+            
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-white">Ürünü Düzenle</h2>
+            </div>
           </div>
           
-          <div className="flex gap-6">
-            {/* Sol taraf - Form */}
-            <div className="w-1/2">
-              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ürün Adı
-                  </label>
-                  <input 
-                    type="text"
-                    name="name"
-                    value={form.name}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
-                    placeholder="Ürün adını girin"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ürün Açıklaması
-                  </label>
-                  <textarea 
-                    name="description"
-                    value={form.description}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900 min-h-[100px]"
-                    placeholder="Ürün açıklamasını girin"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Koleksiyon
-                  </label>
-                  <select 
-                    name="collectionId"
-                    value={form.collectionId}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
-                  >
-                    <option value="">Koleksiyon Seçin</option>
-                    {collections.map(col => (
-                      <option key={col.collectionId} value={col.collectionId}>
-                        {col.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Kural ID
-                  </label>
-                  <select 
-                    name="rule_id"
-                    value={form.rule_id}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
-                  >
-                    <option value="">Kural Seçin</option>
-                    {productRules.map(rule => (
-                      <option key={rule.id} value={rule.id}>
-                        {rule.id} - {rule.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ürün Görseli
-                  </label>
-                  
-                  {/* Drag & Drop Area */}
-                  <div
-                    className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                      dragActive 
-                        ? 'border-blue-500 bg-blue-50' 
-                        : imagePreview 
-                          ? 'border-green-300 bg-green-50' 
-                          : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                    onDragEnter={handleDrag}
-                    onDragLeave={handleDrag}
-                    onDragOver={handleDrag}
-                    onDrop={handleDrop}
-                  >
-                    <input
-                      type="file"
-                      name="productImage"
+          {/* Content */}
+          <div className="p-6">
+            <div className="flex gap-6">
+              {/* Sol taraf - Form */}
+              <div className="w-1/2">
+                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Ürün Adı
+                    </label>
+                    <input 
+                      type="text"
+                      name="name"
+                      value={form.name}
                       onChange={handleChange}
-                      accept="image/*"
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
+                      placeholder="Ürün adını girin"
                     />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Ürün Açıklaması
+                    </label>
+                    <textarea 
+                      name="description"
+                      value={form.description}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900 min-h-[100px]"
+                      placeholder="Ürün açıklamasını girin"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Koleksiyon
+                    </label>
+                    <select 
+                      name="collectionId"
+                      value={form.collectionId}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
+                    >
+                      <option value="">Koleksiyon Seçin</option>
+                      {collections.map(col => (
+                        <option key={col.collectionId} value={col.collectionId}>
+                          {col.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Kural ID
+                    </label>
+                    <select 
+                      name="rule_id"
+                      value={form.rule_id}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
+                    >
+                      <option value="">Kural Seçin</option>
+                      {productRules.map(rule => (
+                        <option key={rule.id} value={rule.id}>
+                          {rule.id} - {rule.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Ürün Görseli
+                    </label>
                     
-                    {imagePreview ? (
-                      <div className="space-y-3">
-                        <div className="relative inline-block">
-                          <img 
-                            src={imagePreview} 
-                            alt="Yeni görsel önizleme" 
-                            className="h-24 w-24 object-cover rounded-lg border border-gray-200"
-                          />
-                          <button
-                            type="button"
-                            onClick={removeImage}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
-                          >
-                            ×
-                          </button>
+                    {/* Drag & Drop Area */}
+                    <div
+                      className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                        dragActive 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : imagePreview 
+                            ? 'border-green-300 bg-green-50' 
+                            : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                      onDragEnter={handleDrag}
+                      onDragLeave={handleDrag}
+                      onDragOver={handleDrag}
+                      onDrop={handleDrop}
+                    >
+                      <input
+                        type="file"
+                        name="productImage"
+                        onChange={handleChange}
+                        accept="image/*"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      
+                      {imagePreview ? (
+                        <div className="space-y-3">
+                          <div className="relative inline-block">
+                            <Image 
+                              src={imagePreview} 
+                              alt="Yeni görsel önizleme" 
+                              width={96}
+                              height={96}
+                              className="h-24 w-24 object-cover rounded-lg border border-gray-200"
+                            />
+                            <button
+                              type="button"
+                              onClick={removeImage}
+                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
+                            >
+                              ×
+                            </button>
+                          </div>
+                          <div>
+                            <p className="text-sm text-green-600 font-medium">✓ Yeni görsel seçildi</p>
+                            <p className="text-xs text-gray-500">Güncellemek için "Güncelle" butonuna tıklayın</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm text-green-600 font-medium">✓ Yeni görsel seçildi</p>
-                          <p className="text-xs text-gray-500">Güncellemek için "Güncelle" butonuna tıklayın</p>
+                      ) : (
+                        <div className="space-y-3">
+                          <div className="mx-auto w-12 h-12 text-gray-400">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 48 48">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-gray-600">
+                              <span className="font-medium text-blue-600">Yeni görsel seçmek için tıklayın</span> ya da sürükleyip bırakın
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF - Max 10MB</p>
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <div className="mx-auto w-12 h-12 text-gray-400">
-                          <svg fill="none" stroke="currentColor" viewBox="0 0 48 48">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="text-gray-600">
-                            <span className="font-medium text-blue-600">Yeni görsel seçmek için tıklayın</span> ya da sürükleyip bırakın
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF - Max 10MB</p>
-                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Mevcut görsel */}
+                    {product?.productImage && !imagePreview && (
+                      <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <p className="text-xs font-medium text-gray-700 mb-2">Mevcut görsel:</p>
+                        <Image 
+                          src={product.productImage} 
+                          alt={product.name} 
+                          width={80}
+                          height={80}
+                          className="h-20 w-20 object-cover rounded-md border border-gray-300"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Değiştirmek için yukarıya yeni bir görsel yükleyin</p>
                       </div>
                     )}
                   </div>
                   
-                  {/* Mevcut görsel */}
-                  {product?.productImage && !imagePreview && (
-                    <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <p className="text-xs font-medium text-gray-700 mb-2">Mevcut görsel:</p>
-                      <img 
-                        src={product.productImage} 
-                        alt={product.name} 
-                        className="h-20 w-20 object-cover rounded-md border border-gray-300"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Değiştirmek için yukarıya yeni bir görsel yükleyin</p>
-                    </div>
+                  {error && (
+                    <div className="text-red-500 text-sm mt-1">{error}</div>
                   )}
-                </div>
-                
-                {error && (
-                  <div className="text-red-500 text-sm mt-1">{error}</div>
-                )}
-                
-                <div className="flex justify-between items-center mt-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowDeleteConfirm(true)}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center gap-2"
-                  >
-                    <FaTrash size={14} />
-                    Ürünü Sil
-                  </button>
                   
-                  <div className="flex gap-2">
+                  <div className="flex justify-between items-center mt-4">
                     <button
                       type="button"
-                      onClick={onClose}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center gap-2"
                     >
-                      İptal
+                      <FaTrash size={14} />
+                      Ürünü Sil
                     </button>
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-70"
-                    >
-                      {loading ? "Güncelleniyor..." : "Güncelle"}
-                    </button>
+                    
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={onClose}
+                        className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                      >
+                        İptal
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-70"
+                      >
+                        {loading ? "Güncelleniyor..." : "Güncelle"}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </form>
-            </div>
-            
-            {/* Sağ taraf - Kural Tablosu */}
-            <div className="w-1/2">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Kural ID Açıklamaları</h3>
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
-                <div className="max-h-[500px] overflow-y-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-50 sticky top-0">
-                      <tr>
-                        <th className="px-3 py-2 text-left font-medium text-gray-700 border-b">ID</th>
-                        <th className="px-3 py-2 text-left font-medium text-gray-700 border-b">Kural Açıklaması</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {productRules.map(rule => (
-                        <tr key={rule.id} className="hover:bg-gray-50">
-                          <td className="px-3 py-3 font-medium text-blue-600">{rule.id}</td>
-                          <td className="px-3 py-3">
-                            <div className="space-y-1">
-                              <div className="font-medium text-gray-900">{rule.name}</div>
-                              <div className="text-xs text-gray-600">• {rule.canHaveFringe ? 'Saçaklı/Saçaksız seçenekler' : 'Saçak yok'}</div>
-                              {rule.sizeOptions && rule.sizeOptions.length > 0 && (
-                                <div className="text-xs text-gray-600">
-                                  • {rule.sizeOptions.some(size => size.isOptionalHeight) 
-                                    ? 'Standart En + Opsiyonel Boy' 
-                                    : rule.sizeOptions.length === 1 
-                                      ? `Tek Ebat: ${rule.sizeOptions[0].width}×${rule.sizeOptions[0].height}` 
-                                      : rule.sizeOptions.map(size => `${size.width}×${size.isOptionalHeight ? 'Ops' : size.height}`).join(', ')}
-                                </div>
-                              )}
-                              {rule.cutTypes && rule.cutTypes.length > 0 && (
-                                <div className="text-xs text-gray-600">
-                                  • Kesim: {rule.cutTypes.map(cut => cut.name.charAt(0).toUpperCase() + cut.name.slice(1)).join(', ')}
-                                </div>
-                              )}
-                              {rule.description && (
-                                <div className="text-xs text-gray-600">• {rule.description}</div>
-                              )}
-                            </div>
-                          </td>
+                </form>
+              </div>
+              
+              {/* Sağ taraf - Kural Tablosu */}
+              <div className="w-1/2">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Kural ID Açıklamaları</h3>
+                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  <div className="max-h-[500px] overflow-y-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 sticky top-0">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700 border-b">ID</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700 border-b">Kural Açıklaması</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {productRules.map(rule => (
+                          <tr key={rule.id} className="hover:bg-gray-50">
+                            <td className="px-3 py-3 font-medium text-blue-600">{rule.id}</td>
+                            <td className="px-3 py-3">
+                              <div className="space-y-1">
+                                <div className="font-medium text-gray-900">{rule.name}</div>
+                                <div className="text-xs text-gray-600">• {rule.canHaveFringe ? 'Saçaklı/Saçaksız seçenekler' : 'Saçak yok'}</div>
+                                {rule.sizeOptions && rule.sizeOptions.length > 0 && (
+                                  <div className="text-xs text-gray-600">
+                                    • {rule.sizeOptions.some(size => size.isOptionalHeight) 
+                                      ? 'Standart En + Opsiyonel Boy' 
+                                      : rule.sizeOptions.length === 1 
+                                        ? `Tek Ebat: ${rule.sizeOptions[0].width}×${rule.sizeOptions[0].height}` 
+                                        : rule.sizeOptions.map(size => `${size.width}×${size.isOptionalHeight ? 'Ops' : size.height}`).join(', ')}
+                                  </div>
+                                )}
+                                {rule.cutTypes && rule.cutTypes.length > 0 && (
+                                  <div className="text-xs text-gray-600">
+                                    • Kesim: {rule.cutTypes.map(cut => cut.name.charAt(0).toUpperCase() + cut.name.slice(1)).join(', ')}
+                                  </div>
+                                )}
+                                {rule.description && (
+                                  <div className="text-xs text-gray-600">• {rule.description}</div>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1414,8 +1429,8 @@ export default function ProductList() {
       </div>
     );
   }
-
-  return (
+    
+    return (
     <div className="p-6 bg-white min-h-screen">
       <div className="mb-6">
         <div className="flex justify-between items-center mb-3">
@@ -1557,7 +1572,7 @@ export default function ProductList() {
                 )}
               </div>
             )}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
+            <div className="flex flex-wrap justify-center lg:justify-start gap-6 p-6">
               {sortedProducts.map((product) => {
                 // Ürünün boyut seçeneklerinde is_optional_height true olan varsa kesim ürünü
                 const hasOptionalHeight = product.sizeOptions && product.sizeOptions.some((size: any) => size.is_optional_height === true);
@@ -1565,9 +1580,9 @@ export default function ProductList() {
                 const statusText = isCustomCut ? 'KESİM' : 'HAZIR';
                 
                 return (
-                  <div key={product.productId} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow relative">
+                  <div key={product.productId} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow relative" style={{ width: '350px', height: '550px' }}>
                     {/* Koleksiyon adı - sol üst */}
-                    <div className="absolute top-2 left-2 z-10">
+                    <div className="absolute top-3 left-3 z-10">
                       <span className="bg-[#00365a] text-white text-xs px-2 py-1 rounded-md font-medium">
                         {product.collection?.name || collections.find(c => c.collectionId === product.collectionId)?.name || "SERİSİ"}
                       </span>
@@ -1575,63 +1590,60 @@ export default function ProductList() {
                     
                     {/* Makas işareti - sağ üst */}
                     {isCustomCut && (
-                      <div className="absolute top-2 right-2 z-10">
+                      <div className="absolute top-3 right-3 z-10">
                         <span className="text-gray-600 text-xl">✂️</span>
                       </div>
                     )}
                     
-                    {/* Ürün görseli */}
-                    <div className="aspect-[4/3] relative overflow-hidden bg-gray-50 rounded-lg border border-gray-200">
-                      <img 
+                    {/* Ürün görseli - daha büyük alan */}
+                    <div className="relative overflow-hidden bg-gray-50" style={{ height: '400px' }}>
+                      <Image 
                         src={product.productImage || "https://tebi.io/pashahome/products/ornek-urun.jpg"} 
                         alt={product.name} 
-                        className="w-full h-full object-contain p-4" 
+                        width={350}
+                        height={400}
+                        className="w-full h-full object-contain p-3" 
                       />
                     </div>
                     
-                    {/* Ürün bilgileri */}
-                    <div className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <h3 className="text-black font-medium text-sm mb-1">
-                            {statusText} {product.name}
-                          </h3>
-                          <div className="text-xs text-gray-500 uppercase tracking-wide">
-                            {product.collection?.name || collections.find(c => c.collectionId === product.collectionId)?.name || "-"}
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-2 ml-2">
+                    {/* Ürün bilgileri - kompakt alan */}
+                    <div className="p-4 h-[150px] flex flex-col justify-between">
+                      <div className="flex-1">
+                        <h3 className="text-black font-medium text-sm mb-2 line-clamp-2">
+                          {statusText} {product.name}
+                        </h3>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <button 
+                          className="flex-1 px-3 py-2 bg-[#00365a] text-white rounded-md flex items-center justify-center gap-2 text-sm shadow-sm hover:bg-[#004170] transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedProductId(product.productId);
+                            setDetailModalOpen(true);
+                          }}
+                          title="Ürün Detayı"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                          </svg>
+                          Sepete Ekle
+                        </button>
+                        {isAdmin && (
                           <button 
-                            className="px-3 py-2 bg-[#00365a] text-white rounded-md flex items-center gap-2 text-sm shadow-sm hover:bg-[#004170] transition-colors"
+                            className="w-10 h-10 bg-green-600 text-white rounded-md flex items-center justify-center text-xs shadow-sm hover:bg-green-700 transition-colors"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setSelectedProductId(product.productId);
-                              setDetailModalOpen(true);
+                              setSelectedProductForUpdate(product);
+                              setUpdateModalOpen(true);
                             }}
-                            title="Ürün Detayı"
+                            title="Ürünü Güncelle"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                             </svg>
-                            Sepete Ekle
                           </button>
-                          {isAdmin && (
-                            <button 
-                              className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-xs shadow-sm hover:bg-green-700 transition-colors"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedProductForUpdate(product);
-                                setUpdateModalOpen(true);
-                              }}
-                              title="Ürünü Güncelle"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                              </svg>
-                            </button>
-                          )}
-                        </div>
+                        )}
                       </div>
                     </div>
                   </div>

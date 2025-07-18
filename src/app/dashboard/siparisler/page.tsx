@@ -703,7 +703,7 @@ const Siparisler = () => {
                     </div>
 
                     {order.notes && (
-                      <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                         <span className="text-sm text-yellow-800">
                           <strong>Not:</strong> {order.notes}
                         </span>
@@ -805,34 +805,47 @@ const Siparisler = () => {
         {/* Sipariş Detay Modal */}
         {selectedOrder && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-6">
+            <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
+              {/* Modal Header */}
+              <div className="bg-[#00365a] px-6 py-4 relative">
+                <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="text-2xl font-bold text-gray-900">
+                    <h3 className="text-2xl font-bold text-white">
                       Sipariş Detayları
                     </h3>
+                    <p className="text-blue-100 text-sm mt-1">
+                      Sipariş No: {selectedOrder.id}
+                    </p>
                   </div>
                   <button
                     onClick={() => setSelectedOrder(null)}
-                    className="text-gray-400 hover:text-gray-600 text-2xl"
+                    className="text-white hover:text-blue-200 text-2xl transition-colors"
                   >
                     ×
                   </button>
                 </div>
+              </div>
 
+              {/* Modal Body */}
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Sol taraf - Sipariş Bilgileri */}
                   <div className="space-y-6">
-                    <div>
-                      <h4 className="text-lg font-semibold text-gray-900 mb-3">Sipariş Bilgileri</h4>
-                      <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Sipariş No:</span>
-                          <span className="text-gray-900">{selectedOrder.id}</span>
+                    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                      <h4 className="text-lg font-semibold text-[#00365a] mb-4 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                          <path fillRule="evenodd" d="M4 5a2 2 0 012-2v1a1 1 0 102 0V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm2.5 7a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" clipRule="evenodd" />
+                        </svg>
+                        Sipariş Bilgileri
+                      </h4>
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                          <span className="text-gray-600 font-medium">Sipariş No:</span>
+                          <span className="text-gray-900 font-mono text-sm bg-gray-100 px-2 py-1 rounded">{selectedOrder.id.slice(0, 8)}...</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Tarih:</span>
+                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                          <span className="text-gray-600 font-medium">Tarih:</span>
                           <span className="text-gray-900">
                             {new Date(selectedOrder.created_at).toLocaleDateString('tr-TR', {
                               year: 'numeric',
@@ -843,15 +856,15 @@ const Siparisler = () => {
                             })}
                           </span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Durum:</span>
+                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                          <span className="text-gray-600 font-medium">Durum:</span>
                           <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[selectedOrder.status]}`}>
                             {statusLabels[selectedOrder.status]}
                           </span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Toplam Tutar:</span>
-                          <span className="font-semibold text-[#00365a]">
+                        <div className="flex justify-between items-center py-2">
+                          <span className="text-gray-600 font-medium">Toplam Tutar:</span>
+                          <span className="font-bold text-[#00365a] text-lg">
                             {parseFloat(selectedOrder.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                           </span>
                         </div>
@@ -860,57 +873,70 @@ const Siparisler = () => {
 
                     {/* Admin için müşteri bilgileri */}
                     {isAdmin && selectedOrder.user && (
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-900 mb-3">Müşteri Bilgileri</h4>
-                        <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Ad Soyad:</span>
+                      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                        <h4 className="text-lg font-semibold text-[#00365a] mb-4 flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                          </svg>
+                          Müşteri Bilgileri
+                        </h4>
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span className="text-gray-600 font-medium">Ad Soyad:</span>
                             <span className="text-gray-900">{selectedOrder.user.name} {selectedOrder.user.surname}</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">E-posta:</span>
+                          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span className="text-gray-600 font-medium">E-posta:</span>
                             <span className="text-gray-900">{selectedOrder.user.email}</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Telefon:</span>
+                          <div className="flex justify-between items-center py-2">
+                            <span className="text-gray-600 font-medium">Telefon:</span>
                             <span className="text-gray-900">{selectedOrder.user.phone}</span>
                           </div>
                         </div>
                       </div>
                     )}
 
-                    <div>
-                      <h4 className="text-lg font-semibold text-gray-900 mb-3">Mağaza Bilgileri</h4>
-                      <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Mağaza Adı:</span>
-                          <span className="text-gray-900">{selectedOrder.store_name}</span>
+                    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                      <h4 className="text-lg font-semibold text-[#00365a] mb-4 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm3 6a2 2 0 11-4 0 2 2 0 014 0zm7-1a1 1 0 10-2 0 1 1 0 002 0zm-1 3a1 1 0 10-2 0 1 1 0 002 0z" clipRule="evenodd" />
+                        </svg>
+                        Mağaza Bilgileri
+                      </h4>
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                          <span className="text-gray-600 font-medium">Mağaza Adı:</span>
+                          <span className="text-gray-900 font-semibold">{selectedOrder.store_name}</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Vergi No:</span>
-                          <span className="text-gray-900">{selectedOrder.store_tax_number}</span>
+                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                          <span className="text-gray-600 font-medium">Vergi No:</span>
+                          <span className="text-gray-900 font-mono text-sm">{selectedOrder.store_tax_number}</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Telefon:</span>
+                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                          <span className="text-gray-600 font-medium">Telefon:</span>
                           <span className="text-gray-900">{selectedOrder.store_phone}</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">E-posta:</span>
+                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                          <span className="text-gray-600 font-medium">E-posta:</span>
                           <span className="text-gray-900">{selectedOrder.store_email}</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Adres:</span>
-                          <span className="text-gray-900">{selectedOrder.delivery_address}</span>
+                        <div className="flex justify-between items-center py-2">
+                          <span className="text-gray-600 font-medium">Adres:</span>
+                          <span className="text-gray-900 text-right max-w-xs">{selectedOrder.delivery_address}</span>
                         </div>
                       </div>
                     </div>
 
                     {selectedOrder.notes && (
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-900 mb-3">Sipariş Notu</h4>
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                          <p className="text-yellow-800">{selectedOrder.notes}</p>
-                        </div>
+                      <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-6 shadow-sm">
+                        <h4 className="text-lg font-semibold text-amber-700 mb-3 flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                          </svg>
+                          Sipariş Notu
+                        </h4>
+                        <p className="text-amber-800 bg-white bg-opacity-70 p-3 rounded-lg">{selectedOrder.notes}</p>
                       </div>
                     )}
 
@@ -919,7 +945,15 @@ const Siparisler = () => {
 
                   {/* Sağ taraf - Ürünler */}
                   <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Sipariş Edilen Ürünler</h4>
+                    <div className="mb-6">
+                      <h4 className="text-lg font-semibold text-[#00365a] mb-2 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 2L3 7v11a2 2 0 002 2h10a2 2 0 002-2V7l-7-5zM6 12a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1z" clipRule="evenodd" />
+                        </svg>
+                        Sipariş Edilen Ürünler
+                      </h4>
+                      <p className="text-gray-500 text-sm">{selectedOrder.items.length} ürün</p>
+                    </div>
                     <div className="space-y-4">
                       {selectedOrder.items.map((item) => (
                         <div key={item.id} className="border border-gray-200 rounded-lg p-4">
@@ -1412,10 +1446,10 @@ const Siparisler = () => {
                   </div>
                 </div>
 
-                <div className="mt-6 pt-6 border-t border-gray-200 flex justify-end">
+                <div className="mt-6 pt-6 border-t border-gray-200 flex justify-end gap-3">
                   <button
                     onClick={() => setSelectedOrder(null)}
-                    className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                    className="px-6 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors font-medium"
                   >
                     Kapat
                   </button>

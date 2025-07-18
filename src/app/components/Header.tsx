@@ -6,7 +6,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
-import FinancialSummaryMobile from '../components/FinancialSummaryMobile';
 import { FaUser, FaSignOutAlt, FaCog, FaShoppingCart } from 'react-icons/fa';
 import { getMyBalance, BalanceInfo } from '../../services/api';
 
@@ -307,16 +306,6 @@ const Header = ({ title, user }: HeaderProps) => {
       adminOnly: false,
     },
     {
-      name: 'Analiz',
-      href: '/dashboard/analizler',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-          <path d="M18.375 2.25c-1.035 0-1.875.84-1.875 1.875v15.75c0 1.035.84 1.875 1.875 1.875h.75c1.035 0 1.875-.84 1.875-1.875V4.125c0-1.036-.84-1.875-1.875-1.875h-.75zM9.75 8.625c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-.75a1.875 1.875 0 01-1.875-1.875V8.625zM3 13.125c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v6.75c0 1.035-.84 1.875-1.875 1.875h-.75A1.875 1.875 0 013 19.875v-6.75z" />
-        </svg>
-      ),
-      adminOnly: true,
-    },
-    {
       name: 'Ürün Kuralları',
       href: '/dashboard/urun-kurallari',
       icon: (
@@ -569,17 +558,6 @@ const Header = ({ title, user }: HeaderProps) => {
           </div>
         </div>
         
-        {/* Mobil finansal özet - Sadece mağaza kullanıcıları için */}
-        {authUser?.store && (
-          <FinancialSummaryMobile 
-            bakiye={financialInfo.bakiye}
-            acikHesapLimiti={financialInfo.acikHesapLimiti}
-            limitsizAcikHesap={financialInfo.limitsizAcikHesap}
-            isLoading={isLoadingBalance}
-            onRefresh={refreshBalance}
-          />
-        )}
-        
         {/* Desktop navigasyon */}
         <nav className="hidden lg:block py-2">
           <div className="flex justify-center gap-1">
@@ -593,7 +571,10 @@ const Header = ({ title, user }: HeaderProps) => {
                 <>
                   {/* Normal menü öğeleri */}
                   {regularNavItems.map((item) => {
-                    const isActive = pathname === item.href;
+                    // Analizlerim için özel aktif kontrol - hem kullanici-analizleri hem analizler sayfalarında aktif olsun
+                    const isAnalysisPage = item.href === '/dashboard/kullanici-analizleri' && 
+                                         (pathname === '/dashboard/kullanici-analizleri' || pathname === '/dashboard/analizler');
+                    const isActive = isAnalysisPage || pathname === item.href;
                     return (
                       <Link
                         key={item.name}
@@ -720,12 +701,11 @@ const Header = ({ title, user }: HeaderProps) => {
               {/* Navigasyon menüsü - Enhanced */}
               <div className="flex-1 flex-shrink-0 overflow-y-auto bg-gray-50" style={{minHeight: '200px'}}>
                 <nav className="p-6 space-y-3">
-                  <div className="mb-4">
-                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Navigasyon</h3>
-                    <div className="text-xs text-gray-400">Toplam menü: {navigation.length}</div>
-                  </div>
                   {navigation.map((item) => {
-                    const isActive = pathname === item.href;
+                    // Analizlerim için özel aktif kontrol - hem kullanici-analizleri hem analizler sayfalarında aktif olsun
+                    const isAnalysisPage = item.href === '/dashboard/kullanici-analizleri' && 
+                                         (pathname === '/dashboard/kullanici-analizleri' || pathname === '/dashboard/analizler');
+                    const isActive = isAnalysisPage || pathname === item.href;
                     // Admin olmayan kullanıcılar için admin-only öğeleri gizle
                     if (!isAdmin && item.adminOnly === true) return null;
                     return (
