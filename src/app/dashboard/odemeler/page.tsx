@@ -7,25 +7,23 @@ import { processPayment, PaymentRequest } from '../../../services/api';
 
 interface Payment {
   id: string;
-  paymentNumber: string;
-  status: 'success' | 'pending' | 'failed';
+  sellerReference: string;
+  apiReferenceNumber: string;
   amount: number;
-  currency: string;
-  customerName: string;
-  customerSurname: string;
-  processedBy: string;
   description: string;
+  status: 'COMPLETED' | 'FAILED';
+  paymentDate: string;
+  octetPaymentId: string;
   createdAt: string;
-  paymentMethod: string;
-  transactionId?: string;
-  storeName?: string;
-  cardNumber?: string;
-  inTransactionId?: string;
-  isRefunded?: boolean;
-  is3D?: boolean;
+  updatedAt: string;
+  store: {
+    store_id: string;
+    kurum_adi: string;
+    vergi_numarasi?: string;
+    telefon?: string;
+    eposta?: string;
+  };
 }
-
-
 
 interface Store {
   store_id: string;
@@ -49,23 +47,36 @@ interface Store {
   updated_at: string;
 }
 
+interface PaginationInfo {
+  page: number;
+  limit: number;
+  totalCount: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+interface PaymentSummary {
+  completedCount: number;
+  failedCount: number;
+  totalAmount: number;
+  successRate: number;
+}
+
 const statusLabels = {
-  success: 'Başarılı',
-  pending: 'Beklemede',
-  failed: 'Başarısız'
+  COMPLETED: 'Başarılı',
+  FAILED: 'Başarısız'
 };
 
 const statusColors = {
-  success: 'bg-green-100 text-green-800',
-  pending: 'bg-yellow-100 text-yellow-800', 
-  failed: 'bg-red-100 text-red-800'
+  COMPLETED: 'bg-green-100 text-green-800',
+  FAILED: 'bg-red-100 text-red-800'
 };
 
 export default function PaymentsPage() {
   const { user, token, isAdmin } = useAuth();
   const router = useRouter();
   const [payments, setPayments] = useState<Payment[]>([]);
-
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -75,7 +86,12 @@ export default function PaymentsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [selectedStoreFilter, setSelectedStoreFilter] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [pagination, setPagination] = useState<PaginationInfo | null>(null);
+  const [summary, setSummary] = useState<PaymentSummary | null>(null);
+  const itemsPerPage = 20;
 
   // Ödeme formu state'leri
   const [paymentForm, setPaymentForm] = useState({
@@ -91,7 +107,7 @@ export default function PaymentsPage() {
     }
     fetchPayments();
     initializeStores();
-  }, [user, router, isAdmin]);
+  }, [user, router, isAdmin, currentPage, statusFilter, selectedStoreFilter, startDate, endDate]);
 
   const initializeStores = async () => {
     if (isAdmin) {
@@ -112,16 +128,14 @@ export default function PaymentsPage() {
         } catch (error) {
           console.error('localStorage\'dan kullanıcı verisi alınırken hata:', error);
           // Fallback olarak AuthContext'ten al
-                  if (user.store) {
-          setStores([user.store]);
-          setPaymentForm(prev => ({ ...prev, storeId: user.store!.store_id }));
-        }
+          if (user.store) {
+            setStores([user.store]);
+            setPaymentForm(prev => ({ ...prev, storeId: user.store!.store_id }));
+          }
         }
       }
     }
   };
-
-
 
   const fetchStores = async () => {
     try {
@@ -166,154 +180,88 @@ export default function PaymentsPage() {
         return;
       }
 
-      // API çağrısı (şimdilik dummy data kullanacağız)
-      // const response = await fetch('https://pasha-backend-production.up.railway.app/api/payments', {
-      //   headers: {
-      //     'Authorization': `Bearer ${token}`,
-      //     'Content-Type': 'application/json'
-      //   }
-      // });
+      // API URL'i belirleme
+      const baseUrl = 'https://pasha-backend-production.up.railway.app';
+      let apiUrl = '';
+      
+      if (isAdmin) {
+        apiUrl = `${baseUrl}/api/admin/payments`;
+      } else {
+        apiUrl = `${baseUrl}/api/payments/my-store-payments`;
+      }
 
-      // Dummy data
-      const dummyPayments: Payment[] = [
-        {
-          id: '1',
-          paymentNumber: 'PAY-2024-001',
-          status: 'success',
-          amount: 15750.50,
-          currency: 'TRY',
-          customerName: 'Ahmet',
-          customerSurname: 'Yılmaz',
-          processedBy: 'Admin User',
-          description: 'Halı siparişi ödemesi - Sipariş #ORD-2024-156',
-          createdAt: '2024-01-15T10:30:00Z',
-          paymentMethod: 'Kredi Kartı',
-          transactionId: 'A661DC40K1F66K418BK80',
-          storeName: 'İstanbul Mağazası',
-          cardNumber: '552609XXXXXX5688',
-          inTransactionId: '2fa2c318d8674243aa6c2e5131adc23b',
-          isRefunded: false,
-          is3D: true
-        },
-        {
-          id: '2',
-          paymentNumber: 'PAY-2024-002',
-          status: 'success',
-          amount: 8920.00,
-          currency: 'TRY',
-          customerName: 'Fatma',
-          customerSurname: 'Kaya',
-          processedBy: 'Store Manager',
-          description: 'Kilim siparişi peşin ödemesi',
-          createdAt: '2024-01-14T14:45:00Z',
-          paymentMethod: 'Nakit',
-          storeName: 'Ankara Şubesi',
-          isRefunded: false
-        },
-        {
-          id: '3',
-          paymentNumber: 'PAY-2024-003',
-          status: 'pending',
-          amount: 25300.75,
-          currency: 'TRY',
-          customerName: 'Mehmet',
-          customerSurname: 'Özkan',
-          processedBy: 'System',
-          description: 'Büyük sipariş taksit ödemesi - 2/4',
-          createdAt: '2024-01-13T09:15:00Z',
-          paymentMethod: 'Banka Transferi',
-          transactionId: 'TXN-456789012',
-          storeName: 'İzmir Şubesi'
-        },
-        {
-          id: '4',
-          paymentNumber: 'PAY-2024-004',
-          status: 'failed',
-          amount: 12150.25,
-          currency: 'TRY',
-          customerName: 'Ayşe',
-          customerSurname: 'Demir',
-          processedBy: 'Admin User',
-          description: 'Karttan ödeme alınamadı - limit aşımı',
-          createdAt: '2024-01-12T16:20:00Z',
-          paymentMethod: 'Kredi Kartı',
-          transactionId: 'TXN-987654321',
-          storeName: 'Bursa Mağazası'
-        },
-        {
-          id: '5',
-          paymentNumber: 'PAY-2024-005',
-          status: 'success',
-          amount: 6780.00,
-          currency: 'TRY',
-          customerName: 'Ali',
-          customerSurname: 'Çelik',
-          processedBy: 'Store Manager',
-          description: 'Küçük halı siparişi ödemesi',
-          createdAt: '2024-01-11T11:30:00Z',
-          paymentMethod: 'Kredi Kartı',
-          transactionId: 'B772ED51L2G77L529CL91',
-          storeName: 'Antalya Şubesi',
-          cardNumber: '424242XXXXXX4242',
-          inTransactionId: '3fb3d429e9785354bb7d3f6242bdc34c',
-          isRefunded: false,
-          is3D: true
-        },
-        {
-          id: '6',
-          paymentNumber: 'PAY-2024-006',
-          status: 'success',
-          amount: 18650.80,
-          currency: 'TRY',
-          customerName: 'Zeynep',
-          customerSurname: 'Arslan',
-          processedBy: 'Admin User',
-          description: 'Vintage koleksiyon halı ödemesi',
-          createdAt: '2024-01-10T13:45:00Z',
-          paymentMethod: 'Banka Transferi',
-          transactionId: 'TXN-654321098',
-          storeName: 'İstanbul Mağazası'
-        },
-        {
-          id: '7',
-          paymentNumber: 'PAY-2024-007',
-          status: 'pending',
-          amount: 4520.50,
-          currency: 'TRY',
-          customerName: 'Hasan',
-          customerSurname: 'Polat',
-          processedBy: 'System',
-          description: 'Otomatik ödeme beklemede',
-          createdAt: '2024-01-09T08:00:00Z',
-          paymentMethod: 'Otomatik Ödeme',
-          storeName: 'Adana Şubesi'
-        },
-        {
-          id: '8',
-          paymentNumber: 'PAY-2024-008',
-          status: 'success',
-          amount: 31200.00,
-          currency: 'TRY',
-          customerName: 'Müjgan',
-          customerSurname: 'Yıldız',
-          processedBy: 'Store Manager',
-          description: 'Toplu sipariş peşin ödemesi - 5 adet halı',
-          createdAt: '2024-01-08T15:20:00Z',
-          paymentMethod: 'Nakit',
-          storeName: 'Konya Mağazası'
+      // Query parametrelerini oluşturma
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
+        sortBy: 'createdAt',
+        sortOrder: 'desc'
+      });
+
+      if (statusFilter) {
+        params.append('status', statusFilter);
+      }
+
+      if (selectedStoreFilter && isAdmin) {
+        params.append('storeId', selectedStoreFilter);
+      }
+
+      if (startDate) {
+        params.append('startDate', startDate);
+      }
+
+      if (endDate) {
+        params.append('endDate', endDate);
+      }
+
+      const response = await fetch(`${apiUrl}?${params.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
-      ];
+      });
 
-      setPayments(dummyPayments);
+      if (!response.ok) {
+        if (response.status === 401) {
+          router.push('/');
+          return;
+        }
+        throw new Error(`API Hatası: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.data) {
+        setPayments(data.data.payments || []);
+        setPagination(data.data.pagination);
+        setSummary(data.data.summary);
+      } else {
+        throw new Error(data.message || 'Ödemeler getirilemedi');
+      }
     } catch (error: any) {
       console.error('Ödeme verileri alınırken hata:', error);
       setError(error.message || 'Bir hata oluştu');
+      
+      // Hata durumunda boş liste ve örnek pagination/summary
+      setPayments([]);
+      setPagination({
+        page: currentPage,
+        limit: itemsPerPage,
+        totalCount: 0,
+        totalPages: 0,
+        hasNext: false,
+        hasPrev: false
+      });
+      setSummary({
+        completedCount: 0,
+        failedCount: 0,
+        totalAmount: 0,
+        successRate: 0
+      });
     } finally {
       setLoading(false);
     }
   };
-
-
 
   const handlePaymentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -380,7 +328,7 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
         <!DOCTYPE html>
         <html>
           <head>
-            <title>Ödeme Detayı - ${payment.paymentNumber}</title>
+            <title>Ödeme Detayı - ${payment.sellerReference}</title>
             <meta charset="utf-8">
             <style>
               * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -418,12 +366,6 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
                 padding-bottom: 8px; 
                 font-weight: bold;
               }
-              .info-grid { 
-                display: grid; 
-                grid-template-columns: 1fr 1fr; 
-                gap: 15px; 
-                margin-bottom: 15px; 
-              }
               .info-item { 
                 display: flex; 
                 justify-content: space-between; 
@@ -437,21 +379,14 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
                 color: #000; 
                 font-weight: bold;
               }
-              .status-success { 
+              .status-COMPLETED { 
                 background: #f0f0f0; 
                 color: #000; 
                 padding: 4px 8px; 
                 border: 1px solid #000;
                 font-weight: bold;
               }
-              .status-pending { 
-                background: #f5f5f5; 
-                color: #000; 
-                padding: 4px 8px; 
-                border: 1px solid #000;
-                font-weight: bold;
-              }
-              .status-failed { 
+              .status-FAILED { 
                 background: #e5e5e5; 
                 color: #000; 
                 padding: 4px 8px; 
@@ -479,11 +414,11 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
             </style>
           </head>
           <body>
-            <!-- Header -->
             <div class="header">
               <h1>ÖDEME DETAYI</h1>
-              <p>Ödeme No: <strong>${payment.paymentNumber}</strong></p>
-              <p>Tarih: <strong>${new Date(payment.createdAt).toLocaleDateString('tr-TR', {
+              <p>Satıcı Referansı: <strong>${payment.sellerReference}</strong></p>
+              <p>API Referansı: <strong>${payment.apiReferenceNumber}</strong></p>
+              <p>Tarih: <strong>${new Date(payment.paymentDate || payment.createdAt).toLocaleDateString('tr-TR', {
                 year: 'numeric',
                 month: 'long', 
                 day: 'numeric',
@@ -492,7 +427,6 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
               })}</strong></p>
             </div>
 
-            <!-- İşlem Bilgileri -->
             <div class="section">
               <h3>İşlem Bilgileri</h3>
               <div class="info-item">
@@ -504,70 +438,45 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
                 <span class="amount">${payment.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
               </div>
               <div class="info-item">
-                <span><strong>Ödeme Yöntemi:</strong></span>
-                <span>${payment.paymentMethod}</span>
+                <span><strong>Octet Ödeme ID:</strong></span>
+                <span style="font-family: monospace; font-size: 12px;">${payment.octetPaymentId}</span>
               </div>
-              ${payment.transactionId ? `
-                <div class="info-item">
-                  <span><strong>Transaction Id:</strong></span>
-                  <span style="font-family: monospace; font-size: 12px;">${payment.transactionId}</span>
-                </div>
-              ` : ''}
-              ${payment.inTransactionId ? `
-                <div class="info-item">
-                  <span><strong>InTransaction Id:</strong></span>
-                  <span style="font-family: monospace; font-size: 12px;">${payment.inTransactionId}</span>
-                </div>
-              ` : ''}
-              ${payment.cardNumber ? `
-                <div class="info-item">
-                  <span><strong>Kart No:</strong></span>
-                  <span style="font-family: monospace;">${payment.cardNumber}</span>
-                </div>
-              ` : ''}
-              ${payment.is3D !== undefined ? `
-                <div class="info-item">
-                  <span><strong>3D mi yapıldı?:</strong></span>
-                  <span><strong>${payment.is3D ? 'Evet' : 'Hayır'}</strong></span>
-                </div>
-              ` : ''}
-              ${payment.isRefunded !== undefined ? `
-                <div class="info-item">
-                  <span><strong>İade Yapıldı mı?:</strong></span>
-                  <span><strong>${payment.isRefunded ? 'Evet' : 'Hayır'}</strong></span>
-                </div>
-              ` : ''}
             </div>
 
-            <!-- Müşteri Bilgileri -->
             <div class="section">
-              <h3>Müşteri Bilgileri</h3>
+              <h3>Mağaza Bilgileri</h3>
               <div class="info-item">
-                <span><strong>Müşteri:</strong></span>
-                <span>${payment.customerName} ${payment.customerSurname}</span>
+                <span><strong>Mağaza:</strong></span>
+                <span>${payment.store.kurum_adi}</span>
               </div>
-              <div class="info-item">
-                <span><strong>İşlem Yapan:</strong></span>
-                <span>${payment.processedBy}</span>
-              </div>
-              ${payment.storeName ? `
+              ${payment.store.vergi_numarasi ? `
                 <div class="info-item">
-                  <span><strong>Mağaza:</strong></span>
-                  <span>${payment.storeName}</span>
+                  <span><strong>Vergi Numarası:</strong></span>
+                  <span>${payment.store.vergi_numarasi}</span>
+                </div>
+              ` : ''}
+              ${payment.store.telefon ? `
+                <div class="info-item">
+                  <span><strong>Telefon:</strong></span>
+                  <span>${payment.store.telefon}</span>
+                </div>
+              ` : ''}
+              ${payment.store.eposta ? `
+                <div class="info-item">
+                  <span><strong>E-posta:</strong></span>
+                  <span>${payment.store.eposta}</span>
                 </div>
               ` : ''}
             </div>
 
-            <!-- Açıklama -->
             <div class="section">
               <h3>Açıklama</h3>
               <p style="padding: 10px 0; line-height: 1.6;">${payment.description}</p>
             </div>
 
-            <!-- Footer -->
             <div class="footer">
               <p>Bu belge ${new Date().toLocaleDateString('tr-TR')} tarihinde oluşturulmuştur.</p>
-              <p>Ödeme takibi için lütfen ödeme numaranızı saklayınız.</p>
+              <p>Ödeme takibi için lütfen referans numaranızı saklayınız.</p>
             </div>
           </body>
         </html>
@@ -579,27 +488,42 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
   // Filtreleme
   const filteredPayments = payments.filter(payment => {
     const matchesSearch = searchTerm === "" || 
-      payment.paymentNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.customerSurname.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payment.sellerReference.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payment.apiReferenceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payment.store.kurum_adi.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payment.description.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = statusFilter === "" || payment.status === statusFilter;
+    // Tarih filtresi
+    let matchesDateRange = true;
+    if (startDate || endDate) {
+      const paymentDate = new Date(payment.paymentDate || payment.createdAt);
+      if (startDate) {
+        const start = new Date(startDate);
+        matchesDateRange = matchesDateRange && paymentDate >= start;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999); // Gün sonuna kadar dahil et
+        matchesDateRange = matchesDateRange && paymentDate <= end;
+      }
+    }
     
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesDateRange;
   });
 
-  // Sayfalama
-  const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentPayments = filteredPayments.slice(startIndex, endIndex);
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
+
+  const handleFilterChange = () => {
+    setCurrentPage(1); // Filtre değiştiğinde ilk sayfaya dön
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex items-center space-x-2">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00365a]"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00365a]"></div>
           <span className="text-gray-600">Ödeme verileri yükleniyor...</span>
         </div>
       </div>
@@ -626,14 +550,75 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
           </button>
         </div>
 
+        {/* Summary Cards */}
+        {summary && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Başarılı Ödemeler</p>
+                  <p className="text-2xl font-bold text-gray-900">{summary.completedCount}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-red-100 rounded-lg">
+                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Başarısız Ödemeler</p>
+                  <p className="text-2xl font-bold text-gray-900">{summary.failedCount}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Toplam Tutar</p>
+                  <p className="text-2xl font-bold text-gray-900">{summary.totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Başarı Oranı</p>
+                  <p className="text-2xl font-bold text-gray-900">%{summary.successRate}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Arama</label>
               <input
                 type="text"
-                placeholder="Ödeme no, müşteri adı veya açıklama..."
+                placeholder="Referans no, mağaza adı veya açıklama..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#00365a] focus:border-[#00365a]"
@@ -643,29 +628,99 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
               <label className="block text-sm font-medium text-gray-700 mb-2">Durum</label>
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  handleFilterChange();
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#00365a] focus:border-[#00365a]"
               >
                 <option value="">Tüm Durumlar</option>
-                <option value="success">Başarılı</option>
-                <option value="pending">Beklemede</option>
-                <option value="failed">Başarısız</option>
+                <option value="COMPLETED">Başarılı</option>
+                <option value="FAILED">Başarısız</option>
               </select>
+            </div>
+            {isAdmin && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Mağaza</label>
+                <select
+                  value={selectedStoreFilter}
+                  onChange={(e) => {
+                    setSelectedStoreFilter(e.target.value);
+                    handleFilterChange();
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#00365a] focus:border-[#00365a]"
+                >
+                  <option value="">Tüm Mağazalar</option>
+                  {stores.map((store) => (
+                    <option key={store.store_id} value={store.store_id}>
+                      {store.kurum_adi}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Başlangıç Tarihi</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  handleFilterChange();
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#00365a] focus:border-[#00365a]"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Bitiş Tarihi</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  handleFilterChange();
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#00365a] focus:border-[#00365a]"
+              />
             </div>
             <div className="flex items-end">
               <button
                 onClick={() => {
                   setSearchTerm("");
                   setStatusFilter("");
+                  setSelectedStoreFilter("");
+                  setStartDate("");
+                  setEndDate("");
                   setCurrentPage(1);
                 }}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors w-full"
               >
                 Filtreleri Temizle
               </button>
             </div>
           </div>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">
+                  Hata oluştu
+                </h3>
+                <div className="mt-2 text-sm text-red-700">
+                  <p>{error}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Payments Table */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -674,7 +729,7 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ödeme No
+                    Referans No
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Durum
@@ -683,10 +738,10 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
                     Tutar
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Müşteri
+                    Mağaza
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    İşlem Yapan
+                    Açıklama
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Tarih
@@ -696,32 +751,97 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
                   </th>
                 </tr>
               </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredPayments.map((payment) => (
+                  <tr key={payment.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{payment.sellerReference}</div>
+                      <div className="text-sm text-gray-500">{payment.apiReferenceNumber}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusColors[payment.status]}`}>
+                        {statusLabels[payment.status]}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {payment.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{payment.store.kurum_adi}</div>
+                      {isAdmin && payment.store.vergi_numarasi && (
+                        <div className="text-sm text-gray-500">{payment.store.vergi_numarasi}</div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900 max-w-xs truncate" title={payment.description}>
+                        {payment.description}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {new Date(payment.paymentDate || payment.createdAt).toLocaleDateString('tr-TR', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleViewDetails(payment)}
+                          className="text-[#00365a] hover:text-[#004170] flex items-center"
+                        >
+                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          Detay
+                        </button>
+                        <button
+                          onClick={() => handlePrintPayment(payment)}
+                          className="text-gray-600 hover:text-gray-900 flex items-center"
+                        >
+                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                          </svg>
+                          Yazdır
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
           </div>
 
           {/* Pagination */}
-          {totalPages > 1 && (
+          {pagination && pagination.totalPages > 1 && (
             <div className="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-700">
-                  Toplam <span className="font-medium">{filteredPayments.length}</span> kayıt,{' '}
-                  <span className="font-medium">{startIndex + 1}</span> -{' '}
-                  <span className="font-medium">{Math.min(endIndex, filteredPayments.length)}</span> arası gösteriliyor
+                  Toplam <span className="font-medium">{pagination.totalCount}</span> kayıt,{' '}
+                  <span className="font-medium">{((pagination.page - 1) * pagination.limit) + 1}</span> -{' '}
+                  <span className="font-medium">{Math.min(pagination.page * pagination.limit, pagination.totalCount)}</span> arası gösteriliyor
                 </div>
                 <div className="flex space-x-2">
                   <button
-                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
+                    onClick={() => handlePageChange(Math.max(1, pagination.page - 1))}
+                    disabled={!pagination.hasPrev}
                     className="px-3 py-1 text-sm bg-white border border-gray-300 rounded-md text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Önceki
                   </button>
                   <span className="px-3 py-1 text-sm bg-blue-50 border border-blue-200 rounded-md text-blue-700">
-                    {currentPage} / {totalPages}
+                    {pagination.page} / {pagination.totalPages}
                   </span>
                   <button
-                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
+                    onClick={() => handlePageChange(Math.min(pagination.totalPages, pagination.page + 1))}
+                    disabled={!pagination.hasNext}
                     className="px-3 py-1 text-sm bg-white border border-gray-300 rounded-md text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Sonraki
@@ -756,7 +876,7 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
                     </div>
                     <div>
                       <h3 className="text-2xl font-bold">Ödeme Detayları</h3>
-                      <p className="text-blue-100 text-sm">{selectedPayment.paymentNumber}</p>
+                      <p className="text-blue-100 text-sm">{selectedPayment.sellerReference}</p>
                     </div>
                   </div>
                   <button
@@ -803,54 +923,16 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
                         </div>
                         <div className="bg-white rounded-lg p-4 border border-gray-100">
                           <div className="flex justify-between items-center">
-                            <span className="text-gray-600 font-medium">Ödeme Yöntemi:</span>
-                            <span className="text-gray-900 font-semibold">{selectedPayment.paymentMethod}</span>
+                            <span className="text-gray-600 font-medium">API Referansı:</span>
+                            <span className="text-gray-900 font-mono text-sm bg-gray-50 px-2 py-1 rounded">{selectedPayment.apiReferenceNumber}</span>
                           </div>
                         </div>
-                        {selectedPayment.transactionId && (
-                          <div className="bg-white rounded-lg p-4 border border-gray-100">
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-600 font-medium">Transaction Id:</span>
-                              <span className="text-gray-900 font-mono text-sm bg-gray-50 px-2 py-1 rounded">{selectedPayment.transactionId}</span>
-                            </div>
+                        <div className="bg-white rounded-lg p-4 border border-gray-100">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600 font-medium">Octet Ödeme ID:</span>
+                            <span className="text-gray-900 font-mono text-sm bg-gray-50 px-2 py-1 rounded">{selectedPayment.octetPaymentId}</span>
                           </div>
-                        )}
-                        {selectedPayment.inTransactionId && (
-                          <div className="bg-white rounded-lg p-4 border border-gray-100">
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-600 font-medium">InTransaction Id:</span>
-                              <span className="text-gray-900 font-mono text-sm bg-gray-50 px-2 py-1 rounded">{selectedPayment.inTransactionId}</span>
-                            </div>
-                          </div>
-                        )}
-                        {selectedPayment.cardNumber && (
-                          <div className="bg-white rounded-lg p-4 border border-gray-100">
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-600 font-medium">Kart No:</span>
-                              <span className="text-gray-900 font-mono bg-gray-50 px-2 py-1 rounded">{selectedPayment.cardNumber}</span>
-                            </div>
-                          </div>
-                        )}
-                        {selectedPayment.is3D !== undefined && (
-                          <div className="bg-white rounded-lg p-4 border border-gray-100">
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-600 font-medium">3D mi yapıldı?:</span>
-                              <span className={`font-semibold ${selectedPayment.is3D ? 'text-green-600' : 'text-red-600'}`}>
-                                {selectedPayment.is3D ? 'Evet' : 'Hayır'}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                        {selectedPayment.isRefunded !== undefined && (
-                          <div className="bg-white rounded-lg p-4 border border-gray-100">
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-600 font-medium">İade Yapıldı mı?:</span>
-                              <span className={`font-semibold ${selectedPayment.isRefunded ? 'text-red-600' : 'text-green-600'}`}>
-                                {selectedPayment.isRefunded ? 'Evet' : 'Hayır'}
-                              </span>
-                            </div>
-                          </div>
-                        )}
+                        </div>
                       </div>
                     </div>
 
@@ -858,29 +940,39 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
                       <div className="flex items-center mb-4">
                         <div className="bg-green-100 rounded-full p-2 mr-3">
                           <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                           </svg>
                         </div>
-                        <h4 className="text-lg font-semibold text-gray-900">Müşteri Bilgileri</h4>
+                        <h4 className="text-lg font-semibold text-gray-900">Mağaza Bilgileri</h4>
                       </div>
                       <div className="space-y-4">
                         <div className="bg-white rounded-lg p-4 border border-gray-100">
                           <div className="flex justify-between items-center">
-                            <span className="text-gray-600 font-medium">Müşteri:</span>
-                            <span className="text-gray-900 font-semibold">{selectedPayment.customerName} {selectedPayment.customerSurname}</span>
+                            <span className="text-gray-600 font-medium">Mağaza:</span>
+                            <span className="text-gray-900 font-semibold">{selectedPayment.store.kurum_adi}</span>
                           </div>
                         </div>
-                        <div className="bg-white rounded-lg p-4 border border-gray-100">
-                          <div className="flex justify-between items-center">
-                            <span className="text-gray-600 font-medium">İşlem Yapan:</span>
-                            <span className="text-gray-900 font-semibold">{selectedPayment.processedBy}</span>
-                          </div>
-                        </div>
-                        {selectedPayment.storeName && (
+                        {selectedPayment.store.vergi_numarasi && (
                           <div className="bg-white rounded-lg p-4 border border-gray-100">
                             <div className="flex justify-between items-center">
-                              <span className="text-gray-600 font-medium">Mağaza:</span>
-                              <span className="text-gray-900 font-semibold">{selectedPayment.storeName}</span>
+                              <span className="text-gray-600 font-medium">Vergi No:</span>
+                              <span className="text-gray-900 font-semibold">{selectedPayment.store.vergi_numarasi}</span>
+                            </div>
+                          </div>
+                        )}
+                        {selectedPayment.store.telefon && (
+                          <div className="bg-white rounded-lg p-4 border border-gray-100">
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-600 font-medium">Telefon:</span>
+                              <span className="text-gray-900 font-semibold">{selectedPayment.store.telefon}</span>
+                            </div>
+                          </div>
+                        )}
+                        {selectedPayment.store.eposta && (
+                          <div className="bg-white rounded-lg p-4 border border-gray-100">
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-600 font-medium">E-posta:</span>
+                              <span className="text-gray-900 font-semibold">{selectedPayment.store.eposta}</span>
                             </div>
                           </div>
                         )}
@@ -888,7 +980,7 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
                           <div className="flex justify-between items-center">
                             <span className="text-gray-600 font-medium">Tarih:</span>
                             <span className="text-gray-900 font-semibold">
-                              {new Date(selectedPayment.createdAt).toLocaleDateString('tr-TR', {
+                              {new Date(selectedPayment.paymentDate || selectedPayment.createdAt).toLocaleDateString('tr-TR', {
                                 year: 'numeric',
                                 month: 'long',
                                 day: 'numeric',
@@ -919,7 +1011,7 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
                 </div>
 
                 {/* Footer */}
-                <div className="bg-gray-50 px-6 py-4 rounded-b-2xl flex justify-between items-center">
+                <div className="bg-gray-50 px-6 py-4 rounded-b-2xl flex justify-between items-center mt-6">
                   <div className="text-sm text-gray-500">
                     Ödeme ID: <span className="font-mono">{selectedPayment.id}</span>
                   </div>
@@ -943,8 +1035,8 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
                       Kapat
                     </button>
                   </div>
-                                 </div>
-               </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
