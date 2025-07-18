@@ -592,7 +592,7 @@ const MuhasebePage = () => {
                                 </svg>
                             </div>
                             <div>
-                                <h1 className="text-2xl font-bold text-gray-900">💰 Muhasebe Yönetimi</h1>
+                                <h1 className="text-2xl font-bold text-gray-900">Muhasebe Yönetimi</h1>
                                 <p className="text-gray-600">Mali işlemler ve mağaza bakiyelerini yönetin</p>
                             </div>
                         </div>
