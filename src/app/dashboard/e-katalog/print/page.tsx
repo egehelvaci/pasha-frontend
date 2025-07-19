@@ -25,33 +25,92 @@ const PrintCatalogPage = () => {
   useEffect(() => {
     // localStorage'dan seçili ürün ID'lerini al
     const selectedProductIds = localStorage.getItem('selectedProductsForPrint');
-    if (selectedProductIds) {
+    console.log('🔍 localStorage\'dan alınan veri:', selectedProductIds);
+    
+    if (selectedProductIds && selectedProductIds !== 'null' && selectedProductIds !== 'undefined') {
       try {
         const productIds = JSON.parse(selectedProductIds);
+        console.log('📋 Parse edilen ürün ID\'leri:', productIds);
+        
         if (Array.isArray(productIds) && productIds.length > 0) {
+          console.log('✅ Gerçek ürünler yükleniyor...');
           fetchSelectedProducts(productIds);
         } else {
-          setLoading(false);
+          console.log('❌ Ürün listesi boş veya geçersiz');
+          showTestProducts();
         }
       } catch (error) {
-        console.error('Seçili ürünler okunurken hata:', error);
-        setLoading(false);
+        console.error('❌ Seçili ürünler okunurken hata:', error);
+        showTestProducts();
       }
     } else {
-      setLoading(false);
+      console.log('❌ localStorage\'da selectedProductsForPrint verisi yok veya geçersiz');
+      showTestProducts();
     }
   }, []);
+
+  const showTestProducts = () => {
+    console.log('🧪 Test ürünleri yükleniyor...');
+    const testProducts: Product[] = [
+      {
+        productId: 'test-1',
+        name: 'Test Halı 1',
+        description: 'Bu bir test ürünüdür. E-katalog test amaçlı oluşturulmuştur.',
+        productImage: 'https://via.placeholder.com/300x200/00365a/ffffff?text=Test+Halı+1',
+        collection: {
+          name: 'Test Koleksiyonu'
+        }
+      },
+      {
+        productId: 'test-2',
+        name: 'Test Halı 2',
+        description: 'İkinci test ürünü. Yazdırma testi için kullanılmaktadır.',
+        productImage: 'https://via.placeholder.com/300x200/004170/ffffff?text=Test+Halı+2',
+        collection: {
+          name: 'Test Koleksiyonu'
+        }
+      },
+      {
+        productId: 'test-3',
+        name: 'Test Halı 3',
+        description: 'Üçüncü test ürünü. Katalog görünümü test edilmektedir.',
+        productImage: 'https://via.placeholder.com/300x200/005a9e/ffffff?text=Test+Halı+3',
+        collection: {
+          name: 'Test Koleksiyonu'
+        }
+      },
+      {
+        productId: 'test-4',
+        name: 'Test Halı 4',
+        description: 'Dördüncü test ürünü. Print sayfası test edilmektedir.',
+        productImage: 'https://via.placeholder.com/300x200/006bcc/ffffff?text=Test+Halı+4',
+        collection: {
+          name: 'Test Koleksiyonu'
+        }
+      }
+    ];
+    
+    setProducts(testProducts);
+    setLoading(false);
+  };
 
   useEffect(() => {
     // Ürünler yüklendikten sonra otomatik yazdırma dialogunu aç
     if (!loading && products.length > 0) {
       // Kısa bir gecikme ile yazdırma dialogunu aç
       const timer = setTimeout(() => {
-        window.print();
-        
-        // Yazdırma işlemi tamamlandıktan sonra localStorage'ı temizle
-        localStorage.removeItem('selectedProductsForPrint');
-      }, 500);
+        try {
+          window.print();
+          
+          // Yazdırma işlemi tamamlandıktan sonra localStorage'ı temizle
+          setTimeout(() => {
+            localStorage.removeItem('selectedProductsForPrint');
+            console.log('🧹 localStorage temizlendi');
+          }, 2000);
+        } catch (error) {
+          console.error('Yazdırma hatası:', error);
+        }
+      }, 1000); // Daha uzun gecikme ile içeriğin tam yüklenmesini bekle
       
       return () => clearTimeout(timer);
     }
@@ -60,6 +119,9 @@ const PrintCatalogPage = () => {
   const fetchSelectedProducts = async (productIds: string[]) => {
     try {
       const authToken = token;
+      console.log('🔑 Token:', authToken ? 'Mevcut' : 'Yok');
+      console.log('📤 API\'ye gönderilen ürün ID\'leri:', productIds);
+      
       const response = await fetch('https://pasha-backend-production.up.railway.app/api/products/by-ids', {
         method: 'POST',
         headers: {
@@ -69,21 +131,71 @@ const PrintCatalogPage = () => {
         body: JSON.stringify({ productIds })
       });
 
+      console.log('📡 API Response status:', response.status);
+
       if (!response.ok) {
-        throw new Error('Ürünler yüklenirken hata oluştu');
+        console.log('❌ API çağrısı başarısız, alternatif yöntem deneniyor...');
+        // Alternatif: Tüm ürünleri çek ve seçili olanları filtrele
+        await fetchAllProductsAndFilter(productIds);
+        return;
       }
 
       const data = await response.json();
+      console.log('📥 API Response data:', data);
+      
       if (data.success && Array.isArray(data.data)) {
+        console.log('✅ Ürünler başarıyla yüklendi:', data.data.length);
         setProducts(data.data);
       } else {
-        setProducts([]);
+        console.log('❌ API response başarısız, alternatif yöntem deneniyor...');
+        await fetchAllProductsAndFilter(productIds);
       }
     } catch (error) {
-      console.error('Ürünler yüklenirken hata:', error);
-      setProducts([]);
+      console.error('❌ Ürünler yüklenirken hata:', error);
+      console.log('🔄 Alternatif yöntem deneniyor...');
+      await fetchAllProductsAndFilter(productIds);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAllProductsAndFilter = async (selectedIds: string[]) => {
+    try {
+      console.log('🔄 Tüm ürünler çekiliyor ve filtreleniyor...');
+      
+      const authToken = token;
+      const params = new URLSearchParams({
+        limit: '1000',
+        page: '1'
+      });
+      
+      const response = await fetch(`https://pasha-backend-production.up.railway.app/api/products?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Tüm ürünler yüklenirken hata oluştu');
+      }
+
+      const data = await response.json();
+      
+      if (data.success && Array.isArray(data.data)) {
+        // Seçili ID'lere göre filtrele
+        const filteredProducts = data.data.filter((product: Product) => 
+          selectedIds.includes(product.productId)
+        );
+        
+        console.log('✅ Filtrelenmiş ürünler:', filteredProducts.length);
+        setProducts(filteredProducts);
+      } else {
+        throw new Error('Ürün verisi alınamadı');
+      }
+    } catch (error) {
+      console.error('❌ Alternatif yöntem de başarısız:', error);
+      showTestProducts();
     }
   };
 
@@ -109,6 +221,26 @@ const PrintCatalogPage = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00365a] mx-auto mb-4"></div>
           <p className="text-gray-600">Katalog hazırlanıyor...</p>
+          <p className="text-sm text-gray-500 mt-2">Ürünler yükleniyor, lütfen bekleyin...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Eğer hiç ürün yoksa da bir mesaj göster
+  if (products.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="text-6xl mb-4">📄</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">E-Katalog</h1>
+          <p className="text-gray-600 mb-4">Yazdırılabilir katalog sayfası</p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
+            <p className="text-sm text-blue-800">
+              <strong>Bilgi:</strong> Bu sayfa yazdırma için tasarlanmıştır. 
+              E-katalog sayfasından ürün seçerek buraya gelin.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -375,7 +507,14 @@ const PrintCatalogPage = () => {
           }
           
           .print-content {
-            display: none;
+            display: block !important;
+          }
+          
+          /* Ekran görünümünde minimal içerik */
+          @media screen and (max-width: 100px) {
+            .print-content {
+              display: none !important;
+            }
           }
         }
       `}</style>

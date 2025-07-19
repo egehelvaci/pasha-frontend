@@ -24,8 +24,9 @@ interface ProductResponse {
 const EKatalogPage = () => {
   const token = useToken();
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -89,13 +90,43 @@ const EKatalogPage = () => {
       return;
     }
 
+    setIsGeneratingPDF(true);
+
     const selectedProductIds = Array.from(selectedProducts);
+    console.log('📝 Seçili ürün ID\'leri:', selectedProductIds);
     
     // Seçili ürün ID'lerini localStorage'a kaydet
     localStorage.setItem('selectedProductsForPrint', JSON.stringify(selectedProductIds));
+    console.log('💾 localStorage\'a kaydedildi:', localStorage.getItem('selectedProductsForPrint'));
     
-    // Yeni sekmede yazdırılabilir katalog sayfasını aç
-    window.open('/dashboard/e-katalog/print', '_blank');
+    // Gizli iframe oluştur ve print sayfasını yükle
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = '/dashboard/e-katalog/print';
+    
+    // iframe yüklendiğinde otomatik yazdır
+    iframe.onload = () => {
+      setTimeout(() => {
+        try {
+          iframe.contentWindow?.print();
+          // Yazdırma işlemi başladıktan sonra iframe'i kaldır
+          setTimeout(() => {
+            document.body.removeChild(iframe);
+            // localStorage'ı temizle
+            localStorage.removeItem('selectedProductsForPrint');
+            setIsGeneratingPDF(false);
+          }, 1000);
+        } catch (error) {
+          console.error('Yazdırma hatası:', error);
+          // Hata durumunda iframe'i kaldır
+          document.body.removeChild(iframe);
+          setIsGeneratingPDF(false);
+        }
+      }, 500); // Kısa bir gecikme ile yazdırma dialogunu aç
+    };
+    
+    // iframe'i sayfaya ekle
+    document.body.appendChild(iframe);
   };
 
   if (loading) {
@@ -131,10 +162,17 @@ const EKatalogPage = () => {
                 </button>
                 <button
                   onClick={generatePrintableCatalog}
-                  disabled={selectedProducts.size === 0}
+                  disabled={selectedProducts.size === 0 || isGeneratingPDF}
                   className="px-6 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
                 >
-                  🖨️ Yazdırılabilir Katalog Oluştur ({selectedProducts.size})
+                  {isGeneratingPDF ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white inline-block mr-2"></div>
+                      PDF Hazırlanıyor...
+                    </>
+                  ) : (
+                    `🖨️ Yazdırılabilir Katalog Oluştur (${selectedProducts.size})`
+                  )}
                 </button>
               </div>
             </div>
