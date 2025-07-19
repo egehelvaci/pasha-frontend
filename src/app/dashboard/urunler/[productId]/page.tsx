@@ -23,13 +23,19 @@ export default function ProductDetail() {
   const [deleteError, setDeleteError] = useState("");
   const { isAdmin } = useAuth();
   
+  // Sepete ekleme için state'ler
+  const [addToCartLoading, setAddToCartLoading] = useState(false);
+  const [addToCartSuccess, setAddToCartSuccess] = useState(false);
+  const [addToCartError, setAddToCartError] = useState("");
+  const [notes, setNotes] = useState<string>("");
+  
   // Ürün seçimleri için state'ler
   const [selectedSize, setSelectedSize] = useState<any>(null);
   const [selectedCutType, setSelectedCutType] = useState<any>(null);
   const [selectedHasFringe, setSelectedHasFringe] = useState<boolean | null>(null);
   const [totalPrice, setTotalPrice] = useState<number>(0);
-  const [customHeight, setCustomHeight] = useState<number>(100);  // Varsayılan 100 cm yükseklik
-  const [quantity, setQuantity] = useState<number>(1);  // Ürün adedi
+  const [customHeight, setCustomHeight] = useState<number | string>(100);  // Varsayılan 100 cm yükseklik
+  const [quantity, setQuantity] = useState<number | string>(1);  // Ürün adedi
 
   useEffect(() => {
     if (!productFetchedRef.current) {
@@ -63,14 +69,34 @@ export default function ProductDetail() {
   
   // Seçimler değiştiğinde fiyat hesaplama
   useEffect(() => {
-    if (product && selectedSize && quantity > 0) {
-      // Fiyat hesaplama
-      const basePrice = selectedSize.price || 0;
-      const totalArea = (parseFloat(selectedSize.width) * parseFloat(selectedSize.height)) / 10000; // m2 cinsinden
-      const totalPrice = basePrice * totalArea * quantity;
-      setTotalPrice(totalPrice);
+    const quantityNum = parseInt(quantity.toString()) || 0;
+    if (product && selectedSize && quantityNum > 0) {
+      // Metrekare fiyatı
+      const pricePerSquareMeter = parseFloat(product.pricing?.price) || 0;
+      
+      // Yükseklik değerini belirle (özel yükseklik varsa onu kullan)
+      const heightValue = selectedSize.is_optional_height ? parseFloat(customHeight.toString()) || 100 : parseFloat(selectedSize.height);
+      const widthValue = parseFloat(selectedSize.width);
+      
+      // Alan hesaplama (cm² -> m²)
+      const totalArea = (widthValue * heightValue) / 10000;
+      
+      // Toplam fiyat hesaplama
+      const calculatedPrice = pricePerSquareMeter * totalArea * quantityNum;
+      setTotalPrice(calculatedPrice || 0);
+      
+      console.log("Fiyat hesaplaması:", {
+        pricePerSquareMeter,
+        widthValue,
+        heightValue,
+        totalArea,
+        quantity: quantityNum,
+        calculatedPrice
+      });
+    } else {
+      setTotalPrice(0);
     }
-  }, [product, selectedSize, quantity]);
+  }, [product, selectedSize, quantity, customHeight]);
 
   const fetchProduct = async () => {
     try {
@@ -127,6 +153,88 @@ export default function ProductDetail() {
   // Saçak değişimi
   const handleFringeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedHasFringe(e.target.value === "true");
+  };
+
+  // Sepete ekleme fonksiyonu
+  const addToCart = async () => {
+    // Validasyon kontrolleri
+    if (!product || !selectedSize || !selectedCutType) {
+      setAddToCartError("Ürün detayları eksik");
+      return;
+    }
+    
+    const quantityNum = parseInt(quantity.toString()) || 0;
+    if (quantityNum <= 0) {
+      setAddToCartError("Lütfen geçerli bir miktar girin");
+      return;
+    }
+    
+    // Kesim türünü API isteğine uygun formata dönüştür
+    let cutTypeValue = "rectangle"; // Varsayılan
+    if (selectedCutType.name === "oval") {
+      cutTypeValue = "oval";
+    } else if (selectedCutType.name === "daire") {
+      cutTypeValue = "round";
+    } else if (selectedCutType.name === "custom") {
+      cutTypeValue = "custom";
+    } else if (selectedCutType.name === "post kesim") {
+      cutTypeValue = "post kesim";
+    }
+    
+    setAddToCartLoading(true);
+    setAddToCartError("");
+    setAddToCartSuccess(false);
+    
+    try {
+      const authToken = token;
+      
+      // Yükseklik değerini belirle
+      const heightValue = selectedSize.is_optional_height ? customHeight : selectedSize.height;
+      
+      const requestBody = {
+        productId: product.productId,
+        quantity: quantityNum,
+        width: selectedSize.width,
+        height: heightValue,
+        hasFringe: selectedHasFringe === true,
+        cutType: cutTypeValue,
+        notes: notes.trim() || undefined // Boşsa undefined olacak, API'ye gönderilmeyecek
+      };
+      
+      const res = await fetch(`${API_BASE_URL}/api/cart/add`, {
+        method: "POST",
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok || !data.success) {
+        // Veritabanı bağlantı hatası için özel mesaj
+        if (data.message && data.message.includes("too many clients")) {
+          throw new Error("Sunucu şu anda yoğun. Lütfen daha sonra tekrar deneyin.");
+        }
+        throw new Error(data.message || "Ürün sepete eklenemedi");
+      }
+      
+      // Başarılı
+      setAddToCartSuccess(true);
+      setQuantity(1); // Miktar sıfırla
+      setNotes(""); // Notları temizle
+      
+      // 3 saniye sonra başarı mesajını temizle
+      setTimeout(() => {
+        setAddToCartSuccess(false);
+      }, 3000);
+      
+    } catch (err: any) {
+      setAddToCartError(err.message || "Sepete eklerken bir hata oluştu");
+    } finally {
+      setAddToCartLoading(false);
+    }
   };
 
   function UpdateProductModal({ open, onClose, product, collections, onSuccess }: { open: boolean, onClose: () => void, product: any, collections: any[], onSuccess: (updated: any) => void }) {
@@ -274,12 +382,6 @@ export default function ProductDetail() {
       <div className="bg-white rounded-2xl shadow-lg p-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-black">{product.collection?.name} - {product.name}</h1>
-          <button 
-            onClick={() => setModalOpen(true)} 
-            className="bg-blue-900 text-white rounded-full px-4 py-2 text-sm font-semibold"
-          >
-            Düzenle
-          </button>
         </div>
         
         <div className="flex flex-col md:flex-row gap-8">
@@ -320,9 +422,20 @@ export default function ProductDetail() {
                         onChange={(e) => {
                           const value = e.target.value;
                           if (value === '') {
-                            setCustomHeight(10);
+                            setCustomHeight('');
                           } else {
-                            setCustomHeight(Number(value) || 10);
+                            const numValue = Number(value);
+                            if (numValue >= 10) {
+                              setCustomHeight(numValue);
+                            } else if (value.length <= 1) {
+                              setCustomHeight(value);
+                            }
+                          }
+                        }}
+                        onBlur={(e) => {
+                          const value = e.target.value;
+                          if (value === '' || Number(value) < 10) {
+                            setCustomHeight(10);
                           }
                         }}
                         className="border rounded-md p-2 text-black w-24"
@@ -385,8 +498,22 @@ export default function ProductDetail() {
                     value={quantity}
                     onChange={(e) => {
                       const value = e.target.value;
-                      const newQuantity = value === '' ? 1 : Math.max(1, parseInt(value) || 1);
-                      setQuantity(newQuantity);
+                      if (value === '') {
+                        setQuantity('');
+                      } else {
+                        const numValue = parseInt(value);
+                        if (numValue >= 1) {
+                          setQuantity(numValue);
+                        } else if (value.length <= 1) {
+                          setQuantity(value);
+                        }
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const value = e.target.value;
+                      if (value === '' || parseInt(value) < 1) {
+                        setQuantity(1);
+                      }
                     }}
                     className="w-16 border-y border-gray-300 py-1 px-2 text-center text-black"
                   />
@@ -414,6 +541,16 @@ export default function ProductDetail() {
                 </span>
               </div>
               
+              <div className="flex flex-col gap-2">
+                <span className="text-sm text-gray-500">Notlar (Opsiyonel)</span>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Ürün için özel notlarınızı yazabilirsiniz..."
+                  className="border rounded-md p-2 text-black resize-none h-20"
+                />
+              </div>
+
               <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-blue-900">Toplam Tutar</span>
@@ -430,10 +567,45 @@ export default function ProductDetail() {
                     × {quantity} adet için hesaplandı
                   </div>
                 )}
-                {/* DEBUG: Quantity değerini göster */}
-                <div className="text-xs mt-1 text-red-600 font-mono">
-                  DEBUG: quantity = {quantity}, typeof = {typeof quantity}
-                </div>
+              </div>
+
+              {/* Sepete Ekle Butonu */}
+              <div className="mt-4">
+                {addToCartSuccess && (
+                  <div className="mb-3 p-3 bg-green-100 border border-green-300 rounded-md text-green-700 text-sm">
+                    ✅ Ürün başarıyla sepete eklendi!
+                  </div>
+                )}
+                
+                {addToCartError && (
+                  <div className="mb-3 p-3 bg-red-100 border border-red-300 rounded-md text-red-700 text-sm">
+                    ❌ {addToCartError}
+                  </div>
+                )}
+                
+                <button
+                  type="button"
+                  className="w-full py-3 bg-green-600 text-white rounded-md font-semibold flex items-center justify-center gap-2 hover:bg-green-700 transition-colors disabled:opacity-70"
+                  onClick={addToCart}
+                  disabled={addToCartLoading || !selectedSize || !selectedCutType}
+                >
+                  {addToCartLoading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      İşleniyor...
+                    </>
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                      </svg>
+                      Sepete Ekle
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>

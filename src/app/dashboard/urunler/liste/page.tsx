@@ -657,8 +657,8 @@ export default function ProductList() {
     const [selectedCutType, setSelectedCutType] = useState<any>(null);
     const [selectedHasFringe, setSelectedHasFringe] = useState<boolean | null>(null);
     const [totalPrice, setTotalPrice] = useState<number>(0);
-    const [customHeight, setCustomHeight] = useState<number>(100);  // Varsayılan 100 cm yükseklik
-    const [quantity, setQuantity] = useState<number>(1);
+    const [customHeight, setCustomHeight] = useState<number | string>(100);  // Varsayılan 100 cm yükseklik
+    const [quantity, setQuantity] = useState<number | string>(1);
     const [notes, setNotes] = useState<string>("");
     const [addToCartLoading, setAddToCartLoading] = useState(false);
     const [addToCartSuccess, setAddToCartSuccess] = useState(false);
@@ -710,12 +710,14 @@ export default function ProductList() {
     
     // Seçimler değiştiğinde fiyat hesaplama
     useEffect(() => {
-      if (product && selectedSize) {
+      const quantityNum = parseInt(quantity.toString()) || 0;
+      if (product && selectedSize && quantityNum > 0) {
         // Metrekare hesapla
         let squareMeters;
         if (selectedSize.is_optional_height) {
           // İsteğe bağlı yükseklik için kullanıcının girdiği değeri kullan
-          squareMeters = (selectedSize.width * customHeight) / 10000; // cm² -> m²
+          const heightValue = parseFloat(customHeight.toString()) || 100;
+          squareMeters = (selectedSize.width * heightValue) / 10000; // cm² -> m²
         } else {
           // Sabit yükseklik için metrekare hesapla
           squareMeters = (selectedSize.width * selectedSize.height) / 10000; // cm² -> m²
@@ -723,9 +725,11 @@ export default function ProductList() {
         
         // Birim fiyat ve toplam fiyat hesapla (quantity ile çarp)
         const unitPrice = product.pricing?.price || 0;
-        const calculatedPrice = squareMeters * unitPrice * quantity;
+        const calculatedPrice = squareMeters * unitPrice * quantityNum;
         
         setTotalPrice(calculatedPrice);
+      } else {
+        setTotalPrice(0);
       }
     }, [product, selectedSize, customHeight, quantity]);
 
@@ -780,7 +784,8 @@ export default function ProductList() {
         return;
       }
       
-      if (quantity <= 0) {
+      const quantityNum = parseInt(quantity.toString()) || 0;
+      if (quantityNum <= 0) {
         setAddToCartError("Lütfen geçerli bir miktar girin");
         return;
       }
@@ -805,11 +810,11 @@ export default function ProductList() {
         const authToken = token;
         
         // Yükseklik değerini belirle
-        const heightValue = selectedSize.is_optional_height ? customHeight : selectedSize.height;
+        const heightValue = selectedSize.is_optional_height ? parseFloat(customHeight.toString()) || 100 : selectedSize.height;
         
         const requestBody = {
           productId: product.productId,
-          quantity: quantity,
+          quantity: quantityNum,
           width: selectedSize.width,
           height: heightValue,
           hasFringe: selectedHasFringe === true,
@@ -930,7 +935,25 @@ export default function ProductList() {
                               min="10"
                               max="10000"
                               value={customHeight}
-                              onChange={(e) => setCustomHeight(Number(e.target.value))}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === '') {
+                                  setCustomHeight('');
+                                } else {
+                                  const numValue = Number(value);
+                                  if (numValue >= 10) {
+                                    setCustomHeight(numValue);
+                                  } else if (value.length <= 1) {
+                                    setCustomHeight(value);
+                                  }
+                                }
+                              }}
+                              onBlur={(e) => {
+                                const value = e.target.value;
+                                if (value === '' || Number(value) < 10) {
+                                  setCustomHeight(100);
+                                }
+                              }}
                               className="border rounded-md p-2 text-black w-24"
                             />
                             <span className="text-sm text-gray-500">cm</span>
@@ -1020,9 +1043,20 @@ export default function ProductList() {
                               onChange={(e) => {
                                 const value = e.target.value;
                                 if (value === '') {
-                                  setQuantity(1);
+                                  setQuantity('');
                                 } else {
-                                  setQuantity(Math.max(1, parseInt(value) || 1));
+                                  const numValue = parseInt(value);
+                                  if (numValue >= 1) {
+                                    setQuantity(numValue);
+                                  } else if (value.length <= 1) {
+                                    setQuantity(value);
+                                  }
+                                }
+                              }}
+                              onBlur={(e) => {
+                                const value = e.target.value;
+                                if (value === '' || parseInt(value) < 1) {
+                                  setQuantity(1);
                                 }
                               }}
                               className="w-16 border-y border-gray-300 py-1 px-2 text-center text-black"
@@ -1715,7 +1749,8 @@ export default function ProductList() {
                 const statusText = isCustomCut ? 'KESİM' : 'HAZIR';
                 
                 return (
-                  <div key={product.productId} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow relative" style={{ width: '350px', height: '550px' }}>
+                  <div key={product.productId} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow relative cursor-pointer" style={{ width: '350px', height: '550px' }}
+                       onClick={() => router.push(`/dashboard/urunler/${product.productId}`)}>
                     {/* Koleksiyon adı - sol üst */}
                     <div className="absolute top-3 left-3 z-10">
                       <span className="bg-[#00365a] text-white text-xs px-2 py-1 rounded-md font-medium">
@@ -1751,13 +1786,13 @@ export default function ProductList() {
                       
                       <div className="flex items-center gap-2">
                         <button 
-                          className="flex-1 px-3 py-2 bg-[#00365a] text-white rounded-md flex items-center justify-center gap-2 text-sm shadow-sm hover:bg-[#004170] transition-colors"
+                          className="flex-1 px-3 py-2 bg-green-600 text-white rounded-md flex items-center justify-center gap-2 text-sm shadow-sm hover:bg-green-700 transition-colors font-semibold"
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedProductId(product.productId);
                             setDetailModalOpen(true);
                           }}
-                          title="Ürün Detayı"
+                          title="Sepete Ekle"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -1766,7 +1801,7 @@ export default function ProductList() {
                         </button>
                         {isAdmin && (
                           <button 
-                            className="w-10 h-10 bg-green-600 text-white rounded-md flex items-center justify-center text-xs shadow-sm hover:bg-green-700 transition-colors"
+                            className="w-10 h-10 bg-blue-600 text-white rounded-md flex items-center justify-center text-xs shadow-sm hover:bg-blue-700 transition-colors"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedProductForUpdate(product);
