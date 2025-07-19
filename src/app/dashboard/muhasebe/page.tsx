@@ -1032,38 +1032,319 @@ const MuhasebePage = () => {
                         </div>
                         <button
                             onClick={() => {
-                                const printContent = document.getElementById('son-islemler');
-                                if (printContent) {
-                                    const newWindow = window.open('', '_blank');
-                                    if (newWindow) {
-                                        newWindow.document.write(`
-                                            <html>
-                                                <head>
-                                                    <title>Son İşlemler</title>
-                                                    <style>
-                                                        body { font-family: Arial, sans-serif; margin: 20px; }
-                                                        table { width: 100%; border-collapse: collapse; }
-                                                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                                                        th { background-color: #f5f5f5; font-weight: bold; }
-                                                        .bg-red-50 { background-color: #fef2f2; }
-                                                        .bg-green-50 { background-color: #f0fdf4; }
-                                                        .bg-gray-50 { background-color: #f9fafb; }
-                                                        .text-red-600 { color: #dc2626; }
-                                                        .text-green-600 { color: #16a34a; }
-                                                        .text-gray-600 { color: #4b5563; }
-                                                        h2 { margin-bottom: 20px; color: #1f2937; }
-                                                    </style>
-                                                </head>
-                                                <body>
-                                                    ${printContent.innerHTML}
-                                                </body>
-                                            </html>
-                                        `);
-                                        newWindow.document.close();
-                                        newWindow.print();
-                                        newWindow.close();
-                                    }
+                                // Filtrelenmiş verileri al
+                                const currentData = getFilteredData();
+                                const transactions = currentData?.hareketler || [];
+                                
+                                // Sayfaya yazdırma stilleri ekle
+                                const printStyles = `
+                                    <style id="print-styles">
+                                        @media print {
+                                            body * {
+                                                visibility: hidden;
+                                            }
+                                            .printable-content, .printable-content * {
+                                                visibility: visible;
+                                            }
+                                            .printable-content {
+                                                position: absolute;
+                                                left: 0;
+                                                top: 0;
+                                                width: 100%;
+                                            }
+                                            .print-header {
+                                                text-align: center;
+                                                margin-bottom: 20px;
+                                                padding-bottom: 15px;
+                                                border-bottom: 2px solid #00365a;
+                                            }
+                                            .print-header h1 {
+                                                color: #00365a;
+                                                font-size: 20px;
+                                                margin-bottom: 8px;
+                                                font-weight: bold;
+                                            }
+                                            .print-header .date {
+                                                color: #666;
+                                                font-size: 14px;
+                                            }
+                                            .filters-info {
+                                                background: #f8f9fa;
+                                                padding: 10px;
+                                                margin-bottom: 15px;
+                                                border-radius: 5px;
+                                                border-left: 4px solid #00365a;
+                                            }
+                                            .filters-info h3 {
+                                                color: #00365a;
+                                                font-size: 14px;
+                                                margin-bottom: 5px;
+                                            }
+                                            .filter-item {
+                                                display: inline-block;
+                                                background: white;
+                                                padding: 3px 8px;
+                                                margin: 2px;
+                                                border-radius: 3px;
+                                                border: 1px solid #ddd;
+                                                font-size: 11px;
+                                            }
+                                            .summary-section {
+                                                margin-bottom: 20px;
+                                                display: grid;
+                                                grid-template-columns: repeat(3, 1fr);
+                                                gap: 15px;
+                                            }
+                                            .summary-card {
+                                                text-align: center;
+                                                padding: 10px;
+                                                border: 1px solid #ddd;
+                                                border-radius: 5px;
+                                                background: #f9f9f9;
+                                            }
+                                            .summary-card .value {
+                                                font-size: 16px;
+                                                font-weight: bold;
+                                                margin-bottom: 3px;
+                                            }
+                                            .summary-card .label {
+                                                font-size: 11px;
+                                                color: #666;
+                                                text-transform: uppercase;
+                                            }
+                                            .summary-card.income .value { color: #16a34a; }
+                                            .summary-card.expense .value { color: #dc2626; }
+                                            .summary-card.net .value { color: #00365a; }
+                                            .print-table {
+                                                width: 100%;
+                                                border-collapse: collapse;
+                                                margin-top: 10px;
+                                                font-size: 11px;
+                                            }
+                                            .print-table th {
+                                                background-color: #00365a !important;
+                                                color: white !important;
+                                                padding: 8px 6px;
+                                                text-align: left;
+                                                font-weight: bold;
+                                                font-size: 10px;
+                                                text-transform: uppercase;
+                                                -webkit-print-color-adjust: exact;
+                                            }
+                                            .print-table td {
+                                                padding: 6px;
+                                                border-bottom: 1px solid #e5e5e5;
+                                                vertical-align: top;
+                                            }
+                                            .print-table tr:nth-child(even) {
+                                                background-color: #f9f9f9 !important;
+                                                -webkit-print-color-adjust: exact;
+                                            }
+                                            .status-badge {
+                                                display: inline-block;
+                                                padding: 2px 6px;
+                                                border-radius: 3px;
+                                                font-size: 9px;
+                                                font-weight: bold;
+                                                text-transform: uppercase;
+                                            }
+                                            .status-alacakli {
+                                                background-color: #dcfce7 !important;
+                                                color: #166534 !important;
+                                                -webkit-print-color-adjust: exact;
+                                            }
+                                            .status-borclu {
+                                                background-color: #fef2f2 !important;
+                                                color: #991b1b !important;
+                                                -webkit-print-color-adjust: exact;
+                                            }
+                                            .status-dengede {
+                                                background-color: #f3f4f6 !important;
+                                                color: #374151 !important;
+                                                -webkit-print-color-adjust: exact;
+                                            }
+                                            .amount-income {
+                                                color: #16a34a !important;
+                                                font-weight: bold;
+                                            }
+                                            .amount-expense {
+                                                color: #dc2626 !important;
+                                                font-weight: bold;
+                                            }
+                                            .transaction-type {
+                                                display: inline-block;
+                                                padding: 2px 6px;
+                                                border-radius: 3px;
+                                                font-size: 9px;
+                                                font-weight: bold;
+                                            }
+                                            .type-income {
+                                                background-color: #dcfce7 !important;
+                                                color: #166534 !important;
+                                                -webkit-print-color-adjust: exact;
+                                            }
+                                            .type-expense {
+                                                background-color: #fef2f2 !important;
+                                                color: #991b1b !important;
+                                                -webkit-print-color-adjust: exact;
+                                            }
+                                            .print-footer {
+                                                margin-top: 30px;
+                                                padding-top: 15px;
+                                                border-top: 1px solid #ddd;
+                                                text-align: center;
+                                                font-size: 10px;
+                                                color: #666;
+                                            }
+                                            .text-truncate {
+                                                white-space: nowrap;
+                                                overflow: hidden;
+                                                text-overflow: ellipsis;
+                                            }
+                                            .balance-info {
+                                                font-size: 10px;
+                                                color: #666;
+                                                margin-top: 2px;
+                                            }
+                                        }
+                                    </style>
+                                `;
+                                
+                                // Yazdırılacak içeriği oluştur
+                                const printContent = `
+                                    <div class="printable-content">
+                                        <div class="print-header">
+                                            <h1>📋 Muhasebe Hareketleri</h1>
+                                            <div class="date">Yazdırma Tarihi: ${new Date().toLocaleDateString('tr-TR', { 
+                                                year: 'numeric', 
+                                                month: 'long', 
+                                                day: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}</div>
+                                        </div>
+
+                                        ${(selectedStoreFilter || startDate || endDate || transactionTypeFilter) ? `
+                                            <div class="filters-info">
+                                                <h3>🔍 Uygulanan Filtreler:</h3>
+                                                ${selectedStoreFilter ? `<span class="filter-item">Mağaza: ${responseData?.magazaBakiyeleri?.find(m => m.store_id === selectedStoreFilter)?.kurum_adi}</span>` : ''}
+                                                ${startDate ? `<span class="filter-item">Başlangıç: ${new Date(startDate).toLocaleDateString('tr-TR')}</span>` : ''}
+                                                ${endDate ? `<span class="filter-item">Bitiş: ${new Date(endDate).toLocaleDateString('tr-TR')}</span>` : ''}
+                                                ${transactionTypeFilter ? `<span class="filter-item">Tür: ${transactionTypeFilter === 'gelir' ? 'Gelir' : 'Gider'}</span>` : ''}
+                                            </div>
+                                        ` : ''}
+
+                                        <div class="summary-section">
+                                            <div class="summary-card income">
+                                                <div class="value">+${formatCurrency(
+                                                    transactions.filter(t => !t.harcama).reduce((sum, t) => sum + parseFloat(t.tutar), 0)
+                                                )}</div>
+                                                <div class="label">Toplam Gelir</div>
+                                            </div>
+                                            <div class="summary-card expense">
+                                                <div class="value">-${formatCurrency(
+                                                    transactions.filter(t => t.harcama).reduce((sum, t) => sum + parseFloat(t.tutar), 0)
+                                                )}</div>
+                                                <div class="label">Toplam Gider</div>
+                                            </div>
+                                            <div class="summary-card net">
+                                                <div class="value">${formatCurrency(
+                                                    transactions.filter(t => !t.harcama).reduce((sum, t) => sum + parseFloat(t.tutar), 0) -
+                                                    transactions.filter(t => t.harcama).reduce((sum, t) => sum + parseFloat(t.tutar), 0)
+                                                )}</div>
+                                                <div class="label">Net Durum</div>
+                                            </div>
+                                        </div>
+
+                                        <table class="print-table">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width: 12%;">Tarih</th>
+                                                    <th style="width: 20%;">Mağaza</th>
+                                                    <th style="width: 15%;">İşlem Türü</th>
+                                                    <th style="width: 15%;">Mağaza Durumu</th>
+                                                    <th style="width: 12%;">Tutar</th>
+                                                    <th style="width: 20%;">Açıklama</th>
+                                                    <th style="width: 6%;">Durum</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${transactions.map(transaction => `
+                                                    <tr>
+                                                        <td>
+                                                            ${new Date(transaction.tarih).toLocaleDateString('tr-TR')}
+                                                            <div style="font-size: 9px; color: #888;">
+                                                                ${new Date(transaction.tarih).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="text-truncate" title="${transaction.store?.kurum_adi || 'Bilinmeyen Mağaza'}">
+                                                                ${transaction.store?.kurum_adi || 'Bilinmeyen Mağaza'}
+                                                            </div>
+                                                            <div style="font-size: 9px; color: #888;">${transaction.storeId}</div>
+                                                        </td>
+                                                        <td class="text-truncate" title="${transaction.islemTuru}">
+                                                            ${transaction.islemTuru}
+                                                        </td>
+                                                        <td>
+                                                            <span class="status-badge status-${transaction.store.durum.toLowerCase()}">
+                                                                ${transaction.store.durum}
+                                                            </span>
+                                                            <div class="balance-info">
+                                                                Bakiye: ${formatCurrency(transaction.store.bakiye)}
+                                                            </div>
+                                                        </td>
+                                                        <td class="${transaction.harcama ? 'amount-expense' : 'amount-income'}">
+                                                            ${transaction.harcama ? '-' : '+'}${formatCurrency(parseFloat(transaction.tutar))}
+                                                        </td>
+                                                        <td class="text-truncate" title="${transaction.aciklama}">
+                                                            ${transaction.aciklama}
+                                                        </td>
+                                                        <td>
+                                                            <span class="transaction-type type-${transaction.harcama ? 'expense' : 'income'}">
+                                                                ${transaction.harcama ? 'GİDER' : 'GELİR'}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+
+                                        <div class="print-footer">
+                                            <p><strong>Toplam ${transactions.length} hareket listelendi</strong></p>
+                                            <p>Bu rapor Paşa Bayii Sipariş Sistemi tarafından ${new Date().toLocaleDateString('tr-TR')} tarihinde otomatik olarak oluşturulmuştur.</p>
+                                        </div>
+                                    </div>
+                                `;
+                                
+                                // Eski yazdırma stillerini temizle
+                                const oldStyles = document.getElementById('print-styles');
+                                if (oldStyles) {
+                                    oldStyles.remove();
                                 }
+                                
+                                // Eski yazdırılacak içeriği temizle
+                                const oldContent = document.querySelector('.printable-content');
+                                if (oldContent) {
+                                    oldContent.remove();
+                                }
+                                
+                                // Yeni stilleri head'e ekle
+                                document.head.insertAdjacentHTML('beforeend', printStyles);
+                                
+                                // Yazdırılacak içeriği body'ye ekle
+                                document.body.insertAdjacentHTML('beforeend', printContent);
+                                
+                                // Yazdırma dialogunu aç
+                                window.print();
+                                
+                                // Yazdırma işlemi bittiğinde temizlik yap
+                                setTimeout(() => {
+                                    const stylesElement = document.getElementById('print-styles');
+                                    const contentElement = document.querySelector('.printable-content');
+                                    if (stylesElement) stylesElement.remove();
+                                    if (contentElement) contentElement.remove();
+                                }, 1000);
                             }}
                             className="flex items-center px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                         >

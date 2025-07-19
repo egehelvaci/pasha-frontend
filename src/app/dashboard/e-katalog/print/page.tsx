@@ -324,10 +324,15 @@ const PrintCatalogPage = () => {
           }
 
           .cover-page h1 {
-            color: white !important;
+            color: #ffffff !important;
             font-size: 48px !important;
             font-weight: 900 !important;
             margin-bottom: 20mm !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5) !important;
+          }
+          
+          .cover-page p, .cover-page div {
+            color: #ffffff !important;
           }
 
           .page-header {
@@ -458,44 +463,46 @@ const PrintCatalogPage = () => {
               </div>
               
               <div>
-                <h1 className="text-5xl font-bold mb-6 text-white" style={{ 
-                  color: 'white',
+                <h1 className="text-5xl font-bold mb-6" style={{ 
+                  color: '#ffffff !important',
                   fontWeight: '900',
                   textShadow: '0 2px 4px rgba(0,0,0,0.5)',
                   WebkitPrintColorAdjust: 'exact',
                   printColorAdjust: 'exact'
                 }}>E-KATALOG</h1>
-                <div className="w-32 h-1 bg-white mx-auto mb-8"></div>
-                <p className="text-2xl mb-3 text-white" style={{ 
-                  color: 'white',
+                <div className="w-32 h-1 mx-auto mb-8" style={{ backgroundColor: '#ffffff' }}></div>
+                <p className="text-2xl mb-3" style={{ 
+                  color: '#ffffff !important',
                   fontWeight: '700',
                   textShadow: '0 1px 3px rgba(0,0,0,0.4)',
                   WebkitPrintColorAdjust: 'exact',
                   printColorAdjust: 'exact'
                 }}>Halı Koleksiyonu</p>
-                <p className="text-xl opacity-90 text-white" style={{ 
-                  color: 'white',
+                <p className="text-xl mt-2" style={{ 
+                  color: '#ffffff !important',
                   fontWeight: '600',
                   textShadow: '0 1px 2px rgba(0,0,0,0.3)',
                   WebkitPrintColorAdjust: 'exact',
-                  printColorAdjust: 'exact'
+                  printColorAdjust: 'exact',
+                  opacity: '0.9'
                 }}>{new Date().getFullYear()}</p>
               </div>
               
               <div className="mt-16">
-                <p className="text-2xl font-medium text-white" style={{ 
-                  color: 'white',
+                <p className="text-2xl font-medium" style={{ 
+                  color: '#ffffff !important',
                   fontWeight: '800',
                   textShadow: '0 2px 4px rgba(0,0,0,0.5)',
                   WebkitPrintColorAdjust: 'exact',
                   printColorAdjust: 'exact'
                 }}>PAŞA HOME</p>
-                <p className="text-lg opacity-80 mt-2 text-white" style={{ 
-                  color: 'white',
+                <p className="text-lg mt-2" style={{ 
+                  color: '#ffffff !important',
                   fontWeight: '600',
                   textShadow: '0 1px 2px rgba(0,0,0,0.3)',
                   WebkitPrintColorAdjust: 'exact',
-                  printColorAdjust: 'exact'
+                  printColorAdjust: 'exact',
+                  opacity: '0.8'
                 }}>
                   {new Date().toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' })}
                 </p>
