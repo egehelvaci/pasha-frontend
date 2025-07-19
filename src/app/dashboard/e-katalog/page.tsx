@@ -110,21 +110,7 @@ const EKatalogPage = () => {
     const selectedProductIds = Array.from(selectedProducts);
     console.log('📝 Seçili ürün ID\'leri:', selectedProductIds.length, 'ürün');
     
-    // Check if too many products selected and warn user
-    if (selectedProductIds.length > 100) {
-      const confirm = window.confirm(
-        `${selectedProductIds.length} ürün seçtiniz. Bu çok fazla ürün olduğu için katalog oluşturma uzun sürebilir.\n\n` +
-        `Devam etmek istiyor musunuz?\n\n` +
-        `Öneriler:\n` +
-        `• Daha az ürün seçerek daha hızlı katalog oluşturabilirsiniz\n` +
-        `• Koleksiyonlara göre ayrı kataloglar oluşturabilirsiniz`
-      );
-      
-      if (!confirm) {
-        setIsGeneratingPDF(false);
-        return;
-      }
-    }
+
     
     // Use requestIdleCallback for better performance on low-end devices
     const processGeneration = () => {
