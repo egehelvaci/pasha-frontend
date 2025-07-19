@@ -9,6 +9,24 @@ import { useAuth } from '../context/AuthContext';
 import { FaUser, FaSignOutAlt, FaCog, FaShoppingCart } from 'react-icons/fa';
 import { getMyBalance, BalanceInfo } from '../../services/api';
 
+// Token'ı localStorage veya sessionStorage'dan al
+function getAuthToken(): string | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  
+  // Önce localStorage'dan "beni hatırla" durumunu kontrol et
+  const rememberMe = localStorage.getItem("rememberMe") === "true";
+  
+  if (rememberMe) {
+    // "Beni hatırla" aktifse localStorage'dan al
+    return localStorage.getItem('token');
+  } else {
+    // "Beni hatırla" aktif değilse sessionStorage'dan al
+    return sessionStorage.getItem('token');
+  }
+}
+
 type HeaderProps = {
   title: string;
   user: {
@@ -85,7 +103,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
 
     setIsLoadingBalance(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = getAuthToken();
       if (!token) {
         return;
       }
@@ -129,7 +147,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
     const fetchCartData = async () => {
       try {
         // Token kontrolü
-        const token = localStorage.getItem('token');
+        const token = getAuthToken();
         if (!token) {
           return;
         }

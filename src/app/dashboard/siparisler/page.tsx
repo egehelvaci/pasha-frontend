@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
+import { useToken } from '@/app/hooks/useToken';
 
 interface OrderItem {
   id: string;
@@ -183,8 +184,9 @@ const statusColors: { [key: string]: string } = {
 };
 
 const Siparisler = () => {
+  const { user, isAdmin, isLoading: authLoading } = useAuth();
+  const token = useToken();
   const router = useRouter();
-  const { isAdmin, isLoading: authLoading } = useAuth();
   const [ordersData, setOrdersData] = useState<OrdersResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -242,8 +244,8 @@ const Siparisler = () => {
     try {
       setLoading(true);
       setError(''); // Clear previous errors
-      const token = localStorage.getItem('token');
-      if (!token) {
+      const authToken = token;
+      if (!authToken) {
         router.push('/');
         return;
       }
@@ -270,7 +272,7 @@ const Siparisler = () => {
 
       const response = await fetch(endpoint, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json'
         }
       });
@@ -291,13 +293,13 @@ const Siparisler = () => {
       } else {
         throw new Error(data.message || 'Siparişler alınamadı');
       }
-    } catch (error) {
+    } catch (error: any) {
 
       setError('Siparişler alınamadı. Lütfen tekrar deneyiniz.');
     } finally {
       setLoading(false);
     }
-  }, [router, isAdmin, calculateOrderStats, authLoading]);
+  }, [router, isAdmin, calculateOrderStats, authLoading, token]);
 
   useEffect(() => {
     // AuthContext yüklemesi tamamlanana kadar bekle
@@ -311,7 +313,7 @@ const Siparisler = () => {
   // Sipariş detayını getir
   const handleViewOrderDetail = async (orderId: string) => {
     try {
-      const token = localStorage.getItem('token');
+      const authToken = token;
       let endpoint: string;
       
       // Admin ise sadece admin/orders endpoint'ini kullan
@@ -331,7 +333,7 @@ const Siparisler = () => {
 
       const response = await fetch(endpoint, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json'
         }
       });
@@ -346,7 +348,7 @@ const Siparisler = () => {
       } else {
         throw new Error(data.message || 'Sipariş detayı alınamadı');
       }
-    } catch (error) {
+    } catch (error: any) {
 
       alert('Sipariş detayı alınamadı. Lütfen tekrar deneyiniz.');
     }
@@ -355,11 +357,11 @@ const Siparisler = () => {
   // QR kod oluşturma fonksiyonu
   const generateQRCodes = async (orderId: string) => {
     try {
-      const token = localStorage.getItem('token');
+      const authToken = token;
       const response = await fetch(`https://pasha-backend-production.up.railway.app/api/admin/orders/${orderId}/generate-qr-images`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json'
         }
       });
@@ -375,7 +377,7 @@ const Siparisler = () => {
 
 
       return data.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('QR kod oluşturma hatası:', error);
       throw error;
     }
@@ -389,13 +391,13 @@ const Siparisler = () => {
     
     setUpdatingStatus(true);
     try {
-      const token = localStorage.getItem('token');
+      const authToken = token;
       
       // İlk olarak sipariş durumunu güncelle
       const response = await fetch(`https://pasha-backend-production.up.railway.app/api/admin/orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ status: newStatus })
@@ -413,7 +415,7 @@ const Siparisler = () => {
             await generateQRCodes(orderId);
             // QR kodları oluşturulduktan sonra alert mesajını güncelle
             alert('Sipariş durumu güncellendi ve QR kodları oluşturuldu!');
-          } catch (qrError) {
+          } catch (qrError: any) {
             // QR kod hatası sipariş güncellemeyi engellemez, sadece uyarı verelim
             alert('Sipariş durumu güncellendi ancak QR kodları oluşturulurken bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
           }
@@ -431,7 +433,7 @@ const Siparisler = () => {
       } else {
         throw new Error(data.message || 'Sipariş durumu güncellenemedi');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Sipariş durumu güncellenirken hata:', error);
       alert('Sipariş durumu güncellenirken bir hata oluştu. Lütfen tekrar deneyiniz.');
     } finally {
@@ -1394,7 +1396,7 @@ const Siparisler = () => {
                                 // QR kodları oluşturulduktan sonra sipariş detayını yenile
                                 await handleViewOrderDetail(selectedOrder.id);
                                 alert('QR kodları başarıyla oluşturuldu!');
-                              } catch (error) {
+                              } catch (error: any) {
 
                                 alert('QR kodları oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.');
                               } finally {

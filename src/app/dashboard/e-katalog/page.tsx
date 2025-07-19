@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useToken } from '@/app/hooks/useToken';
 
 interface Product {
   productId: string;
@@ -21,6 +22,7 @@ interface ProductResponse {
 }
 
 const EKatalogPage = () => {
+  const token = useToken();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
@@ -32,7 +34,7 @@ const EKatalogPage = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const authToken = token;
       
       const params = new URLSearchParams({
         limit: '1000',
@@ -41,7 +43,7 @@ const EKatalogPage = () => {
       
       const response = await fetch(`https://pasha-backend-production.up.railway.app/api/products?${params}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json'
         }
       });

@@ -64,6 +64,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // Client-side kontrolü - sadece tarayıcıda çalıştır
+        if (typeof window === 'undefined') {
+          return;
+        }
+
         // Önce localStorage'dan "beni hatırla" durumunu kontrol et
         const rememberMe = localStorage.getItem("rememberMe") === "true";
         console.log('🔍 Remember Me durumu:', rememberMe);
@@ -99,13 +104,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.error("LocalStorage/SessionStorage parse hatası:", error);
-        localStorage.removeItem("user");
-        localStorage.removeItem("token");
-        localStorage.removeItem("userType");
-        localStorage.removeItem("rememberMe");
-        sessionStorage.removeItem("user");
-        sessionStorage.removeItem("token");
-        sessionStorage.removeItem("userType");
+        // Güvenli cleanup - client-side kontrolü ile
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem("user");
+          localStorage.removeItem("token");
+          localStorage.removeItem("userType");
+          localStorage.removeItem("rememberMe");
+          sessionStorage.removeItem("user");
+          sessionStorage.removeItem("token");
+          sessionStorage.removeItem("userType");
+        }
       } finally {
         setIsLoading(false);
       }

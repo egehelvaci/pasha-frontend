@@ -2,11 +2,31 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '@/app/context/AuthContext';
 
 // API Base URL
 const API_BASE_URL = "https://pasha-backend-production.up.railway.app";
 
+// Token'ı localStorage veya sessionStorage'dan al
+function getAuthToken(): string | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  
+  // Önce localStorage'dan "beni hatırla" durumunu kontrol et
+  const rememberMe = localStorage.getItem("rememberMe") === "true";
+  
+  if (rememberMe) {
+    // "Beni hatırla" aktifse localStorage'dan al
+    return localStorage.getItem('token');
+  } else {
+    // "Beni hatırla" aktif değilse sessionStorage'dan al
+    return sessionStorage.getItem('token');
+  }
+}
+
 export default function CartPage() {
+  const { token } = useAuth();
   const [loading, setLoading] = useState(true);
   const [cartData, setCartData] = useState<any>(null);
   const [error, setError] = useState("");
@@ -20,15 +40,15 @@ export default function CartPage() {
   const fetchCartData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      if (!token) {
+      const authToken = token || getAuthToken();
+      if (!authToken) {
         router.push('/');
         return;
       }
       
       const res = await fetch(`${API_BASE_URL}/api/cart`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${authToken}`
         }
       });
       
@@ -58,11 +78,11 @@ export default function CartPage() {
       setUpdatingItems(prev => new Set(prev).add(itemId));
       setError(""); // Önceki hataları temizle
       
-      const token = localStorage.getItem('token');
+      const authToken = token || getAuthToken();
       const res = await fetch(`${API_BASE_URL}/api/cart/items/${itemId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${authToken}`
         }
       });
       
@@ -103,11 +123,11 @@ export default function CartPage() {
       setUpdatingItems(prev => new Set(prev).add(itemId));
       setError(""); // Önceki hataları temizle
       
-      const token = localStorage.getItem('token');
+      const authToken = token || getAuthToken();
       const res = await fetch(`${API_BASE_URL}/api/cart/items/${itemId}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ quantity: newQuantity })
@@ -143,11 +163,11 @@ export default function CartPage() {
     }
     
     try {
-      const token = localStorage.getItem('token');
+      const authToken = token || getAuthToken();
       const res = await fetch(`${API_BASE_URL}/api/cart/clear`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${authToken}`
         }
       });
       

@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { useToken } from '@/app/hooks/useToken';
 
 // API Base URL
 const API_BASE_URL = "https://pasha-backend-production.up.railway.app";
@@ -168,7 +169,8 @@ interface StockUpdateResponse {
 }
 
 export default function StokPage() {
-  const { user, isLoading, token, isAdmin } = useAuth();
+  const { user, isLoading, isAdmin } = useAuth();
+  const token = useToken();
   const router = useRouter();
 
   const [products, setProducts] = useState<Product[]>([]);

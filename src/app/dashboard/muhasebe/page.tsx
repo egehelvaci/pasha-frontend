@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { getStores, getStorePriceLists, Store, PriceListProduct } from '../../../services/api';
+import { useToken } from '@/app/hooks/useToken';
 
 // PriceListProduct'ı genişletiyoruz
 interface ExtendedPriceListProduct extends PriceListProduct {
@@ -65,6 +66,7 @@ interface TransactionFormData {
 
 const MuhasebePage = () => {
     const { isAdmin, user } = useAuth();
+    const token = useToken();
     const router = useRouter();
     const [data, setData] = useState<AccountingData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -122,15 +124,15 @@ const MuhasebePage = () => {
             setLoading(true);
             setError(null);
 
-            const token = localStorage.getItem('token');
-            if (!token) {
+            const authToken = token;
+            if (!authToken) {
                 throw new Error('Token bulunamadı');
             }
 
             // Yeni API - tek endpoint'ten hem transactions hem bakiye bilgileri
             const response = await fetch('https://pasha-backend-production.up.railway.app/api/admin/muhasebe-hareketleri', {
                 headers: {
-                    'Authorization': `Bearer ${token}`,
+                    'Authorization': `Bearer ${authToken}`,
                     'Content-Type': 'application/json'
                 }
             });
@@ -168,12 +170,12 @@ const MuhasebePage = () => {
     // Gelir türlerini getir
     const fetchIncomeTypes = async () => {
         try {
-            const token = localStorage.getItem('token');
-            if (!token) return;
+            const authToken = token;
+            if (!authToken) return;
 
             const response = await fetch('https://pasha-backend-production.up.railway.app/api/admin/muhasebe/income-types', {
                 headers: {
-                    'Authorization': `Bearer ${token}`,
+                    'Authorization': `Bearer ${authToken}`,
                     'Content-Type': 'application/json'
                 }
             });
@@ -192,12 +194,12 @@ const MuhasebePage = () => {
     // Gider türlerini getir
     const fetchExpenseTypes = async () => {
         try {
-            const token = localStorage.getItem('token');
-            if (!token) return;
+            const authToken = token;
+            if (!authToken) return;
 
             const response = await fetch('https://pasha-backend-production.up.railway.app/api/admin/muhasebe/expense-types', {
                 headers: {
-                    'Authorization': `Bearer ${token}`,
+                    'Authorization': `Bearer ${authToken}`,
                     'Content-Type': 'application/json'
                 }
             });
@@ -363,7 +365,7 @@ const MuhasebePage = () => {
 
         try {
             setFormLoading(true);
-            const token = localStorage.getItem('token');
+            const authToken = token;
 
             // API formatına uygun olarak veri hazırla (yeni API dokümantasyonuna göre)
             const submitData = {
@@ -379,7 +381,7 @@ const MuhasebePage = () => {
             const response = await fetch('https://pasha-backend-production.up.railway.app/api/admin/muhasebe-hareketleri', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${token}`,
+                    'Authorization': `Bearer ${authToken}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(submitData)

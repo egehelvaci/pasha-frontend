@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { useToken } from '@/app/hooks/useToken';
 import { FaPlus, FaEdit, FaTrash, FaStore, FaUser, FaLock, FaBuilding, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { getStores, assignUserToStore, removeUserFromStore, getMyProfile, updateStoreProfile, changePassword, StoreUpdateData, PasswordChangeData, UserProfileInfo, StoreProfileInfo } from '@/services/api';
 
@@ -36,7 +37,8 @@ interface UserFormData {
 }
 
 export default function Settings() {
-  const { user, token, isAdmin, isLoading: authLoading } = useAuth();
+  const { user, isAdmin, isLoading: authLoading } = useAuth();
+  const token = useToken();
   const router = useRouter();
   
   // Admin için mevcut state'ler

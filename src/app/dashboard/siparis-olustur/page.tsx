@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
+import { useToken } from '@/app/hooks/useToken';
 
 interface CartItem {
   id: number;
@@ -41,6 +42,7 @@ interface LimitCheckResult {
 const SiparisOlustur = () => {
   const router = useRouter();
   const { user } = useAuth();
+  const token = useToken();
   const [cartData, setCartData] = useState<CartData | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -53,15 +55,15 @@ const SiparisOlustur = () => {
     const fetchCartData = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem('token');
-        if (!token) {
+        const authToken = token;
+        if (!authToken) {
           router.push('/');
           return;
         }
 
         const response = await fetch('https://pasha-backend-production.up.railway.app/api/cart', {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            'Authorization': `Bearer ${authToken}`,
             'Content-Type': 'application/json'
           }
         });
@@ -91,15 +93,15 @@ const SiparisOlustur = () => {
   const performLimitCheck = async () => {
     try {
       setCheckingLimits(true);
-      const token = localStorage.getItem('token');
-      if (!token) {
+      const authToken = token;
+      if (!authToken) {
         router.push('/');
         return;
       }
 
       const response = await fetch('https://pasha-backend-production.up.railway.app/api/orders/check-limits', {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json'
         }
       });
@@ -148,8 +150,8 @@ const SiparisOlustur = () => {
     setSubmitting(true);
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
+      const authToken = token;
+      if (!authToken) {
         router.push('/');
         return;
       }
@@ -162,7 +164,7 @@ const SiparisOlustur = () => {
       const response = await fetch('https://pasha-backend-production.up.railway.app/api/orders/create-from-cart', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(orderPayload)

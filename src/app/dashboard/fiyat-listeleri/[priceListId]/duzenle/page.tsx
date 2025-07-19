@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { PriceList, CreatePriceListData, getPriceLists, updatePriceList } from '@/services/api';
 import { useAuth } from '@/app/context/AuthContext';
 import type { Collection } from '@/services/api';
+import { useToken } from '@/app/hooks/useToken';
 
 // Form için değerlerin tipini tanımla
 interface FormValues {
@@ -66,6 +67,7 @@ export default function EditPriceListPage() {
   const router = useRouter();
   const params = useParams();
   const { isAdmin } = useAuth();
+  const token = useToken();
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -193,9 +195,10 @@ export default function EditPriceListPage() {
 
       // Doğrudan fiyat listesi detaylarını getir
       try {
+        const authToken = token;
         const detailResponse = await fetch(`https://pasha-backend-production.up.railway.app/api/price-lists/${params.priceListId}`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${authToken}`
           }
         });
         const detailData = await detailResponse.json() as PriceListDetailResponse;

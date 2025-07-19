@@ -5,6 +5,7 @@ import Image from "next/image";
 import { FaTrash } from "react-icons/fa";
 import { useAuth } from '@/app/context/AuthContext';
 import { getProductRules, ProductRule } from '@/services/api';
+import { useToken } from '@/app/hooks/useToken';
 
 // API Base URL
 const API_BASE_URL = "https://pasha-backend-production.up.railway.app";
@@ -94,6 +95,7 @@ const getPageSize = () => {
 };
 
 export default function ProductList() {
+  const token = useToken();
   const [products, setProducts] = useState<any[]>([]);
   const [pagination, setPagination] = useState<any>(null); // YENİ
   const [currentPage, setCurrentPage] = useState(1); // YENİ
@@ -166,7 +168,7 @@ export default function ProductList() {
   const fetchProducts = async (page: number = 1, searchQuery: string = '', collectionId: string = '') => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const authToken = token;
       const limit = getPageSize();
       
       const params = new URLSearchParams({
@@ -178,7 +180,7 @@ export default function ProductList() {
       
       const response = await fetch(`${API_BASE_URL}/api/products?${params}`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${authToken}`
         }
       });
       
@@ -204,10 +206,10 @@ export default function ProductList() {
 
   const fetchCollections = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const authToken = token;
       const res = await fetch("https://pasha-backend-production.up.railway.app/api/collections/", {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${authToken}`
         }
       });
       const data = await res.json();
@@ -263,11 +265,11 @@ export default function ProductList() {
     setDeleteLoading(true);
     setDeleteError("");
     try {
-      const token = localStorage.getItem('token');
+      const authToken = token;
       const res = await fetch(`https://pasha-backend-production.up.railway.app/api/products/${deleteId}`, {
         method: "DELETE",
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${authToken}`
         }
       });
       if (!res.ok) throw new Error("Ürün silinemedi");
@@ -371,7 +373,7 @@ export default function ProductList() {
       setError("");
       
       try {
-        const token = localStorage.getItem('token');
+        const authToken = token;
         const fd = new FormData();
         fd.append('name', form.name);
         fd.append('description', form.description);
@@ -731,7 +733,7 @@ export default function ProductList() {
       setLoading(true);
       setError("");
       try {
-        const token = localStorage.getItem('token');
+        const authToken = token;
         const res = await fetch(`https://pasha-backend-production.up.railway.app/api/products/${id}`, {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -800,7 +802,7 @@ export default function ProductList() {
       setAddToCartSuccess(false);
       
       try {
-        const token = localStorage.getItem('token');
+        const authToken = token;
         
         // Yükseklik değerini belirle
         const heightValue = selectedSize.is_optional_height ? customHeight : selectedSize.height;
@@ -1186,7 +1188,7 @@ export default function ProductList() {
       setError("");
       
       try {
-        const token = localStorage.getItem('token');
+        const authToken = token;
         const fd = new FormData();
         
         // Sadece değişen alanları gönder
@@ -1247,7 +1249,7 @@ export default function ProductList() {
       setDeleteLoading(true);
       
       try {
-        const token = localStorage.getItem('token');
+        const authToken = token;
         const res = await fetch(`https://pasha-backend-production.up.railway.app/api/products/${product.productId}`, {
           method: "DELETE",
           headers: {

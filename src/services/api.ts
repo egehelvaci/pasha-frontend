@@ -1,3 +1,21 @@
+// Token'ı localStorage veya sessionStorage'dan al
+function getAuthToken(): string | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  
+  // Önce localStorage'dan "beni hatırla" durumunu kontrol et
+  const rememberMe = localStorage.getItem("rememberMe") === "true";
+  
+  if (rememberMe) {
+    // "Beni hatırla" aktifse localStorage'dan al
+    return localStorage.getItem('token');
+  } else {
+    // "Beni hatırla" aktif değilse sessionStorage'dan al
+    return sessionStorage.getItem('token');
+  }
+}
+
 export interface Collection {
   id: string;
   collectionId: string;
@@ -520,7 +538,7 @@ export async function deletePrice(priceId: string): Promise<void> {
 
 export async function getPriceLists(): Promise<PriceList[]> {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     const response = await fetch(`${API_BASE_URL}/api/price-lists`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -539,7 +557,7 @@ export async function getPriceLists(): Promise<PriceList[]> {
 
 export async function updatePriceList(priceListId: string, data: UpdatePriceListData): Promise<PriceList> {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     const response = await fetch(`${API_BASE_URL}/api/price-lists/${priceListId}`, {
       method: 'PUT',
       headers: {
@@ -564,7 +582,7 @@ export async function updatePriceList(priceListId: string, data: UpdatePriceList
 
 export async function deletePriceList(priceListId: string): Promise<DeletePriceListResponse> {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     const response = await fetch(`${API_BASE_URL}/api/price-lists/${priceListId}`, {
       method: 'DELETE',
       headers: {
@@ -586,7 +604,7 @@ export async function deletePriceList(priceListId: string): Promise<DeletePriceL
 
 export async function getStores(): Promise<Store[]> {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     
     if (!token) {
 
@@ -623,7 +641,7 @@ export async function getStores(): Promise<Store[]> {
 
 export async function createStore(data: CreateStoreData): Promise<Store> {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     const response = await fetch(`${API_BASE_URL}/api/stores`, {
       method: 'POST',
       headers: {
@@ -648,7 +666,7 @@ export async function createStore(data: CreateStoreData): Promise<Store> {
 
 export async function updateStore(id: string, data: UpdateStoreData): Promise<Store> {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     const response = await fetch(`${API_BASE_URL}/api/stores/${id}`, {
       method: 'PUT',
       headers: {
@@ -673,7 +691,7 @@ export async function updateStore(id: string, data: UpdateStoreData): Promise<St
 
 export async function deleteStore(id: string): Promise<DeleteStoreResponse> {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     const response = await fetch(`${API_BASE_URL}/api/stores/${id}`, {
       method: 'DELETE',
       headers: {
@@ -695,7 +713,7 @@ export async function deleteStore(id: string): Promise<DeleteStoreResponse> {
 
 export async function createPriceList(data: CreatePriceListData): Promise<PriceList> {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     const response = await fetch(`${API_BASE_URL}/api/price-lists`, {
       method: 'POST',
       headers: {
@@ -720,7 +738,7 @@ export async function createPriceList(data: CreatePriceListData): Promise<PriceL
 
 export async function assignPriceList(data: AssignPriceListData): Promise<PriceListAssignment> {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     const response = await fetch(`${API_BASE_URL}/api/price-lists/store-assignments`, {
       method: 'POST',
       headers: {
@@ -745,7 +763,7 @@ export async function assignPriceList(data: AssignPriceListData): Promise<PriceL
 
 export async function assignStorePriceList(data: AssignStorePriceListData): Promise<StorePriceListAssignment> {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     const response = await fetch(`${API_BASE_URL}/api/price-lists/store-assignments`, {
       method: 'POST',
       headers: {
@@ -770,7 +788,7 @@ export async function assignStorePriceList(data: AssignStorePriceListData): Prom
 
 export async function getStorePriceLists(storeId: string): Promise<StorePriceListAssignment[]> {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     const response = await fetch(`${API_BASE_URL}/api/price-lists/store-assignments/${storeId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -792,7 +810,7 @@ export async function getStorePriceLists(storeId: string): Promise<StorePriceLis
 
 export async function getMyStorePriceList(): Promise<any> {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     const response = await fetch(`${API_BASE_URL}/api/price-lists/my-store/price-list`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -814,7 +832,7 @@ export async function getMyStorePriceList(): Promise<any> {
 
 export async function assignUserToStore(userId: string, data: AssignUserToStoreData): Promise<AssignUserToStoreResponse> {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/assign-store`, {
       method: 'POST',
       headers: {
@@ -839,7 +857,7 @@ export async function assignUserToStore(userId: string, data: AssignUserToStoreD
 
 export async function removeUserFromStore(userId: string): Promise<RemoveUserFromStoreResponse> {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/remove-store`, {
       method: 'DELETE',
       headers: {
@@ -1049,7 +1067,7 @@ export interface CreateCutTypeData {
 // Ürün Kuralları API Fonksiyonları
 export const getProductRules = async (isActive?: boolean, search?: string): Promise<ProductRule[]> => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     if (!token) throw new Error('Token bulunamadı');
 
     let url = `${API_BASE_URL}/api/admin/product-rules`;
@@ -1079,7 +1097,7 @@ export const getProductRules = async (isActive?: boolean, search?: string): Prom
 
 export const getProductRule = async (ruleId: number): Promise<ProductRule> => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     if (!token) throw new Error('Token bulunamadı');
 
     const response = await fetch(`${API_BASE_URL}/api/admin/product-rules/${ruleId}`, {
@@ -1101,7 +1119,7 @@ export const getProductRule = async (ruleId: number): Promise<ProductRule> => {
 
 export const createProductRule = async (data: CreateProductRuleData): Promise<ProductRule> => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     if (!token) throw new Error('Token bulunamadı');
 
     const response = await fetch(`${API_BASE_URL}/api/admin/product-rules`, {
@@ -1125,7 +1143,7 @@ export const createProductRule = async (data: CreateProductRuleData): Promise<Pr
 
 export const updateProductRule = async (ruleId: number, data: UpdateProductRuleData): Promise<ProductRule> => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     if (!token) throw new Error('Token bulunamadı');
 
     const response = await fetch(`${API_BASE_URL}/api/admin/product-rules/${ruleId}`, {
@@ -1149,7 +1167,7 @@ export const updateProductRule = async (ruleId: number, data: UpdateProductRuleD
 
 export const deleteProductRule = async (ruleId: number): Promise<void> => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     if (!token) throw new Error('Token bulunamadı');
 
     const response = await fetch(`${API_BASE_URL}/api/admin/product-rules/${ruleId}`, {
@@ -1173,7 +1191,7 @@ export const deleteProductRule = async (ruleId: number): Promise<void> => {
 // Boyut Seçenekleri API Fonksiyonları
 export const addSizeOption = async (ruleId: number, data: CreateSizeOptionData): Promise<SizeOption> => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     if (!token) throw new Error('Token bulunamadı');
 
     const response = await fetch(`${API_BASE_URL}/api/admin/product-rules/${ruleId}/size-options`, {
@@ -1197,7 +1215,7 @@ export const addSizeOption = async (ruleId: number, data: CreateSizeOptionData):
 
 export const updateSizeOption = async (ruleId: number, sizeId: number, data: CreateSizeOptionData): Promise<SizeOption> => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     if (!token) throw new Error('Token bulunamadı');
 
     const response = await fetch(`${API_BASE_URL}/api/admin/product-rules/${ruleId}/size-options/${sizeId}`, {
@@ -1221,7 +1239,7 @@ export const updateSizeOption = async (ruleId: number, sizeId: number, data: Cre
 
 export const deleteSizeOption = async (ruleId: number, sizeId: number): Promise<void> => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     if (!token) throw new Error('Token bulunamadı');
 
     const response = await fetch(`${API_BASE_URL}/api/admin/product-rules/${ruleId}/size-options/${sizeId}`, {
@@ -1242,7 +1260,7 @@ export const deleteSizeOption = async (ruleId: number, sizeId: number): Promise<
 // Kesim Türleri Ataması API Fonksiyonları
 export const assignCutTypes = async (ruleId: number, cutTypeIds: number[]): Promise<CutType[]> => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     if (!token) throw new Error('Token bulunamadı');
 
     const response = await fetch(`${API_BASE_URL}/api/admin/product-rules/${ruleId}/cut-types`, {
@@ -1266,7 +1284,7 @@ export const assignCutTypes = async (ruleId: number, cutTypeIds: number[]): Prom
 
 export const removeCutType = async (ruleId: number, cutTypeId: number): Promise<void> => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     if (!token) throw new Error('Token bulunamadı');
 
     const response = await fetch(`${API_BASE_URL}/api/admin/product-rules/${ruleId}/cut-types/${cutTypeId}`, {
@@ -1287,7 +1305,7 @@ export const removeCutType = async (ruleId: number, cutTypeId: number): Promise<
 // Kesim Türleri Yönetimi API Fonksiyonları
 export const getCutTypes = async (search?: string): Promise<CutType[]> => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     if (!token) throw new Error('Token bulunamadı');
 
     let url = `${API_BASE_URL}/api/admin/cut-types`;
@@ -1312,7 +1330,7 @@ export const getCutTypes = async (search?: string): Promise<CutType[]> => {
 
 export const getCutType = async (cutTypeId: number): Promise<CutType> => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     if (!token) throw new Error('Token bulunamadı');
 
     const response = await fetch(`${API_BASE_URL}/api/admin/cut-types/${cutTypeId}`, {
@@ -1334,7 +1352,7 @@ export const getCutType = async (cutTypeId: number): Promise<CutType> => {
 
 export const createCutType = async (data: CreateCutTypeData): Promise<CutType> => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     if (!token) throw new Error('Token bulunamadı');
 
     const response = await fetch(`${API_BASE_URL}/api/admin/cut-types`, {
@@ -1358,7 +1376,7 @@ export const createCutType = async (data: CreateCutTypeData): Promise<CutType> =
 
 export const updateCutType = async (cutTypeId: number, data: CreateCutTypeData): Promise<CutType> => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     if (!token) throw new Error('Token bulunamadı');
 
     const response = await fetch(`${API_BASE_URL}/api/admin/cut-types/${cutTypeId}`, {
@@ -1382,7 +1400,7 @@ export const updateCutType = async (cutTypeId: number, data: CreateCutTypeData):
 
 export const deleteCutType = async (cutTypeId: number): Promise<void> => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     if (!token) throw new Error('Token bulunamadı');
 
     const response = await fetch(`${API_BASE_URL}/api/admin/cut-types/${cutTypeId}`, {
@@ -1406,7 +1424,7 @@ export const deleteCutType = async (cutTypeId: number): Promise<void> => {
 // Bakiye bilgilerini çeken API fonksiyonu
 export const getMyBalance = async (): Promise<BalanceInfo> => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     if (!token) throw new Error('Token bulunamadı');
 
     const response = await fetch(`${API_BASE_URL}/api/my-statistics/balance`, {
@@ -1496,7 +1514,7 @@ export interface UserStatisticsResponse {
 // Kullanıcı istatistiklerini çeken API fonksiyonu
 export const getMyUserStatistics = async (period: '1_month' | '3_months' | '6_months' | '1_year' = '1_year'): Promise<UserStatisticsResponse['data']> => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     if (!token) throw new Error('Token bulunamadı');
 
     const response = await fetch(`${API_BASE_URL}/api/my-statistics/user-stats?period=${period}`, {
@@ -1594,7 +1612,7 @@ export interface PasswordChangeResponse {
 
 // Profil bilgilerini getir
 export const getMyProfile = async (): Promise<{ user: UserProfileInfo; store: StoreProfileInfo | null }> => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   if (!token) {
     throw new Error('Token bulunamadı');
   }
@@ -1623,7 +1641,7 @@ export const getMyProfile = async (): Promise<{ user: UserProfileInfo; store: St
 
 // Mağaza bilgilerini güncelle
 export const updateStoreProfile = async (storeData: StoreUpdateData): Promise<StoreProfileInfo> => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   if (!token) {
     throw new Error('Token bulunamadı');
   }
@@ -1653,7 +1671,7 @@ export const updateStoreProfile = async (storeData: StoreUpdateData): Promise<St
 
 // Şifre değiştir
 export const changePassword = async (passwordData: PasswordChangeData): Promise<string> => {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   if (!token) {
     throw new Error('Token bulunamadı');
   }
@@ -1702,7 +1720,7 @@ export interface PaymentResponse {
 // Ödeme işlemi başlatma
 export async function processPayment(paymentData: PaymentRequest): Promise<PaymentResponse> {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     
     if (!token) {
       throw new Error('Oturum açmanız gerekiyor');

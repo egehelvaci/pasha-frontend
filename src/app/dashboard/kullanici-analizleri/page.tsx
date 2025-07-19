@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '../../context/AuthContext';
+import { useToken } from '@/app/hooks/useToken';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, LineElement, PointElement } from 'chart.js';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 import { getMyUserStatistics, UserStatisticsResponse } from '../../../services/api';
@@ -22,7 +23,8 @@ ChartJS.register(
 type UserStatisticsData = UserStatisticsResponse['data'];
 
 export default function UserAnalyticsPage() {
-  const { user, isAdmin, token, isLoading: authLoading } = useAuth();
+  const { user, isAdmin, isLoading: authLoading } = useAuth();
+  const token = useToken();
   const router = useRouter();
   const [statisticsData, setStatisticsData] = useState<UserStatisticsData | null>(null);
   const [loading, setLoading] = useState(true);

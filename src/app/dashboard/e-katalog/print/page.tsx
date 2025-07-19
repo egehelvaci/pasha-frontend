@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useToken } from '@/app/hooks/useToken';
 
 interface Product {
   productId: string;
@@ -17,6 +18,7 @@ interface GroupedProducts {
 }
 
 const PrintCatalogPage = () => {
+  const token = useToken();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -57,25 +59,29 @@ const PrintCatalogPage = () => {
 
   const fetchSelectedProducts = async (productIds: string[]) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`https://pasha-backend-production.up.railway.app/api/products?limit=1000`, {
+      const authToken = token;
+      const response = await fetch('https://pasha-backend-production.up.railway.app/api/products/by-ids', {
+        method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({ productIds })
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && Array.isArray(data.data)) {
-          const filteredProducts = data.data.filter((product: Product) => 
-            productIds.includes(product.productId)
-          );
-          setProducts(filteredProducts);
-        }
+      if (!response.ok) {
+        throw new Error('Ürünler yüklenirken hata oluştu');
+      }
+
+      const data = await response.json();
+      if (data.success && Array.isArray(data.data)) {
+        setProducts(data.data);
+      } else {
+        setProducts([]);
       }
     } catch (error) {
       console.error('Ürünler yüklenirken hata:', error);
+      setProducts([]);
     } finally {
       setLoading(false);
     }

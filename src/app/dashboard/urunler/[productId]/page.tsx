@@ -5,10 +5,12 @@ import { FaTrash } from "react-icons/fa";
 import { FaArrowLeft } from "react-icons/fa";
 import { useAuth } from '@/app/context/AuthContext';
 import { API_BASE_URL } from '@/services/api';
+import { useToken } from '@/app/hooks/useToken';
 
 export default function ProductDetail() {
   const params = useParams();
   const router = useRouter();
+  const token = useToken();
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -72,10 +74,10 @@ export default function ProductDetail() {
 
   const fetchProduct = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const authToken = token;
       const res = await fetch(`https://pasha-backend-production.up.railway.app/api/products/${params.productId}`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${authToken}`
         }
       });
       if (!res.ok) throw new Error("Ürün bulunamadı");
@@ -90,10 +92,10 @@ export default function ProductDetail() {
 
   const fetchCollections = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const authToken = token;
       const res = await fetch("https://pasha-backend-production.up.railway.app/api/collections/", {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${authToken}`
         }
       });
       const data = await res.json();
@@ -172,7 +174,7 @@ export default function ProductDetail() {
       setLoading(true);
       setError("");
       try {
-        const token = localStorage.getItem('token');
+        const authToken = token;
         const fd = new FormData();
         Object.entries(form).forEach(([key, value]) => {
           if (value !== null && value !== "") fd.append(key, value as any);
@@ -180,7 +182,7 @@ export default function ProductDetail() {
         const res = await fetch(`https://pasha-backend-production.up.railway.app/api/products/${product.productId}`, {
           method: "PUT",
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${authToken}`
           },
           body: fd
         });
@@ -238,11 +240,11 @@ export default function ProductDetail() {
     setDeleteLoading(true);
     setDeleteError("");
     try {
-      const token = localStorage.getItem('token');
+      const authToken = token;
       const res = await fetch(`https://pasha-backend-production.up.railway.app/api/products/${product.productId}`, {
         method: "DELETE",
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${authToken}`
         }
       });
       if (!res.ok) throw new Error("Ürün silinemedi");

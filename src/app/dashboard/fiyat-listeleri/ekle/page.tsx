@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { CreatePriceListData, createPriceList, getPriceLists } from '@/services/api';
 import { useAuth } from '@/app/context/AuthContext';
 import type { Collection } from '@/services/api';
+import { useToken } from '@/app/hooks/useToken';
 
 // Form için değerlerin tipini tanımla
 interface FormValues {
@@ -49,6 +50,7 @@ interface PriceListDetailResponse {
 export default function AddPriceListPage() {
   const router = useRouter();
   const { isAdmin } = useAuth();
+  const token = useToken();
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -91,11 +93,21 @@ export default function AddPriceListPage() {
 
   const fetchCollections = async () => {
     try {
-      const response = await fetch('https://pasha-backend-production.up.railway.app/api/collections/');
-      const data = await response.json();
-      setCollections(data.data || []);
+      const authToken = token;
+      const response = await fetch('https://pasha-backend-production.up.railway.app/api/collections', {
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setCollections(data.data);
+        }
+      }
     } catch (error) {
-      alert('Koleksiyonlar yüklenirken bir hata oluştu');
+      console.error('Koleksiyonlar yüklenirken hata:', error);
     }
   };
 
@@ -116,7 +128,7 @@ export default function AddPriceListPage() {
         // Varsayılan fiyat listesinin detaylarını al
         const detailResponse = await fetch(`https://pasha-backend-production.up.railway.app/api/price-lists/${defaultPriceList.price_list_id}`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         });
         const detailData = await detailResponse.json() as PriceListDetailResponse;
