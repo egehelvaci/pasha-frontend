@@ -39,8 +39,8 @@ const EKatalogPage = () => {
   
   // Memoize filtered products to prevent unnecessary re-renders
   const visibleProducts = useMemo(() => {
-    return products.slice(0, optimalSettings.maxProductsPerLoad);
-  }, [products, optimalSettings.maxProductsPerLoad]);
+    return products; // Show all products, but warn on low-end devices
+  }, [products]);
 
   const fetchProducts = async () => {
     try {
@@ -48,7 +48,7 @@ const EKatalogPage = () => {
       const authToken = token;
       
       const params = new URLSearchParams({
-        limit: optimalSettings.maxProductsPerLoad.toString(),
+        limit: '1000', // Load all products
         page: '1'
       });
       
@@ -214,10 +214,9 @@ const EKatalogPage = () => {
                 <p className="text-gray-600 mt-1">
                   Ürünleri seçerek yazdırılabilir bir katalog oluşturun
                 </p>
-                {products.length > optimalSettings.maxProductsPerLoad && (
+                {isLowEndDevice() && products.length > 50 && (
                   <p className="text-sm text-amber-600 mt-1">
-                    ⚡ Performans için ilk {optimalSettings.maxProductsPerLoad} ürün gösteriliyor
-                    {isLowEndDevice() && ' (Düşük performanslı cihaz algılandı)'}
+                    ⚠️ Düşük performanslı cihaz algılandı. Çok fazla ürün seçerseniz yavaşlık yaşayabilirsiniz.
                   </p>
                 )}
               </div>
@@ -250,7 +249,7 @@ const EKatalogPage = () => {
               <div className="mt-4 p-3 bg-blue-50 rounded-lg">
                 <p className="text-sm text-[#00365a]">
                   <span className="font-medium">{selectedProducts.size}</span> ürün seçildi
-                  {selectedProducts.size === visibleProducts.length && ' (Görünen tüm ürünler)'}
+                  {selectedProducts.size === visibleProducts.length && ' (Tüm ürünler)'}
                 </p>
                 {selectedProducts.size > optimalSettings.maxSelectedProducts && (
                   <p className="text-xs text-amber-600 mt-1">
@@ -266,7 +265,7 @@ const EKatalogPage = () => {
           <div className="bg-white rounded-lg shadow-sm border">
             <div className="p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Ürünler ({visibleProducts.length}{products.length > 50 ? ` / ${products.length}` : ''})
+                Ürünler ({visibleProducts.length})
               </h2>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">

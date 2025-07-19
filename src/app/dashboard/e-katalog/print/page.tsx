@@ -303,12 +303,14 @@ const PrintCatalogPage = () => {
 
           .cover-page {
             page-break-after: always !important;
-            background: linear-gradient(135deg, #00365a 0%, #004170 100%) !important;
+            background-image: url('https://s3.tebi.io/pashahome/istockphoto-1053718250-612x612.jpg') !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
             color: white !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            text-align: center !important;
+            position: relative !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
 
           .cover-page h1 {
@@ -401,16 +403,84 @@ const PrintCatalogPage = () => {
 
       {/* Print Content */}
       <div className="print-content">
-        {/* Simplified Cover Page */}
+        {/* Cover Page with Background Image */}
         <div className="print-page cover-page">
-          <div>
-            <h1>E-KATALOG</h1>
-            <div style={{ width: '60mm', height: '2px', background: 'white', margin: '0 auto 15mm' }}></div>
-            <p style={{ fontSize: '24px', fontWeight: '600', marginBottom: '8mm' }}>Halı Koleksiyonu</p>
-            <p style={{ fontSize: '20px', fontWeight: '600' }}>PAŞA HOME</p>
-            <p style={{ fontSize: '16px', marginTop: '4mm' }}>
-              {new Date().toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' })}
-            </p>
+          {/* Background Image */}
+          <img 
+            src="https://s3.tebi.io/pashahome/istockphoto-1053718250-612x612.jpg"
+            alt=""
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              zIndex: 0,
+              opacity: 0.7,
+              filter: 'brightness(0.8) contrast(0.9)'
+            }}
+          />
+          
+          <div className="h-full flex flex-col justify-center items-center text-center relative" style={{ zIndex: 1 }}>
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-black bg-opacity-40" style={{ zIndex: 1 }}></div>
+            
+            {/* Content */}
+            <div className="relative z-10 text-white" style={{ zIndex: 2 }}>
+              <div className="mb-12">
+                <img 
+                  src="/logo.svg" 
+                  alt="Paşa Home Logo" 
+                  className="h-20 mx-auto mb-8"
+                  style={{ filter: 'brightness(0) invert(1)' }}
+                />
+              </div>
+              
+              <div>
+                <h1 className="text-5xl font-bold mb-6 text-white" style={{ 
+                  color: 'white',
+                  fontWeight: '900',
+                  textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                  WebkitPrintColorAdjust: 'exact',
+                  printColorAdjust: 'exact'
+                }}>E-KATALOG</h1>
+                <div className="w-32 h-1 bg-white mx-auto mb-8"></div>
+                <p className="text-2xl mb-3 text-white" style={{ 
+                  color: 'white',
+                  fontWeight: '700',
+                  textShadow: '0 1px 3px rgba(0,0,0,0.4)',
+                  WebkitPrintColorAdjust: 'exact',
+                  printColorAdjust: 'exact'
+                }}>Halı Koleksiyonu</p>
+                <p className="text-xl opacity-90 text-white" style={{ 
+                  color: 'white',
+                  fontWeight: '600',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                  WebkitPrintColorAdjust: 'exact',
+                  printColorAdjust: 'exact'
+                }}>{new Date().getFullYear()}</p>
+              </div>
+              
+              <div className="mt-16">
+                <p className="text-2xl font-medium text-white" style={{ 
+                  color: 'white',
+                  fontWeight: '800',
+                  textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                  WebkitPrintColorAdjust: 'exact',
+                  printColorAdjust: 'exact'
+                }}>PAŞA HOME</p>
+                <p className="text-lg opacity-80 mt-2 text-white" style={{ 
+                  color: 'white',
+                  fontWeight: '600',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                  WebkitPrintColorAdjust: 'exact',
+                  printColorAdjust: 'exact'
+                }}>
+                  {new Date().toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
