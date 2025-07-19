@@ -508,7 +508,7 @@ const PrintCatalogPage = () => {
         {Object.entries(groupedProducts).map(([collectionName, collectionProducts], collectionIndex) => {
           // Dynamic products per page based on total product count
           const totalProducts = products.length;
-          const productsPerPage = totalProducts > 50 ? 6 : totalProducts > 20 ? 4 : 3;
+          const productsPerPage = totalProducts > 100 ? 6 : totalProducts > 50 ? 4 : totalProducts > 20 ? 3 : 2;
           const pages = [];
           
           console.log(`📄 ${collectionName}: ${collectionProducts.length} ürün, ${productsPerPage} ürün/sayfa`);
