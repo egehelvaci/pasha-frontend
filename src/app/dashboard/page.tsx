@@ -426,10 +426,9 @@ export default function Dashboard() {
                   <div className="flex-1 overflow-hidden">
                     <div className="h-full overflow-y-auto space-y-3 pr-2">
                       {recentProducts.map((product) => (
-                        <Link
+                        <div
                           key={product.productId}
-                          href={`/dashboard/urunler/${product.productId}`}
-                          className="flex items-center p-3 border border-gray-200 rounded-lg hover:border-green-300 hover:shadow-md transition-all duration-200 group"
+                          className="flex items-center p-3 border border-gray-200 rounded-lg transition-all duration-200"
                         >
                           <div className="h-10 w-10 rounded-lg bg-gray-200 flex-shrink-0 overflow-hidden">
                             {product.productImage ? (
@@ -447,16 +446,11 @@ export default function Dashboard() {
                             )}
                           </div>
                           <div className="ml-3 flex-1 min-w-0">
-                            <h3 className="font-semibold text-gray-900 group-hover:text-green-600 transition-colors truncate text-sm">
+                            <h3 className="font-semibold text-gray-900 truncate text-sm">
                               {product.name}
                             </h3>
                           </div>
-                          <div className="flex-shrink-0">
-                            <svg className="h-4 w-4 text-gray-400 group-hover:text-green-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </div>
-                        </Link>
+                        </div>
                       ))}
                     </div>
                   </div>
