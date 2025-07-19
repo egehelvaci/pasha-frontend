@@ -658,7 +658,7 @@ export default function ProductList() {
     const [selectedHasFringe, setSelectedHasFringe] = useState<boolean | null>(null);
     const [totalPrice, setTotalPrice] = useState<number>(0);
     const [customHeight, setCustomHeight] = useState<number | string>(100);  // Varsayılan 100 cm yükseklik
-    const [quantity, setQuantity] = useState<number | string>(1);
+    const [quantity, setQuantity] = useState<number>(1);
     const [notes, setNotes] = useState<string>("");
     const [addToCartLoading, setAddToCartLoading] = useState(false);
     const [addToCartSuccess, setAddToCartSuccess] = useState(false);
@@ -1043,13 +1043,11 @@ export default function ProductList() {
                               onChange={(e) => {
                                 const value = e.target.value;
                                 if (value === '') {
-                                  setQuantity('');
+                                  setQuantity(0);
                                 } else {
                                   const numValue = parseInt(value);
                                   if (numValue >= 1) {
                                     setQuantity(numValue);
-                                  } else if (value.length <= 1) {
-                                    setQuantity(value);
                                   }
                                 }
                               }}

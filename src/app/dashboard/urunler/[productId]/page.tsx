@@ -35,7 +35,7 @@ export default function ProductDetail() {
   const [selectedHasFringe, setSelectedHasFringe] = useState<boolean | null>(null);
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [customHeight, setCustomHeight] = useState<number | string>(100);  // Varsayılan 100 cm yükseklik
-  const [quantity, setQuantity] = useState<number | string>(1);  // Ürün adedi
+  const [quantity, setQuantity] = useState<number>(1);  // Ürün adedi
 
   useEffect(() => {
     if (!productFetchedRef.current) {
@@ -69,7 +69,7 @@ export default function ProductDetail() {
   
   // Seçimler değiştiğinde fiyat hesaplama
   useEffect(() => {
-    const quantityNum = parseInt(quantity.toString()) || 0;
+    const quantityNum = quantity || 0;
     if (product && selectedSize && quantityNum > 0) {
       // Metrekare fiyatı
       const pricePerSquareMeter = parseFloat(product.pricing?.price) || 0;
@@ -499,13 +499,11 @@ export default function ProductDetail() {
                     onChange={(e) => {
                       const value = e.target.value;
                       if (value === '') {
-                        setQuantity('');
+                        setQuantity(0);
                       } else {
                         const numValue = parseInt(value);
                         if (numValue >= 1) {
                           setQuantity(numValue);
-                        } else if (value.length <= 1) {
-                          setQuantity(value);
                         }
                       }
                     }}
