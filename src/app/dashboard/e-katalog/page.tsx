@@ -260,12 +260,7 @@ const EKatalogPage = () => {
                   <span className="font-medium">{selectedProducts.size}</span> ürün seçildi
                   {selectedProducts.size === visibleProducts.length && ' (Tüm ürünler)'}
                 </p>
-                {selectedProducts.size > optimalSettings.maxSelectedProducts && (
-                  <p className="text-xs text-amber-600 mt-1">
-                    ⚠️ Çok fazla ürün seçtiniz ({selectedProducts.size}/{optimalSettings.maxSelectedProducts}). 
-                    Düşük performanslı cihazlarda sorun yaşayabilirsiniz.
-                  </p>
-                )}
+
               </div>
             )}
           </div>
