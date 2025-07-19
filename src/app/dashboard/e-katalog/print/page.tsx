@@ -77,13 +77,23 @@ const PrintCatalogPage = () => {
     setLoading(false);
   }, []);
 
-  // Optimize print trigger
+  // Optimize print trigger with dynamic delay based on product count
   useEffect(() => {
     if (!loading && products.length > 0) {
+      // Dynamic delay based on number of products
+      const baseDelay = 1000;
+      const perProductDelay = Math.min(50, products.length * 5); // Max 50ms per product
+      const totalDelay = baseDelay + perProductDelay;
+      
+      console.log(`⏱️ ${products.length} ürün için ${totalDelay}ms bekleme süresi`);
+      
       const timer = setTimeout(() => {
         try {
-          // Delay print to ensure all content is rendered
+          // Additional delay for content rendering
+          const printDelay = products.length > 50 ? 3000 : products.length > 20 ? 2000 : 1500;
+          
           const printTimer = setTimeout(() => {
+            console.log('🖨️ Yazdırma başlatılıyor...');
             window.print();
             
             // Cleanup after print
@@ -91,13 +101,13 @@ const PrintCatalogPage = () => {
               localStorage.removeItem('selectedProductsForPrint');
               console.log('🧹 localStorage temizlendi');
             }, 2000);
-          }, 2000); // Longer delay for low-end devices
+          }, printDelay);
           
           return () => clearTimeout(printTimer);
         } catch (error) {
           console.error('Yazdırma hatası:', error);
         }
-      }, 1000);
+      }, totalDelay);
       
       return () => clearTimeout(timer);
     }
@@ -343,9 +353,19 @@ const PrintCatalogPage = () => {
           
           .product-grid {
             display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 8mm !important;
+            margin-top: 8mm !important;
+          }
+          
+          .product-grid.grid-2 {
             grid-template-columns: repeat(2, 1fr) !important;
             gap: 10mm !important;
-            margin-top: 8mm !important;
+          }
+          
+          .product-grid.grid-6 {
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 6mm !important;
           }
           
           .product-item {
@@ -486,9 +506,12 @@ const PrintCatalogPage = () => {
 
         {/* Product Pages - Optimized for performance */}
         {Object.entries(groupedProducts).map(([collectionName, collectionProducts], collectionIndex) => {
-          // Reduce products per page for better performance on low-end devices
-          const productsPerPage = 4;
+          // Dynamic products per page based on total product count
+          const totalProducts = products.length;
+          const productsPerPage = totalProducts > 50 ? 6 : totalProducts > 20 ? 4 : 3;
           const pages = [];
+          
+          console.log(`📄 ${collectionName}: ${collectionProducts.length} ürün, ${productsPerPage} ürün/sayfa`);
           
           for (let i = 0; i < collectionProducts.length; i += productsPerPage) {
             const productsInPage = collectionProducts.slice(i, i + productsPerPage);
@@ -518,7 +541,7 @@ const PrintCatalogPage = () => {
                 
                 {/* Page Content */}
                 <div className="page-content">
-                  <div className="product-grid">
+                  <div className={`product-grid ${productsPerPage === 2 ? 'grid-2' : productsPerPage >= 6 ? 'grid-6' : ''}`}>
                     {productsInPage.map((product) => (
                       <div key={product.productId} className="product-item">
                         {/* Optimized Product Image */}

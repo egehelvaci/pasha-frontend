@@ -108,14 +108,30 @@ const EKatalogPage = () => {
     setIsGeneratingPDF(true);
 
     const selectedProductIds = Array.from(selectedProducts);
-    console.log('📝 Seçili ürün ID\'leri:', selectedProductIds);
+    console.log('📝 Seçili ürün ID\'leri:', selectedProductIds.length, 'ürün');
+    
+    // Check if too many products selected and warn user
+    if (selectedProductIds.length > 100) {
+      const confirm = window.confirm(
+        `${selectedProductIds.length} ürün seçtiniz. Bu çok fazla ürün olduğu için katalog oluşturma uzun sürebilir.\n\n` +
+        `Devam etmek istiyor musunuz?\n\n` +
+        `Öneriler:\n` +
+        `• Daha az ürün seçerek daha hızlı katalog oluşturabilirsiniz\n` +
+        `• Koleksiyonlara göre ayrı kataloglar oluşturabilirsiniz`
+      );
+      
+      if (!confirm) {
+        setIsGeneratingPDF(false);
+        return;
+      }
+    }
     
     // Use requestIdleCallback for better performance on low-end devices
     const processGeneration = () => {
       try {
         // Store selected products in localStorage
         localStorage.setItem('selectedProductsForPrint', JSON.stringify(selectedProductIds));
-        console.log('💾 localStorage\'a kaydedildi:', localStorage.getItem('selectedProductsForPrint'));
+        console.log('💾 localStorage\'a kaydedildi:', selectedProductIds.length, 'ürün');
         
         // Create hidden iframe with optimized loading
         const iframe = document.createElement('iframe');
@@ -131,7 +147,9 @@ const EKatalogPage = () => {
         
         let timeoutId: NodeJS.Timeout;
         
-        // Set timeout for low-end devices
+        // Set timeout based on number of products (longer for more products)
+        const timeoutDuration = Math.min(60000, 30000 + (selectedProductIds.length * 200)); // 30s base + 200ms per product, max 60s
+        
         const cleanup = () => {
           if (timeoutId) clearTimeout(timeoutId);
           if (iframe.parentNode) {
@@ -141,12 +159,12 @@ const EKatalogPage = () => {
           setIsGeneratingPDF(false);
         };
 
-        // Timeout after 30 seconds for low-end devices
+        // Dynamic timeout based on product count
         timeoutId = setTimeout(() => {
           console.warn('Katalog oluşturma zaman aşımına uğradı');
           cleanup();
-          alert('Katalog oluşturma uzun sürdü. Lütfen daha az ürün seçerek tekrar deneyin.');
-        }, 30000);
+          alert(`${selectedProductIds.length} ürün için katalog oluşturma uzun sürdü. Lütfen daha az ürün seçerek tekrar deneyin.`);
+        }, timeoutDuration);
         
         iframe.onload = () => {
           // Add extra delay for content to fully load
@@ -236,7 +254,12 @@ const EKatalogPage = () => {
                   {isGeneratingPDF ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white inline-block mr-2"></div>
-                      Katalog Hazırlanıyor...
+                      {selectedProducts.size > 50 ? 
+                        `Katalog Hazırlanıyor... (${selectedProducts.size} ürün - Bu biraz sürebilir)` :
+                        selectedProducts.size > 20 ?
+                        `Katalog Hazırlanıyor... (${selectedProducts.size} ürün)` :
+                        'Katalog Hazırlanıyor...'
+                      }
                     </>
                   ) : (
                     `🖨️ Katalog Oluştur (${selectedProducts.size})`
