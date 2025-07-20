@@ -504,30 +504,72 @@ const Siparisler = () => {
         {/* Admin İstatistikleri */}
         {isAdmin && orderStats && (
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <button
+              onClick={() => handleStatusFilter('')}
+              className={`p-4 rounded-lg border transition-all duration-200 text-left hover:shadow-md ${
+                statusFilter === '' 
+                  ? 'bg-gray-100 border-gray-300 shadow-md' 
+                  : 'bg-white border-gray-200 hover:bg-gray-50'
+              }`}
+            >
               <div className="text-2xl font-bold text-gray-900">{orderStats.total}</div>
               <div className="text-sm text-gray-500">Toplam</div>
-            </div>
-            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+            </button>
+            <button
+              onClick={() => handleStatusFilter('PENDING')}
+              className={`p-4 rounded-lg border transition-all duration-200 text-left hover:shadow-md ${
+                statusFilter === 'PENDING' 
+                  ? 'bg-yellow-100 border-yellow-300 shadow-md' 
+                  : 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100'
+              }`}
+            >
               <div className="text-2xl font-bold text-yellow-800">{orderStats.pending}</div>
               <div className="text-sm text-yellow-600">Beklemede</div>
-            </div>
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            </button>
+            <button
+              onClick={() => handleStatusFilter('CONFIRMED')}
+              className={`p-4 rounded-lg border transition-all duration-200 text-left hover:shadow-md ${
+                statusFilter === 'CONFIRMED' 
+                  ? 'bg-blue-100 border-blue-300 shadow-md' 
+                  : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+              }`}
+            >
               <div className="text-2xl font-bold text-[#00365a]">{orderStats.confirmed}</div>
               <div className="text-sm text-[#00365a]">Onaylandı</div>
-            </div>
-            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+            </button>
+            <button
+              onClick={() => handleStatusFilter('SHIPPED')}
+              className={`p-4 rounded-lg border transition-all duration-200 text-left hover:shadow-md ${
+                statusFilter === 'SHIPPED' 
+                  ? 'bg-purple-100 border-purple-300 shadow-md' 
+                  : 'bg-purple-50 border-purple-200 hover:bg-purple-100'
+              }`}
+            >
               <div className="text-2xl font-bold text-purple-800">{orderStats.shipped}</div>
               <div className="text-sm text-purple-600">Teslimatta</div>
-            </div>
-            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+            </button>
+            <button
+              onClick={() => handleStatusFilter('DELIVERED')}
+              className={`p-4 rounded-lg border transition-all duration-200 text-left hover:shadow-md ${
+                statusFilter === 'DELIVERED' 
+                  ? 'bg-green-100 border-green-300 shadow-md' 
+                  : 'bg-green-50 border-green-200 hover:bg-green-100'
+              }`}
+            >
               <div className="text-2xl font-bold text-green-800">{orderStats.delivered}</div>
               <div className="text-sm text-green-600">Teslim</div>
-            </div>
-            <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+            </button>
+            <button
+              onClick={() => handleStatusFilter('CANCELED')}
+              className={`p-4 rounded-lg border transition-all duration-200 text-left hover:shadow-md ${
+                statusFilter === 'CANCELED' 
+                  ? 'bg-red-100 border-red-300 shadow-md' 
+                  : 'bg-red-50 border-red-200 hover:bg-red-100'
+              }`}
+            >
               <div className="text-2xl font-bold text-red-800">{orderStats.canceled}</div>
               <div className="text-sm text-red-600">İptal</div>
-            </div>
+            </button>
           </div>
         )}
 
