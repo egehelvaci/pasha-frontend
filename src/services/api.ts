@@ -185,7 +185,6 @@ export interface CreateStoreData {
   yetkili_soyadi: string;
   telefon: string;
   eposta: string;
-  adres: string;
   faks_numarasi?: string;
   aciklama: string;
   tckn: string;                       // 🆕 TCKN alanı
@@ -208,7 +207,6 @@ export interface UpdateStoreData {
   yetkili_soyadi?: string;
   telefon?: string;
   eposta?: string;
-  adres?: string;
   faks_numarasi?: string;
   aciklama?: string;
   tckn?: string;                      // 🆕 TCKN alanı
@@ -1550,6 +1548,7 @@ export interface UserProfileInfo {
   username: string;
   email: string;
   phoneNumber?: string;
+  adres?: string;                     // 🆕 Kullanıcı adres alanı
   tckn?: string;                      // 🆕 TCKN alanı
   isActive: boolean;
   createdAt: string;
@@ -1588,7 +1587,6 @@ export interface StoreUpdateData {
   yetkili_soyadi?: string;
   telefon?: string;
   eposta?: string;
-  adres?: string;
   faks_numarasi?: string;
   tckn?: string;                      // 🆕 TCKN alanı
 }
@@ -1608,6 +1606,20 @@ export interface PasswordChangeData {
 export interface PasswordChangeResponse {
   success: boolean;
   message: string;
+}
+
+// Kullanıcı profil güncelleme interface'i
+export interface UserUpdateData {
+  name: string;
+  surname: string;
+  phoneNumber?: string;
+  adres?: string;                     // 🆕 Kullanıcı adres alanı
+}
+
+export interface UserUpdateResponse {
+  success: boolean;
+  message: string;
+  data: UserProfileInfo;
 }
 
 // Profil bilgilerini getir
@@ -1697,13 +1709,43 @@ export const changePassword = async (passwordData: PasswordChangeData): Promise<
     console.error('Şifre değiştirme hatası:', error);
     throw error;
   }
+};
+
+// Kullanıcı profilini güncelle
+export const updateUserProfile = async (userData: UserUpdateData): Promise<UserProfileInfo> => {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/profile/me`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(userData)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Kullanıcı bilgileri güncellenemedi');
+    }
+
+    const result: UserUpdateResponse = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Kullanıcı bilgileri güncelleme hatası:', error);
+    throw error;
+  }
 }; 
 
 // Ödeme interface'leri
 export interface PaymentRequest {
   storeId: string;
   amount: number;
-  aciklama: string;
+  aciklama?: string;                  // 🔄 Artık opsiyonel
 }
 
 export interface PaymentResponse {
@@ -1715,6 +1757,43 @@ export interface PaymentResponse {
     amount: number;
   } | null;
   message?: string;
+}
+
+// Kullanıcının mağaza bilgisini al (my-store-payments endpoint'inden)
+export async function getMyStoreInfo(): Promise<{ store_id: string }> {
+  try {
+    const token = getAuthToken();
+    
+    if (!token) {
+      throw new Error('Oturum açmanız gerekiyor');
+    }
+    
+    const response = await fetch(`${API_BASE_URL}/api/payments/my-store-payments?limit=1`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Mağaza bilgisi alınamadı');
+    }
+    
+    const result = await response.json();
+    // Response'tan store_id'yi çıkar (ilk ödeme kaydından veya meta data'dan)
+    if (result.success && result.data?.payments?.[0]?.store?.store_id) {
+      return { store_id: result.data.payments[0].store.store_id };
+    } else if (result.success && result.data?.store_id) {
+      return { store_id: result.data.store_id };
+    } else {
+      throw new Error('Mağaza bilgisi bulunamadı');
+    }
+  } catch (error) {
+    console.error('Mağaza bilgisi alınırken hata:', error);
+    throw error;
+  }
 }
 
 // Ödeme işlemi başlatma

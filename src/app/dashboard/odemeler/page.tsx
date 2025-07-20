@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { processPayment, PaymentRequest } from '../../../services/api';
+import { processPayment, PaymentRequest, getMyProfile, UserProfileInfo, getMyStoreInfo } from '../../../services/api';
 
 interface Payment {
   id: string;
@@ -99,6 +99,7 @@ export default function PaymentsPage() {
     description: '',
     storeId: ''
   });
+  const [userProfile, setUserProfile] = useState<UserProfileInfo | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -107,31 +108,53 @@ export default function PaymentsPage() {
     }
     fetchPayments();
     initializeStores();
+    fetchUserProfile();
   }, [user, router, isAdmin, currentPage, statusFilter, selectedStoreFilter, startDate, endDate]);
+
+  // Kullanıcı profil bilgilerini getir
+  const fetchUserProfile = async () => {
+    try {
+      const profileData = await getMyProfile();
+      setUserProfile(profileData.user);
+    } catch (error) {
+      console.error('Profil bilgileri alınamadı:', error);
+    }
+  };
 
   const initializeStores = async () => {
     if (isAdmin) {
       // Admin için API'den mağazaları çek
       await fetchStores();
-    } else if (user?.store) {
-      // Normal kullanıcı için localStorage'dan mağaza bilgisini al
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        try {
-          const userData = JSON.parse(storedUser);
-          if (userData.store) {
-            // Mağaza bilgisini stores state'ine ekle
-            setStores([userData.store]);
-            // Form'da mağazayı otomatik seç
-            setPaymentForm(prev => ({ ...prev, storeId: userData.store.store_id }));
+    } else {
+      try {
+        // Normal kullanıcı için my-store-payments endpoint'inden store_id'yi al
+        const storeInfo = await getMyStoreInfo();
+        if (storeInfo.store_id) {
+          // Form'da mağaza ID'sini otomatik seç
+          setPaymentForm(prev => ({ ...prev, storeId: storeInfo.store_id }));
+        }
+      } catch (error) {
+        console.error('Mağaza bilgisi alınamadı:', error);
+        // Fallback olarak localStorage'dan veya AuthContext'ten al
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          try {
+            const userData = JSON.parse(storedUser);
+            if (userData.store) {
+              setStores([userData.store]);
+              setPaymentForm(prev => ({ ...prev, storeId: userData.store.store_id }));
+            }
+          } catch (parseError) {
+            console.error('localStorage parse hatası:', parseError);
+            // Son fallback olarak AuthContext'ten al
+            if (user?.store) {
+              setStores([user.store]);
+              setPaymentForm(prev => ({ ...prev, storeId: user.store!.store_id }));
+            }
           }
-        } catch (error) {
-          console.error('localStorage\'dan kullanıcı verisi alınırken hata:', error);
-          // Fallback olarak AuthContext'ten al
-          if (user.store) {
-            setStores([user.store]);
-            setPaymentForm(prev => ({ ...prev, storeId: user.store!.store_id }));
-          }
+        } else if (user?.store) {
+          setStores([user.store]);
+          setPaymentForm(prev => ({ ...prev, storeId: user.store!.store_id }));
         }
       }
     }
@@ -268,8 +291,17 @@ export default function PaymentsPage() {
     
     try {
       // Form validasyonu
-      if (!paymentForm.storeId || !paymentForm.amount || !paymentForm.description.trim()) {
-        alert('Lütfen tüm alanları doldurun!');
+      if (!paymentForm.storeId || !paymentForm.amount) {
+        alert('Lütfen mağaza ve tutar alanlarını doldurun!');
+        return;
+      }
+
+      // Adres kontrolü
+      if (!userProfile?.adres || userProfile.adres.trim() === '') {
+        if (confirm('Adres bilginiz eksik. Profil sayfasında adres bilginizi güncellemek ister misiniz?')) {
+          router.push('/dashboard/ayarlar');
+          return;
+        }
         return;
       }
 
@@ -282,7 +314,7 @@ export default function PaymentsPage() {
       const paymentRequest: PaymentRequest = {
         storeId: paymentForm.storeId,
         amount: amount,
-        aciklama: paymentForm.description
+        ...(paymentForm.description.trim() && { aciklama: paymentForm.description.trim() })
       };
 
       // API çağrısı yap
@@ -299,11 +331,11 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
         setPaymentModalOpen(false);
         
         // Formu temizle
-        setPaymentForm({
+        setPaymentForm(prev => ({
           amount: '',
           description: '',
-          storeId: isAdmin ? '' : (stores.length > 0 ? stores[0].store_id : '')
-        });
+          storeId: isAdmin ? '' : prev.storeId // Admin değilse store_id'yi koru
+        }));
         
         // Ödemeleri yeniden yükle
         fetchPayments();
@@ -1198,14 +1230,13 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
                       <svg className="w-4 h-4 mr-2 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      <span className="text-red-500">*</span> Ödeme Açıklaması
+                      Ödeme Açıklaması <span className="text-gray-500 font-normal">(Opsiyonel)</span>
                     </label>
                     <textarea
-                      placeholder="Ödeme açıklamasını giriniz..."
+                      placeholder="Ödeme açıklamasını giriniz... (Boş bırakılabilir)"
                       value={paymentForm.description}
                       onChange={(e) => setPaymentForm(prev => ({ ...prev, description: e.target.value }))}
                       rows={4}
-                      required
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all resize-none"
                     />
                   </div>

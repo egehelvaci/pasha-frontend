@@ -55,7 +55,6 @@ export default function EditStorePage() {
           tckn: currentStore.tckn,                       // 🆕 TCKN alanı
           telefon: currentStore.telefon,
           eposta: currentStore.eposta,
-          adres: currentStore.adres,
           faks_numarasi: currentStore.faks_numarasi,
           aciklama: currentStore.aciklama,
           limitsiz_acik_hesap: currentStore.limitsiz_acik_hesap,
@@ -204,15 +203,6 @@ export default function EditStorePage() {
                 name="faks_numarasi"
               >
                 <Input />
-              </Form.Item>
-
-              <Form.Item
-                label="Adres"
-                name="adres"
-                rules={[{ required: true, message: 'Lütfen adresi giriniz' }]}
-                className="md:col-span-2"
-              >
-                <Input.TextArea rows={3} />
               </Form.Item>
 
               <Form.Item

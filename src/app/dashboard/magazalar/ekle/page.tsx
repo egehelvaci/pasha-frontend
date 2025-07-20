@@ -19,7 +19,6 @@ export default function AddStorePage() {
     telefon: '',
     eposta: '',
     faks_numarasi: '',
-    adres: '',
     aciklama: '',
     bakiye: 0,
     maksimum_taksit: 1,
@@ -45,7 +44,6 @@ export default function AddStorePage() {
     if (!formData.yetkili_soyadi.trim()) newErrors.yetkili_soyadi = 'Yetkili soyadı gereklidir';
     if (!formData.telefon.trim()) newErrors.telefon = 'Telefon numarası gereklidir';
     if (!formData.eposta.trim()) newErrors.eposta = 'E-posta adresi gereklidir';
-    if (!formData.adres.trim()) newErrors.adres = 'Adres gereklidir';
     if (!formData.tckn.trim()) newErrors.tckn = 'TCKN gereklidir';
 
     // TCKN validation
@@ -349,20 +347,6 @@ export default function AddStorePage() {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all"
                       placeholder="0212 123 45 68"
                     />
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      <span className="text-red-500">*</span> Adres
-                    </label>
-                    <textarea
-                      value={formData.adres}
-                      onChange={(e) => handleInputChange('adres', e.target.value)}
-                      rows={3}
-                      className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all resize-none ${errors.adres ? 'border-red-300' : 'border-gray-300'}`}
-                      placeholder="Tam adres bilgisi..."
-                    />
-                    {errors.adres && <p className="mt-1 text-sm text-red-600">{errors.adres}</p>}
                   </div>
                 </div>
               </div>

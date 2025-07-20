@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useToken } from '@/app/hooks/useToken';
 import { FaPlus, FaEdit, FaTrash, FaStore, FaUser, FaLock, FaBuilding, FaEye, FaEyeSlash } from 'react-icons/fa';
-import { getStores, assignUserToStore, removeUserFromStore, getMyProfile, updateStoreProfile, changePassword, StoreUpdateData, PasswordChangeData, UserProfileInfo, StoreProfileInfo } from '@/services/api';
+import { getStores, assignUserToStore, removeUserFromStore, getMyProfile, updateStoreProfile, changePassword, updateUserProfile, StoreUpdateData, PasswordChangeData, UserProfileInfo, StoreProfileInfo, UserUpdateData } from '@/services/api';
 
 interface User {
   userId: string;
@@ -32,6 +32,8 @@ interface UserFormData {
   name: string;
   surname: string;
   email: string;
+  phoneNumber?: string;
+  adres?: string;                     // 🆕 Kullanıcı adres alanı
   userTypeName: string;
   storeId?: string;
 }
@@ -55,6 +57,8 @@ export default function Settings() {
     name: '',
     surname: '',
     email: '',
+    phoneNumber: '',
+    adres: '',
     userTypeName: 'viewer',
     storeId: ''
   });
@@ -83,6 +87,16 @@ export default function Settings() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
+  // Kullanıcı profil güncelleme form state'leri
+  const [userForm, setUserForm] = useState<UserUpdateData>({
+    name: '',
+    surname: '',
+    phoneNumber: '',
+    adres: ''
+  });
+  const [userLoading, setUserLoading] = useState(false);
+  const [userMessage, setUserMessage] = useState('');
+  
   // Mağaza güncelleme form state'leri
   const [storeForm, setStoreForm] = useState<StoreUpdateData>({
     kurum_adi: '',
@@ -92,7 +106,6 @@ export default function Settings() {
     yetkili_soyadi: '',
     telefon: '',
     eposta: '',
-    adres: '',
     faks_numarasi: '',
     tckn: ''
   });
@@ -137,6 +150,16 @@ export default function Settings() {
       setUserProfile(profileData.user);
       setStoreProfile(profileData.store);
       
+      // Kullanıcı form'unu doldur
+      if (profileData.user) {
+        setUserForm({
+          name: profileData.user.name || '',
+          surname: profileData.user.surname || '',
+          phoneNumber: profileData.user.phoneNumber || '',
+          adres: profileData.user.adres || ''
+        });
+      }
+      
       // Mağaza form'unu doldur
       if (profileData.store) {
         setStoreForm({
@@ -147,7 +170,6 @@ export default function Settings() {
           yetkili_soyadi: profileData.store.yetkili_soyadi || '',
           telefon: profileData.store.telefon || '',
           eposta: profileData.store.eposta || '',
-          adres: profileData.store.adres || '',
           faks_numarasi: profileData.store.faks_numarasi || '',
           tckn: profileData.store.tckn || ''
         });
@@ -230,6 +252,37 @@ export default function Settings() {
     }
   };
 
+  // Kullanıcı form handler'ı
+  const handleUserChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setUserForm(prev => ({ ...prev, [name]: value }));
+    setUserMessage(''); // Mesajı temizle
+  };
+
+  // Kullanıcı profil güncelleme submit
+  const handleUserSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUserMessage('');
+
+    // Frontend validasyonu
+    if (!userForm.name.trim() || !userForm.surname.trim()) {
+      setUserMessage('Ad ve soyad zorunludur');
+      return;
+    }
+
+    setUserLoading(true);
+    try {
+      await updateUserProfile(userForm);
+      setUserMessage('Profil bilgileri başarıyla güncellendi!');
+      // Profil bilgilerini yenile
+      await fetchUserProfile();
+    } catch (err: any) {
+      setUserMessage('Hata: ' + err.message);
+    } finally {
+      setUserLoading(false);
+    }
+  };
+
   // Admin için mevcut fonksiyonlar (değişiklik yok)
   useEffect(() => {
     if (selectedUser) {
@@ -238,6 +291,8 @@ export default function Settings() {
         name: (selectedUser.fullName || ((selectedUser.name || '') + ' ' + (selectedUser.surname || ''))).split(' ')[0],
         surname: (selectedUser.fullName || ((selectedUser.name || '') + ' ' + (selectedUser.surname || ''))).split(' ').slice(1).join(' '),
         email: selectedUser.email,
+        phoneNumber: (selectedUser as any).phoneNumber || '',
+        adres: (selectedUser as any).adres || '',
         userTypeName:
           typeof selectedUser.userType === 'object'
             ? selectedUser.userType.name
@@ -251,6 +306,8 @@ export default function Settings() {
         name: '',
         surname: '',
         email: '',
+        phoneNumber: '',
+        adres: '',
         userTypeName: 'viewer',
         storeId: ''
       });
@@ -362,7 +419,7 @@ export default function Settings() {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
@@ -489,34 +546,96 @@ export default function Settings() {
             {activeTab === 'profile' && userProfile && (
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Kişisel Bilgiler</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Ad</label>
-                    <p className="bg-gray-50 px-3 py-2 rounded-md text-gray-900">{userProfile.name}</p>
+                
+                {userMessage && (
+                  <div className={`mb-4 p-3 rounded-md ${
+                    userMessage.startsWith('Hata') 
+                      ? 'bg-red-50 border border-red-200 text-red-700' 
+                      : 'bg-green-50 border border-green-200 text-green-700'
+                  }`}>
+                    {userMessage}
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Soyad</label>
-                    <p className="bg-gray-50 px-3 py-2 rounded-md text-gray-900">{userProfile.surname}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Kullanıcı Adı</label>
-                    <p className="bg-gray-50 px-3 py-2 rounded-md text-gray-900">{userProfile.username}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">E-posta</label>
-                    <p className="bg-gray-50 px-3 py-2 rounded-md text-gray-900">{userProfile.email}</p>
-                  </div>
-                  {userProfile.phoneNumber && (
+                )}
+
+                <form onSubmit={handleUserSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
-                      <p className="bg-gray-50 px-3 py-2 rounded-md text-gray-900">{userProfile.phoneNumber}</p>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Ad <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={userForm.name}
+                        onChange={handleUserChange}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
                     </div>
-                  )}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Kullanıcı Tipi</label>
-                    <p className="bg-gray-50 px-3 py-2 rounded-md text-gray-900">{userProfile.userType}</p>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Soyad <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="surname"
+                        value={userForm.surname}
+                        onChange={handleUserChange}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Telefon
+                      </label>
+                      <input
+                        type="tel"
+                        name="phoneNumber"
+                        value={userForm.phoneNumber}
+                        onChange={handleUserChange}
+                        placeholder="05xx xxx xx xx"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Kullanıcı Adı</label>
+                      <p className="bg-gray-50 px-3 py-2 rounded-md text-gray-900">{userProfile.username}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">E-posta</label>
+                      <p className="bg-gray-50 px-3 py-2 rounded-md text-gray-900">{userProfile.email}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Kullanıcı Tipi</label>
+                      <p className="bg-gray-50 px-3 py-2 rounded-md text-gray-900">{userProfile.userType}</p>
+                    </div>
                   </div>
-                </div>
+                  
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Adres
+                    </label>
+                    <textarea
+                      name="adres"
+                      value={userForm.adres}
+                      onChange={handleUserChange}
+                      rows={3}
+                      placeholder="Tam adres bilginizi giriniz..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={userLoading}
+                      className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {userLoading ? 'Güncelleniyor...' : 'Güncelle'}
+                    </button>
+                  </div>
+                </form>
               </div>
             )}
 
@@ -642,19 +761,6 @@ export default function Settings() {
                         name="eposta"
                         value={storeForm.eposta}
                         onChange={handleStoreChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                    
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Adres
-                      </label>
-                      <textarea
-                        name="adres"
-                        value={storeForm.adres}
-                        onChange={handleStoreChange}
-                        rows={3}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                       />
                     </div>
@@ -954,6 +1060,30 @@ export default function Settings() {
                   placeholder="E-posta"
                   className="border rounded px-3 py-2 text-black"
                   required
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label htmlFor="phoneNumber" className="text-sm font-semibold text-gray-700">Telefon</label>
+                <input
+                  name="phoneNumber"
+                  id="phoneNumber"
+                  type="tel"
+                  value={formData.phoneNumber}
+                  onChange={handleInputChange}
+                  placeholder="05xx xxx xx xx"
+                  className="border rounded px-3 py-2 text-black"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label htmlFor="adres" className="text-sm font-semibold text-gray-700">Adres</label>
+                <textarea
+                  name="adres"
+                  id="adres"
+                  value={formData.adres}
+                  onChange={handleInputChange}
+                  placeholder="Kullanıcı adresi..."
+                  rows={3}
+                  className="border rounded px-3 py-2 text-black resize-none"
                 />
               </div>
               <div className="flex flex-col gap-1">

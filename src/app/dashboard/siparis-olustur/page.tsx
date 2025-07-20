@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
 import { useToken } from '@/app/hooks/useToken';
+import { getMyProfile, UserProfileInfo } from '@/services/api';
 
 interface CartItem {
   id: number;
@@ -49,6 +50,7 @@ const SiparisOlustur = () => {
   const [limitInfo, setLimitInfo] = useState<LimitCheckResult | null>(null);
   const [checkingLimits, setCheckingLimits] = useState(false);
   const [orderNotes, setOrderNotes] = useState('');
+  const [userProfile, setUserProfile] = useState<UserProfileInfo | null>(null);
 
   // Sepet verilerini getir
   useEffect(() => {
@@ -88,6 +90,22 @@ const SiparisOlustur = () => {
 
     fetchCartData();
   }, [router]);
+
+  // Kullanıcı profil bilgilerini getir
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const profileData = await getMyProfile();
+        setUserProfile(profileData.user);
+      } catch (error) {
+        console.error('Profil bilgileri alınamadı:', error);
+      }
+    };
+
+    if (token) {
+      fetchUserProfile();
+    }
+  }, [token]);
 
   // Sepet limitini kontrol et
   const performLimitCheck = async () => {
@@ -138,6 +156,15 @@ const SiparisOlustur = () => {
   const handleSubmitOrder = async () => {
     if (!cartData || cartData.items.length === 0) {
       alert('Sepetiniz boş!');
+      return;
+    }
+
+    // Adres kontrolü yap
+    if (!userProfile?.adres || userProfile.adres.trim() === '') {
+      if (confirm('Adres bilginiz eksik. Profil sayfasında adres bilginizi güncellemek ister misiniz?')) {
+        router.push('/dashboard/ayarlar');
+        return;
+      }
       return;
     }
 
@@ -233,6 +260,27 @@ const SiparisOlustur = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Sol taraf - Sipariş Bilgileri */}
           <div className="space-y-6">
+            {/* Adres Uyarısı */}
+            {userProfile && (!userProfile.adres || userProfile.adres.trim() === '') && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="flex items-center">
+                  <span className="text-2xl mr-2">⚠️</span>
+                  <div>
+                    <h3 className="text-yellow-800 font-semibold">Adres Bilgisi Eksik</h3>
+                    <p className="text-yellow-700 text-sm">
+                      Sipariş verebilmek için adres bilginizi güncellemeniz gerekmektedir.
+                    </p>
+                    <button
+                      onClick={() => router.push('/dashboard/ayarlar')}
+                      className="mt-2 text-yellow-800 hover:text-yellow-900 underline text-sm font-medium"
+                    >
+                      Profil ayarlarına git →
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Limit Kontrolü */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Sipariş Durumu</h2>
