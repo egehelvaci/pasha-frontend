@@ -397,7 +397,7 @@ export default function ProductDetail() {
                   {product.sizeOptions?.map((size: any) => (
                     <option key={size.id} value={size.id}>
                       {size.width}x{size.is_optional_height ? 'İsteğe Bağlı' : size.height} cm 
-                      (Stok: {size.stockQuantity})
+                      (Stok: {size.is_optional_height ? `${(size.stockAreaM2 || 0).toFixed(1)} m²` : `${size.stockQuantity || 0} adet`})
                     </option>
                   ))}
                 </select>
@@ -628,7 +628,7 @@ export default function ProductDetail() {
                     </span>
                   </div>
                   <div className="mt-1 text-sm text-gray-600">
-                    Stok: {size.stockQuantity} adet
+                    Stok: {size.is_optional_height ? `${(size.stockAreaM2 || 0).toFixed(1)} m²` : `${size.stockQuantity || 0} adet`}
                   </div>
                 </div>
               ))}

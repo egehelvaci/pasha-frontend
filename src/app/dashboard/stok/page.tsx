@@ -112,6 +112,8 @@ interface SizeOption {
   height: number;
   is_optional_height: boolean;
   stockQuantity: number;
+  stockAreaM2: number;
+  pieceAreaM2: number;
 }
 
 interface Variation {
@@ -160,6 +162,9 @@ interface StockUpdateRequest {
   width: number;
   height: number;
   quantity: number;
+  areaM2?: number;
+  updateMode?: string;
+  areaM2ForFixed?: number; // Hazır kesim için m² girişi
 }
 
 interface StockUpdateResponse {
@@ -185,7 +190,10 @@ export default function StokPage() {
   const [stockForm, setStockForm] = useState<StockUpdateRequest>({
     width: 0,
     height: 0,
-    quantity: 0
+    quantity: 0,
+    areaM2: 0,
+    updateMode: 'quantity',
+    areaM2ForFixed: 0
   });
   const [isUpdatingStock, setIsUpdatingStock] = useState(false);
   const [isLoadingProductDetail, setIsLoadingProductDetail] = useState(false);
@@ -379,27 +387,49 @@ export default function StokPage() {
     
     if (productToUse.sizeOptions && productToUse.sizeOptions.length > 0) {
       const firstOption = productToUse.sizeOptions[0];
+      const productType = getProductType(productToUse.sizeOptions);
+      
       setSelectedSizeOption(firstOption);
-      setStockForm({
-        width: firstOption.width,
-        height: firstOption.height,
-        quantity: 1
-      });
+      
+      if (productType === 'optional_height') {
+        setStockForm({
+          width: firstOption.width,
+          height: firstOption.height,
+          quantity: 0,
+          areaM2: 0,
+          updateMode: 'area'
+        });
+      } else {
+        setStockForm({
+          width: firstOption.width,
+          height: firstOption.height,
+          quantity: 0,
+          areaM2: 0,
+          areaM2ForFixed: 0,
+          updateMode: 'quantity'
+        });
+      }
     } else if (productToUse.variations && productToUse.variations.length > 0) {
       const firstVariation = productToUse.variations[0];
       setSelectedSizeOption(null);
-      setStockForm({
-        width: firstVariation.width,
-        height: firstVariation.height,
-        quantity: 1
-      });
+              setStockForm({
+          width: firstVariation.width,
+          height: firstVariation.height,
+          quantity: 0,
+          areaM2: 0,
+          areaM2ForFixed: 0,
+          updateMode: 'quantity'
+        });
     } else {
       setSelectedSizeOption(null);
-      setStockForm({
-        width: 100,
-        height: 100,
-        quantity: 1
-      });
+              setStockForm({
+          width: 100,
+          height: 100,
+          quantity: 0,
+          areaM2: 0,
+          areaM2ForFixed: 0,
+          updateMode: 'quantity'
+        });
     }
     
     setIsModalOpen(true);
@@ -409,17 +439,55 @@ export default function StokPage() {
     setIsModalOpen(false);
     setSelectedProduct(null);
     setSelectedSizeOption(null);
-    setStockForm({ width: 0, height: 0, quantity: 0 });
+    setStockForm({ width: 0, height: 0, quantity: 0, areaM2: 0, updateMode: 'quantity', areaM2ForFixed: 0 });
+  };
+
+  // Ürün tipini belirleme fonksiyonu
+  const getProductType = (sizeOptions: SizeOption[]) => {
+    if (sizeOptions.length === 0) return 'unknown';
+    
+    const hasOptionalHeight = sizeOptions.some(so => so.is_optional_height === true);
+    
+    if (hasOptionalHeight) {
+      return 'optional_height';
+    } else {
+      return 'fixed_size';
+    }
+  };
+
+  // m²'den adet hesaplama fonksiyonu
+  const calculateQuantityFromArea = (areaM2: number, pieceAreaM2: number): number => {
+    if (pieceAreaM2 <= 0) return 0;
+    return Math.floor(areaM2 / pieceAreaM2);
   };
 
   const handleSizeOptionChange = (sizeOption: SizeOption) => {
     setSelectedSizeOption(sizeOption);
-    setStockForm(prev => ({
-      ...prev,
-      width: sizeOption.width,
-      height: sizeOption.height,
-      quantity: sizeOption.stockQuantity || 0
-    }));
+    
+    const productType = getProductType(selectedProduct?.sizeOptions || []);
+    
+    if (productType === 'optional_height') {
+      // Opsiyonel yükseklik: m² bazlı
+      setStockForm(prev => ({
+        ...prev,
+        width: sizeOption.width,
+        height: sizeOption.height,
+        quantity: 0,
+        areaM2: 0,
+        updateMode: 'area'
+      }));
+          } else {
+        // Hazır kesim: adet bazlı
+        setStockForm(prev => ({
+          ...prev,
+          width: sizeOption.width,
+          height: sizeOption.height,
+          quantity: 0,
+          areaM2: 0,
+          areaM2ForFixed: 0,
+          updateMode: 'quantity'
+        }));
+      }
   };
 
   const updateStock = async () => {
@@ -440,21 +508,43 @@ export default function StokPage() {
       return;
     }
 
-    const apiUrl = `${API_BASE_URL}/api/products/${selectedProduct.productId}/stock`;
+    const productType = getProductType(selectedProduct.sizeOptions || []);
+    let apiUrl: string;
+    let requestBody: any;
 
-    if (stockForm.width <= 0 || stockForm.height <= 0 || stockForm.quantity <= 0) {
-      alert('Lütfen geçerli boyut ve miktar değerleri girin!');
-      return;
+    if (productType === 'optional_height') {
+      // Opsiyonel yükseklik: m² bazlı stok ekleme
+      apiUrl = `${API_BASE_URL}/api/products/${selectedProduct.productId}/stock-area`;
+      
+      if (stockForm.width <= 0 || stockForm.height <= 0 || (stockForm.areaM2 || 0) < 0) {
+        alert('Lütfen geçerli boyut ve m² değerleri girin!');
+        return;
+      }
+
+      requestBody = {
+        width: stockForm.width,
+        height: stockForm.height,
+        areaM2: stockForm.areaM2
+      };
+    } else {
+      // Hazır kesim: adet bazlı stok ekleme
+      apiUrl = `${API_BASE_URL}/api/products/${selectedProduct.productId}/stock-hybrid`;
+      
+      if (stockForm.width <= 0 || stockForm.height <= 0 || stockForm.quantity < 0) {
+        alert('Lütfen geçerli boyut ve adet değerleri girin!');
+        return;
+      }
+
+      requestBody = {
+        width: stockForm.width,
+        height: stockForm.height,
+        quantity: stockForm.quantity,
+        updateMode: 'quantity'
+      };
     }
 
     setIsUpdatingStock(true);
     try {
-      const requestBody = {
-        width: stockForm.width,
-        height: stockForm.height,
-        quantity: stockForm.quantity
-      };
-
       const response = await fetch(apiUrl, {
         method: 'PATCH',
         headers: {
@@ -481,7 +571,9 @@ export default function StokPage() {
             
             setStockForm(prev => ({
               ...prev,
-              quantity: 1
+              quantity: 0,
+              areaM2: 0,
+              areaM2ForFixed: 0
             }));
             
             alert('Stok başarıyla güncellendi!');
@@ -899,14 +991,28 @@ export default function StokPage() {
                   <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                     <h4 className="text-sm font-medium text-gray-900 mb-3">Mevcut Stok Durumu (Güncel)</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {selectedProduct.sizeOptions.map((option) => (
-                        <div key={option.id} className="text-sm bg-white p-3 rounded border">
-                          <div className="font-medium text-gray-900">{option.width}x{option.height} cm</div>
-                          <div className={`${option.stockQuantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {option.stockQuantity || 0} adet
+                      {selectedProduct.sizeOptions.map((option) => {
+                        const productType = getProductType(selectedProduct.sizeOptions || []);
+                        const isOptionalHeight = option.is_optional_height;
+                        
+                        return (
+                          <div key={option.id} className="text-sm bg-white p-3 rounded border">
+                            <div className="font-medium text-gray-900">{option.width}x{option.height} cm</div>
+                            <div className="text-xs text-gray-500 mb-1">
+                              {isOptionalHeight ? 'Opsiyonel Yükseklik' : 'Hazır Kesim'}
+                            </div>
+                            {isOptionalHeight ? (
+                              <div className={`${(option.stockAreaM2 || 0) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {(option.stockAreaM2 || 0).toFixed(1)} m²
+                              </div>
+                            ) : (
+                              <div className={`${(option.stockQuantity || 0) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {option.stockQuantity || 0} adet
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -931,7 +1037,13 @@ export default function StokPage() {
                           >
                             <div className="font-medium text-center">{option.width}x{option.height} cm</div>
                             <div className="text-xs text-gray-500 mt-1 text-center">
-                              Mevcut: {option.stockQuantity || 0} adet
+                              {option.is_optional_height ? 'Opsiyonel Yükseklik' : 'Hazır Kesim'}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1 text-center">
+                              Mevcut: {option.is_optional_height 
+                                ? `${(option.stockAreaM2 || 0).toFixed(1)} m²`
+                                : `${option.stockQuantity || 0} adet`
+                              }
                             </div>
                           </button>
                         ))}
@@ -969,19 +1081,105 @@ export default function StokPage() {
                     </div>
                   )}
 
-                  {/* Miktar */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Güncellenecek Stok:
-                    </label>
-                    <input
-                      type="number"
-                      value={stockForm.quantity}
-                      onChange={(e) => setStockForm(prev => ({ ...prev, quantity: e.target.value === '' ? 0 : Number(e.target.value) }))}
-                      className="w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Güncellenecek miktar"
-                    />
-                  </div>
+                  {/* Stok Ekleme Formu - Ürün Tipine Göre */}
+                  {selectedProduct.sizeOptions && selectedProduct.sizeOptions.length > 0 && (
+                    (() => {
+                      const productType = getProductType(selectedProduct.sizeOptions);
+                      const isOptionalHeight = productType === 'optional_height';
+                      
+                      return (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            {isOptionalHeight ? 'Eklenecek Stok (m²):' : 'Eklenecek Stok (Adet):'}
+                          </label>
+                          {isOptionalHeight ? (
+                            <input
+                              type="number"
+                              step="0.1"
+                              min="0"
+                              value={stockForm.areaM2 === 0 ? 0 : stockForm.areaM2 || ''}
+                              onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                              onChange={(e) => setStockForm(prev => ({ 
+                                ...prev, 
+                                areaM2: e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)),
+                                quantity: 0
+                              }))}
+                              className="w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="Eklenecek m² miktarı"
+                            />
+                          ) : (
+                            <div className="space-y-3">
+                              {/* Adet girişi */}
+                              <div>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={stockForm.quantity === 0 ? 0 : stockForm.quantity || ''}
+                                  onChange={(e) => setStockForm(prev => ({ 
+                                    ...prev, 
+                                    quantity: e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)),
+                                    areaM2: 0,
+                                    areaM2ForFixed: 0
+                                  }))}
+                                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                                  className="w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  placeholder="Eklenecek adet miktarı"
+                                />
+                              </div>
+                              
+                              {/* m² girişi */}
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Eklenecek Stok (m²) - Adet olarak hesaplanır:
+                                </label>
+                                <input
+                                  type="number"
+                                  step="0.1"
+                                  min="0"
+                                  value={stockForm.areaM2ForFixed === 0 ? 0 : stockForm.areaM2ForFixed || ''}
+                                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                                  onChange={(e) => {
+                                    const areaM2 = e.target.value === '' ? 0 : Math.max(0, Number(e.target.value));
+                                    const calculatedQuantity = calculateQuantityFromArea(areaM2, selectedSizeOption?.pieceAreaM2 || 0);
+                                    setStockForm(prev => ({ 
+                                      ...prev, 
+                                      areaM2ForFixed: areaM2,
+                                      quantity: calculatedQuantity,
+                                      areaM2: 0
+                                    }));
+                                  }}
+                                  className="w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  placeholder="Eklenecek m² miktarı"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()
+                  )}
+
+                  {/* Manuel boyut için miktar */}
+                  {(!selectedProduct.sizeOptions || selectedProduct.sizeOptions.length === 0) && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Eklenecek Stok (Adet):
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={stockForm.quantity === 0 ? 0 : stockForm.quantity || ''}
+                        onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                        onChange={(e) => setStockForm(prev => ({ 
+                          ...prev, 
+                          quantity: e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)),
+                          areaM2: 0
+                        }))}
+                        className="w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Eklenecek adet miktarı"
+                      />
+                    </div>
+                  )}
 
                   {/* Seçilen boyut özeti */}
                   {selectedSizeOption && (
@@ -992,16 +1190,45 @@ export default function StokPage() {
                           <span className="ml-1 text-gray-900">{stockForm.width}x{stockForm.height} cm</span>
                         </div>
                         <div>
-                          <span className="font-medium text-gray-700">Mevcut stok:</span> 
-                          <span className="ml-1 text-gray-900">{selectedSizeOption.stockQuantity || 0} adet</span>
+                          <span className="font-medium text-gray-700">Ürün tipi:</span> 
+                          <span className="ml-1 text-gray-900">
+                            {selectedSizeOption.is_optional_height ? 'Opsiyonel Yükseklik' : 'Hazır Kesim'}
+                          </span>
                         </div>
                         <div>
-                          <span className="font-medium text-gray-700">Güncellenecek:</span> 
-                          <span className="ml-1 text-gray-900">{stockForm.quantity} adet</span>
+                          <span className="font-medium text-gray-700">Mevcut stok:</span> 
+                          <span className="ml-1 text-gray-900">
+                            {selectedSizeOption.is_optional_height 
+                              ? `${(selectedSizeOption.stockAreaM2 || 0).toFixed(1)} m²`
+                              : `${selectedSizeOption.stockQuantity || 0} adet`
+                            }
+                          </span>
                         </div>
+                        <div>
+                          <span className="font-medium text-gray-700">Eklenecek:</span> 
+                          <span className="ml-1 text-gray-900">
+                            {selectedSizeOption.is_optional_height 
+                              ? `${stockForm.areaM2 || 0} m²`
+                              : `${stockForm.quantity} adet`
+                            }
+                          </span>
+                        </div>
+                        {!selectedSizeOption.is_optional_height && stockForm.areaM2ForFixed && stockForm.areaM2ForFixed > 0 && (
+                          <div>
+                            <span className="font-medium text-gray-700">Hesaplanan:</span> 
+                            <span className="ml-1 text-blue-600">
+                              {stockForm.areaM2ForFixed} m² = {stockForm.quantity} adet
+                            </span>
+                          </div>
+                        )}
                         <div className="pt-1 border-t border-blue-200">
                           <span className="font-medium text-blue-700">Yeni toplam:</span> 
-                          <span className="ml-1 text-blue-900 font-semibold">{stockForm.quantity} adet</span>
+                          <span className="ml-1 text-blue-900 font-semibold">
+                            {selectedSizeOption.is_optional_height 
+                              ? `${((selectedSizeOption.stockAreaM2 || 0) + (stockForm.areaM2 || 0)).toFixed(1)} m²`
+                              : `${(selectedSizeOption.stockQuantity || 0) + stockForm.quantity} adet`
+                            }
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -1020,10 +1247,21 @@ export default function StokPage() {
                   </button>
                   <button
                     onClick={updateStock}
-                    disabled={isUpdatingStock || stockForm.quantity <= 0 || stockForm.width <= 0 || stockForm.height <= 0}
+                    disabled={
+                      isUpdatingStock || 
+                      stockForm.width <= 0 || 
+                      stockForm.height <= 0 ||
+                      (selectedProduct.sizeOptions && selectedProduct.sizeOptions.length > 0 ? 
+                        (getProductType(selectedProduct.sizeOptions) === 'optional_height' ? 
+                          (stockForm.areaM2 || 0) < 0 : 
+                          stockForm.quantity < 0
+                        ) : 
+                        stockForm.quantity < 0
+                      )
+                    }
                     className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isUpdatingStock ? 'Güncelleniyor...' : 'Stok Güncelle'}
+                    {isUpdatingStock ? 'Güncelleniyor...' : 'Stok Ekle'}
                   </button>
                 </div>
               </div>
