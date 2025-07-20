@@ -457,7 +457,7 @@ const MuhasebePage = () => {
                 {/* Header Skeleton */}
                 <div className="bg-white shadow-sm border-b">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                        <div className="animate-pulse">
+                <div className="animate-pulse">
                             <div className="h-8 bg-gray-200 rounded-lg w-64 mb-4"></div>
                             <div className="h-4 bg-gray-200 rounded w-96"></div>
                         </div>
@@ -473,8 +473,8 @@ const MuhasebePage = () => {
                                     <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
                                     <div className="h-8 bg-gray-200 rounded w-16"></div>
                                 </div>
-                            ))}
-                        </div>
+                        ))}
+                    </div>
 
                         {/* Content Skeleton */}
                         <div className="bg-white rounded-xl shadow-sm p-6">
@@ -513,12 +513,12 @@ const MuhasebePage = () => {
                         </div>
                         <h2 className="text-xl font-semibold text-gray-900 mb-2">Veri Yükleme Hatası</h2>
                         <p className="text-gray-600 mb-6">{error}</p>
-                        <button
-                            onClick={() => fetchAccountingData(true)}
+                    <button
+                        onClick={() => fetchAccountingData(true)}
                             className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors"
-                        >
-                            Tekrar Dene
-                        </button>
+                    >
+                        Tekrar Dene
+                    </button>
                     </div>
                 </div>
             </div>
@@ -600,31 +600,31 @@ const MuhasebePage = () => {
                         </div>
                         
                         <div className="flex items-center space-x-3">
-                            <button
-                                onClick={openModal}
+                        <button
+                            onClick={openModal}
                                 className="flex items-center px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all duration-200 shadow-sm hover:shadow-md"
-                            >
-                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                </svg>
+                        >
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
                                 Yeni Hareket
-                            </button>
-                            <button
-                                onClick={() => fetchAccountingData(true)}
+                        </button>
+                        <button
+                            onClick={() => fetchAccountingData(true)}
                                 className="flex items-center px-4 py-2 text-white rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
-                                style={{backgroundColor: '#00365a'}}
-                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#002847'}
-                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#00365a'}
-                            >
-                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                                Yenile
-                            </button>
+                            style={{backgroundColor: '#00365a'}}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#002847'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#00365a'}
+                        >
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Yenile
+                        </button>
                         </div>
                     </div>
+                    </div>
                 </div>
-            </div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Filtreleme Bölümü */}
@@ -735,153 +735,153 @@ const MuhasebePage = () => {
                         <div className="mt-6 pt-4 border-t border-gray-200">
                             <div className="flex flex-wrap gap-2 items-center">
                                 <span className="text-sm font-medium text-gray-600">🏷️ Aktif Filtreler:</span>
-                                {selectedStoreFilter && (
+                            {selectedStoreFilter && (
                                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        Mağaza: {responseData?.magazaBakiyeleri?.find(m => m.store_id === selectedStoreFilter)?.kurum_adi}
-                                    </span>
-                                )}
-                                {startDate && (
+                                    Mağaza: {responseData?.magazaBakiyeleri?.find(m => m.store_id === selectedStoreFilter)?.kurum_adi}
+                                </span>
+                            )}
+                            {startDate && (
                                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        Başlangıç: {new Date(startDate).toLocaleDateString('tr-TR')}
-                                    </span>
-                                )}
-                                {endDate && (
+                                    Başlangıç: {new Date(startDate).toLocaleDateString('tr-TR')}
+                                </span>
+                            )}
+                            {endDate && (
                                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        Bitiş: {new Date(endDate).toLocaleDateString('tr-TR')}
-                                    </span>
-                                )}
-                                {transactionTypeFilter && (
+                                    Bitiş: {new Date(endDate).toLocaleDateString('tr-TR')}
+                                </span>
+                            )}
+                            {transactionTypeFilter && (
                                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                        Tür: {transactionTypeFilter === 'gelir' ? 'Gelir' : 'Gider'}
-                                    </span>
-                                )}
+                                    Tür: {transactionTypeFilter === 'gelir' ? 'Gelir' : 'Gider'}
+                                </span>
+                            )}
                             </div>
                         </div>
                     )}
-                </div>
+            </div>
 
                 {/* Modern Özet Kartları - Responsive Grid */}
-                {responseData && (
+            {responseData && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4 lg:gap-6 mb-8">
-                        {/* Toplam Mağaza */}
+                    {/* Toplam Mağaza */}
                         <div className="bg-white rounded-xl shadow-sm border p-3 lg:p-4 hover:shadow-md transition-shadow min-w-0">
                             <div className="flex items-center space-x-3">
                                 <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 flex-shrink-0">
                                     <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                    </svg>
-                                </div>
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                            </div>
                                 <div className="min-w-0 flex-1">
                                     <p className="text-xs font-medium text-gray-600 truncate">Toplam Mağaza</p>
                                     <p className="text-xl font-bold text-gray-900">{responseData.magazaBakiyeleri.length}</p>
-                                </div>
                             </div>
                         </div>
+                    </div>
 
-                        {/* Kasa Bakiyesi */}
+                    {/* Kasa Bakiyesi */}
                         <div className="bg-white rounded-xl shadow-sm border p-3 lg:p-4 hover:shadow-md transition-shadow min-w-0">
                             <div className="flex items-center space-x-3">
                                 <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 flex-shrink-0">
                                     <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                                    </svg>
-                                </div>
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                </svg>
+                            </div>
                                 <div className="min-w-0 flex-1">
                                     <p className="text-xs font-medium text-gray-600 truncate">Kasa Bakiyesi</p>
                                     <p className="text-sm xl:text-base font-bold text-blue-600 truncate leading-tight" title={formatCurrency(parseFloat(responseData.adminKasaBakiyesi))}>
-                                        {formatCurrency(parseFloat(responseData.adminKasaBakiyesi))}
+                                {formatCurrency(parseFloat(responseData.adminKasaBakiyesi))}
                                     </p>
-                                </div>
                             </div>
                         </div>
+                    </div>
 
-                        {/* Toplam Alacak */}
+                    {/* Toplam Alacak */}
                         <div className="bg-white rounded-xl shadow-sm border p-3 lg:p-4 hover:shadow-md transition-shadow min-w-0">
                             <div className="flex items-center space-x-3">
                                 <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-red-100 flex-shrink-0">
                                     <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
-                                    </svg>
-                                </div>
+                                </svg>
+                            </div>
                                 <div className="min-w-0 flex-1">
                                     <p className="text-xs font-medium text-gray-600 truncate">Toplam Alacak</p>
                                     <p className="text-sm xl:text-base font-bold text-red-600 truncate leading-tight" title={formatCurrency(
                                         responseData.magazaBakiyeleri?.filter(m => m.durum === 'BORCLU')
                                             .reduce((sum, m) => sum + Math.abs(m.bakiye), 0) || 0
                                     )}>
-                                        {formatCurrency(
-                                            responseData.magazaBakiyeleri?.filter(m => m.durum === 'BORCLU')
-                                                .reduce((sum, m) => sum + Math.abs(m.bakiye), 0) || 0
-                                        )}
+                                {formatCurrency(
+                                    responseData.magazaBakiyeleri?.filter(m => m.durum === 'BORCLU')
+                                        .reduce((sum, m) => sum + Math.abs(m.bakiye), 0) || 0
+                                )}
                                     </p>
-                                </div>
                             </div>
                         </div>
+                    </div>
 
-                        {/* Borçlu Mağazalar */}
+                    {/* Borçlu Mağazalar */}
                         <div className="bg-white rounded-xl shadow-sm border p-3 lg:p-4 hover:shadow-md transition-shadow min-w-0">
                             <div className="flex items-center space-x-3">
                                 <div className="flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0" style={{backgroundColor: 'rgba(0, 54, 90, 0.1)'}}>
                                     <svg className="w-4 h-4" style={{color: '#00365a'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 002 2z" />
-                                    </svg>
-                                </div>
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 002 2z" />
+                                </svg>
+                            </div>
                                 <div className="min-w-0 flex-1">
                                     <p className="text-xs font-medium text-gray-600 truncate">Borçlu Mağazalar</p>
                                     <p className="text-xl font-bold text-red-600">
-                                        {responseData.magazaBakiyeleri?.filter(m => m.durum === 'BORCLU').length || 0}
+                                {responseData.magazaBakiyeleri?.filter(m => m.durum === 'BORCLU').length || 0}
                                     </p>
-                                </div>
                             </div>
                         </div>
+                    </div>
 
-                        {/* Alacaklı Mağazalar */}
+                    {/* Alacaklı Mağazalar */}
                         <div className="bg-white rounded-xl shadow-sm border p-3 lg:p-4 hover:shadow-md transition-shadow min-w-0">
                             <div className="flex items-center space-x-3">
                                 <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-green-100 flex-shrink-0">
                                     <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                                    </svg>
-                                </div>
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                </svg>
+                            </div>
                                 <div className="min-w-0 flex-1">
                                     <p className="text-xs font-medium text-gray-600 truncate">Alacaklı Mağazalar</p>
                                     <p className="text-xl font-bold text-green-600">
-                                        {responseData.magazaBakiyeleri?.filter(m => m.durum === 'ALACAKLI').length || 0}
+                                {responseData.magazaBakiyeleri?.filter(m => m.durum === 'ALACAKLI').length || 0}
                                     </p>
-                                </div>
                             </div>
                         </div>
+                    </div>
 
-                        {/* Toplam Verecek */}
+                    {/* Toplam Verecek */}
                         <div className="bg-white rounded-xl shadow-sm border p-3 lg:p-4 hover:shadow-md transition-shadow min-w-0">
                             <div className="flex items-center space-x-3">
                                 <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 flex-shrink-0">
                                     <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
-                                    </svg>
-                                </div>
+                                </svg>
+                            </div>
                                 <div className="min-w-0 flex-1">
                                     <p className="text-xs font-medium text-gray-600 truncate">Toplam Verecek</p>
                                     <p className="text-sm xl:text-base font-bold text-blue-600 truncate leading-tight" title={formatCurrency(
                                         responseData.magazaBakiyeleri?.filter(m => m.durum === 'ALACAKLI')
                                             .reduce((sum, m) => sum + m.bakiye, 0) || 0
                                     )}>
-                                        {formatCurrency(
-                                            responseData.magazaBakiyeleri?.filter(m => m.durum === 'ALACAKLI')
-                                                .reduce((sum, m) => sum + m.bakiye, 0) || 0
-                                        )}
+                                {formatCurrency(
+                                    responseData.magazaBakiyeleri?.filter(m => m.durum === 'ALACAKLI')
+                                        .reduce((sum, m) => sum + m.bakiye, 0) || 0
+                                )}
                                     </p>
-                                </div>
                             </div>
                         </div>
                     </div>
-                )}
+                </div>
+            )}
 
                 {/* Mağaza Detayları - Modern Kartlar */}
-                {responseData && responseData.magazaBakiyeleri && responseData.magazaBakiyeleri.length > 0 && (
+            {responseData && responseData.magazaBakiyeleri && responseData.magazaBakiyeleri.length > 0 && (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                        {/* Borçlu Mağazalar */}
-                        {responseData.magazaBakiyeleri.filter(m => m.durum === 'BORCLU').length > 0 && (
+                    {/* Borçlu Mağazalar */}
+                    {responseData.magazaBakiyeleri.filter(m => m.durum === 'BORCLU').length > 0 && (
                             <div className="bg-white rounded-xl shadow-sm border p-6">
                                 <div className="flex items-center space-x-3 mb-6">
                                     <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-100">
@@ -891,21 +891,21 @@ const MuhasebePage = () => {
                                     </div>
                                     <h3 className="text-lg font-semibold text-gray-900">📉 Borçlu Mağazalar</h3>
                                 </div>
-                                <div className="space-y-3">
-                                    {responseData.magazaBakiyeleri.filter(m => m.durum === 'BORCLU').map((magaza: MagazaBakiye) => (
+                            <div className="space-y-3">
+                                {responseData.magazaBakiyeleri.filter(m => m.durum === 'BORCLU').map((magaza: MagazaBakiye) => (
                                         <div key={magaza.store_id} className="flex justify-between items-center p-4 bg-red-50 rounded-xl border border-red-100 hover:bg-red-100 transition-colors">
-                                            <span className="text-sm font-medium text-gray-900">{magaza.kurum_adi}</span>
-                                            <span className="text-sm font-bold text-red-600">
-                                                {formatCurrency(magaza.tutar)}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
+                                        <span className="text-sm font-medium text-gray-900">{magaza.kurum_adi}</span>
+                                        <span className="text-sm font-bold text-red-600">
+                                            {formatCurrency(magaza.tutar)}
+                                        </span>
+                                    </div>
+                                ))}
                             </div>
-                        )}
+                        </div>
+                    )}
 
-                        {/* Alacaklı Mağazalar */}
-                        {responseData.magazaBakiyeleri.filter(m => m.durum === 'ALACAKLI').length > 0 && (
+                    {/* Alacaklı Mağazalar */}
+                    {responseData.magazaBakiyeleri.filter(m => m.durum === 'ALACAKLI').length > 0 && (
                             <div className="bg-white rounded-xl shadow-sm border p-6">
                                 <div className="flex items-center space-x-3 mb-6">
                                     <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-green-100">
@@ -915,21 +915,21 @@ const MuhasebePage = () => {
                                     </div>
                                     <h3 className="text-lg font-semibold text-gray-900">📈 Alacaklı Mağazalar</h3>
                                 </div>
-                                <div className="space-y-3">
-                                    {responseData.magazaBakiyeleri.filter(m => m.durum === 'ALACAKLI').map((magaza: MagazaBakiye) => (
+                            <div className="space-y-3">
+                                {responseData.magazaBakiyeleri.filter(m => m.durum === 'ALACAKLI').map((magaza: MagazaBakiye) => (
                                         <div key={magaza.store_id} className="flex justify-between items-center p-4 bg-green-50 rounded-xl border border-green-100 hover:bg-green-100 transition-colors">
-                                            <span className="text-sm font-medium text-gray-900">{magaza.kurum_adi}</span>
-                                            <span className="text-sm font-bold text-green-600">
-                                                {formatCurrency(magaza.tutar)}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
+                                        <span className="text-sm font-medium text-gray-900">{magaza.kurum_adi}</span>
+                                        <span className="text-sm font-bold text-green-600">
+                                            {formatCurrency(magaza.tutar)}
+                                        </span>
+                                    </div>
+                                ))}
                             </div>
-                        )}
+                        </div>
+                    )}
 
-                        {/* Dengede Mağazalar */}
-                        {responseData.magazaBakiyeleri.filter(m => m.durum === 'DENGEDE').length > 0 && (
+                    {/* Dengede Mağazalar */}
+                    {responseData.magazaBakiyeleri.filter(m => m.durum === 'DENGEDE').length > 0 && (
                             <div className="bg-white rounded-xl shadow-sm border p-6">
                                 <div className="flex items-center space-x-3 mb-6">
                                     <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100">
@@ -939,30 +939,30 @@ const MuhasebePage = () => {
                                     </div>
                                     <h3 className="text-lg font-semibold text-gray-900">⚖️ Dengede Mağazalar</h3>
                                 </div>
-                                <div className="space-y-3">
-                                    {responseData.magazaBakiyeleri.filter(m => m.durum === 'DENGEDE').map((magaza: MagazaBakiye) => (
+                            <div className="space-y-3">
+                                {responseData.magazaBakiyeleri.filter(m => m.durum === 'DENGEDE').map((magaza: MagazaBakiye) => (
                                         <div key={magaza.store_id} className="flex justify-between items-center p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
-                                            <span className="text-sm font-medium text-gray-900">{magaza.kurum_adi}</span>
-                                            <span className="text-sm font-medium text-gray-600">
-                                                Bakiye: {formatCurrency(magaza.bakiye)}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
+                                        <span className="text-sm font-medium text-gray-900">{magaza.kurum_adi}</span>
+                                        <span className="text-sm font-medium text-gray-600">
+                                            Bakiye: {formatCurrency(magaza.bakiye)}
+                                        </span>
+                                    </div>
+                                ))}
                             </div>
-                        )}
-                    </div>
-                )}
+                        </div>
+                    )}
+                </div>
+            )}
 
-                {/* Filtrelenmiş Veriler Özeti */}
-                {(selectedStoreFilter || startDate || endDate || transactionTypeFilter) && filteredData && (
+            {/* Filtrelenmiş Veriler Özeti */}
+            {(selectedStoreFilter || startDate || endDate || transactionTypeFilter) && filteredData && (
                     <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6 mb-8">
                         <div className="flex items-center space-x-3 mb-4">
                             <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-200">
                                 <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                 </svg>
-                            </div>
+                        </div>
                             <h3 className="text-lg font-semibold text-blue-900">📊 Filtrelenmiş Veriler Özeti</h3>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -972,66 +972,66 @@ const MuhasebePage = () => {
                             </div>
                             <div className="text-center bg-white rounded-lg p-4">
                                 <div className="text-2xl font-bold text-green-600">
-                                    {formatCurrency(
-                                        filteredData.hareketler
-                                            .filter(t => !t.harcama)
-                                            .reduce((sum, t) => sum + parseFloat(t.tutar), 0)
-                                    )}
-                                </div>
-                                <div className="text-sm text-green-700">Toplam Gelir</div>
+                                {formatCurrency(
+                                    filteredData.hareketler
+                                        .filter(t => !t.harcama)
+                                        .reduce((sum, t) => sum + parseFloat(t.tutar), 0)
+                                )}
                             </div>
+                                <div className="text-sm text-green-700">Toplam Gelir</div>
+                        </div>
                             <div className="text-center bg-white rounded-lg p-4">
                                 <div className="text-2xl font-bold text-red-600">
-                                    {formatCurrency(
-                                        filteredData.hareketler
-                                            .filter(t => t.harcama)
-                                            .reduce((sum, t) => sum + parseFloat(t.tutar), 0)
-                                    )}
-                                </div>
-                                <div className="text-sm text-red-700">Toplam Gider</div>
+                                {formatCurrency(
+                                    filteredData.hareketler
+                                        .filter(t => t.harcama)
+                                        .reduce((sum, t) => sum + parseFloat(t.tutar), 0)
+                                )}
                             </div>
+                                <div className="text-sm text-red-700">Toplam Gider</div>
+                        </div>
                             <div className="text-center bg-white rounded-lg p-4">
                                 <div className={`text-2xl font-bold ${
-                                    (filteredData.hareketler.filter(t => !t.harcama).reduce((sum, t) => sum + parseFloat(t.tutar), 0) -
-                                     filteredData.hareketler.filter(t => t.harcama).reduce((sum, t) => sum + parseFloat(t.tutar), 0)) >= 0
-                                    ? 'text-green-600' : 'text-red-600'
-                                }`}>
-                                    {formatCurrency(
-                                        filteredData.hareketler.filter(t => !t.harcama).reduce((sum, t) => sum + parseFloat(t.tutar), 0) -
-                                        filteredData.hareketler.filter(t => t.harcama).reduce((sum, t) => sum + parseFloat(t.tutar), 0)
-                                    )}
-                                </div>
-                                <div className="text-sm text-gray-700">Net Durum</div>
+                                (filteredData.hareketler.filter(t => !t.harcama).reduce((sum, t) => sum + parseFloat(t.tutar), 0) -
+                                 filteredData.hareketler.filter(t => t.harcama).reduce((sum, t) => sum + parseFloat(t.tutar), 0)) >= 0
+                                ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                                {formatCurrency(
+                                    filteredData.hareketler.filter(t => !t.harcama).reduce((sum, t) => sum + parseFloat(t.tutar), 0) -
+                                    filteredData.hareketler.filter(t => t.harcama).reduce((sum, t) => sum + parseFloat(t.tutar), 0)
+                                )}
                             </div>
+                                <div className="text-sm text-gray-700">Net Durum</div>
                         </div>
                     </div>
-                )}
+                </div>
+            )}
 
                 {/* Modern İşlem Geçmişi Tablosu */}
                 <div className="bg-white rounded-xl shadow-sm border" id="son-islemler">
-                    <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                         <div className="flex items-center space-x-3">
                             <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100">
                                 <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                 </svg>
                             </div>
-                            <div>
+                    <div>
                                 <h2 className="text-lg font-semibold text-gray-900">
                                     📋 Son İşlemler
-                                    {filteredData && filteredData.hareketler.length !== responseData?.hareketler.length && (
-                                        <span className="ml-2 text-sm text-gray-500">
-                                            ({filteredData.hareketler.length} / {responseData?.hareketler.length} kayıt)
-                                        </span>
-                                    )}
-                                </h2>
-                                {filteredData && filteredData.hareketler.length === 0 && (selectedStoreFilter || startDate || endDate || transactionTypeFilter) && (
-                                    <p className="text-sm text-gray-500 mt-1">Filtreye uygun kayıt bulunamadı</p>
-                                )}
+                            {filteredData && filteredData.hareketler.length !== responseData?.hareketler.length && (
+                                <span className="ml-2 text-sm text-gray-500">
+                                    ({filteredData.hareketler.length} / {responseData?.hareketler.length} kayıt)
+                                </span>
+                            )}
+                        </h2>
+                        {filteredData && filteredData.hareketler.length === 0 && (selectedStoreFilter || startDate || endDate || transactionTypeFilter) && (
+                            <p className="text-sm text-gray-500 mt-1">Filtreye uygun kayıt bulunamadı</p>
+                        )}
                             </div>
-                        </div>
-                        <button
-                            onClick={() => {
+                    </div>
+                    <button
+                        onClick={() => {
                                 // Filtrelenmiş verileri al
                                 const currentData = getFilteredData();
                                 const transactions = currentData?.hareketler || [];
@@ -1207,7 +1207,7 @@ const MuhasebePage = () => {
                                                 margin-top: 2px;
                                             }
                                         }
-                                    </style>
+                                                </style>
                                 `;
                                 
                                 // Yazdırılacak içeriği oluştur
@@ -1347,138 +1347,138 @@ const MuhasebePage = () => {
                                 }, 1000);
                             }}
                             className="flex items-center px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                        >
-                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                            </svg>
-                            Yazdır
-                        </button>
-                    </div>
-                    <div className="overflow-x-auto max-h-96 overflow-y-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
+                    >
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        Yazdır
+                    </button>
+                </div>
+                <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Tarih
-                                    </th>
+                                    Tarih
+                                </th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Mağaza
-                                    </th>
+                                    Mağaza
+                                </th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        İşlem Türü
-                                    </th>
+                                    İşlem Türü
+                                </th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Mağaza Durumu
-                                    </th>
+                                    Mağaza Durumu
+                                </th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Tutar
-                                    </th>
+                                    Tutar
+                                </th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Açıklama
-                                    </th>
+                                    Açıklama
+                                </th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Durum
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {filteredData?.hareketler.map((transaction: Transaction) => (
+                                    Durum
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {filteredData?.hareketler.map((transaction: Transaction) => (
                                     <tr key={transaction.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-4 py-4 text-sm text-gray-900">
-                                            {new Date(transaction.tarih).toLocaleDateString('tr-TR')}
-                                        </td>
+                                        {new Date(transaction.tarih).toLocaleDateString('tr-TR')}
+                                    </td>
                                         <td className="px-4 py-4">
-                                            <div className="text-sm font-medium text-gray-900 truncate max-w-32">
-                                                {transaction.store?.kurum_adi || 'Bilinmeyen Mağaza'}
-                                            </div>
-                                            <div className="text-xs text-gray-500 truncate">{transaction.storeId}</div>
-                                        </td>
+                                        <div className="text-sm font-medium text-gray-900 truncate max-w-32">
+                                            {transaction.store?.kurum_adi || 'Bilinmeyen Mağaza'}
+                                        </div>
+                                        <div className="text-xs text-gray-500 truncate">{transaction.storeId}</div>
+                                    </td>
                                         <td className="px-4 py-4 text-sm text-gray-900">
-                                            <span className="truncate block max-w-28">{transaction.islemTuru}</span>
-                                        </td>
+                                        <span className="truncate block max-w-28">{transaction.islemTuru}</span>
+                                    </td>
                                         <td className="px-4 py-4">
-                                            <div className="text-sm">
+                                        <div className="text-sm">
                                                 <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
                                                     transaction.store.durum === 'ALACAKLI' ? 'text-green-600 bg-green-100' :
                                                     transaction.store.durum === 'BORCLU' ? 'text-red-600 bg-red-100' :
                                                     'text-gray-600 bg-gray-100'
-                                                }`}>
-                                                    {transaction.store.durum}
-                                                </span>
-                                                <div className="text-xs text-gray-500 mt-1">
-                                                    Bakiye: {formatCurrency(transaction.store.bakiye)}
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-4">
-                                            <div className={`text-sm font-medium ${transaction.harcama ? 'text-red-600' : 'text-green-600'}`}>
-                                                {transaction.harcama ? '-' : '+'}{formatCurrency(parseFloat(transaction.tutar))}
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-4 text-sm text-gray-900">
-                                            <span className="truncate block max-w-48" title={transaction.aciklama}>
-                                                {transaction.aciklama}
+                                            }`}>
+                                                {transaction.store.durum}
                                             </span>
-                                        </td>
+                                                                                         <div className="text-xs text-gray-500 mt-1">
+                                                 Bakiye: {formatCurrency(transaction.store.bakiye)}
+                                             </div>
+                                        </div>
+                                    </td>
+                                        <td className="px-4 py-4">
+                                        <div className={`text-sm font-medium ${transaction.harcama ? 'text-red-600' : 'text-green-600'}`}>
+                                            {transaction.harcama ? '-' : '+'}{formatCurrency(parseFloat(transaction.tutar))}
+                                        </div>
+                                    </td>
+                                        <td className="px-4 py-4 text-sm text-gray-900">
+                                        <span className="truncate block max-w-48" title={transaction.aciklama}>
+                                            {transaction.aciklama}
+                                        </span>
+                                    </td>
                                         <td className="px-4 py-4">
                                             <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
                                                 transaction.harcama ? 'text-red-600 bg-red-100' : 'text-green-600 bg-green-100'
                                             }`}>
-                                                {transaction.harcama ? 'Gider' : 'Gelir'}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                            {transaction.harcama ? 'Gider' : 'Gelir'}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
+            </div>
 
                 {/* Modern Mali Kayıt Ekleme Modal */}
-                {isModalOpen && (
+            {isModalOpen && (
                     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
                         <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-                            {/* Modal Header */}
+                        {/* Modal Header */}
                             <div className="bg-[#00365a] text-white rounded-t-2xl p-6">
                                 <div className="flex justify-between items-center">
                                     <div>
                                         <h3 className="text-xl font-bold">Yeni Mali Hareket</h3>
                                         <p className="text-blue-100 text-sm mt-1">Gelir veya gider kaydı oluşturun</p>
                                     </div>
-                                    <button
-                                        onClick={closeModal}
+                            <button
+                                onClick={closeModal}
                                         className="text-blue-100 hover:text-white transition-colors p-2 hover:bg-white hover:bg-opacity-20 rounded-xl"
-                                        disabled={formLoading}
-                                    >
+                                disabled={formLoading}
+                            >
                                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
                                 </div>
-                            </div>
+                        </div>
 
-                            {/* Modal Content */}
-                            <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                                {/* Müşteri Seçimi */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Müşteri <span className="text-red-500">*</span>
-                                    </label>
-                                    <select
-                                        value={selectedCustomer}
-                                        onChange={(e) => handleCustomerChange(e.target.value)}
+                        {/* Modal Content */}
+                        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                            {/* Müşteri Seçimi */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Müşteri <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                    value={selectedCustomer}
+                                    onChange={(e) => handleCustomerChange(e.target.value)}
                                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors"
-                                        required
-                                        disabled={formLoading}
-                                    >
-                                        <option value="">Müşteri seçin...</option>
-                                        {stores.map((store) => (
-                                            <option key={store.store_id} value={store.store_id}>
-                                                {store.kurum_adi}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+                                    required
+                                    disabled={formLoading}
+                                >
+                                    <option value="">Müşteri seçin...</option>
+                                    {stores.map((store) => (
+                                        <option key={store.store_id} value={store.store_id}>
+                                            {store.kurum_adi}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
 
                                 {/* Otomatik Tutar Hesaplama */}
                                 <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
@@ -1486,60 +1486,60 @@ const MuhasebePage = () => {
                                         Otomatik Tutar Hesaplama (İsteğe Bağlı)
                                     </h4>
                                     
-                                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                                        {/* Ürün Seçimi */}
-                                        <div className="md:col-span-2">
+                            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                                {/* Ürün Seçimi */}
+                                <div className="md:col-span-2">
                                             <label className="block text-sm font-medium text-gray-700 mb-2">Ürün</label>
-                                            <select
-                                                value={selectedCollection}
-                                                onChange={(e) => {
-                                                    setSelectedCollection(e.target.value);
-                                                    setFormData(prev => ({ ...prev, collection_id: e.target.value }));
-                                                }}
+                                                                            <select
+                                            value={selectedCollection}
+                                            onChange={(e) => {
+                                                setSelectedCollection(e.target.value);
+                                                setFormData(prev => ({ ...prev, collection_id: e.target.value }));
+                                            }}
                                                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors"
-                                                disabled={!selectedCustomer || formLoading || collections.length === 0}
-                                            >
-                                                <option value="">
-                                                    {!selectedCustomer ? 'Önce müşteri seçin...' :
-                                                        collections.length === 0 ? 'Ürün bulunamadı...' :
-                                                            'Ürün seçin...'}
-                                                </option>
-                                                {collections.map((collection) => (
-                                                    <option key={collection.id} value={collection.id}>
-                                                        {collection.name} ({formatCurrency(collection.price_per_square_meter)}/m²)
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        {/* Metrekare */}
-                                        <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Metrekare</label>
-                                            <input
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                value={formData.square_meters || ''}
-                                                onChange={(e) => setFormData(prev => ({ ...prev, square_meters: parseFloat(e.target.value) || 0 }))}
-                                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors"
-                                                placeholder="0.00"
-                                                disabled={formLoading}
-                                            />
-                                        </div>
-
-                                        {/* Hesapla Butonu */}
-                                        <div className="flex items-end">
-                                            <button
-                                                type="button"
-                                                onClick={calculateAmount}
-                                                disabled={!formData.collection_id || !formData.square_meters || formLoading}
-                                                className="w-full px-4 py-3 bg-[#00365a] text-white rounded-lg hover:bg-[#002847] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                                            >
-                                                Hesapla
-                                            </button>
-                                        </div>
-                                    </div>
+                                        disabled={!selectedCustomer || formLoading || collections.length === 0}
+                                    >
+                                        <option value="">
+                                            {!selectedCustomer ? 'Önce müşteri seçin...' :
+                                                collections.length === 0 ? 'Ürün bulunamadı...' :
+                                                    'Ürün seçin...'}
+                                        </option>
+                                        {collections.map((collection) => (
+                                            <option key={collection.id} value={collection.id}>
+                                                {collection.name} ({formatCurrency(collection.price_per_square_meter)}/m²)
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
+
+                                {/* Metrekare */}
+                                <div className="md:col-span-2">
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Metrekare</label>
+                                                                            <input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            value={formData.square_meters || ''}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, square_meters: parseFloat(e.target.value) || 0 }))}
+                                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors"
+                                        placeholder="0.00"
+                                        disabled={formLoading}
+                                    />
+                                </div>
+
+                                {/* Hesapla Butonu */}
+                                <div className="flex items-end">
+                                    <button
+                                        type="button"
+                                        onClick={calculateAmount}
+                                        disabled={!formData.collection_id || !formData.square_meters || formLoading}
+                                                className="w-full px-4 py-3 bg-[#00365a] text-white rounded-lg hover:bg-[#002847] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                    >
+                                        Hesapla
+                                    </button>
+                                        </div>
+                                </div>
+                            </div>
 
                                 {/* İşlem Detayları */}
                                 <div className="space-y-4">
@@ -1548,109 +1548,109 @@ const MuhasebePage = () => {
                                     </h4>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {/* İşlem Türü */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                İşlem Türü <span className="text-red-500">*</span>
-                                            </label>
-                                            <select
-                                                value={formData.islemTuru}
-                                                onChange={(e) => {
-                                                    setFormData(prev => ({ 
-                                                        ...prev, 
-                                                        islemTuru: e.target.value
-                                                    }));
-                                                }}
+                            {/* İşlem Türü */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    İşlem Türü <span className="text-red-500">*</span>
+                                </label>
+                                                                    <select
+                                        value={formData.islemTuru}
+                                        onChange={(e) => {
+                                            setFormData(prev => ({ 
+                                                ...prev, 
+                                                islemTuru: e.target.value
+                                            }));
+                                        }}
                                                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors"
-                                                required
-                                                disabled={formLoading}
-                                            >
-                                                <option value="">İşlem türü seçin...</option>
-                                                
-                                                {/* Gelir Türleri */}
-                                                {incomeTypes.length > 0 && (
-                                                    <optgroup label="Gelir Türleri">
-                                                        {incomeTypes.map((type) => (
-                                                            <option key={type} value={type}>{type}</option>
-                                                        ))}
-                                                    </optgroup>
-                                                )}
-                                                
-                                                {/* Gider Türleri */}
-                                                {expenseTypes.length > 0 && (
-                                                    <optgroup label="Gider Türleri">
-                                                        {expenseTypes.map((type) => (
-                                                            <option key={type} value={type}>{type}</option>
-                                                        ))}
-                                                    </optgroup>
-                                                )}
-                                            </select>
-                                        </div>
+                                    required
+                                    disabled={formLoading}
+                                >
+                                    <option value="">İşlem türü seçin...</option>
+                                    
+                                    {/* Gelir Türleri */}
+                                    {incomeTypes.length > 0 && (
+                                        <optgroup label="Gelir Türleri">
+                                            {incomeTypes.map((type) => (
+                                                <option key={type} value={type}>{type}</option>
+                                            ))}
+                                        </optgroup>
+                                    )}
+                                    
+                                    {/* Gider Türleri */}
+                                    {expenseTypes.length > 0 && (
+                                        <optgroup label="Gider Türleri">
+                                            {expenseTypes.map((type) => (
+                                                <option key={type} value={type}>{type}</option>
+                                            ))}
+                                        </optgroup>
+                                    )}
+                                </select>
+                            </div>
 
-                                        {/* Tutar */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Tutar <span className="text-red-500">*</span>
-                                            </label>
-                                            <input
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                value={formData.tutar}
-                                                onChange={(e) => setFormData(prev => ({ ...prev, tutar: parseFloat(e.target.value) || 0 }))}
+                            {/* Tutar */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Tutar <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={formData.tutar}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, tutar: parseFloat(e.target.value) || 0 }))}
                                                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors"
-                                                placeholder="0.00"
-                                                required
-                                                disabled={formLoading}
-                                            />
+                                    placeholder="0.00"
+                                    required
+                                    disabled={formLoading}
+                                />
                                         </div>
-                                    </div>
+                            </div>
 
-                                    {/* Tarih */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            İşlem Tarihi <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="datetime-local"
-                                            value={formData.tarih}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, tarih: e.target.value }))}
+                            {/* Tarih */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    İşlem Tarihi <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="datetime-local"
+                                    value={formData.tarih}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, tarih: e.target.value }))}
                                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors"
-                                            required
-                                            disabled={formLoading}
-                                        />
-                                    </div>
+                                    required
+                                    disabled={formLoading}
+                                />
+                            </div>
 
-                                    {/* Açıklama */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Açıklama <span className="text-red-500">*</span>
-                                        </label>
-                                        <textarea
-                                            value={formData.aciklama}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, aciklama: e.target.value }))}
+                            {/* Açıklama */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Açıklama <span className="text-red-500">*</span>
+                                </label>
+                                <textarea
+                                    value={formData.aciklama}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, aciklama: e.target.value }))}
                                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors"
-                                            rows={3}
-                                            placeholder="İşlem açıklaması... Fiş no, Fatura no, Nakliye, Kargo, vb."
-                                            required
-                                            disabled={formLoading}
-                                        />
+                                    rows={3}
+                                    placeholder="İşlem açıklaması... Fiş no, Fatura no, Nakliye, Kargo, vb."
+                                    required
+                                    disabled={formLoading}
+                                />
                                     </div>
-                                </div>
+                            </div>
 
-                                {/* Butonlar */}
+                            {/* Butonlar */}
                                 <div className="flex gap-3 pt-4 border-t border-gray-200">
-                                    <button
-                                        type="button"
-                                        onClick={closeModal}
-                                        className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                                        disabled={formLoading}
-                                    >
-                                        İptal
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={formLoading}
+                                <button
+                                    type="button"
+                                    onClick={closeModal}
+                                    className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                                    disabled={formLoading}
+                                >
+                                    İptal
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={formLoading}
                                         className="flex-1 px-4 py-3 bg-[#00365a] text-white rounded-lg hover:bg-[#002847] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
                                     >
                                         {formLoading ? (
@@ -1661,12 +1661,12 @@ const MuhasebePage = () => {
                                         ) : (
                                             'Kaydet'
                                         )}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                )}
+                </div>
+            )}
             </div>
         </div>
     );

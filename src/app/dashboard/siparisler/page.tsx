@@ -193,6 +193,8 @@ const Siparisler = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [orderStats, setOrderStats] = useState<OrderStats | null>(null);
+  const [totalOrdersCount, setTotalOrdersCount] = useState<number>(0);
+  const [fixedStats, setFixedStats] = useState<OrderStats | null>(null);
   
   // Filtreleme ve sayfalama
   const [currentPage, setCurrentPage] = useState(1);
@@ -201,9 +203,9 @@ const Siparisler = () => {
   const [tempSearchQuery, setTempSearchQuery] = useState('');
 
   // Sipariş istatistiklerini hesapla
-  const calculateOrderStats = useCallback((orders: Order[]): OrderStats => {
+  const calculateOrderStats = useCallback((orders: Order[], totalCount: number = 0, isInitialLoad: boolean = false): OrderStats => {
     const stats = {
-      total: orders.length,
+      total: totalCount, // Toplam değeri sabit kalmalı
       pending: 0,
       confirmed: 0,
       shipped: 0,
@@ -211,25 +213,28 @@ const Siparisler = () => {
       canceled: 0
     };
 
-    orders.forEach(order => {
-      switch (order.status) {
-        case 'PENDING':
-          stats.pending++;
-          break;
-        case 'CONFIRMED':
-          stats.confirmed++;
-          break;
-        case 'SHIPPED':
-          stats.shipped++;
-          break;
-        case 'DELIVERED':
-          stats.delivered++;
-          break;
-        case 'CANCELED':
-          stats.canceled++;
-          break;
-      }
-    });
+    // Sadece ilk yüklemede tüm siparişlerin durumlarını say
+    if (isInitialLoad) {
+      orders.forEach(order => {
+        switch (order.status) {
+          case 'PENDING':
+            stats.pending++;
+            break;
+          case 'CONFIRMED':
+            stats.confirmed++;
+            break;
+          case 'SHIPPED':
+            stats.shipped++;
+            break;
+          case 'DELIVERED':
+            stats.delivered++;
+            break;
+          case 'CANCELED':
+            stats.canceled++;
+            break;
+        }
+      });
+    }
 
     return stats;
   }, []);
@@ -284,12 +289,6 @@ const Siparisler = () => {
       const data = await response.json();
       if (data.success) {
         setOrdersData(data.data);
-        
-        // Admin için istatistikleri hesapla
-        if (isAdmin && data.data.orders) {
-          const stats = calculateOrderStats(data.data.orders);
-          setOrderStats(stats);
-        }
       } else {
         throw new Error(data.message || 'Siparişler alınamadı');
       }
@@ -299,7 +298,45 @@ const Siparisler = () => {
     } finally {
       setLoading(false);
     }
-  }, [router, isAdmin, calculateOrderStats, authLoading, token]);
+  }, [router, isAdmin, calculateOrderStats, authLoading, token, statusFilter, searchQuery, totalOrdersCount]);
+
+  // Tüm siparişleri getir (istatistikler için)
+  const fetchAllOrdersForStats = useCallback(async () => {
+    if (authLoading || !isAdmin) {
+      return;
+    }
+
+    try {
+      const authToken = token;
+      if (!authToken) {
+        return;
+      }
+
+      const endpoint = 'https://pasha-backend-production.up.railway.app/api/admin/orders';
+      
+      const response = await fetch(endpoint, {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Tüm siparişler alınamadı');
+      }
+
+      const data = await response.json();
+      if (data.success && data.data.orders) {
+        // Tüm siparişlerden istatistikleri hesapla
+        const totalCount = data.data.pagination?.total || data.data.orders.length;
+        const allStats = calculateOrderStats(data.data.orders, totalCount, true);
+        setFixedStats(allStats);
+        setTotalOrdersCount(totalCount);
+      }
+    } catch (error) {
+      console.error('Tüm siparişler alınırken hata:', error);
+    }
+  }, [authLoading, isAdmin, token, calculateOrderStats]);
 
   useEffect(() => {
     // AuthContext yüklemesi tamamlanana kadar bekle
@@ -309,6 +346,13 @@ const Siparisler = () => {
     
     fetchOrders(currentPage, statusFilter, searchQuery);
   }, [fetchOrders, currentPage, statusFilter, searchQuery, authLoading]);
+
+  // Sadece bir kez tüm siparişleri getir (istatistikler için)
+  useEffect(() => {
+    if (!authLoading && isAdmin && !fixedStats) {
+      fetchAllOrdersForStats();
+    }
+  }, [authLoading, isAdmin, fixedStats, fetchAllOrdersForStats]);
 
   // Sipariş detayını getir
   const handleViewOrderDetail = async (orderId: string) => {
@@ -375,7 +419,6 @@ const Siparisler = () => {
         throw new Error(data.message || 'QR kodları oluşturulamadı');
       }
 
-
       return data.data;
     } catch (error: any) {
       console.error('QR kod oluşturma hatası:', error);
@@ -383,6 +426,223 @@ const Siparisler = () => {
     }
   };
 
+  // Sipariş bazlı QR kodları yazdırma fonksiyonu
+  const printOrderQRCodes = (order: Order) => {
+    if (!order.qr_codes || order.qr_codes.length === 0) {
+      alert('Bu sipariş için QR kod bulunamadı!');
+      return;
+    }
+
+    // Zaten yazdırma işlemi devam ediyorsa çık
+    if (document.querySelector('iframe[data-printing="true"]')) {
+      return;
+    }
+
+    // Gizli iframe oluştur
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('data-printing', 'true');
+    iframe.style.position = 'fixed';
+    iframe.style.top = '-9999px';
+    iframe.style.left = '-9999px';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = 'none';
+    document.body.appendChild(iframe);
+
+    // iframe içeriğini yaz
+    iframe.contentDocument?.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title style="color: black;">Sipariş QR Kodları - ${order.id.slice(0, 8)}</title>
+          <meta charset="utf-8">
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+              font-family: Arial, sans-serif; 
+              line-height: 1.4; 
+              color: #333; 
+              background: white;
+              padding: 0;
+              margin: 0;
+              min-height: 100vh;
+            }
+            .header { 
+              width: 100%;
+              text-align: center; 
+              background: #00365a;
+              color: white;
+              padding: 15px;
+              margin-bottom: 15px;
+              border-radius: 0;
+            }
+            .header h1 { 
+              font-size: 20px; 
+              margin-bottom: 8px; 
+              color: white; 
+            }
+            .header p {
+              color: white;
+              opacity: 0.85;
+              font-size: 14px;
+            }
+            .order-info {
+              border: 1px solid #000;
+              padding: 10px;
+              margin-bottom: 15px;
+              background: #f9f9f9;
+              font-size: 12px;
+            }
+            .order-info h3 {
+              font-size: 14px;
+              margin-bottom: 5px;
+            }
+            .qr-grid {
+              display: block;
+              margin: 0;
+              padding: 0;
+            }
+            .qr-item {
+              border: 1px solid #000;
+              padding: 15px;
+              text-align: center;
+              page-break-inside: avoid;
+              page-break-after: always;
+              height: 100vh;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+              margin: 0;
+              box-sizing: border-box;
+              overflow: hidden;
+            }
+            .qr-item:last-child {
+              page-break-after: avoid;
+            }
+            .qr-content {
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              align-items: center;
+              margin-top: 10px;
+            }
+            .qr-image {
+              max-width: 180px;
+              max-height: 180px;
+              border: 1px solid #000;
+              margin: 10px auto;
+            }
+            .product-info {
+              text-align: left;
+              margin-top: 10px;
+              font-size: 11px;
+            }
+            .product-info p {
+              margin: 2px 0;
+            }
+            .delivery-info {
+              border: 1px solid #000;
+              padding: 8px;
+              margin: 8px 0;
+              background: #f0f0f0;
+              font-size: 10px;
+            }
+            .delivery-info h4 {
+              font-size: 12px;
+              margin-bottom: 5px;
+            }
+            @media print {
+              body { 
+                padding: 0; 
+                margin: 0;
+                min-height: 100vh;
+              }
+              .qr-item { 
+                page-break-inside: avoid; 
+                height: 100vh;
+                margin: 0;
+                padding: 15px;
+                overflow: hidden;
+              }
+              .qr-item:last-child {
+                page-break-after: avoid;
+              }
+              @page { 
+                margin: 0; 
+                size: A4;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          ${order.qr_codes.map((qrCode, index) => {
+            // Ürün adedi kadar QR kod oluştur
+            const qrCodes = [];
+            for (let i = 0; i < qrCode.order_item.quantity; i++) {
+              qrCodes.push(`
+                <div class="qr-item">
+                  <div class="header">
+                    <h1 style="color: black;">Sipariş QR Kodları</h1>
+                    <p style="color: black;">Sipariş No: ${order.id.slice(0, 8)}</p>
+                  </div>
+
+                  <div class="order-info">
+                    <h3>Sipariş Bilgileri</h3>
+                    <p><strong>Mağaza:</strong> ${order.store_name}</p>
+                  </div>
+
+                  <div class="delivery-info">
+                    <h4>Teslimat Adresi</h4>
+                    <p><strong>Mağaza:</strong> ${order.store_name}</p>
+                    <p><strong>Adres:</strong> ${order.delivery_address}</p>
+                    <p><strong>Telefon:</strong> ${order.store_phone}</p>
+                    <p><strong>E-posta:</strong> ${order.store_email}</p>
+                  </div>
+
+                  <div class="qr-content">
+                    <h4 style="margin-bottom: 15px; font-size: 16px;">${qrCode.product.name}</h4>
+                    <img src="${qrCode.qrCodeImageUrl}" alt="QR Kod ${index + 1}-${i + 1}" class="qr-image" />
+                    <div class="product-info">
+                      <p><strong>Boyut:</strong> ${qrCode.order_item.width}×${qrCode.order_item.height} cm</p>
+                      <p><strong>Saçak:</strong> ${qrCode.order_item.has_fringe ? 'Saçaklı' : 'Saçaksız'}</p>
+                      <p><strong>Kesim Türü:</strong> ${qrCode.order_item.cut_type.charAt(0).toUpperCase() + qrCode.order_item.cut_type.slice(1)}</p>
+                    </div>
+                  </div>
+                </div>
+              `);
+            }
+            return qrCodes.join('');
+          }).join('')}
+        </body>
+      </html>
+    `);
+    iframe.contentDocument?.close();
+
+    // iframe yüklendiğinde yazdırma dialogunu tetikle
+    iframe.onload = () => {
+      setTimeout(() => {
+        if (iframe.contentWindow) {
+          // Yazdırma dialogunu tetikle
+          iframe.contentWindow.print();
+          
+          // Yazdırma tamamlandıktan sonra iframe'i kaldır
+          setTimeout(() => {
+            if (document.body.contains(iframe)) {
+              document.body.removeChild(iframe);
+            }
+          }, 3000);
+        }
+      }, 1000);
+    };
+
+    // iframe yüklenemezse de temizle
+    setTimeout(() => {
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe);
+      }
+    }, 5000);
+  };
 
 
   // Admin için sipariş durumu güncelleme
@@ -502,7 +762,7 @@ const Siparisler = () => {
         </div>
 
         {/* Admin İstatistikleri */}
-        {isAdmin && orderStats && (
+        {isAdmin && fixedStats && (
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
             <button
               onClick={() => handleStatusFilter('')}
@@ -512,7 +772,7 @@ const Siparisler = () => {
                   : 'bg-white border-gray-200 hover:bg-gray-50'
               }`}
             >
-              <div className="text-2xl font-bold text-gray-900">{orderStats.total}</div>
+              <div className="text-2xl font-bold text-gray-900">{totalOrdersCount}</div>
               <div className="text-sm text-gray-500">Toplam</div>
             </button>
             <button
@@ -523,7 +783,7 @@ const Siparisler = () => {
                   : 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100'
               }`}
             >
-              <div className="text-2xl font-bold text-yellow-800">{orderStats.pending}</div>
+              <div className="text-2xl font-bold text-yellow-800">{fixedStats.pending}</div>
               <div className="text-sm text-yellow-600">Beklemede</div>
             </button>
             <button
@@ -534,7 +794,7 @@ const Siparisler = () => {
                   : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
               }`}
             >
-              <div className="text-2xl font-bold text-[#00365a]">{orderStats.confirmed}</div>
+              <div className="text-2xl font-bold text-[#00365a]">{fixedStats.confirmed}</div>
               <div className="text-sm text-[#00365a]">Onaylandı</div>
             </button>
             <button
@@ -545,7 +805,7 @@ const Siparisler = () => {
                   : 'bg-purple-50 border-purple-200 hover:bg-purple-100'
               }`}
             >
-              <div className="text-2xl font-bold text-purple-800">{orderStats.shipped}</div>
+              <div className="text-2xl font-bold text-purple-800">{fixedStats.shipped}</div>
               <div className="text-sm text-purple-600">Teslimatta</div>
             </button>
             <button
@@ -556,7 +816,7 @@ const Siparisler = () => {
                   : 'bg-green-50 border-green-200 hover:bg-green-100'
               }`}
             >
-              <div className="text-2xl font-bold text-green-800">{orderStats.delivered}</div>
+              <div className="text-2xl font-bold text-green-800">{fixedStats.delivered}</div>
               <div className="text-sm text-green-600">Teslim</div>
             </button>
             <button
@@ -567,7 +827,7 @@ const Siparisler = () => {
                   : 'bg-red-50 border-red-200 hover:bg-red-100'
               }`}
             >
-              <div className="text-2xl font-bold text-red-800">{orderStats.canceled}</div>
+              <div className="text-2xl font-bold text-red-800">{fixedStats.canceled}</div>
               <div className="text-sm text-red-600">İptal</div>
             </button>
           </div>
@@ -762,6 +1022,20 @@ const Siparisler = () => {
                     >
                       Detayları Gör
                     </button>
+
+                    {/* QR Kodları Yazdır Butonu - Sadece CONFIRMED durumunda ve QR kodları varsa */}
+                    {order.status === 'CONFIRMED' && order.qr_codes && order.qr_codes.length > 0 && (
+                      <button
+                        onClick={() => printOrderQRCodes(order)}
+                        className="px-4 py-2 text-white rounded-lg transition-colors text-sm flex items-center gap-1"
+                        style={{ backgroundColor: 'rgb(0 54 90)' }}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        QR Yazdır
+                      </button>
+                    )}
 
                     {/* Admin için durum güncelleme butonları */}
                     {isAdmin && (
@@ -1041,7 +1315,19 @@ const Siparisler = () => {
                     {/* QR Kodları Bölümü */}
                     {selectedOrder.qr_codes && selectedOrder.qr_codes.length > 0 && (
                       <div className="mt-6">
-                        <h4 className="text-lg font-semibold text-gray-900 mb-3">QR Kodları</h4>
+                        <div className="flex justify-between items-center mb-3">
+                          <h4 className="text-lg font-semibold text-gray-900">QR Kodları</h4>
+                          <button
+                            onClick={() => printOrderQRCodes(selectedOrder)}
+                            className="flex items-center gap-2 px-4 py-2 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md"
+                            style={{ backgroundColor: 'rgb(0 54 90)' }}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                            </svg>
+                            Tüm QR Kodları Yazdır
+                          </button>
+                        </div>
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                           {/* QR İstatistikleri */}
                           <div className="mb-4">

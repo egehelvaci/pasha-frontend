@@ -80,9 +80,6 @@ export const measurePerformance = (name: string, fn: () => void) => {
   const start = performance.now();
   fn();
   const end = performance.now();
-  
-  console.log(`⚡ ${name} took ${(end - start).toFixed(2)}ms`);
-  
   // Log warning for slow operations on low-end devices
   if (isLowEndDevice() && (end - start) > 1000) {
     console.warn(`⚠️ Slow operation detected on low-end device: ${name}`);

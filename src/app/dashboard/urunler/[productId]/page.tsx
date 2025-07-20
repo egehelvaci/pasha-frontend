@@ -85,14 +85,6 @@ export default function ProductDetail() {
       const calculatedPrice = pricePerSquareMeter * totalArea * quantityNum;
       setTotalPrice(calculatedPrice || 0);
       
-      console.log("Fiyat hesaplaması:", {
-        pricePerSquareMeter,
-        widthValue,
-        heightValue,
-        totalArea,
-        quantity: quantityNum,
-        calculatedPrice
-      });
     } else {
       setTotalPrice(0);
     }

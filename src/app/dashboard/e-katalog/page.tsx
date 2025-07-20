@@ -108,16 +108,12 @@ const EKatalogPage = () => {
     setIsGeneratingPDF(true);
 
     const selectedProductIds = Array.from(selectedProducts);
-    console.log('📝 Seçili ürün ID\'leri:', selectedProductIds.length, 'ürün');
-    
-
-    
+  
     // Use requestIdleCallback for better performance on low-end devices
     const processGeneration = () => {
       try {
         // Store selected products in localStorage
         localStorage.setItem('selectedProductsForPrint', JSON.stringify(selectedProductIds));
-        console.log('💾 localStorage\'a kaydedildi:', selectedProductIds.length, 'ürün');
         
         // Create hidden iframe with optimized loading
         const iframe = document.createElement('iframe');

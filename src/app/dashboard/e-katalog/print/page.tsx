@@ -26,18 +26,14 @@ const PrintCatalogPage = () => {
   useEffect(() => {
     // localStorage'dan seçili ürün ID'lerini al
     const selectedProductIds = localStorage.getItem('selectedProductsForPrint');
-    console.log('🔍 localStorage\'dan alınan veri:', selectedProductIds);
     
     if (selectedProductIds && selectedProductIds !== 'null' && selectedProductIds !== 'undefined') {
       try {
         const productIds = JSON.parse(selectedProductIds);
-        console.log('📋 Parse edilen ürün ID\'leri:', productIds);
         
         if (Array.isArray(productIds) && productIds.length > 0) {
-          console.log('✅ Gerçek ürünler yükleniyor...');
           fetchSelectedProducts(productIds);
         } else {
-          console.log('❌ Ürün listesi boş veya geçersiz');
           showTestProducts();
         }
       } catch (error) {
@@ -45,13 +41,11 @@ const PrintCatalogPage = () => {
         showTestProducts();
       }
     } else {
-      console.log('❌ localStorage\'da selectedProductsForPrint verisi yok veya geçersiz');
       showTestProducts();
     }
   }, []);
 
   const showTestProducts = useCallback(() => {
-    console.log('🧪 Test ürünleri yükleniyor...');
     const testProducts: Product[] = [
       {
         productId: 'test-1',
@@ -85,7 +79,6 @@ const PrintCatalogPage = () => {
       const perProductDelay = Math.min(50, products.length * 5); // Max 50ms per product
       const totalDelay = baseDelay + perProductDelay;
       
-      console.log(`⏱️ ${products.length} ürün için ${totalDelay}ms bekleme süresi`);
       
       const timer = setTimeout(() => {
         try {
@@ -93,13 +86,11 @@ const PrintCatalogPage = () => {
           const printDelay = products.length > 50 ? 3000 : products.length > 20 ? 2000 : 1500;
           
           const printTimer = setTimeout(() => {
-            console.log('🖨️ Yazdırma başlatılıyor...');
             window.print();
             
             // Cleanup after print
             setTimeout(() => {
               localStorage.removeItem('selectedProductsForPrint');
-              console.log('🧹 localStorage temizlendi');
             }, 2000);
           }, printDelay);
           
@@ -116,8 +107,6 @@ const PrintCatalogPage = () => {
   const fetchSelectedProducts = async (productIds: string[]) => {
     try {
       const authToken = token;
-      console.log('🔑 Token:', authToken ? 'Mevcut' : 'Yok');
-      console.log('📤 API\'ye gönderilen ürün ID\'leri:', productIds);
       
       const response = await fetch('https://pasha-backend-production.up.railway.app/api/products/by-ids', {
         method: 'POST',
@@ -128,27 +117,21 @@ const PrintCatalogPage = () => {
         body: JSON.stringify({ productIds })
       });
 
-      console.log('📡 API Response status:', response.status);
 
       if (!response.ok) {
-        console.log('❌ API çağrısı başarısız, alternatif yöntem deneniyor...');
         await fetchAllProductsAndFilter(productIds);
         return;
       }
 
       const data = await response.json();
-      console.log('📥 API Response data:', data);
       
       if (data.success && Array.isArray(data.data)) {
-        console.log('✅ Ürünler başarıyla yüklendi:', data.data.length);
         setProducts(data.data);
       } else {
-        console.log('❌ API response başarısız, alternatif yöntem deneniyor...');
         await fetchAllProductsAndFilter(productIds);
       }
     } catch (error) {
       console.error('❌ Ürünler yüklenirken hata:', error);
-      console.log('🔄 Alternatif yöntem deneniyor...');
       await fetchAllProductsAndFilter(productIds);
     } finally {
       setLoading(false);
@@ -157,7 +140,6 @@ const PrintCatalogPage = () => {
 
   const fetchAllProductsAndFilter = async (selectedIds: string[]) => {
     try {
-      console.log('🔄 Tüm ürünler çekiliyor ve filtreleniyor...');
       
       const authToken = token;
       const params = new URLSearchParams({
@@ -184,7 +166,6 @@ const PrintCatalogPage = () => {
           selectedIds.includes(product.productId)
         );
         
-        console.log('✅ Filtrelenmiş ürünler:', filteredProducts.length);
         setProducts(filteredProducts);
       } else {
         throw new Error('Ürün verisi alınamadı');
@@ -518,7 +499,6 @@ const PrintCatalogPage = () => {
           const productsPerPage = totalProducts > 100 ? 6 : totalProducts > 50 ? 4 : totalProducts > 20 ? 3 : 2;
           const pages = [];
           
-          console.log(`📄 ${collectionName}: ${collectionProducts.length} ürün, ${productsPerPage} ürün/sayfa`);
           
           for (let i = 0; i < collectionProducts.length; i += productsPerPage) {
             const productsInPage = collectionProducts.slice(i, i + productsPerPage);

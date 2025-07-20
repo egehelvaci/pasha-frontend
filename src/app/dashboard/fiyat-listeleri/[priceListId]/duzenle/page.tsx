@@ -211,7 +211,7 @@ export default function EditPriceListPage() {
           detailData.data.collection_prices?.forEach((detail) => {
             collectionPrices[detail.collection_id] = Number(detail.price_per_square_meter);
           });
-
+          
           // Form verilerini güncelle
           setFormData({
             name: detailData.data.price_list.name,
@@ -256,7 +256,7 @@ export default function EditPriceListPage() {
 
   const onFinish = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!priceList || !validateForm()) return;
 
     // Sadece değer girilmiş olan koleksiyon fiyatlarını dahil et
@@ -444,7 +444,7 @@ export default function EditPriceListPage() {
                         type="date"
                         value={formData.validTo}
                         onChange={(e) => handleInputChange('validTo', e.target.value)}
-                        disabled={priceList?.is_default}
+                  disabled={priceList?.is_default}
                         className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all ${priceList?.is_default ? 'bg-gray-100 cursor-not-allowed' : ''} ${errors.validTo ? 'border-red-300' : 'border-gray-300'}`}
                       />
                       {errors.validTo && <p className="mt-1 text-sm text-red-600">{errors.validTo}</p>}
@@ -484,7 +484,7 @@ export default function EditPriceListPage() {
                       <p className="mt-1 text-xs text-gray-500">Boş bırakılırsa limitsiz olur</p>
                     </div>
 
-                    {!priceList?.is_default && (
+              {!priceList?.is_default && (
                       <div className="md:col-span-2">
                         <div className="flex items-center">
                           <input
@@ -504,7 +504,7 @@ export default function EditPriceListPage() {
                   </div>
                 </div>
 
-                {/* Zam/İndirim Bölümü */}
+              {/* Zam/İndirim Bölümü */}
                 <div>
                   <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                     <svg className="w-5 h-5 mr-2 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -540,23 +540,23 @@ export default function EditPriceListPage() {
                           value={formData.adjustmentRate || ''}
                           onChange={(e) => handleInputChange('adjustmentRate', parseFloat(e.target.value) || undefined)}
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                          placeholder="Örn: 10"
-                        />
+                        placeholder="Örn: 10"
+                      />
                       </div>
-                      
+                    
                       <button 
                         type="button"
-                        onClick={applyAdjustment}
+                      onClick={applyAdjustment}
                         className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
-                      >
-                        Uygula
+                    >
+                      Uygula
                       </button>
-                    </div>
-                    <p className="text-sm text-green-700 mt-4">
-                      Girilen oran ile mevcut fiyatlar güncellenerek yeni fiyatlar hesaplanacaktır.
-                    </p>
                   </div>
+                    <p className="text-sm text-green-700 mt-4">
+                    Girilen oran ile mevcut fiyatlar güncellenerek yeni fiyatlar hesaplanacaktır.
+                  </p>
                 </div>
+              </div>
 
                 {/* Koleksiyon Fiyatları */}
                 <div>
@@ -568,7 +568,7 @@ export default function EditPriceListPage() {
                   </h4>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {collections.map((collection) => (
+                  {collections.map((collection) => (
                       <div key={collection.collectionId}>
                         <label className="block text-sm font-semibold text-gray-700 mb-3">
                           {collection.name}
@@ -583,10 +583,10 @@ export default function EditPriceListPage() {
                           placeholder={`${collection.code} için fiyat`}
                         />
                       </div>
-                    ))}
-                  </div>
+                  ))}
                 </div>
               </div>
+            </div>
 
               {/* Form Footer */}
               <div className="flex justify-end gap-4 pt-8 border-t border-gray-200 mt-8">
@@ -595,7 +595,7 @@ export default function EditPriceListPage() {
                   onClick={() => router.push('/dashboard/fiyat-listeleri')}
                   className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition-all"
                 >
-                  İptal
+                İptal
                 </button>
                 <button
                   type="submit"
@@ -618,9 +618,9 @@ export default function EditPriceListPage() {
                 </button>
               </div>
             </form>
-          </div>
+            </div>
         )}
-      </div>
+        </div>
     </div>
   );
 } 

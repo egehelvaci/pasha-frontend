@@ -71,25 +71,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // Önce localStorage'dan "beni hatırla" durumunu kontrol et
         const rememberMe = localStorage.getItem("rememberMe") === "true";
-        console.log('🔍 Remember Me durumu:', rememberMe);
         
         let storedUser, storedToken, storedUserType;
         
         if (rememberMe) {
           // "Beni hatırla" aktifse localStorage'dan al
-          console.log('📦 localStorage\'dan veri alınıyor');
           storedUser = localStorage.getItem("user");
           storedToken = localStorage.getItem("token");
           storedUserType = localStorage.getItem("userType");
         } else {
           // "Beni hatırla" aktif değilse sessionStorage'dan al
-          console.log('📦 sessionStorage\'dan veri alınıyor');
           storedUser = sessionStorage.getItem("user");
           storedToken = sessionStorage.getItem("token");
           storedUserType = sessionStorage.getItem("userType");
         }
         
-        console.log('📋 Bulunan veriler:', { storedUser: !!storedUser, storedToken: !!storedToken, storedUserType });
         
         if (storedUser && storedUser !== "undefined") {
           setUser(JSON.parse(storedUser));
@@ -103,7 +99,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setIsAdmin(true);
         }
       } catch (error) {
-        console.error("LocalStorage/SessionStorage parse hatası:", error);
         // Güvenli cleanup - client-side kontrolü ile
         if (typeof window !== 'undefined') {
           localStorage.removeItem("user");
@@ -158,13 +153,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // "Beni hatırla" seçeneğine göre localStorage'a kaydet
         if (rememberMe) {
-          console.log('🔐 Remember Me aktif - localStorage kullanılıyor');
           localStorage.setItem("user", JSON.stringify(userData));
           localStorage.setItem("token", result.data.token);
           localStorage.setItem("userType", result.data.user.userType);
           localStorage.setItem("rememberMe", "true");
         } else {
-          console.log('🔑 Remember Me pasif - sessionStorage kullanılıyor');
           // SessionStorage kullan (tarayıcı kapatıldığında silinir)
           sessionStorage.setItem("user", JSON.stringify(userData));
           sessionStorage.setItem("token", result.data.token);
@@ -177,7 +170,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, message: result.message || "Kullanıcı adı veya şifre hatalı" };
       }
     } catch (error) {
-      console.error("Login hatası:", error);
       return { success: false, message: "Bağlantı hatası, lütfen daha sonra tekrar deneyin" };
     } finally {
       setIsLoading(false);
@@ -230,8 +222,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: true, message: "Çıkış yapıldı" };
       }
     } catch (error) {
-      console.error("Logout hatası:", error);
-      
       // Hata olsa bile çıkış yap
       setUser(null);
       setToken(null);

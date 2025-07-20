@@ -36,12 +36,12 @@ export default function StoresPage() {
     if (!authLoading && isAdmin) {
       if (!storesFetchedRef.current) {
         storesFetchedRef.current = true;
-        fetchStores();
+      fetchStores();
       }
       
       if (!priceListsFetchedRef.current) {
         priceListsFetchedRef.current = true;
-        fetchPriceLists();
+      fetchPriceLists();
       }
     }
   }, [isAdmin, authLoading, router]);
@@ -55,7 +55,6 @@ export default function StoresPage() {
       const data = await getStores();
       setStores(data);
     } catch (error: any) {
-      console.error('Mağazalar yüklenirken hata:', error);
       alert(error.message || 'Mağazalar yüklenirken bir hata oluştu');
     } finally {
       setLoading(false);
@@ -200,7 +199,7 @@ export default function StoresPage() {
         {/* Page Header */}
         <div className="mb-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
+        <div>
               <h1 className="text-3xl font-bold text-[#00365a] flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mr-3" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 1h6v4H7V5zm8 8v2a1 1 0 01-1 1H6a1 1 0 01-1-1v-2h10z" clipRule="evenodd" />
@@ -246,7 +245,7 @@ export default function StoresPage() {
                 </svg>
               </div>
             </div>
-            <div>
+        <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Durum</label>
               <select
                 value={statusFilter}
@@ -348,7 +347,7 @@ export default function StoresPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div>
+        <div>
                             <div className="text-sm text-gray-900">{store.telefon}</div>
                             {store.faks_numarasi && (
                               <div className="text-sm text-gray-500">Faks: {store.faks_numarasi}</div>
@@ -487,25 +486,25 @@ export default function StoresPage() {
                             Finansal Durum
                           </h4>
                           <div className="space-y-1">
-                            <div className="text-sm">
-                              <span className="font-medium">Bakiye:</span>
+          <div className="text-sm">
+            <span className="font-medium">Bakiye:</span> 
                               <span className={`ml-1 font-semibold ${(store.bakiye || 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
                                 {store.bakiye?.toLocaleString('tr-TR') || '0'} ₺
-                              </span>
-                            </div>
-                            <div className="text-sm">
+            </span>
+          </div>
+          <div className="text-sm">
                               <span className="font-medium">Açık Hesap:</span>
                               <span className="ml-1 text-orange-600 font-semibold">
                                 {store.limitsiz_acik_hesap ? 'Limitsiz' : `${store.acik_hesap_tutari?.toLocaleString('tr-TR') || '0'} ₺`}
                               </span>
-                            </div>
-                            <div className="text-sm">
+          </div>
+          <div className="text-sm">
                               <span className="font-medium">Max Taksit:</span>
                               <span className="ml-1 text-purple-600 font-semibold">{store.maksimum_taksit || 1}</span>
                             </div>
-                          </div>
-                        </div>
-                      </div>
+          </div>
+          </div>
+        </div>
 
                       <div className="flex flex-wrap gap-2">
                         <button
@@ -515,31 +514,31 @@ export default function StoresPage() {
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                           </svg>
-                          Düzenle
+            Düzenle
                         </button>
                         <button
-                          onClick={() => {
+            onClick={() => {
                             setSelectedStore(store);
-                            setAssignModalVisible(true);
-                          }}
+              setAssignModalVisible(true);
+            }}
                           className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md"
-                        >
+          >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                           </svg>
-                          Fiyat Listesi
+            Fiyat Listesi
                         </button>
                         <button
                           onClick={() => {
                             setStoreToDelete(store);
-                            setDeleteModalVisible(true);
-                          }}
+              setDeleteModalVisible(true);
+            }}
                           className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
-                          Sil
+            Sil
                         </button>
                       </div>
                     </div>
@@ -553,7 +552,7 @@ export default function StoresPage() {
                 <svg className="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
-              </div>
+        </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-3">Mağaza Bulunamadı</h3>
               <p className="text-gray-600 mb-6 max-w-md mx-auto leading-relaxed">
                 {searchTerm || statusFilter !== 'all' 
@@ -563,7 +562,7 @@ export default function StoresPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button
-                  onClick={() => router.push('/dashboard/magazalar/ekle')}
+            onClick={() => router.push('/dashboard/magazalar/ekle')}
                   className="inline-flex items-center gap-2 px-6 py-3 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -621,16 +620,16 @@ export default function StoresPage() {
               {/* Footer */}
               <div className="bg-gray-50 px-6 py-4 rounded-b-2xl flex justify-end gap-3">
                 <button
-                  onClick={() => {
-                    setDeleteModalVisible(false);
-                    setStoreToDelete(null);
-                  }}
+            onClick={() => {
+              setDeleteModalVisible(false);
+              setStoreToDelete(null);
+            }}
                   className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition-all"
-                >
-                  İptal
+          >
+            İptal
                 </button>
                 <button
-                  onClick={handleDelete}
+            onClick={handleDelete}
                   disabled={deleteLoading}
                   className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
@@ -701,20 +700,20 @@ export default function StoresPage() {
               {/* Footer */}
               <div className="bg-gray-50 px-6 py-4 rounded-b-2xl flex justify-end gap-3">
                 <button
-                  onClick={() => {
-                    setAssignModalVisible(false);
-                    setSelectedStore(null);
-                    setSelectedPriceList('');
-                  }}
+            onClick={() => {
+              setAssignModalVisible(false);
+              setSelectedStore(null);
+              setSelectedPriceList('');
+            }}
                   className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition-all"
-                >
-                  İptal
+          >
+            İptal
                 </button>
                 <button
-                  onClick={handleAssignPriceList}
+            onClick={handleAssignPriceList}
                   disabled={assignLoading || !selectedPriceList}
                   className="px-6 py-3 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
+          >
                   {assignLoading ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
@@ -733,7 +732,7 @@ export default function StoresPage() {
             </div>
           </div>
         )}
-      </div>
+        </div>
     </div>
   );
 } 

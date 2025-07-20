@@ -115,7 +115,7 @@ export default function AddStorePage() {
   };
 
   if (!isAdmin) {
-    return (
+  return (
       <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center max-w-md">
           <div className="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
@@ -371,8 +371,8 @@ export default function AddStorePage() {
                       value={formData.bakiye}
                       onChange={(e) => handleInputChange('bakiye', parseFloat(e.target.value) || 0)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all"
-                      placeholder="0.00"
-                    />
+                  placeholder="0.00"
+                />
                     <p className="mt-1 text-xs text-gray-500">Mağazanın kullanabileceği mevcut bakiye tutarı</p>
                   </div>
 
@@ -387,8 +387,8 @@ export default function AddStorePage() {
                       value={formData.maksimum_taksit}
                       onChange={(e) => handleInputChange('maksimum_taksit', parseInt(e.target.value) || 1)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all"
-                      placeholder="1"
-                    />
+                  placeholder="1"
+                />
                     <p className="mt-1 text-xs text-gray-500">Mağazanın kullanabileceği maksimum taksit sayısı</p>
                   </div>
 
@@ -427,9 +427,9 @@ export default function AddStorePage() {
                     )}
                   </div>
                 </div>
-              </div>
+            </div>
 
-              {/* Bilgilendirme Kartı */}
+            {/* Bilgilendirme Kartı */}
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
                 <h4 className="text-sm font-semibold text-blue-800 mb-3 flex items-center">
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
