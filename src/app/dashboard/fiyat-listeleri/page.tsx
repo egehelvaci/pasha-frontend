@@ -16,6 +16,9 @@ export default function PriceListsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'default'>('all');
   
+  // Custom dropdown state'i
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+  
   // API çağrısını takip etmek için ref oluştur
   const fetchedRef = useRef(false);
 
@@ -30,6 +33,21 @@ export default function PriceListsPage() {
       fetchPriceLists();
     }
   }, [isAdmin, authLoading, router]);
+
+  // Dropdown'ın dışına tıklandığında kapanması
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.dropdown-container')) {
+        setStatusDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const fetchPriceLists = async () => {
     // Zaten yükleme yapılıyorsa çık
@@ -248,18 +266,79 @@ export default function PriceListsPage() {
                 </svg>
               </div>
             </div>
-            <div>
+            <div className="dropdown-container">
               <label className="block text-sm font-medium text-gray-700 mb-2">Durum</label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive' | 'default')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all"
-              >
-                <option value="all">Tüm Durumlar</option>
-                <option value="active">Aktif</option>
-                <option value="inactive">Pasif</option>
-                <option value="default">Varsayılan</option>
-              </select>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all text-left bg-white"
+                >
+                  <span className="text-gray-900">
+                    {statusFilter === "all" && "Tüm Durumlar"}
+                    {statusFilter === "active" && "Aktif"}
+                    {statusFilter === "inactive" && "Pasif"}
+                    {statusFilter === "default" && "Varsayılan"}
+                  </span>
+                  <svg 
+                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${statusDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {statusDropdownOpen && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div
+                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                        statusFilter === "all" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      }`}
+                      onClick={() => {
+                        setStatusFilter("all");
+                        setStatusDropdownOpen(false);
+                      }}
+                    >
+                      Tüm Durumlar
+                    </div>
+                    <div
+                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                        statusFilter === "active" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      }`}
+                      onClick={() => {
+                        setStatusFilter("active");
+                        setStatusDropdownOpen(false);
+                      }}
+                    >
+                      Aktif
+                    </div>
+                    <div
+                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                        statusFilter === "inactive" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      }`}
+                      onClick={() => {
+                        setStatusFilter("inactive");
+                        setStatusDropdownOpen(false);
+                      }}
+                    >
+                      Pasif
+                    </div>
+                    <div
+                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                        statusFilter === "default" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      }`}
+                      onClick={() => {
+                        setStatusFilter("default");
+                        setStatusDropdownOpen(false);
+                      }}
+                    >
+                      Varsayılan
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="flex items-end">
               <button

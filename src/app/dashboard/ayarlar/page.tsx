@@ -69,6 +69,11 @@ export default function Settings() {
   const [assignLoading, setAssignLoading] = useState(false);
   const [removeLoading, setRemoveLoading] = useState(false);
   
+  // Custom dropdown state'leri
+  const [userTypeDropdownOpen, setUserTypeDropdownOpen] = useState(false);
+  const [storeDropdownOpen, setStoreDropdownOpen] = useState(false);
+  const [assignStoreDropdownOpen, setAssignStoreDropdownOpen] = useState(false);
+  
   // Normal kullanıcı için yeni state'ler
   const [activeTab, setActiveTab] = useState<'profile' | 'store' | 'password'>('profile');
   const [userProfile, setUserProfile] = useState<UserProfileInfo | null>(null);
@@ -132,6 +137,23 @@ export default function Settings() {
       fetchUserProfile();
     }
   }, [isAdmin, authLoading, router]);
+
+  // Dropdown'ların dışına tıklandığında kapanması
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.dropdown-container')) {
+        setUserTypeDropdownOpen(false);
+        setStoreDropdownOpen(false);
+        setAssignStoreDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Auth yüklenirken loading göster
   if (authLoading) {
@@ -908,80 +930,110 @@ export default function Settings() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-black">Kullanıcı Yönetimi</h1>
-        <button
-          onClick={() => { setSelectedUser(null); setModalOpen(true); }}
-          className="bg-blue-900 text-white rounded-full px-6 py-2 font-semibold flex items-center gap-2"
-        >
-          <FaPlus /> Yeni Kullanıcı
-        </button>
+      {/* Modern Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Kullanıcı Yönetimi</h1>
+            <p className="text-gray-600">Sistem kullanıcılarını yönetin ve yeni kullanıcılar ekleyin</p>
+          </div>
+          <button
+            onClick={() => { setSelectedUser(null); setModalOpen(true); }}
+            className="bg-[#00365a] hover:bg-[#004170] text-white rounded-xl px-6 py-3 font-semibold flex items-center gap-2 transition-all shadow-lg hover:shadow-xl"
+          >
+            <FaPlus className="w-4 h-4" /> Yeni Kullanıcı
+          </button>
+        </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      {/* Modern Table Container */}
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-gradient-to-r from-[#00365a] to-[#004170]">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kullanıcı Adı</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ad Soyad</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">E-posta</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kullanıcı Tipi</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mağaza</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durum</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Kullanıcı Adı</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Ad Soyad</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">E-posta</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Kullanıcı Tipi</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Mağaza</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Durum</th>
+                <th className="px-6 py-4 text-right text-xs font-semibold text-white uppercase tracking-wider">İşlemler</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-gray-100">
               {users.map((user, index) => (
                 <tr
                   key={user.userId}
-                  className={
-                    `${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ` +
-                    (!user.isActive ? ' opacity-50 text-gray-400' : '')
-                  }
+                  className={`hover:bg-gray-50 transition-colors ${
+                    !user.isActive ? 'opacity-60' : ''
+                  }`}
                 >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.username}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {user.fullName || ((user.name || '') + ' ' + (user.surname || ''))}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.email}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {typeof user.userType === 'object'
-                      ? (user.userType.description || user.userType.name)
-                      : user.userType}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {user.Store ? user.Store.kurum_adi : '-'}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="h-8 w-8 rounded-full bg-gradient-to-r from-[#00365a] to-[#004170] flex items-center justify-center text-white text-sm font-semibold mr-3">
+                        {user.username.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-sm font-medium text-gray-900">{user.username}</span>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    <span className="text-sm text-gray-900">
+                      {user.fullName || ((user.name || '') + ' ' + (user.surname || ''))}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="text-sm text-gray-900">{user.email}</span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {typeof user.userType === 'object'
+                        ? (user.userType.description || user.userType.name)
+                        : user.userType}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="text-sm text-gray-900">
+                      {user.Store ? user.Store.kurum_adi : '-'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      user.isActive 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
                       {user.isActive ? 'Aktif' : 'Pasif'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={() => handleUserClick(user.userId)}
-                      className="text-blue-600 hover:text-blue-900 mr-4"
-                    >
-                      <FaEdit />
-                    </button>
-                    <button
-                      onClick={() => { 
-                        setAssigningUserId(user.userId); 
-                        setSelectedStoreId(user.Store?.store_id || '');
-                        setAssignStoreModalOpen(true); 
-                      }}
-                      className="text-green-600 hover:text-green-900 mr-4"
-                    >
-                      <FaStore />
-                    </button>
-                    <button
-                      onClick={() => { setDeleteUserId(user.userId); setDeleteModalOpen(true); }}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      <FaTrash />
-                    </button>
+                    <div className="flex items-center justify-end space-x-2">
+                      <button
+                        onClick={() => handleUserClick(user.userId)}
+                        className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Düzenle"
+                      >
+                        <FaEdit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => { 
+                          setAssigningUserId(user.userId); 
+                          setSelectedStoreId(user.Store?.store_id || '');
+                          setAssignStoreModalOpen(true); 
+                        }}
+                        className="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-lg transition-colors"
+                        title="Mağaza Ata"
+                      >
+                        <FaStore className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => { setDeleteUserId(user.userId); setDeleteModalOpen(true); }}
+                        className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Sil"
+                      >
+                        <FaTrash className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -992,141 +1044,263 @@ export default function Settings() {
 
       {/* Kullanıcı Detay/Düzenleme Modalı */}
       {modalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg relative">
-            <h2 className="text-lg font-bold mb-4 text-black">
-              {selectedUser ? 'Kullanıcı Düzenle' : 'Yeni Kullanıcı Ekle'}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="flex flex-col gap-1">
-                <label htmlFor="username" className="text-sm font-semibold text-gray-700">Kullanıcı Adı</label>
-                <input
-                  name="username"
-                  id="username"
-                  value={formData.username}
-                  onChange={handleInputChange}
-                  placeholder="Kullanıcı Adı"
-                  className="border rounded px-3 py-2 text-black"
-                  required
-                />
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-[#00365a] to-[#004170] text-white rounded-t-2xl p-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-xl font-bold">
+                    {selectedUser ? 'Kullanıcı Düzenle' : 'Yeni Kullanıcı Ekle'}
+                  </h2>
+                  <p className="text-blue-100 text-sm mt-1">
+                    {selectedUser ? 'Kullanıcı bilgilerini güncelleyin' : 'Yeni kullanıcı bilgilerini girin'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => { setModalOpen(false); setSelectedUser(null); }}
+                  className="text-blue-100 hover:text-white transition-colors p-2 hover:bg-white hover:bg-opacity-20 rounded-xl"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
-              {!selectedUser && (
-                <div className="flex flex-col gap-1">
-                  <label htmlFor="password" className="text-sm font-semibold text-gray-700">Şifre</label>
+            </div>
+
+            {/* Modal Content */}
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Kullanıcı Adı */}
+                <div>
+                  <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">Kullanıcı Adı <span className="text-red-500">*</span></label>
                   <input
-                    name="password"
-                    id="password"
-                    type="password"
-                    value={formData.password}
+                    name="username"
+                    id="username"
+                    value={formData.username}
                     onChange={handleInputChange}
-                    placeholder="Şifre"
-                    className="border rounded px-3 py-2 text-black"
+                    placeholder="Kullanıcı adını girin"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors"
                     required
                   />
                 </div>
-              )}
-              <div className="flex flex-col gap-1">
-                <label htmlFor="name" className="text-sm font-semibold text-gray-700">Ad</label>
-                <input
-                  name="name"
-                  id="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Ad"
-                  className="border rounded px-3 py-2 text-black"
-                  required
-                />
+
+                {/* Şifre - Sadece yeni kullanıcı için */}
+                {!selectedUser && (
+                  <div>
+                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Şifre <span className="text-red-500">*</span></label>
+                    <input
+                      name="password"
+                      id="password"
+                      type="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      placeholder="Şifre girin"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors"
+                      required
+                    />
+                  </div>
+                )}
+
+                {/* Ad */}
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">Ad <span className="text-red-500">*</span></label>
+                  <input
+                    name="name"
+                    id="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Adını girin"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors"
+                    required
+                  />
+                </div>
+
+                {/* Soyad */}
+                <div>
+                  <label htmlFor="surname" className="block text-sm font-medium text-gray-700 mb-2">Soyad <span className="text-red-500">*</span></label>
+                  <input
+                    name="surname"
+                    id="surname"
+                    value={formData.surname}
+                    onChange={handleInputChange}
+                    placeholder="Soyadını girin"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors"
+                    required
+                  />
+                </div>
+
+                {/* E-posta */}
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">E-posta <span className="text-red-500">*</span></label>
+                  <input
+                    name="email"
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    placeholder="E-posta adresini girin"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors"
+                    required
+                  />
+                </div>
+
+                {/* Telefon */}
+                <div>
+                  <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">Telefon</label>
+                  <input
+                    name="phoneNumber"
+                    id="phoneNumber"
+                    type="tel"
+                    value={formData.phoneNumber}
+                    onChange={handleInputChange}
+                    placeholder="05xx xxx xx xx"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors"
+                  />
+                </div>
               </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="surname" className="text-sm font-semibold text-gray-700">Soyad</label>
-                <input
-                  name="surname"
-                  id="surname"
-                  value={formData.surname}
-                  onChange={handleInputChange}
-                  placeholder="Soyad"
-                  className="border rounded px-3 py-2 text-black"
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="email" className="text-sm font-semibold text-gray-700">E-posta</label>
-                <input
-                  name="email"
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="E-posta"
-                  className="border rounded px-3 py-2 text-black"
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="phoneNumber" className="text-sm font-semibold text-gray-700">Telefon</label>
-                <input
-                  name="phoneNumber"
-                  id="phoneNumber"
-                  type="tel"
-                  value={formData.phoneNumber}
-                  onChange={handleInputChange}
-                  placeholder="05xx xxx xx xx"
-                  className="border rounded px-3 py-2 text-black"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="adres" className="text-sm font-semibold text-gray-700">Adres</label>
+
+              {/* Adres - Tam genişlik */}
+              <div>
+                <label htmlFor="adres" className="block text-sm font-medium text-gray-700 mb-2">Adres</label>
                 <textarea
                   name="adres"
                   id="adres"
                   value={formData.adres}
                   onChange={handleInputChange}
-                  placeholder="Kullanıcı adresi..."
+                  placeholder="Kullanıcı adresini girin..."
                   rows={3}
-                  className="border rounded px-3 py-2 text-black resize-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors resize-none"
                 />
               </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="userTypeName" className="text-sm font-semibold text-gray-700">Kullanıcı Tipi</label>
-                <select
-                  name="userTypeName"
-                  id="userTypeName"
-                  value={formData.userTypeName}
-                  onChange={handleInputChange}
-                  className="border rounded px-3 py-2 text-black"
-                  required
-                >
-                  <option value="admin">Admin</option>
-                  <option value="editor">Editör</option>
-                  <option value="viewer">Görüntüleyici</option>
-                </select>
-              </div>
-              {!selectedUser && (
-                <div className="flex flex-col gap-1">
-                  <label htmlFor="storeId" className="text-sm font-semibold text-gray-700">Mağaza</label>
-                  <select
-                    name="storeId"
-                    id="storeId"
-                    value={formData.storeId || ''}
-                    onChange={handleInputChange}
-                    className="border rounded px-3 py-2 text-black"
-                    required
-                  >
-                    <option value="">Mağaza Seçin</option>
-                    {stores.map(store => (
-                      <option key={store.store_id} value={store.store_id}>
-                        {store.kurum_adi}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
 
-              <div className="flex justify-end gap-2 mt-6">
-                <button type="button" className="px-4 py-2 rounded bg-gray-200 text-black" onClick={() => { setModalOpen(false); setSelectedUser(null); }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Kullanıcı Tipi Dropdown */}
+                <div className="dropdown-container">
+                  <label htmlFor="userTypeName" className="block text-sm font-medium text-gray-700 mb-2">Kullanıcı Tipi <span className="text-red-500">*</span></label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setUserTypeDropdownOpen(!userTypeDropdownOpen)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors text-left bg-white"
+                    >
+                      <span className="text-gray-900">
+                        {formData.userTypeName === "admin" && "Admin"}
+                        {formData.userTypeName === "editor" && "Editör"}
+                        {formData.userTypeName === "viewer" && "Görüntüleyici"}
+                      </span>
+                      <svg 
+                        className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${userTypeDropdownOpen ? 'rotate-180' : ''}`}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    {userTypeDropdownOpen && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                        <div
+                          className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                            formData.userTypeName === "admin" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                          }`}
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, userTypeName: "admin" }));
+                            setUserTypeDropdownOpen(false);
+                          }}
+                        >
+                          Admin
+                        </div>
+                        <div
+                          className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                            formData.userTypeName === "editor" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                          }`}
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, userTypeName: "editor" }));
+                            setUserTypeDropdownOpen(false);
+                          }}
+                        >
+                          Editör
+                        </div>
+                        <div
+                          className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                            formData.userTypeName === "viewer" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                          }`}
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, userTypeName: "viewer" }));
+                            setUserTypeDropdownOpen(false);
+                          }}
+                        >
+                          Görüntüleyici
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Mağaza Dropdown - Sadece yeni kullanıcı için */}
+                {!selectedUser && (
+                  <div className="dropdown-container">
+                    <label htmlFor="storeId" className="block text-sm font-medium text-gray-700 mb-2">Mağaza <span className="text-red-500">*</span></label>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setStoreDropdownOpen(!storeDropdownOpen)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors text-left bg-white"
+                      >
+                        <span className="text-gray-900">
+                          {formData.storeId ? 
+                            stores.find(s => s.store_id === formData.storeId)?.kurum_adi || 'Seçili Mağaza' :
+                            'Mağaza seçin'
+                          }
+                        </span>
+                        <svg 
+                          className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${storeDropdownOpen ? 'rotate-180' : ''}`}
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      
+                      {storeDropdownOpen && (
+                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                          {stores.map((store) => (
+                            <div
+                              key={store.store_id}
+                              className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                formData.storeId === store.store_id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                              }`}
+                              onClick={() => {
+                                setFormData(prev => ({ ...prev, storeId: store.store_id }));
+                                setStoreDropdownOpen(false);
+                              }}
+                            >
+                              {store.kurum_adi}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Butonlar */}
+              <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
+                <button 
+                  type="button" 
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors" 
+                  onClick={() => { setModalOpen(false); setSelectedUser(null); }}
+                >
                   Vazgeç
                 </button>
-                <button type="submit" className="bg-blue-900 text-white rounded px-6 py-2 font-semibold">
+                <button 
+                  type="submit" 
+                  className="bg-[#00365a] hover:bg-[#004170] text-white rounded-lg px-6 py-2 font-semibold transition-colors"
+                >
                   {selectedUser ? 'Güncelle' : 'Ekle'}
                 </button>
               </div>
@@ -1151,52 +1325,116 @@ export default function Settings() {
 
       {/* Mağaza Atama Modalı */}
       {assignStoreModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-lg relative">
-            <h2 className="text-lg font-bold mb-4 text-black">Kullanıcı Mağaza Bilgileri</h2>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Mağaza</label>
-              <select
-                value={selectedStoreId}
-                onChange={(e) => setSelectedStoreId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black"
-              >
-                <option value="" className="text-black">Mağaza seçin</option>
-                {stores.map(store => (
-                  <option key={store.store_id} value={store.store_id} className="text-black">
-                    {store.kurum_adi}
-                  </option>
-                ))}
-                {users.find(u => u.userId === assigningUserId)?.Store && (
-                  <option value="remove" className="text-red-600 font-medium">
-                    Mağaza Atamasını Kaldır
-                  </option>
-                )}
-              </select>
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-[#00365a] to-[#004170] text-white rounded-t-2xl p-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-xl font-bold">Kullanıcı Mağaza Bilgileri</h2>
+                  <p className="text-blue-100 text-sm mt-1">Kullanıcıya mağaza atayın veya kaldırın</p>
+                </div>
+                <button
+                  onClick={() => { setAssignStoreModalOpen(false); setAssigningUserId(null); setSelectedStoreId(''); }}
+                  className="text-blue-100 hover:text-white transition-colors p-2 hover:bg-white hover:bg-opacity-20 rounded-xl"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
-            <div className="flex justify-end gap-2">
-              <button 
-                className="px-4 py-2 rounded bg-gray-200 text-black" 
-                onClick={() => { 
-                  setAssignStoreModalOpen(false); 
-                  setAssigningUserId(null);
-                  setSelectedStoreId('');
-                }}
-              >
-                Vazgeç
-              </button>
-              <button 
-                className={`px-4 py-2 rounded ${selectedStoreId === "remove" ? "bg-red-600" : "bg-blue-900"} text-white`}
-                onClick={handleAssignStore}
-                disabled={!selectedStoreId || assignLoading || removeLoading}
-              >
-                {assignLoading || removeLoading 
-                  ? 'İşleniyor...' 
-                  : selectedStoreId === "remove" 
-                    ? 'Kaldır' 
-                    : 'Ata'
-                }
-              </button>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-6">
+              <div className="dropdown-container">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Mağaza</label>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setAssignStoreDropdownOpen(!assignStoreDropdownOpen)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors text-left bg-white"
+                  >
+                    <span className="text-gray-900">
+                      {selectedStoreId === "remove" ? "Mağaza Atamasını Kaldır" :
+                        selectedStoreId ? 
+                          stores.find(s => s.store_id === selectedStoreId)?.kurum_adi || 'Seçili Mağaza' :
+                          'Mağaza seçin'
+                      }
+                    </span>
+                    <svg 
+                      className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${assignStoreDropdownOpen ? 'rotate-180' : ''}`}
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  {assignStoreDropdownOpen && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                      {stores.map((store) => (
+                        <div
+                          key={store.store_id}
+                          className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                            selectedStoreId === store.store_id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                          }`}
+                          onClick={() => {
+                            setSelectedStoreId(store.store_id);
+                            setAssignStoreDropdownOpen(false);
+                          }}
+                        >
+                          {store.kurum_adi}
+                        </div>
+                      ))}
+                      {users.find(u => u.userId === assigningUserId)?.Store && (
+                        <div
+                          className={`px-3 py-2 cursor-pointer hover:bg-red-50 transition-colors border-t border-gray-200 ${
+                            selectedStoreId === "remove" ? 'bg-red-50 text-red-900' : 'text-red-600'
+                          }`}
+                          onClick={() => {
+                            setSelectedStoreId("remove");
+                            setAssignStoreDropdownOpen(false);
+                          }}
+                        >
+                          Mağaza Atamasını Kaldır
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Butonlar */}
+              <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
+                <button 
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors" 
+                  onClick={() => { 
+                    setAssignStoreModalOpen(false); 
+                    setAssigningUserId(null);
+                    setSelectedStoreId('');
+                  }}
+                >
+                  Vazgeç
+                </button>
+                <button 
+                  className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+                    selectedStoreId === "remove" 
+                      ? "bg-red-600 hover:bg-red-700 text-white" 
+                      : "bg-[#00365a] hover:bg-[#004170] text-white"
+                  }`}
+                  onClick={handleAssignStore}
+                  disabled={!selectedStoreId || assignLoading || removeLoading}
+                >
+                  {assignLoading || removeLoading 
+                    ? 'İşleniyor...' 
+                    : selectedStoreId === "remove" 
+                      ? 'Kaldır' 
+                      : 'Ata'
+                  }
+                </button>
+              </div>
             </div>
           </div>
         </div>

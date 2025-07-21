@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Store, UpdateStoreData } from '@/services/api';
-import { Button, Form, Input, InputNumber, Switch, message, Modal } from 'antd';
+import { Button, Form, Input, InputNumber, Switch, message } from 'antd';
 import { useAuth } from '@/app/context/AuthContext';
 
 export default function EditStorePage() {
@@ -108,67 +108,82 @@ export default function EditStorePage() {
   if (!isAdmin) return null;
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4 fixed inset-0 bg-black bg-opacity-50 z-50">
-      <Modal
-        title="Mağaza Düzenle"
-        open={true}
-        onCancel={() => router.push('/dashboard/magazalar')}
-        footer={null}
-        width="95%"
-        style={{ maxWidth: '800px', margin: '0 auto', top: 20 }}
-        centered
-        maskClosable={false}
-        className="relative"
-      >
-        <div className="max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden">
+        {/* Modal Header */}
+        <div className="bg-[#00365a] px-6 py-4 relative">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-bold text-white flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" clipRule="evenodd" />
+                </svg>
+                Mağaza Düzenle
+              </h2>
+              <p className="text-blue-100 text-sm mt-1">
+                Mağaza bilgilerini güncelleyin
+              </p>
+            </div>
+            <button 
+              onClick={() => router.push('/dashboard/magazalar')}
+              className="text-white hover:text-blue-200 text-3xl font-bold transition-colors"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+
+        {/* Modal Body */}
+        <div className="p-6 max-h-[calc(90vh-120px)] overflow-y-auto">
           <Form
             form={form}
             layout="vertical"
             onFinish={onFinish}
+            className="space-y-6"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Form.Item
-                label="Kurum Adı"
+                label={<span className="text-sm font-medium text-gray-700">Kurum Adı <span className="text-red-500">*</span></span>}
                 name="kurum_adi"
                 rules={[{ required: true, message: 'Lütfen kurum adını giriniz' }]}
               >
-                <Input />
+                <Input className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors" />
               </Form.Item>
 
               <Form.Item
-                label="Vergi Numarası"
+                label={<span className="text-sm font-medium text-gray-700">Vergi Numarası <span className="text-red-500">*</span></span>}
                 name="vergi_numarasi"
                 rules={[{ required: true, message: 'Lütfen vergi numarasını giriniz' }]}
               >
-                <Input />
+                <Input className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors" />
               </Form.Item>
 
               <Form.Item
-                label="Vergi Dairesi"
+                label={<span className="text-sm font-medium text-gray-700">Vergi Dairesi <span className="text-red-500">*</span></span>}
                 name="vergi_dairesi"
                 rules={[{ required: true, message: 'Lütfen vergi dairesini giriniz' }]}
               >
-                <Input />
+                <Input className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors" />
               </Form.Item>
 
               <Form.Item
-                label="Yetkili Adı"
+                label={<span className="text-sm font-medium text-gray-700">Yetkili Adı <span className="text-red-500">*</span></span>}
                 name="yetkili_adi"
                 rules={[{ required: true, message: 'Lütfen yetkili adını giriniz' }]}
               >
-                <Input />
+                <Input className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors" />
               </Form.Item>
 
               <Form.Item
-                label="Yetkili Soyadı"
+                label={<span className="text-sm font-medium text-gray-700">Yetkili Soyadı <span className="text-red-500">*</span></span>}
                 name="yetkili_soyadi"
                 rules={[{ required: true, message: 'Lütfen yetkili soyadını giriniz' }]}
               >
-                <Input />
+                <Input className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors" />
               </Form.Item>
 
               <Form.Item
-                label="TCKN"
+                label={<span className="text-sm font-medium text-gray-700">TCKN <span className="text-red-500">*</span></span>}
                 name="tckn"
                 rules={[
                   { required: true, message: 'Lütfen TCKN giriniz' },
@@ -176,52 +191,52 @@ export default function EditStorePage() {
                   { pattern: /^[0-9]+$/, message: 'TCKN sadece sayılardan oluşmalıdır' }
                 ]}
               >
-                <Input maxLength={11} placeholder="12345678901" />
+                <Input maxLength={11} placeholder="12345678901" className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors" />
               </Form.Item>
 
               <Form.Item
-                label="Telefon"
+                label={<span className="text-sm font-medium text-gray-700">Telefon <span className="text-red-500">*</span></span>}
                 name="telefon"
                 rules={[{ required: true, message: 'Lütfen telefon numarasını giriniz' }]}
               >
-                <Input />
+                <Input className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors" />
               </Form.Item>
 
               <Form.Item
-                label="E-posta"
+                label={<span className="text-sm font-medium text-gray-700">E-posta <span className="text-red-500">*</span></span>}
                 name="eposta"
                 rules={[
                   { required: true, message: 'Lütfen e-posta adresini giriniz' },
                   { type: 'email', message: 'Geçerli bir e-posta adresi giriniz' }
                 ]}
               >
-                <Input />
+                <Input className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors" />
               </Form.Item>
 
               <Form.Item
-                label="Faks Numarası"
+                label={<span className="text-sm font-medium text-gray-700">Faks Numarası</span>}
                 name="faks_numarasi"
               >
-                <Input />
+                <Input className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors" />
               </Form.Item>
 
               <Form.Item
-                label="Açıklama"
+                label={<span className="text-sm font-medium text-gray-700">Açıklama</span>}
                 name="aciklama"
                 className="md:col-span-2"
               >
-                <Input.TextArea rows={3} />
+                <Input.TextArea rows={3} className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors resize-none" />
               </Form.Item>
 
               {/* 🆕 Bakiye Alanı */}
               <Form.Item
-                label="Mağaza Bakiyesi (TL)"
+                label={<span className="text-sm font-medium text-gray-700">Mağaza Bakiyesi (TL) <span className="text-red-500">*</span></span>}
                 name="bakiye"
                 rules={[{ required: true, message: 'Lütfen mağaza bakiyesini giriniz' }]}
                 tooltip="Mağazanın doğrudan kullanabileceği para miktarı"
               >
                 <InputNumber
-                  className="w-full"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors"
                   formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                   parser={(value: string | undefined) => value ? Number(value.replace(/[^\d.]/g, '')) : 0}
                   min={0}
@@ -232,13 +247,13 @@ export default function EditStorePage() {
 
               {/* 🆕 Maksimum Taksit Sayısı */}
               <Form.Item
-                label="Maksimum Taksit Sayısı"
+                label={<span className="text-sm font-medium text-gray-700">Maksimum Taksit Sayısı <span className="text-red-500">*</span></span>}
                 name="maksimum_taksit"
                 rules={[{ required: true, message: 'Lütfen maksimum taksit sayısını giriniz' }]}
                 tooltip="Mağazanın kullanabileceği maksimum taksit sayısı"
               >
                 <InputNumber
-                  className="w-full"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors"
                   min={1}
                   max={48}
                   placeholder="1"
@@ -246,12 +261,12 @@ export default function EditStorePage() {
               </Form.Item>
 
               <Form.Item
-                label="Limitsiz Açık Hesap"
+                label={<span className="text-sm font-medium text-gray-700">Limitsiz Açık Hesap</span>}
                 name="limitsiz_acik_hesap"
                 valuePropName="checked"
                 tooltip="Bu seçenek aktifse mağaza sınırsız açık hesap kullanabilir"
               >
-                <Switch />
+                <Switch className="ant-switch-custom" />
               </Form.Item>
 
               <Form.Item
@@ -262,13 +277,13 @@ export default function EditStorePage() {
                   const isLimitsiz = getFieldValue('limitsiz_acik_hesap');
                   return !isLimitsiz ? (
                     <Form.Item
-                      label="Açık Hesap Limiti (TL)"
+                      label={<span className="text-sm font-medium text-gray-700">Açık Hesap Limiti (TL) <span className="text-red-500">*</span></span>}
                       name="acik_hesap_tutari"
                       rules={[{ required: true, message: 'Lütfen açık hesap limitini giriniz' }]}
                       tooltip="Mağazanın bakiyesi bittiğinde kullanabileceği açık hesap limiti"
                     >
                       <InputNumber
-                        className="w-full"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors"
                         formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                         parser={(value: string | undefined) => value ? Number(value.replace(/[^\d.]/g, '')) : 0}
                         min={0}
@@ -281,11 +296,11 @@ export default function EditStorePage() {
               </Form.Item>
 
               <Form.Item
-                label="Aktif"
+                label={<span className="text-sm font-medium text-gray-700">Aktif</span>}
                 name="is_active"
                 valuePropName="checked"
               >
-                <Switch />
+                <Switch className="ant-switch-custom" />
               </Form.Item>
             </div>
 
@@ -300,17 +315,36 @@ export default function EditStorePage() {
               </ul>
             </div>
 
-            <div className="flex justify-end gap-2 mt-4 sticky bottom-0 bg-white py-4 border-t">
-              <Button onClick={() => router.push('/dashboard/magazalar')}>
+            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+              <button
+                onClick={() => router.push('/dashboard/magazalar')}
+                className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold transition-all"
+              >
                 İptal
-              </Button>
-              <Button type="primary" htmlType="submit" loading={loading}>
-                Kaydet
-              </Button>
+              </button>
+              <button
+                onClick={() => form.submit()}
+                disabled={loading}
+                className="px-6 py-3 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    Kaydediliyor...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Kaydet
+                  </>
+                )}
+              </button>
             </div>
           </Form>
         </div>
-      </Modal>
+      </div>
     </div>
   );
 } 

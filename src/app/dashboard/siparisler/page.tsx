@@ -202,6 +202,20 @@ const Siparisler = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [tempSearchQuery, setTempSearchQuery] = useState('');
 
+  // Modal açıkken body scroll'unu engelle
+  useEffect(() => {
+    if (selectedOrder) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    // Cleanup function
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [selectedOrder]);
+
   // Sipariş istatistiklerini hesapla
   const calculateOrderStats = useCallback((orders: Order[], totalCount: number = 0, isInitialLoad: boolean = false): OrderStats => {
     const stats = {
@@ -1123,7 +1137,7 @@ const Siparisler = () => {
         {/* Sipariş Detay Modal */}
         {selectedOrder && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
+            <div className="bg-white rounded-xl max-w-7xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
               {/* Modal Header */}
               <div className="bg-[#00365a] px-6 py-4 relative">
                 <div className="flex justify-between items-center">
@@ -1137,7 +1151,7 @@ const Siparisler = () => {
                   </div>
                   <button
                     onClick={() => setSelectedOrder(null)}
-                    className="text-white hover:text-blue-200 text-2xl transition-colors"
+                    className="text-white hover:text-blue-200 text-3xl font-bold transition-colors"
                   >
                     ×
                   </button>
@@ -1145,7 +1159,7 @@ const Siparisler = () => {
               </div>
 
               {/* Modal Body */}
-              <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Sol taraf - Sipariş Bilgileri */}
                   <div className="space-y-6">
@@ -1158,10 +1172,6 @@ const Siparisler = () => {
                         Sipariş Bilgileri
                       </h4>
                       <div className="space-y-4">
-                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                          <span className="text-gray-600 font-medium">Sipariş No:</span>
-                          <span className="text-gray-900 font-mono text-sm bg-gray-100 px-2 py-1 rounded">{selectedOrder.id.slice(0, 8)}...</span>
-                        </div>
                         <div className="flex justify-between items-center py-2 border-b border-gray-100">
                           <span className="text-gray-600 font-medium">Tarih:</span>
                           <span className="text-gray-900">

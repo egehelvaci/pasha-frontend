@@ -21,6 +21,10 @@ export default function StoresPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   
+  // Custom dropdown state'leri
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+  const [priceListDropdownOpen, setPriceListDropdownOpen] = useState(false);
+  
   // API çağrılarını takip etmek için ref oluştur
   const storesFetchedRef = useRef(false);
   const priceListsFetchedRef = useRef(false);
@@ -45,6 +49,22 @@ export default function StoresPage() {
       }
     }
   }, [isAdmin, authLoading, router]);
+
+  // Dropdown'ların dışına tıklandığında kapanması
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.dropdown-container')) {
+        setStatusDropdownOpen(false);
+        setPriceListDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const fetchStores = async () => {
     // Zaten yükleme yapılıyorsa çık
@@ -245,17 +265,67 @@ export default function StoresPage() {
                 </svg>
               </div>
             </div>
-        <div>
+        <div className="dropdown-container">
               <label className="block text-sm font-medium text-gray-700 mb-2">Durum</label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all"
-              >
-                <option value="all">Tüm Durumlar</option>
-                <option value="active">Aktif</option>
-                <option value="inactive">Pasif</option>
-              </select>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all text-left bg-white"
+                >
+                  <span className="text-gray-900">
+                    {statusFilter === "all" && "Tüm Durumlar"}
+                    {statusFilter === "active" && "Aktif"}
+                    {statusFilter === "inactive" && "Pasif"}
+                  </span>
+                  <svg 
+                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${statusDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {statusDropdownOpen && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div
+                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                        statusFilter === "all" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      }`}
+                      onClick={() => {
+                        setStatusFilter("all");
+                        setStatusDropdownOpen(false);
+                      }}
+                    >
+                      Tüm Durumlar
+                    </div>
+                    <div
+                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                        statusFilter === "active" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      }`}
+                      onClick={() => {
+                        setStatusFilter("active");
+                        setStatusDropdownOpen(false);
+                      }}
+                    >
+                      Aktif
+                    </div>
+                    <div
+                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                        statusFilter === "inactive" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      }`}
+                      onClick={() => {
+                        setStatusFilter("inactive");
+                        setStatusDropdownOpen(false);
+                      }}
+                    >
+                      Pasif
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="flex items-end">
               <button
@@ -673,27 +743,72 @@ export default function StoresPage() {
                 <p className="text-gray-900 mb-4">
                   <strong>{selectedStore.kurum_adi}</strong> mağazasına fiyat listesi atayın.
                 </p>
-                <div className="mb-4">
+                <div className="mb-4 dropdown-container">
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
                     Fiyat Listesi Seçin
                   </label>
-                  <select
-                    value={selectedPriceList}
-                    onChange={(e) => setSelectedPriceList(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all"
-                  >
-                    <option value="">Fiyat listesi seçin</option>
-                    {priceLists.map(list => (
-                      <option key={list.price_list_id} value={list.price_list_id}>
-                        {list.name}
-                        {list.valid_from || list.valid_to ? (
-                          ` (${list.valid_from ? new Date(list.valid_from).toLocaleDateString('tr-TR') : ''} 
-                          ${list.valid_from && list.valid_to ? ' - ' : ''}
-                          ${list.valid_to ? new Date(list.valid_to).toLocaleDateString('tr-TR') : ''})`
-                        ) : ''}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setPriceListDropdownOpen(!priceListDropdownOpen)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all text-left bg-white"
+                    >
+                      <span className={selectedPriceList ? "text-gray-900" : "text-gray-500"}>
+                        {selectedPriceList 
+                          ? priceLists.find(list => list.price_list_id === selectedPriceList)?.name + 
+                            (priceLists.find(list => list.price_list_id === selectedPriceList)?.valid_from || priceLists.find(list => list.price_list_id === selectedPriceList)?.valid_to ? 
+                              ` (${priceLists.find(list => list.price_list_id === selectedPriceList)?.valid_from ? new Date(priceLists.find(list => list.price_list_id === selectedPriceList)!.valid_from).toLocaleDateString('tr-TR') : ''} 
+                              ${priceLists.find(list => list.price_list_id === selectedPriceList)?.valid_from && priceLists.find(list => list.price_list_id === selectedPriceList)?.valid_to ? ' - ' : ''}
+                              ${priceLists.find(list => list.price_list_id === selectedPriceList)?.valid_to ? new Date(priceLists.find(list => list.price_list_id === selectedPriceList)!.valid_to).toLocaleDateString('tr-TR') : ''})`
+                            : '')
+                          : "Fiyat listesi seçin"
+                        }
+                      </span>
+                      <svg 
+                        className={`absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${priceListDropdownOpen ? 'rotate-180' : ''}`}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    {priceListDropdownOpen && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        <div
+                          className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                            !selectedPriceList ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                          }`}
+                          onClick={() => {
+                            setSelectedPriceList("");
+                            setPriceListDropdownOpen(false);
+                          }}
+                        >
+                          Fiyat listesi seçin
+                        </div>
+                        {priceLists.map(list => (
+                          <div
+                            key={list.price_list_id}
+                            className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                              selectedPriceList === list.price_list_id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                            }`}
+                            onClick={() => {
+                              setSelectedPriceList(list.price_list_id);
+                              setPriceListDropdownOpen(false);
+                            }}
+                          >
+                            {list.name}
+                            {list.valid_from || list.valid_to ? (
+                              ` (${list.valid_from ? new Date(list.valid_from).toLocaleDateString('tr-TR') : ''} 
+                              ${list.valid_from && list.valid_to ? ' - ' : ''}
+                              ${list.valid_to ? new Date(list.valid_to).toLocaleDateString('tr-TR') : ''})`
+                            ) : ''}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 

@@ -86,6 +86,20 @@ const Header = ({ title, user, className }: HeaderProps) => {
       document.body.style.width = '';
     };
   }, [isMobileMenuOpen]);
+
+  // Profile modal açıldığında body scroll'unu devre dışı bırak
+  useEffect(() => {
+    if (isProfileModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    
+    // Cleanup function
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isProfileModalOpen]);
   
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -890,7 +904,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
             </div>
             
             {/* Modal Content */}
-            <div className="p-6 max-h-[calc(90vh-140px)] overflow-y-auto">
+            <div className="p-6 max-h-[calc(90vh-140px)] overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {/* Profil Fotoğrafı ve Temel Bilgiler */}
               <div className="text-center mb-6">
                 <div className="h-24 w-24 mx-auto rounded-full bg-gradient-to-br from-[#00365a] to-[#004170] flex items-center justify-center text-white text-3xl font-bold shadow-lg mb-4">

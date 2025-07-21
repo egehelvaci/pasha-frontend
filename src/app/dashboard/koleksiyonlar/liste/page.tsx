@@ -265,6 +265,10 @@ export default function CollectionList() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [sortBy, setSortBy] = useState<string>("name_asc");
+  
+  // Custom dropdown state'i
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+  
   const didFetch = useRef(false);
   const { isAdmin } = useAuth();
 
@@ -282,6 +286,21 @@ export default function CollectionList() {
     if (didFetch.current) return;
     didFetch.current = true;
     fetchCollections();
+  }, []);
+
+  // Dropdown'ın dışına tıklandığında kapanması
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.dropdown-container')) {
+        setSortDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const filtered = collections.filter(col =>
@@ -368,20 +387,103 @@ export default function CollectionList() {
       {/* Filters & Search */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
         <div className="flex flex-col sm:flex-row gap-4 items-center">
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-3 w-full sm:w-auto dropdown-container">
             <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Sıralama:</label>
-            <select 
-              className="border border-gray-300 rounded-lg px-4 py-2 text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all min-w-[200px]"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-            >
-              <option value="name_asc">Koleksiyon Adı (A-Z)</option>
-              <option value="name_desc">Koleksiyon Adı (Z-A)</option>
-              <option value="products_asc">Ürün Adedi (Artan)</option>
-              <option value="products_desc">Ürün Adedi (Azalan)</option>
-              <option value="date_asc">Eklenme Tarihi (Eskiden Yeniye)</option>
-              <option value="date_desc">Eklenme Tarihi (Yeniden Eskiye)</option>
-            </select>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+                className="border border-gray-300 rounded-lg px-4 py-2 text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all min-w-[200px] text-left bg-white"
+              >
+                <span className="text-gray-900">
+                  {sortBy === "name_asc" && "Koleksiyon Adı (A-Z)"}
+                  {sortBy === "name_desc" && "Koleksiyon Adı (Z-A)"}
+                  {sortBy === "products_asc" && "Ürün Adedi (Artan)"}
+                  {sortBy === "products_desc" && "Ürün Adedi (Azalan)"}
+                  {sortBy === "date_asc" && "Eklenme Tarihi (Eskiden Yeniye)"}
+                  {sortBy === "date_desc" && "Eklenme Tarihi (Yeniden Eskiye)"}
+                </span>
+                <svg 
+                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${sortDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {sortDropdownOpen && (
+                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  <div
+                    className={`px-4 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                      sortBy === "name_asc" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                    }`}
+                    onClick={() => {
+                      setSortBy("name_asc");
+                      setSortDropdownOpen(false);
+                    }}
+                  >
+                    Koleksiyon Adı (A-Z)
+                  </div>
+                  <div
+                    className={`px-4 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                      sortBy === "name_desc" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                    }`}
+                    onClick={() => {
+                      setSortBy("name_desc");
+                      setSortDropdownOpen(false);
+                    }}
+                  >
+                    Koleksiyon Adı (Z-A)
+                  </div>
+                  <div
+                    className={`px-4 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                      sortBy === "products_asc" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                    }`}
+                    onClick={() => {
+                      setSortBy("products_asc");
+                      setSortDropdownOpen(false);
+                    }}
+                  >
+                    Ürün Adedi (Artan)
+                  </div>
+                  <div
+                    className={`px-4 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                      sortBy === "products_desc" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                    }`}
+                    onClick={() => {
+                      setSortBy("products_desc");
+                      setSortDropdownOpen(false);
+                    }}
+                  >
+                    Ürün Adedi (Azalan)
+                  </div>
+                  <div
+                    className={`px-4 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                      sortBy === "date_asc" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                    }`}
+                    onClick={() => {
+                      setSortBy("date_asc");
+                      setSortDropdownOpen(false);
+                    }}
+                  >
+                    Eklenme Tarihi (Eskiden Yeniye)
+                  </div>
+                  <div
+                    className={`px-4 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                      sortBy === "date_desc" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                    }`}
+                    onClick={() => {
+                      setSortBy("date_desc");
+                      setSortDropdownOpen(false);
+                    }}
+                  >
+                    Eklenme Tarihi (Yeniden Eskiye)
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           
           <div className="relative w-full sm:w-auto">

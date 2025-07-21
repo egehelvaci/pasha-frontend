@@ -986,37 +986,6 @@ export default function StokPage() {
 
               {/* Modal Content - Scrollable */}
               <div className="px-4 py-4 md:p-6 max-h-[calc(100vh-200px)] md:max-h-none overflow-y-auto">
-                {/* Mevcut Stok Durumu */}
-                {selectedProduct.sizeOptions && selectedProduct.sizeOptions.length > 0 && (
-                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                    <h4 className="text-sm font-medium text-gray-900 mb-3">Mevcut Stok Durumu (Güncel)</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {selectedProduct.sizeOptions.map((option) => {
-                        const productType = getProductType(selectedProduct.sizeOptions || []);
-                        const isOptionalHeight = option.is_optional_height;
-                        
-                        return (
-                        <div key={option.id} className="text-sm bg-white p-3 rounded border">
-                          <div className="font-medium text-gray-900">{option.width}x{option.height} cm</div>
-                            <div className="text-xs text-gray-500 mb-1">
-                              {isOptionalHeight ? 'Opsiyonel Yükseklik' : 'Hazır Kesim'}
-                            </div>
-                            {isOptionalHeight ? (
-                              <div className={`${(option.stockAreaM2 || 0) > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                {(option.stockAreaM2 || 0).toFixed(1)} m²
-                              </div>
-                            ) : (
-                              <div className={`${(option.stockQuantity || 0) > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {option.stockQuantity || 0} adet
-                          </div>
-                            )}
-                        </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
                 <div className="space-y-6">
                   {/* Boyut Seçimi */}
                   {selectedProduct.sizeOptions && selectedProduct.sizeOptions.length > 0 ? (

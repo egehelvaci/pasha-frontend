@@ -19,6 +19,9 @@ export default function ProductRulesPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState('');
   
+  // Custom dropdown state'i
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+  
   const fetchedRef = useRef(false);
 
   useEffect(() => {
@@ -32,6 +35,21 @@ export default function ProductRulesPage() {
       fetchData();
     }
   }, [isAdmin, authLoading, router]);
+
+  // Dropdown'ın dışına tıklandığında kapanması
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.dropdown-container')) {
+        setStatusDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -199,17 +217,67 @@ export default function ProductRulesPage() {
                 </svg>
               </div>
             </div>
-            <div>
+            <div className="dropdown-container">
               <label className="block text-sm font-medium text-gray-700 mb-2">Durum</label>
-              <select
-                value={activeFilter}
-                onChange={(e) => setActiveFilter(e.target.value as 'all' | 'active' | 'inactive')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all"
-              >
-                <option value="all">Tüm Kurallar</option>
-                <option value="active">Aktif Kurallar</option>
-                <option value="inactive">Pasif Kurallar</option>
-              </select>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all text-left bg-white"
+                >
+                  <span className="text-gray-900">
+                    {activeFilter === "all" && "Tüm Kurallar"}
+                    {activeFilter === "active" && "Aktif Kurallar"}
+                    {activeFilter === "inactive" && "Pasif Kurallar"}
+                  </span>
+                  <svg 
+                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${statusDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {statusDropdownOpen && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div
+                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                        activeFilter === "all" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      }`}
+                      onClick={() => {
+                        setActiveFilter("all");
+                        setStatusDropdownOpen(false);
+                      }}
+                    >
+                      Tüm Kurallar
+                    </div>
+                    <div
+                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                        activeFilter === "active" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      }`}
+                      onClick={() => {
+                        setActiveFilter("active");
+                        setStatusDropdownOpen(false);
+                      }}
+                    >
+                      Aktif Kurallar
+                    </div>
+                    <div
+                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                        activeFilter === "inactive" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      }`}
+                      onClick={() => {
+                        setActiveFilter("inactive");
+                        setStatusDropdownOpen(false);
+                      }}
+                    >
+                      Pasif Kurallar
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="flex items-end">
               <button

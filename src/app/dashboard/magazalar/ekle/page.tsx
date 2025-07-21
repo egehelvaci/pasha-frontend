@@ -263,7 +263,7 @@ export default function AddStorePage() {
                       value={formData.yetkili_adi}
                       onChange={(e) => handleInputChange('yetkili_adi', e.target.value)}
                       className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all ${errors.yetkili_adi ? 'border-red-300' : 'border-gray-300'}`}
-                      placeholder="Ahmet"
+                      placeholder="İsim"
                     />
                     {errors.yetkili_adi && <p className="mt-1 text-sm text-red-600">{errors.yetkili_adi}</p>}
                   </div>
@@ -277,7 +277,7 @@ export default function AddStorePage() {
                       value={formData.yetkili_soyadi}
                       onChange={(e) => handleInputChange('yetkili_soyadi', e.target.value)}
                       className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all ${errors.yetkili_soyadi ? 'border-red-300' : 'border-gray-300'}`}
-                      placeholder="Yılmaz"
+                      placeholder="Soyisim"
                     />
                     {errors.yetkili_soyadi && <p className="mt-1 text-sm text-red-600">{errors.yetkili_soyadi}</p>}
                   </div>

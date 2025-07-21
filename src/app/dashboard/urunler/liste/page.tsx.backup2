@@ -678,11 +678,6 @@ export default function ProductList() {
     const [addToCartSuccess, setAddToCartSuccess] = useState(false);
     const [addToCartError, setAddToCartError] = useState("");
     
-    // Custom dropdown state'leri
-    const [sizeDropdownOpen, setSizeDropdownOpen] = useState(false);
-    const [cutTypeDropdownOpen, setCutTypeDropdownOpen] = useState(false);
-    const [fringeDropdownOpen, setFringeDropdownOpen] = useState(false);
-    
     const addToCartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     
     // Modal açıkken body scroll'unu engelle
@@ -698,23 +693,6 @@ export default function ProductList() {
         document.body.style.overflow = 'unset';
       };
     }, [open]);
-
-    // Dropdown'ların dışına tıklandığında kapanması
-    useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-        const target = event.target as Element;
-        if (!target.closest('.dropdown-container')) {
-          setSizeDropdownOpen(false);
-          setCutTypeDropdownOpen(false);
-          setFringeDropdownOpen(false);
-        }
-      };
-
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }, []);
     
     // Sepete ekleme başarılı mesajını 3 saniye sonra kaldır
     useEffect(() => {
@@ -906,11 +884,11 @@ export default function ProductList() {
     
     return (
       <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl w-full max-w-6xl shadow-lg relative overflow-hidden max-h-[90vh]">
+        <div className="bg-white rounded-xl w-full max-w-6xl shadow-lg relative overflow-y-auto max-h-[90vh]">
           {/* Header */}
           <div className="bg-[#00365a] rounded-t-xl px-6 py-4 relative">
             <button 
-              className="absolute top-3 right-3 text-white hover:text-gray-200 text-3xl font-bold" 
+              className="absolute top-3 right-3 text-white hover:text-gray-200 text-xl" 
               onClick={onClose}
             >
               &times;
@@ -918,11 +896,28 @@ export default function ProductList() {
             
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-white">Sepete Ekle</h2>
+              {isAdmin && product && (
+                <button 
+                  className="bg-green-600 text-white rounded-full px-3 py-1 flex items-center gap-1 text-sm hover:bg-green-700 transition-colors" 
+                  title="Düzenle" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedProductForUpdate(product);
+                    setUpdateModalOpen(true);
+                    onClose(); // Detay modalını kapat
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                  Düzenle
+                </button>
+              )}
             </div>
           </div>
           
           {/* Content */}
-          <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="p-6">
             {loading ? (
               <div className="p-16 flex flex-col items-center justify-center">
                 <div className="w-12 h-12 border-4 border-blue-900 border-t-transparent rounded-full animate-spin"></div>
@@ -981,59 +976,20 @@ export default function ProductList() {
                 
                 <div className="w-full md:w-1/2">
                   <div className="grid grid-cols-1 gap-5">
-                    <div className="flex flex-col gap-2 dropdown-container">
-                      <span className="text-sm font-medium text-gray-700">Boyut Seçimi</span>
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() => setSizeDropdownOpen(!sizeDropdownOpen)}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                        >
-                          <span className={selectedSize ? "text-gray-900" : "text-gray-500"}>
-                            {selectedSize 
-                              ? `${selectedSize.width}x${selectedSize.is_optional_height ? 'İsteğe Bağlı' : selectedSize.height} cm (Stok: ${selectedSize.is_optional_height ? `${(selectedSize.stockAreaM2 || 0).toFixed(1)} m²` : `${selectedSize.stockQuantity || 0} adet`})`
-                              : "Boyut Seçin"
-                            }
-                          </span>
-                          <svg 
-                            className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${sizeDropdownOpen ? 'rotate-180' : ''}`}
-                            fill="none" 
-                            stroke="currentColor" 
-                            viewBox="0 0 24 24"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </button>
-                        
-                        {sizeDropdownOpen && (
-                          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                            <div 
-                              className="px-3 py-2 text-gray-500 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
-                              onClick={() => {
-                                setSelectedSize(null);
-                                setSizeDropdownOpen(false);
-                              }}
-                            >
-                              Boyut Seçin
-                            </div>
-                            {product.sizeOptions?.map((size: any) => (
-                              <div
-                                key={size.id}
-                                className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                  selectedSize?.id === size.id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                                }`}
-                                onClick={() => {
-                                  setSelectedSize(size);
-                                  setSizeDropdownOpen(false);
-                                }}
-                              >
-                                {size.width}x{size.is_optional_height ? 'İsteğe Bağlı' : size.height} cm 
-                                (Stok: {size.is_optional_height ? `${(size.stockAreaM2 || 0).toFixed(1)} m²` : `${size.stockQuantity || 0} adet`})
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                    <div className="flex flex-col gap-2">
+                      <span className="text-sm text-gray-500">Boyut Seçimi</span>
+                      <select 
+                        className="border rounded-md p-2 text-black"
+                        value={selectedSize?.id}
+                        onChange={handleSizeChange}
+                      >
+                        {product.sizeOptions?.map((size: any) => (
+                          <option key={size.id} value={size.id}>
+                            {size.width}x{size.is_optional_height ? 'İsteğe Bağlı' : size.height} cm 
+                            (Stok: {size.is_optional_height ? `${(size.stockAreaM2 || 0).toFixed(1)} m²` : `${size.stockQuantity || 0} adet`})
+                          </option>
+                        ))}
+                      </select>
                       
                       {selectedSize && selectedSize.is_optional_height && (
                         <div className="mt-2">
@@ -1074,123 +1030,32 @@ export default function ProductList() {
                       )}
                     </div>
                     
-                    <div className="flex flex-col gap-2 dropdown-container">
-                      <span className="text-sm font-medium text-gray-700">Kesim Türü</span>
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() => setCutTypeDropdownOpen(!cutTypeDropdownOpen)}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                        >
-                          <span className={selectedCutType ? "text-gray-900" : "text-gray-500"}>
-                            {selectedCutType 
-                              ? selectedCutType.name.charAt(0).toUpperCase() + selectedCutType.name.slice(1)
-                              : "Kesim Türü Seçin"
-                            }
-                          </span>
-                          <svg 
-                            className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${cutTypeDropdownOpen ? 'rotate-180' : ''}`}
-                            fill="none" 
-                            stroke="currentColor" 
-                            viewBox="0 0 24 24"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </button>
-                        
-                        {cutTypeDropdownOpen && (
-                          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                            <div 
-                              className="px-3 py-2 text-gray-500 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
-                              onClick={() => {
-                                setSelectedCutType(null);
-                                setCutTypeDropdownOpen(false);
-                              }}
-                            >
-                              Kesim Türü Seçin
-                            </div>
-                            {product.cutTypes?.map((cutType: any) => (
-                              <div
-                                key={cutType.id}
-                                className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                  selectedCutType?.id === cutType.id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                                }`}
-                                onClick={() => {
-                                  setSelectedCutType(cutType);
-                                  setCutTypeDropdownOpen(false);
-                                }}
-                              >
-                                {cutType.name.charAt(0).toUpperCase() + cutType.name.slice(1)}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                    <div className="flex flex-col gap-2">
+                      <span className="text-sm text-gray-500">Kesim Türü</span>
+                      <select 
+                        className="border rounded-md p-2 text-black"
+                        value={selectedCutType?.id}
+                        onChange={handleCutTypeChange}
+                      >
+                        {product.cutTypes?.map((cutType: any) => (
+                          <option key={cutType.id} value={cutType.id}>
+                            {cutType.name.charAt(0).toUpperCase() + cutType.name.slice(1)}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                     
                     {product.canHaveFringe && (
-                      <div className="flex flex-col gap-2 dropdown-container">
-                        <span className="text-sm font-medium text-gray-700">Saçak</span>
-                        <div className="relative">
-                          <button
-                            type="button"
-                            onClick={() => setFringeDropdownOpen(!fringeDropdownOpen)}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                          >
-                            <span className={selectedHasFringe !== null ? "text-gray-900" : "text-gray-500"}>
-                              {selectedHasFringe === true 
-                                ? "Saçaklı"
-                                : selectedHasFringe === false
-                                ? "Saçaksız"
-                                : "Saçak Seçin"
-                              }
-                            </span>
-                            <svg 
-                              className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${fringeDropdownOpen ? 'rotate-180' : ''}`}
-                              fill="none" 
-                              stroke="currentColor" 
-                              viewBox="0 0 24 24"
-                            >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </button>
-                          
-                          {fringeDropdownOpen && (
-                            <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                              <div 
-                                className="px-3 py-2 text-gray-500 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
-                                onClick={() => {
-                                  setSelectedHasFringe(null);
-                                  setFringeDropdownOpen(false);
-                                }}
-                              >
-                                Saçak Seçin
-                              </div>
-                              <div
-                                className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                  selectedHasFringe === true ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                                }`}
-                                onClick={() => {
-                                  setSelectedHasFringe(true);
-                                  setFringeDropdownOpen(false);
-                                }}
-                              >
-                                Saçaklı
-                              </div>
-                              <div
-                                className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                  selectedHasFringe === false ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                                }`}
-                                onClick={() => {
-                                  setSelectedHasFringe(false);
-                                  setFringeDropdownOpen(false);
-                                }}
-                              >
-                                Saçaksız
-                              </div>
-                            </div>
-                          )}
-                        </div>
+                      <div className="flex flex-col gap-2">
+                        <span className="text-sm text-gray-500">Saçak</span>
+                        <select 
+                          className="border rounded-md p-2 text-black"
+                          value={selectedHasFringe?.toString()}
+                          onChange={handleFringeChange}
+                        >
+                          <option value="true">Saçaklı</option>
+                          <option value="false">Saçaksız</option>
+                        </select>
                       </div>
                     )}
                     
@@ -1321,7 +1186,6 @@ export default function ProductList() {
             </div>
           )}
         </div>
-        </div>
       </div>
     );
   }
@@ -1341,10 +1205,6 @@ export default function ProductList() {
         const [dragActive, setDragActive] = useState(false);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     
-    // Custom dropdown state'leri
-    const [collectionDropdownOpen, setCollectionDropdownOpen] = useState(false);
-    const [ruleDropdownOpen, setRuleDropdownOpen] = useState(false);
-    
     // Modal açıkken body scroll'unu engelle
     useEffect(() => {
       if (open) {
@@ -1358,22 +1218,6 @@ export default function ProductList() {
         document.body.style.overflow = 'unset';
       };
     }, [open]);
-
-    // Dropdown'ların dışına tıklandığında kapanması
-    useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-        const target = event.target as Element;
-        if (!target.closest('.dropdown-container')) {
-          setCollectionDropdownOpen(false);
-          setRuleDropdownOpen(false);
-        }
-      };
-
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }, []);
     
     useEffect(() => {
       if (product) {
@@ -1573,11 +1417,11 @@ export default function ProductList() {
     
     return (
       <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl w-full max-w-6xl shadow-lg relative overflow-hidden max-h-[90vh]">
+        <div className="bg-white rounded-xl w-full max-w-6xl shadow-lg relative overflow-y-auto max-h-[90vh]">
           {/* Header */}
           <div className="bg-[#00365a] rounded-t-xl px-6 py-4 relative">
             <button 
-              className="absolute top-3 right-3 text-white hover:text-gray-200 text-3xl font-bold" 
+              className="absolute top-3 right-3 text-white hover:text-gray-200 text-xl" 
               onClick={onClose}
             >
               &times;
@@ -1589,7 +1433,7 @@ export default function ProductList() {
           </div>
           
           {/* Content */}
-          <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="p-6">
             <div className="flex gap-6">
               {/* Sol taraf - Form */}
               <div className="w-1/2">
@@ -1621,120 +1465,42 @@ export default function ProductList() {
                     />
                   </div>
                   
-                  <div className="relative dropdown-container">
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Koleksiyon
                     </label>
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() => setCollectionDropdownOpen(!collectionDropdownOpen)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                      >
-                        <span className={form.collectionId ? "text-gray-900" : "text-gray-500"}>
-                          {form.collectionId 
-                            ? collections.find(col => col.collectionId === form.collectionId)?.name || "Koleksiyon Seçin"
-                            : "Koleksiyon Seçin"
-                          }
-                        </span>
-                        <svg 
-                          className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${collectionDropdownOpen ? 'rotate-180' : ''}`}
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
-                      
-                      {collectionDropdownOpen && (
-                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                          <div 
-                            className="px-3 py-2 text-gray-500 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
-                            onClick={() => {
-                              setForm({ ...form, collectionId: "" });
-                              setCollectionDropdownOpen(false);
-                            }}
-                          >
-                            Koleksiyon Seçin
-                          </div>
-                          {collections.map(col => (
-                            <div
-                              key={col.collectionId}
-                              className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                form.collectionId === col.collectionId ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                              }`}
-                              onClick={() => {
-                                setForm({ ...form, collectionId: col.collectionId });
-                                setCollectionDropdownOpen(false);
-                              }}
-                            >
-                              {col.name}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    <select 
+                      name="collectionId"
+                      value={form.collectionId}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
+                    >
+                      <option value="">Koleksiyon Seçin</option>
+                      {collections.map(col => (
+                        <option key={col.collectionId} value={col.collectionId}>
+                          {col.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   
-                  <div className="relative dropdown-container">
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Kural ID
                     </label>
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() => setRuleDropdownOpen(!ruleDropdownOpen)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                      >
-                        <span className={form.rule_id ? "text-gray-900" : "text-gray-500"}>
-                          {form.rule_id 
-                            ? productRules.find(rule => rule.id.toString() === form.rule_id) 
-                                ? `${productRules.find(rule => rule.id.toString() === form.rule_id)?.id} - ${productRules.find(rule => rule.id.toString() === form.rule_id)?.name}`
-                                : "Kural Seçin"
-                            : "Kural Seçin"
-                          }
-                        </span>
-                        <svg 
-                          className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${ruleDropdownOpen ? 'rotate-180' : ''}`}
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
-                      
-                      {ruleDropdownOpen && (
-                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                          <div 
-                            className="px-3 py-2 text-gray-500 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
-                            onClick={() => {
-                              setForm({ ...form, rule_id: "" });
-                              setRuleDropdownOpen(false);
-                            }}
-                          >
-                            Kural Seçin
-                          </div>
-                          {productRules
-                            .sort((a, b) => a.id - b.id)
-                            .map(rule => (
-                              <div
-                                key={rule.id}
-                                className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                  form.rule_id === rule.id.toString() ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                                }`}
-                                onClick={() => {
-                                  setForm({ ...form, rule_id: rule.id.toString() });
-                                  setRuleDropdownOpen(false);
-                                }}
-                              >
-                                {rule.id} - {rule.name}
-                              </div>
-                            ))}
-                        </div>
-                      )}
-                    </div>
+                    <select 
+                      name="rule_id"
+                      value={form.rule_id}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
+                    >
+                      <option value="">Kural Seçin</option>
+                      {productRules.map(rule => (
+                        <option key={rule.id} value={rule.id}>
+                          {rule.id} - {rule.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   
                   <div>

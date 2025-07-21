@@ -89,6 +89,13 @@ const MuhasebePage = () => {
     const [endDate, setEndDate] = useState<string>('');
     const [transactionTypeFilter, setTransactionTypeFilter] = useState<string>(''); // 'gelir', 'gider', veya ''
     
+    // Custom dropdown state'leri
+    const [storeFilterDropdownOpen, setStoreFilterDropdownOpen] = useState(false);
+    const [transactionTypeFilterDropdownOpen, setTransactionTypeFilterDropdownOpen] = useState(false);
+    const [customerDropdownOpen, setCustomerDropdownOpen] = useState(false);
+    const [collectionDropdownOpen, setCollectionDropdownOpen] = useState(false);
+    const [transactionTypeDropdownOpen, setTransactionTypeDropdownOpen] = useState(false);
+    
     const [formData, setFormData] = useState<TransactionFormData>({
         storeId: '',
         islemTuru: '',
@@ -118,6 +125,38 @@ const MuhasebePage = () => {
             fetchExpenseTypes();
         }
     }, [isAdmin]);
+
+    // Dropdown'ların dışına tıklandığında kapanması
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Element;
+            if (!target.closest('.dropdown-container')) {
+                setStoreFilterDropdownOpen(false);
+                setTransactionTypeFilterDropdownOpen(false);
+                setCustomerDropdownOpen(false);
+                setCollectionDropdownOpen(false);
+                setTransactionTypeDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    // Modal açıldığında body scroll'u engelle
+    useEffect(() => {
+        if (isModalOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isModalOpen]);
 
     const fetchAccountingData = async (forceRefresh = false) => {
         try {
@@ -640,25 +679,65 @@ const MuhasebePage = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 items-end">
                         {/* Mağaza Filtresi */}
-                        <div>
+                        <div className="dropdown-container">
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                 </svg>
                                 Mağaza
                             </label>
-                            <select
-                                value={selectedStoreFilter}
-                                onChange={(e) => setSelectedStoreFilter(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                            >
-                                <option value="">Tüm Mağazalar</option>
-                                {responseData?.magazaBakiyeleri?.map((magaza) => (
-                                    <option key={magaza.store_id} value={magaza.store_id}>
-                                        {magaza.kurum_adi}
-                                    </option>
-                                ))}
-                            </select>
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    onClick={() => setStoreFilterDropdownOpen(!storeFilterDropdownOpen)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-left bg-white"
+                                >
+                                    <span className="text-gray-900">
+                                        {selectedStoreFilter ? 
+                                            responseData?.magazaBakiyeleri?.find(m => m.store_id === selectedStoreFilter)?.kurum_adi || 'Seçili Mağaza' :
+                                            'Tüm Mağazalar'
+                                        }
+                                    </span>
+                                    <svg 
+                                        className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${storeFilterDropdownOpen ? 'rotate-180' : ''}`}
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                                
+                                {storeFilterDropdownOpen && (
+                                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                                        <div
+                                            className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                                !selectedStoreFilter ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                            }`}
+                                            onClick={() => {
+                                                setSelectedStoreFilter('');
+                                                setStoreFilterDropdownOpen(false);
+                                            }}
+                                        >
+                                            Tüm Mağazalar
+                                        </div>
+                                        {responseData?.magazaBakiyeleri?.map((magaza) => (
+                                            <div
+                                                key={magaza.store_id}
+                                                className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                                    selectedStoreFilter === magaza.store_id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                                }`}
+                                                onClick={() => {
+                                                    setSelectedStoreFilter(magaza.store_id);
+                                                    setStoreFilterDropdownOpen(false);
+                                                }}
+                                            >
+                                                {magaza.kurum_adi}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         {/* Başlangıç Tarihi */}
@@ -694,22 +773,72 @@ const MuhasebePage = () => {
                         </div>
 
                         {/* İşlem Türü Filtresi */}
-                        <div>
+                        <div className="dropdown-container">
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                                 </svg>
                                 İşlem Türü
                             </label>
-                            <select
-                                value={transactionTypeFilter}
-                                onChange={(e) => setTransactionTypeFilter(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                            >
-                                <option value="">Tüm İşlemler</option>
-                                <option value="gelir">Sadece Gelir</option>
-                                <option value="gider">Sadece Gider</option>
-                            </select>
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    onClick={() => setTransactionTypeFilterDropdownOpen(!transactionTypeFilterDropdownOpen)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-left bg-white"
+                                >
+                                    <span className="text-gray-900">
+                                        {transactionTypeFilter === "gelir" && "Sadece Gelir"}
+                                        {transactionTypeFilter === "gider" && "Sadece Gider"}
+                                        {!transactionTypeFilter && "Tüm İşlemler"}
+                                    </span>
+                                    <svg 
+                                        className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${transactionTypeFilterDropdownOpen ? 'rotate-180' : ''}`}
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                                
+                                {transactionTypeFilterDropdownOpen && (
+                                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                                        <div
+                                            className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                                !transactionTypeFilter ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                            }`}
+                                            onClick={() => {
+                                                setTransactionTypeFilter('');
+                                                setTransactionTypeFilterDropdownOpen(false);
+                                            }}
+                                        >
+                                            Tüm İşlemler
+                                        </div>
+                                        <div
+                                            className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                                transactionTypeFilter === "gelir" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                            }`}
+                                            onClick={() => {
+                                                setTransactionTypeFilter("gelir");
+                                                setTransactionTypeFilterDropdownOpen(false);
+                                            }}
+                                        >
+                                            Sadece Gelir
+                                        </div>
+                                        <div
+                                            className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                                transactionTypeFilter === "gider" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                            }`}
+                                            onClick={() => {
+                                                setTransactionTypeFilter("gider");
+                                                setTransactionTypeFilterDropdownOpen(false);
+                                            }}
+                                        >
+                                            Sadece Gider
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         {/* Filtreleri Temizle Butonu */}
@@ -1437,7 +1566,7 @@ const MuhasebePage = () => {
                 {/* Modern Mali Kayıt Ekleme Modal */}
             {isModalOpen && (
                     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-                        <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+                        <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                         {/* Modal Header */}
                             <div className="bg-[#00365a] text-white rounded-t-2xl p-6">
                                 <div className="flex justify-between items-center">
@@ -1460,24 +1589,54 @@ const MuhasebePage = () => {
                         {/* Modal Content */}
                         <form onSubmit={handleSubmit} className="p-6 space-y-6">
                             {/* Müşteri Seçimi */}
-                            <div>
+                            <div className="dropdown-container">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Müşteri <span className="text-red-500">*</span>
                                 </label>
-                                <select
-                                    value={selectedCustomer}
-                                    onChange={(e) => handleCustomerChange(e.target.value)}
-                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors"
-                                    required
-                                    disabled={formLoading}
-                                >
-                                    <option value="">Müşteri seçin...</option>
-                                    {stores.map((store) => (
-                                        <option key={store.store_id} value={store.store_id}>
-                                            {store.kurum_adi}
-                                        </option>
-                                    ))}
-                                </select>
+                                <div className="relative">
+                                    <button
+                                        type="button"
+                                        onClick={() => setCustomerDropdownOpen(!customerDropdownOpen)}
+                                        className={`w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors text-left ${
+                                            formLoading ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
+                                        }`}
+                                        disabled={formLoading}
+                                    >
+                                        <span className="text-gray-900">
+                                            {selectedCustomer ? 
+                                                stores.find(s => s.store_id === selectedCustomer)?.kurum_adi || 'Seçili Müşteri' :
+                                                'Müşteri seçin...'
+                                            }
+                                        </span>
+                                        <svg 
+                                            className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${customerDropdownOpen ? 'rotate-180' : ''}`}
+                                            fill="none" 
+                                            stroke="currentColor" 
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                    
+                                    {customerDropdownOpen && !formLoading && (
+                                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                                            {stores.map((store) => (
+                                                <div
+                                                    key={store.store_id}
+                                                    className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                                        selectedCustomer === store.store_id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                                    }`}
+                                                    onClick={() => {
+                                                        handleCustomerChange(store.store_id);
+                                                        setCustomerDropdownOpen(false);
+                                                    }}
+                                                >
+                                                    {store.kurum_adi}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                                 {/* Otomatik Tutar Hesaplama */}
@@ -1488,29 +1647,57 @@ const MuhasebePage = () => {
                                     
                             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                                 {/* Ürün Seçimi */}
-                                <div className="md:col-span-2">
+                                <div className="md:col-span-2 dropdown-container">
                                             <label className="block text-sm font-medium text-gray-700 mb-2">Ürün</label>
-                                                                            <select
-                                            value={selectedCollection}
-                                            onChange={(e) => {
-                                                setSelectedCollection(e.target.value);
-                                                setFormData(prev => ({ ...prev, collection_id: e.target.value }));
-                                            }}
-                                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors"
-                                        disabled={!selectedCustomer || formLoading || collections.length === 0}
-                                    >
-                                        <option value="">
-                                            {!selectedCustomer ? 'Önce müşteri seçin...' :
-                                                collections.length === 0 ? 'Ürün bulunamadı...' :
-                                                    'Ürün seçin...'}
-                                        </option>
-                                        {collections.map((collection) => (
-                                            <option key={collection.id} value={collection.id}>
-                                                {collection.name} ({formatCurrency(collection.price_per_square_meter)}/m²)
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+                                            <div className="relative">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setCollectionDropdownOpen(!collectionDropdownOpen)}
+                                                    className={`w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors text-left ${
+                                                        !selectedCustomer || formLoading || collections.length === 0 ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
+                                                    }`}
+                                                    disabled={!selectedCustomer || formLoading || collections.length === 0}
+                                                >
+                                                    <span className="text-gray-900">
+                                                        {!selectedCustomer ? 'Önce müşteri seçin...' :
+                                                            collections.length === 0 ? 'Ürün bulunamadı...' :
+                                                                selectedCollection ? 
+                                                                    collections.find(c => c.id === selectedCollection)?.name + 
+                                                                    ` (${formatCurrency(collections.find(c => c.id === selectedCollection)?.price_per_square_meter || 0)}/m²)` :
+                                                                    'Ürün seçin...'
+                                                        }
+                                                    </span>
+                                                    <svg 
+                                                        className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${collectionDropdownOpen ? 'rotate-180' : ''}`}
+                                                        fill="none" 
+                                                        stroke="currentColor" 
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </button>
+                                                
+                                                {collectionDropdownOpen && selectedCustomer && !formLoading && collections.length > 0 && (
+                                                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                                                        {collections.map((collection) => (
+                                                            <div
+                                                                key={collection.id}
+                                                                className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                                                    selectedCollection === collection.id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                                                }`}
+                                                                onClick={() => {
+                                                                    setSelectedCollection(collection.id);
+                                                                    setFormData(prev => ({ ...prev, collection_id: collection.id }));
+                                                                    setCollectionDropdownOpen(false);
+                                                                }}
+                                                            >
+                                                                {collection.name} ({formatCurrency(collection.price_per_square_meter)}/m²)
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
 
                                 {/* Metrekare */}
                                 <div className="md:col-span-2">
@@ -1549,42 +1736,88 @@ const MuhasebePage = () => {
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* İşlem Türü */}
-                            <div>
+                            <div className="dropdown-container">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     İşlem Türü <span className="text-red-500">*</span>
                                 </label>
-                                                                    <select
-                                        value={formData.islemTuru}
-                                        onChange={(e) => {
-                                            setFormData(prev => ({ 
-                                                ...prev, 
-                                                islemTuru: e.target.value
-                                            }));
-                                        }}
-                                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors"
-                                    required
-                                    disabled={formLoading}
-                                >
-                                    <option value="">İşlem türü seçin...</option>
+                                <div className="relative">
+                                    <button
+                                        type="button"
+                                        onClick={() => setTransactionTypeDropdownOpen(!transactionTypeDropdownOpen)}
+                                        className={`w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors text-left ${
+                                            formLoading ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
+                                        }`}
+                                        disabled={formLoading}
+                                    >
+                                        <span className="text-gray-900">
+                                            {formData.islemTuru || 'İşlem türü seçin...'}
+                                        </span>
+                                        <svg 
+                                            className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${transactionTypeDropdownOpen ? 'rotate-180' : ''}`}
+                                            fill="none" 
+                                            stroke="currentColor" 
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
                                     
-                                    {/* Gelir Türleri */}
-                                    {incomeTypes.length > 0 && (
-                                        <optgroup label="Gelir Türleri">
-                                            {incomeTypes.map((type) => (
-                                                <option key={type} value={type}>{type}</option>
-                                            ))}
-                                        </optgroup>
+                                    {transactionTypeDropdownOpen && !formLoading && (
+                                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                                            {/* Gelir Türleri */}
+                                            {incomeTypes.length > 0 && (
+                                                <>
+                                                    <div className="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b border-gray-200">
+                                                        Gelir Türleri
+                                                    </div>
+                                                    {incomeTypes.map((type) => (
+                                                        <div
+                                                            key={type}
+                                                            className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                                                formData.islemTuru === type ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                                            }`}
+                                                            onClick={() => {
+                                                                setFormData(prev => ({ 
+                                                                    ...prev, 
+                                                                    islemTuru: type
+                                                                }));
+                                                                setTransactionTypeDropdownOpen(false);
+                                                            }}
+                                                        >
+                                                            {type}
+                                                        </div>
+                                                    ))}
+                                                </>
+                                            )}
+                                            
+                                            {/* Gider Türleri */}
+                                            {expenseTypes.length > 0 && (
+                                                <>
+                                                    <div className="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b border-gray-200">
+                                                        Gider Türleri
+                                                    </div>
+                                                    {expenseTypes.map((type) => (
+                                                        <div
+                                                            key={type}
+                                                            className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                                                formData.islemTuru === type ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                                            }`}
+                                                            onClick={() => {
+                                                                setFormData(prev => ({ 
+                                                                    ...prev, 
+                                                                    islemTuru: type
+                                                                }));
+                                                                setTransactionTypeDropdownOpen(false);
+                                                            }}
+                                                        >
+                                                            {type}
+                                                        </div>
+                                                    ))}
+                                                </>
+                                            )}
+                                        </div>
                                     )}
-                                    
-                                    {/* Gider Türleri */}
-                                    {expenseTypes.length > 0 && (
-                                        <optgroup label="Gider Türleri">
-                                            {expenseTypes.map((type) => (
-                                                <option key={type} value={type}>{type}</option>
-                                            ))}
-                                        </optgroup>
-                                    )}
-                                </select>
+                                </div>
                             </div>
 
                             {/* Tutar */}
