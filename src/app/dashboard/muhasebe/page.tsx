@@ -721,7 +721,7 @@ const MuhasebePage = () => {
                                         >
                                             Tüm Mağazalar
                                         </div>
-                                        {responseData?.magazaBakiyeleri?.map((magaza) => (
+                                {responseData?.magazaBakiyeleri?.map((magaza) => (
                                             <div
                                                 key={magaza.store_id}
                                                 className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
@@ -732,9 +732,9 @@ const MuhasebePage = () => {
                                                     setStoreFilterDropdownOpen(false);
                                                 }}
                                             >
-                                                {magaza.kurum_adi}
+                                        {magaza.kurum_adi}
                                             </div>
-                                        ))}
+                                ))}
                                     </div>
                                 )}
                             </div>
@@ -1600,8 +1600,8 @@ const MuhasebePage = () => {
                                         className={`w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors text-left ${
                                             formLoading ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
                                         }`}
-                                        disabled={formLoading}
-                                    >
+                                    disabled={formLoading}
+                                >
                                         <span className="text-gray-900">
                                             {selectedCustomer ? 
                                                 stores.find(s => s.store_id === selectedCustomer)?.kurum_adi || 'Seçili Müşteri' :
@@ -1620,7 +1620,7 @@ const MuhasebePage = () => {
                                     
                                     {customerDropdownOpen && !formLoading && (
                                         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
-                                            {stores.map((store) => (
+                                    {stores.map((store) => (
                                                 <div
                                                     key={store.store_id}
                                                     className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
@@ -1631,9 +1631,9 @@ const MuhasebePage = () => {
                                                         setCustomerDropdownOpen(false);
                                                     }}
                                                 >
-                                                    {store.kurum_adi}
+                                            {store.kurum_adi}
                                                 </div>
-                                            ))}
+                                    ))}
                                         </div>
                                     )}
                                 </div>
@@ -1656,11 +1656,11 @@ const MuhasebePage = () => {
                                                     className={`w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors text-left ${
                                                         !selectedCustomer || formLoading || collections.length === 0 ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
                                                     }`}
-                                                    disabled={!selectedCustomer || formLoading || collections.length === 0}
-                                                >
+                                        disabled={!selectedCustomer || formLoading || collections.length === 0}
+                                    >
                                                     <span className="text-gray-900">
-                                                        {!selectedCustomer ? 'Önce müşteri seçin...' :
-                                                            collections.length === 0 ? 'Ürün bulunamadı...' :
+                                            {!selectedCustomer ? 'Önce müşteri seçin...' :
+                                                collections.length === 0 ? 'Ürün bulunamadı...' :
                                                                 selectedCollection ? 
                                                                     collections.find(c => c.id === selectedCollection)?.name + 
                                                                     ` (${formatCurrency(collections.find(c => c.id === selectedCollection)?.price_per_square_meter || 0)}/m²)` :
@@ -1679,7 +1679,7 @@ const MuhasebePage = () => {
                                                 
                                                 {collectionDropdownOpen && selectedCustomer && !formLoading && collections.length > 0 && (
                                                     <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
-                                                        {collections.map((collection) => (
+                                        {collections.map((collection) => (
                                                             <div
                                                                 key={collection.id}
                                                                 className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
@@ -1691,13 +1691,13 @@ const MuhasebePage = () => {
                                                                     setCollectionDropdownOpen(false);
                                                                 }}
                                                             >
-                                                                {collection.name} ({formatCurrency(collection.price_per_square_meter)}/m²)
+                                                {collection.name} ({formatCurrency(collection.price_per_square_meter)}/m²)
                                                             </div>
-                                                        ))}
+                                        ))}
                                                     </div>
                                                 )}
                                             </div>
-                                        </div>
+                                </div>
 
                                 {/* Metrekare */}
                                 <div className="md:col-span-2">
@@ -1747,8 +1747,8 @@ const MuhasebePage = () => {
                                         className={`w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors text-left ${
                                             formLoading ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
                                         }`}
-                                        disabled={formLoading}
-                                    >
+                                    disabled={formLoading}
+                                >
                                         <span className="text-gray-900">
                                             {formData.islemTuru || 'İşlem türü seçin...'}
                                         </span>
@@ -1764,13 +1764,13 @@ const MuhasebePage = () => {
                                     
                                     {transactionTypeDropdownOpen && !formLoading && (
                                         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
-                                            {/* Gelir Türleri */}
-                                            {incomeTypes.length > 0 && (
+                                    {/* Gelir Türleri */}
+                                    {incomeTypes.length > 0 && (
                                                 <>
                                                     <div className="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b border-gray-200">
                                                         Gelir Türleri
                                                     </div>
-                                                    {incomeTypes.map((type) => (
+                                            {incomeTypes.map((type) => (
                                                         <div
                                                             key={type}
                                                             className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
@@ -1788,15 +1788,15 @@ const MuhasebePage = () => {
                                                         </div>
                                                     ))}
                                                 </>
-                                            )}
-                                            
-                                            {/* Gider Türleri */}
-                                            {expenseTypes.length > 0 && (
+                                    )}
+                                    
+                                    {/* Gider Türleri */}
+                                    {expenseTypes.length > 0 && (
                                                 <>
                                                     <div className="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b border-gray-200">
                                                         Gider Türleri
                                                     </div>
-                                                    {expenseTypes.map((type) => (
+                                            {expenseTypes.map((type) => (
                                                         <div
                                                             key={type}
                                                             className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${

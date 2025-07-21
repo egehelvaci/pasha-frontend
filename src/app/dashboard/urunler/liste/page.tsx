@@ -122,6 +122,10 @@ export default function ProductList() {
   const [productRules, setProductRules] = useState<ProductRule[]>([]);
   const { isAdmin } = useAuth();
   
+  // Custom dropdown state'leri
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+  const [collectionFilterDropdownOpen, setCollectionFilterDropdownOpen] = useState(false);
+  
   // Debounce timer için ref
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
 
@@ -137,6 +141,22 @@ export default function ProductList() {
     }
     
     fetchProductRules();
+  }, []);
+
+  // Dropdown'ların dışına tıklandığında kapanması
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.dropdown-container')) {
+        setSortDropdownOpen(false);
+        setCollectionFilterDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   // Arama değiştiğinde debounce ile API çağrısı
@@ -296,7 +316,11 @@ export default function ProductList() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [dragActive, setDragActive] = useState(false);
-        const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    
+    // Custom dropdown state'leri
+    const [collectionDropdownOpen, setCollectionDropdownOpen] = useState(false);
+    const [ruleDropdownOpen, setRuleDropdownOpen] = useState(false);
     
     // Modal açıkken body scroll'unu engelle
     useEffect(() => {
@@ -311,7 +335,7 @@ export default function ProductList() {
         document.body.style.overflow = 'unset';
       };
     }, [open]);
-    
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
       const { name, value, type } = e.target;
       if (type === "file") {
@@ -482,42 +506,124 @@ export default function ProductList() {
                   />
                 </div>
                 
-                <div>
+                <div className="relative dropdown-container">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Koleksiyon <span className="text-red-500">*</span>
                   </label>
-                  <select 
-                    name="collectionId"
-                    value={form.collectionId}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
-                  >
-                    <option value="">Koleksiyon Seçin</option>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setCollectionDropdownOpen(!collectionDropdownOpen)}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors text-left bg-white"
+                    >
+                      <span className={form.collectionId ? "text-gray-900" : "text-gray-500"}>
+                        {form.collectionId 
+                          ? collections.find(col => col.collectionId === form.collectionId)?.name || "Koleksiyon Seçin"
+                          : "Koleksiyon Seçin"
+                        }
+                      </span>
+                      <svg 
+                        className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${collectionDropdownOpen ? 'rotate-180' : ''}`}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    {collectionDropdownOpen && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                        <div
+                          className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                            !form.collectionId ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                          }`}
+                          onClick={() => {
+                            setForm({ ...form, collectionId: "" });
+                            setCollectionDropdownOpen(false);
+                          }}
+                        >
+                          Koleksiyon Seçin
+                        </div>
                   {collections.map(col => (
-                      <option key={col.collectionId} value={col.collectionId}>
+                          <div
+                            key={col.collectionId}
+                            className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                              form.collectionId === col.collectionId ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                            }`}
+                            onClick={() => {
+                              setForm({ ...form, collectionId: col.collectionId });
+                              setCollectionDropdownOpen(false);
+                            }}
+                          >
                         {col.name}
-                      </option>
+                          </div>
                   ))}
-                </select>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
-                <div>
+                <div className="relative dropdown-container">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Kural ID
                   </label>
-                  <select 
-                    name="rule_id"
-                    value={form.rule_id}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
-                  >
-                    <option value="">Kural Seçin</option>
-                    {productRules.map(rule => (
-                      <option key={rule.id} value={rule.id}>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setRuleDropdownOpen(!ruleDropdownOpen)}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors text-left bg-white"
+                    >
+                      <span className={form.rule_id ? "text-gray-900" : "text-gray-500"}>
+                        {form.rule_id 
+                          ? productRules.find(rule => rule.id.toString() === form.rule_id) 
+                              ? `${productRules.find(rule => rule.id.toString() === form.rule_id)?.id} - ${productRules.find(rule => rule.id.toString() === form.rule_id)?.name}`
+                              : "Kural Seçin"
+                          : "Kural Seçin"
+                        }
+                      </span>
+                      <svg 
+                        className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${ruleDropdownOpen ? 'rotate-180' : ''}`}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    {ruleDropdownOpen && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                        <div
+                          className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                            !form.rule_id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                          }`}
+                          onClick={() => {
+                            setForm({ ...form, rule_id: "" });
+                            setRuleDropdownOpen(false);
+                          }}
+                        >
+                          Kural Seçin
+                        </div>
+                        {productRules
+                          .sort((a, b) => a.id - b.id) // ID'ye göre sırala
+                          .map(rule => (
+                            <div
+                              key={rule.id}
+                              className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                form.rule_id === rule.id.toString() ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                              }`}
+                              onClick={() => {
+                                setForm({ ...form, rule_id: rule.id.toString() });
+                                setRuleDropdownOpen(false);
+                              }}
+                            >
                         {rule.id} - {rule.name}
-                      </option>
+                            </div>
                     ))}
-                  </select>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
                 <div>
@@ -909,13 +1015,13 @@ export default function ProductList() {
         <div className="bg-white rounded-xl w-full max-w-6xl shadow-lg relative overflow-hidden max-h-[90vh]">
           {/* Header */}
           <div className="bg-[#00365a] rounded-t-xl px-6 py-4 relative">
-            <button 
+          <button 
               className="absolute top-3 right-3 text-white hover:text-gray-200 text-3xl font-bold" 
-              onClick={onClose}
-            >
-              &times;
-            </button>
-            
+            onClick={onClose}
+          >
+            &times;
+          </button>
+          
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-white">Sepete Ekle</h2>
             </div>
@@ -923,20 +1029,20 @@ export default function ProductList() {
           
           {/* Content */}
           <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-            {loading ? (
-              <div className="p-16 flex flex-col items-center justify-center">
-                <div className="w-12 h-12 border-4 border-blue-900 border-t-transparent rounded-full animate-spin"></div>
-                <p className="mt-4 text-gray-600">Ürün detayları yükleniyor...</p>
-              </div>
-            ) : error ? (
-              <div className="p-8 text-center">
-                <div className="text-red-500">{error}</div>
-              </div>
-            ) : product ? (
+          {loading ? (
+            <div className="p-16 flex flex-col items-center justify-center">
+              <div className="w-12 h-12 border-4 border-blue-900 border-t-transparent rounded-full animate-spin"></div>
+              <p className="mt-4 text-gray-600">Ürün detayları yükleniyor...</p>
+            </div>
+          ) : error ? (
+            <div className="p-8 text-center">
+              <div className="text-red-500">{error}</div>
+            </div>
+          ) : product ? (
               <div>
-                <div className="flex items-center justify-between mb-6">
-                  <h1 className="text-2xl font-bold text-black">{product.collection?.name} - {product.name}</h1>
-                </div>
+              <div className="flex items-center justify-between mb-6">
+                <h1 className="text-2xl font-bold text-black">{product.collection?.name} - {product.name}</h1>
+              </div>
               
               <div className="flex flex-col md:flex-row gap-8">
                 <div className="w-full md:w-1/2">
@@ -1016,7 +1122,7 @@ export default function ProductList() {
                             >
                               Boyut Seçin
                             </div>
-                            {product.sizeOptions?.map((size: any) => (
+                        {product.sizeOptions?.map((size: any) => (
                               <div
                                 key={size.id}
                                 className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
@@ -1027,10 +1133,10 @@ export default function ProductList() {
                                   setSizeDropdownOpen(false);
                                 }}
                               >
-                                {size.width}x{size.is_optional_height ? 'İsteğe Bağlı' : size.height} cm 
+                            {size.width}x{size.is_optional_height ? 'İsteğe Bağlı' : size.height} cm 
                                 (Stok: {size.is_optional_height ? `${(size.stockAreaM2 || 0).toFixed(1)} m²` : `${size.stockQuantity || 0} adet`})
                               </div>
-                            ))}
+                        ))}
                           </div>
                         )}
                       </div>
@@ -1109,7 +1215,7 @@ export default function ProductList() {
                             >
                               Kesim Türü Seçin
                             </div>
-                            {product.cutTypes?.map((cutType: any) => (
+                        {product.cutTypes?.map((cutType: any) => (
                               <div
                                 key={cutType.id}
                                 className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
@@ -1120,9 +1226,9 @@ export default function ProductList() {
                                   setCutTypeDropdownOpen(false);
                                 }}
                               >
-                                {cutType.name.charAt(0).toUpperCase() + cutType.name.slice(1)}
+                            {cutType.name.charAt(0).toUpperCase() + cutType.name.slice(1)}
                               </div>
-                            ))}
+                        ))}
                           </div>
                         )}
                       </div>
@@ -1338,7 +1444,7 @@ export default function ProductList() {
     const [error, setError] = useState("");
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
-        const [dragActive, setDragActive] = useState(false);
+    const [dragActive, setDragActive] = useState(false);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     
     // Custom dropdown state'leri
@@ -1374,7 +1480,7 @@ export default function ProductList() {
         document.removeEventListener('mousedown', handleClickOutside);
       };
     }, []);
-    
+
     useEffect(() => {
       if (product) {
         setForm({
@@ -1658,7 +1764,7 @@ export default function ProductList() {
                           >
                             Koleksiyon Seçin
                           </div>
-                          {collections.map(col => (
+                      {collections.map(col => (
                             <div
                               key={col.collectionId}
                               className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
@@ -1669,9 +1775,9 @@ export default function ProductList() {
                                 setCollectionDropdownOpen(false);
                               }}
                             >
-                              {col.name}
+                          {col.name}
                             </div>
-                          ))}
+                      ))}
                         </div>
                       )}
                     </div>
@@ -1729,9 +1835,9 @@ export default function ProductList() {
                                   setRuleDropdownOpen(false);
                                 }}
                               >
-                                {rule.id} - {rule.name}
+                          {rule.id} - {rule.name}
                               </div>
-                            ))}
+                      ))}
                         </div>
                       )}
                     </div>
@@ -1924,42 +2030,164 @@ export default function ProductList() {
         
         <div className="bg-white rounded-lg shadow p-4 border border-gray-200">
           <div className="flex flex-wrap gap-4">
-            <div className="w-full md:w-auto">
+            <div className="w-full md:w-auto dropdown-container">
               <label htmlFor="sort-select" className="block text-sm font-medium text-gray-700 mb-1">
                 Sıralama
               </label>
-              <select
-                id="sort-select"
-                className="w-full md:w-80 lg:w-96 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900 text-sm"
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-              >
-                <option value="name_asc">İsim (A-Z)</option>
-                <option value="name_desc">İsim (Z-A)</option>
-                <option value="date_asc">Tarih (Eskiden Yeniye)</option>
-                <option value="date_desc">Tarih (Yeniden Eskiye)</option>
-                <option value="id_asc">ID (Artan)</option>
-                <option value="id_desc">ID (Azalan)</option>
-              </select>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+                  className="w-full md:w-80 lg:w-96 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all text-left bg-white text-sm"
+                >
+                  <span className={sortBy ? "text-gray-900" : "text-gray-500"}>
+                    {sortBy === "name_asc" ? "İsim (A-Z)" :
+                     sortBy === "name_desc" ? "İsim (Z-A)" :
+                     sortBy === "date_asc" ? "Tarih (Eskiden Yeniye)" :
+                     sortBy === "date_desc" ? "Tarih (Yeniden Eskiye)" :
+                     sortBy === "id_asc" ? "ID (Artan)" :
+                     sortBy === "id_desc" ? "ID (Azalan)" :
+                     "Sıralama Seçin"}
+                  </span>
+                  <svg 
+                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${sortDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {sortDropdownOpen && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                    <div
+                      className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                        sortBy === "name_asc" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      }`}
+                      onClick={() => {
+                        setSortBy("name_asc");
+                        setSortDropdownOpen(false);
+                      }}
+                    >
+                      İsim (A-Z)
+                    </div>
+                    <div
+                      className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                        sortBy === "name_desc" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      }`}
+                      onClick={() => {
+                        setSortBy("name_desc");
+                        setSortDropdownOpen(false);
+                      }}
+                    >
+                      İsim (Z-A)
+                    </div>
+                    <div
+                      className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                        sortBy === "date_asc" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      }`}
+                      onClick={() => {
+                        setSortBy("date_asc");
+                        setSortDropdownOpen(false);
+                      }}
+                    >
+                      Tarih (Eskiden Yeniye)
+                    </div>
+                    <div
+                      className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                        sortBy === "date_desc" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      }`}
+                      onClick={() => {
+                        setSortBy("date_desc");
+                        setSortDropdownOpen(false);
+                      }}
+                    >
+                      Tarih (Yeniden Eskiye)
+                    </div>
+                    <div
+                      className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                        sortBy === "id_asc" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      }`}
+                      onClick={() => {
+                        setSortBy("id_asc");
+                        setSortDropdownOpen(false);
+                      }}
+                    >
+                      ID (Artan)
+                    </div>
+                    <div
+                      className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                        sortBy === "id_desc" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      }`}
+                      onClick={() => {
+                        setSortBy("id_desc");
+                        setSortDropdownOpen(false);
+                      }}
+                    >
+                      ID (Azalan)
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             
-            <div className="w-full md:w-auto">
+            <div className="w-full md:w-auto dropdown-container">
               <label htmlFor="collection-select" className="block text-sm font-medium text-gray-700 mb-1">
                 Koleksiyon
               </label>
-              <select
-                id="collection-select"
-                className="w-full md:w-80 lg:w-96 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900 text-sm"
-                value={selectedCollection}
-                onChange={(e) => setSelectedCollection(e.target.value)}
-              >
-                <option value="">Tüm Koleksiyonlar</option>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setCollectionFilterDropdownOpen(!collectionFilterDropdownOpen)}
+                  className="w-full md:w-80 lg:w-96 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all text-left bg-white text-sm"
+                >
+                  <span className={selectedCollection ? "text-gray-900" : "text-gray-500"}>
+                    {selectedCollection 
+                      ? collections.find(col => col.collectionId === selectedCollection)?.name || "Koleksiyon Seçin"
+                      : "Tüm Koleksiyonlar"
+                    }
+                  </span>
+                  <svg 
+                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${collectionFilterDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {collectionFilterDropdownOpen && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                    <div
+                      className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                        !selectedCollection ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      }`}
+                      onClick={() => {
+                        setSelectedCollection("");
+                        setCollectionFilterDropdownOpen(false);
+                      }}
+                    >
+                      Tüm Koleksiyonlar
+                    </div>
                 {collections.map((col) => (
-                  <option key={col.collectionId} value={col.collectionId}>
+                      <div
+                        key={col.collectionId}
+                        className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                          selectedCollection === col.collectionId ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                        }`}
+                        onClick={() => {
+                          setSelectedCollection(col.collectionId);
+                          setCollectionFilterDropdownOpen(false);
+                        }}
+                      >
                     {col.name}
-                  </option>
+                      </div>
                 ))}
-              </select>
+                  </div>
+                )}
+              </div>
             </div>
             
             <div className="w-full md:w-auto">

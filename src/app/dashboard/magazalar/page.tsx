@@ -66,6 +66,29 @@ export default function StoresPage() {
     };
   }, []);
 
+  // Fiyat listesi format fonksiyonu
+  const formatPriceListDisplay = (priceListId: string) => {
+    const priceList = priceLists.find(list => list.price_list_id === priceListId);
+    if (!priceList) return '';
+    
+    let displayText = priceList.name;
+    
+    if (priceList.valid_from || priceList.valid_to) {
+      const fromDate = priceList.valid_from && priceList.valid_from !== null ? new Date(priceList.valid_from).toLocaleDateString('tr-TR') : '';
+      const toDate = priceList.valid_to && priceList.valid_to !== null ? new Date(priceList.valid_to).toLocaleDateString('tr-TR') : '';
+      
+      if (fromDate && toDate) {
+        displayText += ` (${fromDate} - ${toDate})`;
+      } else if (fromDate) {
+        displayText += ` (${fromDate})`;
+      } else if (toDate) {
+        displayText += ` (${toDate})`;
+      }
+    }
+    
+    return displayText;
+  };
+
   const fetchStores = async () => {
     // Zaten yükleme yapılıyorsa çık
     if (loading && stores.length > 0) return;
@@ -755,12 +778,7 @@ export default function StoresPage() {
                     >
                       <span className={selectedPriceList ? "text-gray-900" : "text-gray-500"}>
                         {selectedPriceList 
-                          ? priceLists.find(list => list.price_list_id === selectedPriceList)?.name + 
-                            (priceLists.find(list => list.price_list_id === selectedPriceList)?.valid_from || priceLists.find(list => list.price_list_id === selectedPriceList)?.valid_to ? 
-                              ` (${priceLists.find(list => list.price_list_id === selectedPriceList)?.valid_from ? new Date(priceLists.find(list => list.price_list_id === selectedPriceList)!.valid_from).toLocaleDateString('tr-TR') : ''} 
-                              ${priceLists.find(list => list.price_list_id === selectedPriceList)?.valid_from && priceLists.find(list => list.price_list_id === selectedPriceList)?.valid_to ? ' - ' : ''}
-                              ${priceLists.find(list => list.price_list_id === selectedPriceList)?.valid_to ? new Date(priceLists.find(list => list.price_list_id === selectedPriceList)!.valid_to).toLocaleDateString('tr-TR') : ''})`
-                            : '')
+                          ? formatPriceListDisplay(selectedPriceList)
                           : "Fiyat listesi seçin"
                         }
                       </span>
@@ -798,12 +816,7 @@ export default function StoresPage() {
                               setPriceListDropdownOpen(false);
                             }}
                           >
-                            {list.name}
-                            {list.valid_from || list.valid_to ? (
-                              ` (${list.valid_from ? new Date(list.valid_from).toLocaleDateString('tr-TR') : ''} 
-                              ${list.valid_from && list.valid_to ? ' - ' : ''}
-                              ${list.valid_to ? new Date(list.valid_to).toLocaleDateString('tr-TR') : ''})`
-                            ) : ''}
+                            {formatPriceListDisplay(list.price_list_id)}
                           </div>
                         ))}
                       </div>
