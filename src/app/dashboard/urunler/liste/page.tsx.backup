@@ -296,22 +296,8 @@ export default function ProductList() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [dragActive, setDragActive] = useState(false);
-        const [imagePreview, setImagePreview] = useState<string | null>(null);
-    
-    // Modal açıkken body scroll'unu engelle
-    useEffect(() => {
-      if (open) {
-        document.body.style.overflow = 'hidden';
-      } else {
-        document.body.style.overflow = 'unset';
-      }
-      
-      // Cleanup function
-      return () => {
-        document.body.style.overflow = 'unset';
-      };
-    }, [open]);
-    
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
       const { name, value, type } = e.target;
       if (type === "file") {
@@ -680,20 +666,6 @@ export default function ProductList() {
     
     const addToCartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     
-    // Modal açıkken body scroll'unu engelle
-    useEffect(() => {
-      if (open) {
-        document.body.style.overflow = 'hidden';
-      } else {
-        document.body.style.overflow = 'unset';
-      }
-      
-      // Cleanup function
-      return () => {
-        document.body.style.overflow = 'unset';
-      };
-    }, [open]);
-    
     // Sepete ekleme başarılı mesajını 3 saniye sonra kaldır
     useEffect(() => {
       if (addToCartSuccess) {
@@ -935,34 +907,6 @@ export default function ProductList() {
                       className="w-full h-full object-contain p-4" 
                     />
                   </div>
-                  {/* Stok Durumu */}
-                    {product.sizeOptions && product.sizeOptions.length > 0 && (
-                      <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <h3 className="text-sm font-medium text-gray-700 mb-3">Stok Durumu</h3>
-                        <div className="space-y-2">
-                          {product.sizeOptions.map((size: any, index: number) => {
-                            const isOptionalHeight = size.is_optional_height;
-                            const stockValue = isOptionalHeight 
-                              ? `${(size.stockAreaM2 || 0).toFixed(1)} m²`
-                              : `${size.stockQuantity || 0} adet`;
-                            const stockColor = (isOptionalHeight ? (size.stockAreaM2 || 0) : (size.stockQuantity || 0)) > 0 
-                              ? 'text-green-600' 
-                              : 'text-red-600';
-                            
-                            return (
-                              <div key={size.id || index} className="flex items-center justify-between text-sm">
-                                <span className="text-gray-700">
-                                  {size.width}x{isOptionalHeight ? 'İsteğe Bağlı' : size.height} cm
-                                </span>
-                                <span className={`font-medium ${stockColor}`}>
-                                  {stockValue}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
                 </div>
                 
                 <div className="w-full md:w-1/2">
@@ -1079,6 +1023,7 @@ export default function ProductList() {
                         </div>
                       )}
                     </div>
+                    
                     <div className="mt-5">
                       <div className="flex flex-col gap-4">
                         <div className="flex flex-col gap-2">
@@ -1171,6 +1116,43 @@ export default function ProductList() {
                 </div>
               </div>
             </div>
+            
+            {/* Ürün Stok Durumu - Ürün Detay Sayfası Tasarımı */}
+            <div className="mt-8 border-t pt-6">
+              <h3 className="text-lg font-semibold text-black mb-4">Ürün Stok Durumu</h3>
+              <div className="text-sm text-gray-600 mb-2">{product.collection?.name} - {product.name}</div>
+              
+              {product.sizeOptions && product.sizeOptions.length > 0 ? (
+                <div className="space-y-4">
+                  {product.sizeOptions.map((size: any, index: number) => (
+                    <div 
+                      key={size.id || index} 
+                      className={`border-b pb-4 ${selectedSize?.id === size.id ? 'bg-blue-50 p-2 rounded' : ''}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-black">
+                          {size.width} x {size.is_optional_height ? '10000' : size.height}
+                        </span>
+                        <div className="flex-1 h-2 bg-gray-200 relative rounded-full overflow-hidden">
+                          <div 
+                            className="absolute top-0 left-0 h-full bg-blue-900 rounded-full"
+                            style={{ width: `${Math.min(100, (size.width / 200) * 100)}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm">
+                          {size.width} / 660 M²
+                        </span>
+                      </div>
+                      <div className="mt-1 text-sm text-gray-600">
+                        Stok: {size.is_optional_height ? `${(size.stockAreaM2 || 0).toFixed(1)} m²` : `${size.stockQuantity || 0} adet`}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-gray-500">Bu ürün için boyut seçeneği bulunmamaktadır.</div>
+              )}
+            </div>
           ) : (
             <div className="p-8 text-center">
               <div className="text-black">Ürün bulunamadı</div>
@@ -1193,23 +1175,9 @@ export default function ProductList() {
     const [error, setError] = useState("");
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
-        const [dragActive, setDragActive] = useState(false);
+    const [dragActive, setDragActive] = useState(false);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
-    
-    // Modal açıkken body scroll'unu engelle
-    useEffect(() => {
-      if (open) {
-        document.body.style.overflow = 'hidden';
-      } else {
-        document.body.style.overflow = 'unset';
-      }
-      
-      // Cleanup function
-      return () => {
-        document.body.style.overflow = 'unset';
-      };
-    }, [open]);
-    
+
     useEffect(() => {
       if (product) {
         setForm({

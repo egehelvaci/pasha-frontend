@@ -392,9 +392,9 @@ export default function StokPage() {
       setSelectedSizeOption(firstOption);
       
       if (productType === 'optional_height') {
-        setStockForm({
-          width: firstOption.width,
-          height: firstOption.height,
+      setStockForm({
+        width: firstOption.width,
+        height: firstOption.height,
           quantity: 0,
           areaM2: 0,
           updateMode: 'area'
@@ -407,29 +407,29 @@ export default function StokPage() {
           areaM2: 0,
           areaM2ForFixed: 0,
           updateMode: 'quantity'
-        });
+      });
       }
     } else if (productToUse.variations && productToUse.variations.length > 0) {
       const firstVariation = productToUse.variations[0];
       setSelectedSizeOption(null);
-              setStockForm({
-          width: firstVariation.width,
-          height: firstVariation.height,
+      setStockForm({
+        width: firstVariation.width,
+        height: firstVariation.height,
           quantity: 0,
           areaM2: 0,
           areaM2ForFixed: 0,
           updateMode: 'quantity'
-        });
+      });
     } else {
       setSelectedSizeOption(null);
-              setStockForm({
-          width: 100,
-          height: 100,
+      setStockForm({
+        width: 100,
+        height: 100,
           quantity: 0,
           areaM2: 0,
           areaM2ForFixed: 0,
           updateMode: 'quantity'
-        });
+      });
     }
     
     setIsModalOpen(true);
@@ -468,10 +468,10 @@ export default function StokPage() {
     
     if (productType === 'optional_height') {
       // Opsiyonel yükseklik: m² bazlı
-      setStockForm(prev => ({
-        ...prev,
-        width: sizeOption.width,
-        height: sizeOption.height,
+    setStockForm(prev => ({
+      ...prev,
+      width: sizeOption.width,
+      height: sizeOption.height,
         quantity: 0,
         areaM2: 0,
         updateMode: 'area'
@@ -486,7 +486,7 @@ export default function StokPage() {
           areaM2: 0,
           areaM2ForFixed: 0,
           updateMode: 'quantity'
-        }));
+    }));
       }
   };
 
@@ -515,11 +515,11 @@ export default function StokPage() {
     if (productType === 'optional_height') {
       // Opsiyonel yükseklik: m² bazlı stok ekleme
       apiUrl = `${API_BASE_URL}/api/products/${selectedProduct.productId}/stock-area`;
-      
+
       if (stockForm.width <= 0 || stockForm.height <= 0 || (stockForm.areaM2 || 0) < 0) {
         alert('Lütfen geçerli boyut ve m² değerleri girin!');
-        return;
-      }
+      return;
+    }
 
       requestBody = {
         width: stockForm.width,
@@ -996,8 +996,8 @@ export default function StokPage() {
                         const isOptionalHeight = option.is_optional_height;
                         
                         return (
-                          <div key={option.id} className="text-sm bg-white p-3 rounded border">
-                            <div className="font-medium text-gray-900">{option.width}x{option.height} cm</div>
+                        <div key={option.id} className="text-sm bg-white p-3 rounded border">
+                          <div className="font-medium text-gray-900">{option.width}x{option.height} cm</div>
                             <div className="text-xs text-gray-500 mb-1">
                               {isOptionalHeight ? 'Opsiyonel Yükseklik' : 'Hazır Kesim'}
                             </div>
@@ -1007,10 +1007,10 @@ export default function StokPage() {
                               </div>
                             ) : (
                               <div className={`${(option.stockQuantity || 0) > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                {option.stockQuantity || 0} adet
-                              </div>
-                            )}
+                            {option.stockQuantity || 0} adet
                           </div>
+                            )}
+                        </div>
                         );
                       })}
                     </div>
@@ -1088,13 +1088,13 @@ export default function StokPage() {
                       const isOptionalHeight = productType === 'optional_height';
                       
                       return (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                             {isOptionalHeight ? 'Eklenecek Stok (m²):' : 'Eklenecek Stok (Adet):'}
-                          </label>
+                    </label>
                           {isOptionalHeight ? (
-                            <input
-                              type="number"
+                    <input
+                      type="number"
                               step="0.1"
                               min="0"
                               value={stockForm.areaM2 === 0 ? 0 : stockForm.areaM2 || ''}
@@ -1104,7 +1104,7 @@ export default function StokPage() {
                                 areaM2: e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)),
                                 quantity: 0
                               }))}
-                              className="w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                               placeholder="Eklenecek m² miktarı"
                             />
                           ) : (
@@ -1124,8 +1124,8 @@ export default function StokPage() {
                                   onWheel={(e) => (e.target as HTMLInputElement).blur()}
                                   className="w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                   placeholder="Eklenecek adet miktarı"
-                                />
-                              </div>
+                    />
+                  </div>
                               
                               {/* m² girişi */}
                               <div>
