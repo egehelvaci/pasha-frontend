@@ -195,11 +195,40 @@ export default function StokPage() {
     updateMode: 'quantity',
     areaM2ForFixed: 0
   });
+  
+  // Input değerleri için string state'ler (silme sorunu için)
+  const [inputValues, setInputValues] = useState({
+    height: '',
+    areaM2: '',
+    quantity: '',
+    areaM2ForFixed: ''
+  });
   const [isUpdatingStock, setIsUpdatingStock] = useState(false);
   const [isLoadingProductDetail, setIsLoadingProductDetail] = useState(false);
   
   // Debounce timer için ref
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Opsiyonel yükseklik ürünlerde boy değiştiğinde m² hesaplama
+  useEffect(() => {
+    if (selectedProduct && selectedSizeOption) {
+      const productType = getProductType(selectedProduct.sizeOptions || []);
+      if (productType === 'optional_height' && stockForm.width > 0 && stockForm.height > 0) {
+        const calculatedAreaM2 = (stockForm.width * stockForm.height) / 10000; // cm² -> m²
+        setStockForm(prev => ({
+          ...prev,
+          areaM2: calculatedAreaM2
+        }));
+      }
+    }
+  }, [stockForm.width, stockForm.height, selectedProduct, selectedSizeOption]);
+
+  // Component unmount olduğunda body scroll'unu geri aç
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
 
   useEffect(() => {
     // Auth loading tamamlandığında user yoksa login'e yönlendir
@@ -433,6 +462,8 @@ export default function StokPage() {
     }
     
     setIsModalOpen(true);
+    // Modal açıldığında body scroll'u engelle
+    document.body.style.overflow = 'hidden';
   };
 
   const closeStockModal = () => {
@@ -440,6 +471,9 @@ export default function StokPage() {
     setSelectedProduct(null);
     setSelectedSizeOption(null);
     setStockForm({ width: 0, height: 0, quantity: 0, areaM2: 0, updateMode: 'quantity', areaM2ForFixed: 0 });
+    setInputValues({ height: '', areaM2: '', quantity: '', areaM2ForFixed: '' });
+    // Modal kapandığında body scroll'u geri aç
+    document.body.style.overflow = 'auto';
   };
 
   // Ürün tipini belirleme fonksiyonu
@@ -476,6 +510,7 @@ export default function StokPage() {
         areaM2: 0,
         updateMode: 'area'
       }));
+      setInputValues({ height: '', areaM2: '', quantity: '', areaM2ForFixed: '' });
           } else {
         // Hazır kesim: adet bazlı
         setStockForm(prev => ({
@@ -487,6 +522,7 @@ export default function StokPage() {
           areaM2ForFixed: 0,
           updateMode: 'quantity'
     }));
+        setInputValues({ height: '', areaM2: '', quantity: '', areaM2ForFixed: '' });
       }
   };
 
@@ -1059,23 +1095,68 @@ export default function StokPage() {
                       return (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {isOptionalHeight ? 'Eklenecek Stok (m²):' : 'Eklenecek Stok (Adet):'}
+                            {isOptionalHeight ? 'Güncellenecek Stok (m²):' : 'Güncellenecek Stok (Adet):'}
                     </label>
                           {isOptionalHeight ? (
-                    <input
-                      type="number"
-                              step="0.1"
-                              min="0"
-                              value={stockForm.areaM2 === 0 ? 0 : stockForm.areaM2 || ''}
-                              onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                              onChange={(e) => setStockForm(prev => ({ 
-                                ...prev, 
-                                areaM2: e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)),
-                                quantity: 0
-                              }))}
-                      className="w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              placeholder="Eklenecek m² miktarı"
-                            />
+                            <div className="space-y-3">
+                              {/* Boy girişi */}
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Boy (cm):
+                                </label>
+                                <p className="text-xs text-gray-500 mb-2">
+                                  Opsiyonel yükseklik ürünlerde boy değeri girin. m² otomatik hesaplanacaktır.
+                                </p>
+                                <input
+                                  type="number"
+                                  step="0.1"
+                                  min="0"
+                                  value={inputValues.height}
+                                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                                  onChange={(e) => {
+                                    const heightValue = e.target.value;
+                                    const height = heightValue === '' ? 0 : Math.max(0, Number(heightValue));
+                                    setInputValues(prev => ({ ...prev, height: heightValue }));
+                                    setStockForm(prev => ({ 
+                                      ...prev, 
+                                      height: height,
+                                      quantity: 0
+                                    }));
+                                  }}
+                                  className="w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  placeholder="Boy değeri (cm)"
+                                />
+                              </div>
+                              
+                              {/* m² girişi */}
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  m² (Manuel giriş için):
+                                </label>
+                                <p className="text-xs text-gray-500 mb-2">
+                                  Boy değiştiğinde m² otomatik hesaplanır. Manuel giriş yapabilirsiniz.
+                                </p>
+                                <input
+                                  type="number"
+                                  step="0.1"
+                                  min="0"
+                                  value={inputValues.areaM2}
+                                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                                  onChange={(e) => {
+                                    const areaM2Value = e.target.value;
+                                    const areaM2 = areaM2Value === '' ? 0 : Math.max(0, Number(areaM2Value));
+                                    setInputValues(prev => ({ ...prev, areaM2: areaM2Value }));
+                                    setStockForm(prev => ({ 
+                                      ...prev, 
+                                      areaM2: areaM2,
+                                      quantity: 0
+                                    }));
+                                  }}
+                                  className="w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  placeholder="Manuel m² girişi"
+                                />
+                              </div>
+                            </div>
                           ) : (
                             <div className="space-y-3">
                               {/* Adet girişi */}
@@ -1083,13 +1164,18 @@ export default function StokPage() {
                                 <input
                                   type="number"
                                   min="0"
-                                  value={stockForm.quantity === 0 ? 0 : stockForm.quantity || ''}
-                                  onChange={(e) => setStockForm(prev => ({ 
-                                    ...prev, 
-                                    quantity: e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)),
-                                    areaM2: 0,
-                                    areaM2ForFixed: 0
-                                  }))}
+                                  value={inputValues.quantity}
+                                  onChange={(e) => {
+                                    const quantityValue = e.target.value;
+                                    const quantity = quantityValue === '' ? 0 : Math.max(0, Number(quantityValue));
+                                    setInputValues(prev => ({ ...prev, quantity: quantityValue }));
+                                    setStockForm(prev => ({ 
+                                      ...prev, 
+                                      quantity: quantity,
+                                      areaM2: 0,
+                                      areaM2ForFixed: 0
+                                    }));
+                                  }}
                                   onWheel={(e) => (e.target as HTMLInputElement).blur()}
                                   className="w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                   placeholder="Eklenecek adet miktarı"
@@ -1099,17 +1185,19 @@ export default function StokPage() {
                               {/* m² girişi */}
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                  Eklenecek Stok (m²) - Adet olarak hesaplanır:
+                                  Güncellenecek Stok (m²) - Adet olarak hesaplanır:
                                 </label>
                                 <input
                                   type="number"
                                   step="0.1"
                                   min="0"
-                                  value={stockForm.areaM2ForFixed === 0 ? 0 : stockForm.areaM2ForFixed || ''}
+                                  value={inputValues.areaM2ForFixed}
                                   onWheel={(e) => (e.target as HTMLInputElement).blur()}
                                   onChange={(e) => {
-                                    const areaM2 = e.target.value === '' ? 0 : Math.max(0, Number(e.target.value));
+                                    const areaM2Value = e.target.value;
+                                    const areaM2 = areaM2Value === '' ? 0 : Math.max(0, Number(areaM2Value));
                                     const calculatedQuantity = calculateQuantityFromArea(areaM2, selectedSizeOption?.pieceAreaM2 || 0);
+                                    setInputValues(prev => ({ ...prev, areaM2ForFixed: areaM2Value }));
                                     setStockForm(prev => ({ 
                                       ...prev, 
                                       areaM2ForFixed: areaM2,
@@ -1132,18 +1220,23 @@ export default function StokPage() {
                   {(!selectedProduct.sizeOptions || selectedProduct.sizeOptions.length === 0) && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Eklenecek Stok (Adet):
+                        Güncellenecek Stok (Adet):
                       </label>
                       <input
                         type="number"
                         min="0"
-                        value={stockForm.quantity === 0 ? 0 : stockForm.quantity || ''}
+                        value={inputValues.quantity}
                         onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                        onChange={(e) => setStockForm(prev => ({ 
-                          ...prev, 
-                          quantity: e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)),
-                          areaM2: 0
-                        }))}
+                        onChange={(e) => {
+                          const quantityValue = e.target.value;
+                          const quantity = quantityValue === '' ? 0 : Math.max(0, Number(quantityValue));
+                          setInputValues(prev => ({ ...prev, quantity: quantityValue }));
+                          setStockForm(prev => ({ 
+                            ...prev, 
+                            quantity: quantity,
+                            areaM2: 0
+                          }));
+                        }}
                         className="w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Eklenecek adet miktarı"
                       />
@@ -1177,7 +1270,7 @@ export default function StokPage() {
                           <span className="font-medium text-gray-700">Eklenecek:</span> 
                           <span className="ml-1 text-gray-900">
                             {selectedSizeOption.is_optional_height 
-                              ? `${stockForm.areaM2 || 0} m²`
+                              ? `${stockForm.areaM2 || 0} m² (${stockForm.width}x${stockForm.height} cm)`
                               : `${stockForm.quantity} adet`
                             }
                           </span>
