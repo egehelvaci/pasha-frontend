@@ -423,7 +423,7 @@ export default function StokPage() {
       if (productType === 'optional_height') {
       setStockForm({
         width: firstOption.width,
-        height: firstOption.height,
+        height: 10000, // Opsiyonel ürünlerde height sabit 10000
           quantity: 0,
           areaM2: 0,
           updateMode: 'area'
@@ -505,7 +505,7 @@ export default function StokPage() {
     setStockForm(prev => ({
       ...prev,
       width: sizeOption.width,
-      height: sizeOption.height,
+      height: 10000, // Opsiyonel ürünlerde height sabit 10000
         quantity: 0,
         areaM2: 0,
         updateMode: 'area'
@@ -559,7 +559,7 @@ export default function StokPage() {
 
       requestBody = {
         width: stockForm.width,
-        height: stockForm.height,
+        height: 10000,
         areaM2: stockForm.areaM2
       };
     } else {
@@ -1178,7 +1178,7 @@ export default function StokPage() {
                                   }}
                                   onWheel={(e) => (e.target as HTMLInputElement).blur()}
                                   className="w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                  placeholder="Eklenecek adet miktarı"
+                                  placeholder="Güncellenecek adet miktarı"
                     />
                   </div>
                               
@@ -1206,7 +1206,7 @@ export default function StokPage() {
                                     }));
                                   }}
                                   className="w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                  placeholder="Eklenecek m² miktarı"
+                                  placeholder="Güncellenecek m² miktarı"
                                 />
                               </div>
                             </div>
@@ -1238,7 +1238,7 @@ export default function StokPage() {
                           }));
                         }}
                         className="w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Eklenecek adet miktarı"
+                        placeholder="Güncellenecek adet miktarı"
                       />
                     </div>
                   )}
@@ -1267,7 +1267,7 @@ export default function StokPage() {
                           </span>
                         </div>
                         <div>
-                          <span className="font-medium text-gray-700">Eklenecek:</span> 
+                          <span className="font-medium text-gray-700">Güncellenecek:</span> 
                           <span className="ml-1 text-gray-900">
                             {selectedSizeOption.is_optional_height 
                               ? `${stockForm.areaM2 || 0} m² (${stockForm.width}x${stockForm.height} cm)`
