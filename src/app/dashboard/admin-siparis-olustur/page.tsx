@@ -372,16 +372,30 @@ const AdminSiparisOlustur = () => {
   const hasStock = (product: AdminOrderProduct | Product) => {
     if ('sizeOptions' in product) {
       // AdminOrderProduct tipinde
-      const hasStockResult = product.sizeOptions && product.sizeOptions.length > 0 && 
-        product.sizeOptions.some(option => {
-          // İsteğe bağlı yükseklik varsa alan bazında kontrol et
-          if (option.is_optional_height) {
-            return (option.stockAreaM2 || 0) > 0;
-          }
-          // Normal ürünler için adet bazında kontrol et
-          return (option.stockQuantity || 0) > 0;
+      let hasStockResult = false;
+      
+      // Önce sizeOptions içindeki stockAreaM2 ve stockQuantity'yi kontrol et
+      if (product.sizeOptions && product.sizeOptions.length > 0) {
+        hasStockResult = product.sizeOptions.some(option => {
+          const hasAreaStock = (option.stockAreaM2 || 0) > 0;
+          const hasQuantityStock = (option.stockQuantity || 0) > 0;
+          return hasAreaStock || hasQuantityStock;
         });
-      console.log(`Ürün ${product.name} stok kontrolü:`, hasStockResult, product.sizeOptions);
+      }
+      
+      // Eğer sizeOptions'da stok yoksa, productvariations'ı kontrol et
+      if (!hasStockResult && product.productvariations && product.productvariations.length > 0) {
+        hasStockResult = product.productvariations.some((variation: any) => {
+          const hasAreaStock = parseFloat(variation.stock_area_m2 || 0) > 0;
+          const hasQuantityStock = (variation.stock_quantity || 0) > 0;
+          return hasAreaStock || hasQuantityStock;
+        });
+      }
+      
+      console.log(`Ürün ${product.name} stok kontrolü:`, hasStockResult, {
+        sizeOptions: product.sizeOptions,
+        productvariations: product.productvariations
+      });
       return hasStockResult;
     } else {
       // Normal Product tipinde
