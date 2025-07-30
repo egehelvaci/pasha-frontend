@@ -846,7 +846,9 @@ const AdminSiparisOlustur = () => {
             <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <div>
                 <div className="flex items-center justify-between mb-6">
-                  <h1 className="text-2xl font-bold text-black">{selectedProduct.collection?.name || 'Koleksiyon'} - {selectedProduct.name}</h1>
+                  <h1 className="text-2xl font-bold text-black">
+                    {('collection' in selectedProduct && selectedProduct.collection?.name) || 'Koleksiyon'} - {selectedProduct.name}
+                  </h1>
                 </div>
                 
                 <div className="flex flex-col md:flex-row gap-8">
@@ -909,7 +911,7 @@ const AdminSiparisOlustur = () => {
                                         return `${productForm.width}x${selectedOption.is_optional_height ? 'İsteğe Bağlı' : productForm.height} cm (Stok: ${selectedOption.is_optional_height ? `${(selectedOption.stockAreaM2 || 0).toFixed(1)} m²` : `${selectedOption.stockQuantity || 0} adet`})`;
                                       }
                                     }
-                                    return `${productForm.width}x${productForm.height} cm (Stok: ${selectedProduct.stock || 0} adet)`;
+                                    return `${productForm.width}x${productForm.height} cm (Stok: ${('stock' in selectedProduct ? selectedProduct.stock : 0) || 0} adet)`;
                                   })()
                                 : "Boyut Seçin"
                               }
