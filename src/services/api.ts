@@ -1,3 +1,5 @@
+const API_URL = "https://pasha-backend-production.up.railway.app";
+
 // Token'ı localStorage veya sessionStorage'dan al
 function getAuthToken(): string | null {
   if (typeof window === 'undefined') {
@@ -2284,6 +2286,140 @@ export async function processPayment(paymentData: PaymentRequest): Promise<Payme
     return result;
   } catch (error) {
     console.error('Ödeme işlemi başlatılırken hata:', error);
+    throw error;
+  }
+}
+
+// Çalışan İstatistikleri API Fonksiyonları
+export interface EmployeeStats {
+  userId: string;
+  name: string;
+  surname: string;
+  email: string;
+  phoneNumber: string;
+}
+
+export interface OverallStats {
+  totalCompletedOrders: number;
+  totalAmount: number;
+  totalAreaM2: number;
+  totalItems: number;
+  averageAmount: number;
+  averageAreaM2: number;
+  averageItems: number;
+}
+
+export interface RecentStats {
+  period: string;
+  completedOrders: number;
+  totalAmount: number;
+  totalAreaM2: number;
+  totalItems: number;
+}
+
+export interface CompletedOrder {
+  orderId: string;
+  completedAt: string;
+  totalAmount: number;
+  totalAreaM2: number;
+  totalItems: number;
+  orderStatus: string;
+  orderCreatedAt: string;
+  orderTotalPrice: number;
+}
+
+export interface EmployeeStatisticsResponse {
+  success: boolean;
+  data: {
+    employee: EmployeeStats;
+    overallStats: OverallStats;
+    recentStats: RecentStats;
+    completedOrders: CompletedOrder[];
+  };
+}
+
+export async function getEmployeeStatistics(employeeId: string): Promise<EmployeeStatisticsResponse['data']> {
+  const token = getAuthToken();
+  
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/employee-stats/${employeeId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Çalışan istatistikleri getirilemedi');
+    }
+
+    return data.data;
+  } catch (error) {
+    console.error('Çalışan istatistikleri hatası:', error);
+    throw error;
+  }
+} 
+
+// Admin Users API Interfaces
+export interface AdminUser {
+  userId: string;
+  username: string;
+  email: string;
+  name: string;
+  surname: string;
+  phoneNumber?: string;
+  adres?: string;
+  userType: {
+    id: number;
+    name: string;
+  };
+  userTypeName: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  Store?: {
+    store_id: string;
+    kurum_adi: string;
+  } | null;
+}
+
+export interface GetAdminUsersResponse {
+  success: boolean;
+  data: AdminUser[];
+  message?: string;
+}
+
+export async function getAdminUsers(): Promise<AdminUser[]> {
+  const token = getAuthToken();
+
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/admin/users`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data: GetAdminUsersResponse = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Kullanıcılar getirilemedi');
+    }
+
+    return data.data || [];
+  } catch (error) {
+    console.error('Admin kullanıcıları getirme hatası:', error);
     throw error;
   }
 } 

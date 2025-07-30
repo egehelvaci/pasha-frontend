@@ -370,6 +370,17 @@ const Header = ({ title, user, className }: HeaderProps) => {
       adminOnly: true,
     },
     {
+      name: 'Çalışan İstatistikleri',
+      href: '/dashboard/calisan-istatistikleri',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+          <path fillRule="evenodd" d="M2.25 13.5a3.75 3.75 0 11.001-7.5 3.75 3.75 0 01-.001 7.5zm15.75-3.75a3.75 3.75 0 11.001-7.5 3.75 3.75 0 01-.001 7.5zM2.25 9.75a1.5 1.5 0 11.001-3 1.5 1.5 0 01-.001 3zm15.75-1.5a1.5 1.5 0 11.001-3 1.5 1.5 0 01-.001 3z" clipRule="evenodd" />
+          <path d="M5.25 14.25v-2.625c0-.621.504-1.125 1.125-1.125H9.75a.75.75 0 01.75.75v2.625c0 .621-.504 1.125-1.125 1.125H6a.75.75 0 01-.75-.75zm6-3v2.625c0 .621.504 1.125 1.125 1.125H18a.75.75 0 01.75.75v-2.625c0-.621-.504-1.125-1.125-1.125H12.375a.75.75 0 01-.75.75z" />
+        </svg>
+      ),
+      adminOnly: true,
+    },
+    {
       name: 'Sepetim',
       href: '/dashboard/sepetim',
       icon: (

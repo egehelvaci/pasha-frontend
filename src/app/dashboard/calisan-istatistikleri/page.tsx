@@ -1,0 +1,324 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { useRouter } from 'next/navigation';
+import { getEmployeeStatistics, getAdminUsers, AdminUser, EmployeeStats, OverallStats, RecentStats, CompletedOrder } from '../../../services/api';
+
+interface EmployeeStatisticsData {
+  employee: EmployeeStats;
+  overallStats: OverallStats;
+  recentStats: RecentStats;
+  completedOrders: CompletedOrder[];
+}
+
+export default function CalisanIstatistikleri() {
+  const { user, isAdmin } = useAuth();
+  const router = useRouter();
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
+  const [statistics, setStatistics] = useState<EmployeeStatisticsData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [employees, setEmployees] = useState<AdminUser[]>([]);
+  const [employeesLoading, setEmployeesLoading] = useState(true);
+
+  // Admin kontrolü
+  useEffect(() => {
+    if (user && !isAdmin) {
+      router.push('/dashboard');
+    }
+  }, [user, isAdmin, router]);
+
+  // Çalışanları getir
+  useEffect(() => {
+    if (isAdmin) {
+      fetchEmployees();
+    }
+  }, [isAdmin]);
+
+  const fetchEmployees = async () => {
+    setEmployeesLoading(true);
+    try {
+      const allUsers = await getAdminUsers();
+      // Sadece userType.id === 4 ve userType.name === 'employee' olan kullanıcıları filtrele
+      const employeeUsers = allUsers.filter(user => 
+        user.userType.id === 4 && user.userType.name === 'employee'
+      );
+      setEmployees(employeeUsers);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Çalışanlar yüklenirken hata oluştu');
+    } finally {
+      setEmployeesLoading(false);
+    }
+  };
+
+  const fetchEmployeeStatistics = async (employeeId: string) => {
+    if (!employeeId) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await getEmployeeStatistics(employeeId);
+      setStatistics(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'İstatistikler yüklenirken hata oluştu');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEmployeeChange = (employeeId: string) => {
+    setSelectedEmployeeId(employeeId);
+    if (employeeId) {
+      fetchEmployeeStatistics(employeeId);
+    } else {
+      setStatistics(null);
+    }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('tr-TR', {
+      style: 'currency',
+      currency: 'TRY',
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('tr-TR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Erişim Reddedildi</h1>
+          <p className="text-gray-600">Bu sayfaya erişim yetkiniz bulunmamaktadır.</p>
+        </div>
+      </div>
+    );
+  }
+
+          return (
+          <div className="min-h-screen bg-gray-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            {/* Başlık */}
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900">Çalışan İstatistikleri</h1>
+              <p className="mt-2 text-gray-600">Çalışanların performans verilerini görüntüleyin</p>
+            </div>
+
+            {/* Çalışan Seçimi */}
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Çalışan Seçimi</h2>
+              
+              {employeesLoading ? (
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  <span className="text-gray-600">Çalışanlar yükleniyor...</span>
+                </div>
+              ) : (
+                <select
+                  value={selectedEmployeeId}
+                  onChange={(e) => handleEmployeeChange(e.target.value)}
+                  className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Çalışan seçin...</option>
+                  {employees.map((employee) => (
+                    <option key={employee.userId} value={employee.userId}>
+                      {employee.name} {employee.surname} ({employee.email})
+                    </option>
+                  ))}
+                </select>
+              )}
+              
+              {employees.length === 0 && !employeesLoading && (
+                <p className="mt-2 text-sm text-gray-500">Henüz çalışan bulunmamaktadır.</p>
+              )}
+            </div>
+
+            {/* Loading */}
+            {loading && (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              </div>
+            )}
+
+            {/* Error */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-800">Hata</h3>
+                    <div className="mt-2 text-sm text-red-700">{error}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* İstatistikler */}
+            {statistics && !loading && (
+              <div className="space-y-6">
+                {/* Çalışan Bilgileri */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Çalışan Bilgileri</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Ad Soyad</p>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {statistics.employee.name} {statistics.employee.surname}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">E-posta</p>
+                      <p className="text-lg font-semibold text-gray-900">{statistics.employee.email}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Telefon</p>
+                      <p className="text-lg font-semibold text-gray-900">{statistics.employee.phoneNumber}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Kullanıcı ID</p>
+                      <p className="text-sm font-semibold text-gray-900">{statistics.employee.userId}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Genel İstatistikler */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Genel İstatistikler</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="text-center">
+                      <p className="text-3xl font-bold text-blue-600">{statistics.overallStats.totalCompletedOrders}</p>
+                      <p className="text-sm text-gray-500">Toplam Tamamlanan Sipariş</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-3xl font-bold text-green-600">{formatCurrency(statistics.overallStats.totalAmount)}</p>
+                      <p className="text-sm text-gray-500">Toplam Tutar</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-3xl font-bold text-purple-600">{statistics.overallStats.totalAreaM2.toFixed(2)} m²</p>
+                      <p className="text-sm text-gray-500">Toplam Alan</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-3xl font-bold text-orange-600">{statistics.overallStats.totalItems}</p>
+                      <p className="text-sm text-gray-500">Toplam Ürün</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Ortalama İstatistikler */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Ortalama İstatistikler</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-blue-600">{formatCurrency(statistics.overallStats.averageAmount)}</p>
+                      <p className="text-sm text-gray-500">Sipariş Başına Ortalama Tutar</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-green-600">{statistics.overallStats.averageAreaM2.toFixed(2)} m²</p>
+                      <p className="text-sm text-gray-500">Sipariş Başına Ortalama Alan</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-purple-600">{statistics.overallStats.averageItems.toFixed(1)}</p>
+                      <p className="text-sm text-gray-500">Sipariş Başına Ortalama Ürün</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Son 30 Gün İstatistikleri */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Son 30 Gün İstatistikleri</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-blue-600">{statistics.recentStats.completedOrders}</p>
+                      <p className="text-sm text-gray-500">Tamamlanan Sipariş</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-green-600">{formatCurrency(statistics.recentStats.totalAmount)}</p>
+                      <p className="text-sm text-gray-500">Toplam Tutar</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-purple-600">{statistics.recentStats.totalAreaM2.toFixed(2)} m²</p>
+                      <p className="text-sm text-gray-500">Toplam Alan</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-orange-600">{statistics.recentStats.totalItems}</p>
+                      <p className="text-sm text-gray-500">Toplam Ürün</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tamamlanan Siparişler */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Tamamlanan Siparişler</h2>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Sipariş ID
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Tamamlanma Tarihi
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Tutar
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Alan (m²)
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Ürün Sayısı
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Durum
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {statistics.completedOrders.map((order) => (
+                          <tr key={order.orderId} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {order.orderId}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {formatDate(order.completedAt)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {formatCurrency(order.totalAmount)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {order.totalAreaM2.toFixed(2)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {order.totalItems}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                {order.orderStatus}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    } 

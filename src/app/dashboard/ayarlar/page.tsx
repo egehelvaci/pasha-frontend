@@ -1188,6 +1188,7 @@ export default function Settings() {
                         {formData.userTypeName === "admin" && "Admin"}
                         {formData.userTypeName === "editor" && "Editör"}
                         {formData.userTypeName === "viewer" && "Görüntüleyici"}
+                        {formData.userTypeName === "employee" && "Çalışan"}
                       </span>
                       <svg 
                         className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${userTypeDropdownOpen ? 'rotate-180' : ''}`}
@@ -1233,6 +1234,17 @@ export default function Settings() {
                           }}
                         >
                           Görüntüleyici
+                        </div>
+                        <div
+                          className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                            formData.userTypeName === "employee" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                          }`}
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, userTypeName: "employee" }));
+                            setUserTypeDropdownOpen(false);
+                          }}
+                        >
+                          Çalışan
                         </div>
                       </div>
                     )}
