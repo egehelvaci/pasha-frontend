@@ -487,6 +487,15 @@ export default function StoresPage() {
                               Düzenle
                             </button>
                             <button
+                              onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/kullanicilar`)}
+                              className="text-orange-600 hover:text-orange-700 flex items-center gap-1 px-3 py-1 rounded-lg hover:bg-orange-50 transition-all"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4H5v8h14v-8h-3z" />
+                              </svg>
+                              Sipariş
+                            </button>
+                            <button
                               onClick={() => {
                                 setSelectedStore(store);
                                 setAssignModalVisible(true);
@@ -610,6 +619,15 @@ export default function StoresPage() {
             Düzenle
                         </button>
                         <button
+                          onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/kullanicilar`)}
+                          className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4H5v8h14v-8h-3z" />
+                          </svg>
+            Sipariş
+                        </button>
+                        <button
             onClick={() => {
                             setSelectedStore(store);
               setAssignModalVisible(true);
@@ -625,7 +643,7 @@ export default function StoresPage() {
                           onClick={() => {
                             setStoreToDelete(store);
               setDeleteModalVisible(true);
-            }}
+                            }}
                           className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

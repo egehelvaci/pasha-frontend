@@ -346,6 +346,247 @@ export interface RemoveUserFromStoreResponse {
   message: string;
 }
 
+export interface StoreUser {
+  user_id: string;
+  username: string;
+  name: string;
+  surname: string;
+  email: string;
+  adres?: string;
+  phone_number?: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface GetStoreUsersResponse {
+  success: boolean;
+  data: StoreUser[];
+  message?: string;
+}
+
+// Admin sipariş oluşturma interface'leri
+export interface AdminOrderCreateRequest {
+  store_id: string;
+  user_id: string;
+}
+
+export interface AdminOrderProduct {
+  productId: string;
+  name: string;
+  description: string;
+  productImage: string;
+  collectionId: string;
+  collectionName: string;
+  pricing: {
+    price: number;
+    currency: string;
+    priceListName: string;
+  };
+  canHaveFringe: boolean;
+  sizeOptions: Array<{
+    id: number;
+    width: number;
+    height: number;
+    is_optional_height: boolean;
+    stockQuantity: number;
+    stockAreaM2: number;
+  }>;
+  cutTypes: Array<{
+    id: number;
+    name: string;
+  }>;
+}
+
+export interface AdminOrderPriceList {
+  price_list_id: string;
+  name: string;
+  description: string;
+  currency: string;
+  limit_amount: number;
+}
+
+export interface AdminOrderCreateData {
+  user: {
+    userId: string;
+    name: string;
+    surname: string;
+    email: string;
+    phoneNumber?: string;
+    adres?: string;
+    userType: string;
+  };
+  store: {
+    store_id: string;
+    kurum_adi: string;
+    vergi_numarasi: string;
+    vergi_dairesi: string;
+    telefon: string;
+    eposta: string;
+    bakiye: number;
+    acik_hesap_tutari: number;
+    limitsiz_acik_hesap: boolean;
+  };
+  priceList: AdminOrderPriceList;
+  products: AdminOrderProduct[];
+  totalProducts: number;
+  availableCollections: string[];
+}
+
+export interface AdminOrderCreateResponse {
+  success: boolean;
+  message: string;
+  data: AdminOrderCreateData;
+}
+
+// Admin sepet sistemi interface'leri
+export interface AdminCartItem {
+  id: number;
+  productId: string;
+  quantity: number;
+  width: number;
+  height: number;
+  area_m2: number;
+  unit_price: number;
+  total_price: number;
+  has_fringe: boolean;
+  cut_type: string;
+  notes?: string;
+  product?: {
+    productId: string;
+    name: string;
+    description: string;
+    productImage: string;
+    collection: {
+      collectionId: string;
+      name: string;
+      code: string;
+    };
+    pricing: {
+      price: number;
+      currency: string;
+    };
+  };
+}
+
+export interface AdminCart {
+  id: number;
+  targetUserId: string;
+  adminUserId: string;
+  storeId: string;
+  items: AdminCartItem[];
+  totalItems: number;
+  totalPrice: number;
+  adminUser: {
+    userId: string;
+    name: string;
+    surname: string;
+  };
+  targetUser: {
+    userId: string;
+    name: string;
+    surname: string;
+  };
+  store: {
+    store_id: string;
+    kurum_adi: string;
+  };
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AddToAdminCartRequest {
+  targetUserId: string;
+  storeId: string;
+  productId: string;
+  quantity: number;
+  width: number;
+  height: number;
+  hasFringe: boolean;
+  cutType: string;
+  notes?: string;
+}
+
+export interface AddToAdminCartResponse {
+  success: boolean;
+  message: string;
+  data: {
+    adminCartItem: AdminCartItem;
+    targetUser: {
+      userId: string;
+      name: string;
+      surname: string;
+      email: string;
+      store: {
+        store_id: string;
+        kurum_adi: string;
+      };
+    };
+    store: {
+      store_id: string;
+      kurum_adi: string;
+    };
+  };
+}
+
+export interface GetAdminCartResponse {
+  success: boolean;
+  message: string;
+  data: {
+    adminCart: AdminCart;
+  };
+}
+
+export interface UpdateAdminCartItemRequest {
+  quantity?: number;
+  width?: number;
+  height?: number;
+  hasFringe?: boolean;
+  cutType?: string;
+  notes?: string;
+}
+
+export interface CreateOrderFromAdminCartRequest {
+  targetUserId: string;
+  storeId: string;
+  notes?: string;
+}
+
+export interface CreateOrderFromAdminCartResponse {
+  success: boolean;
+  message: string;
+  data: {
+    order: {
+      id: string;
+      user_id: string;
+      cart_id: number;
+      total_price: string;
+      status: string;
+      delivery_address: string;
+      store_name: string;
+      store_tax_number: string;
+      store_tax_office: string;
+      store_phone: string;
+      store_email: string;
+      notes?: string;
+      items: AdminCartItem[];
+    };
+    targetUser: {
+      userId: string;
+      name: string;
+      surname: string;
+      email: string;
+      store: {
+        store_id: string;
+        kurum_adi: string;
+      };
+    };
+    requiresPayment: boolean;
+    limitAmount: number;
+    minimumPayment: number | null;
+  };
+}
+
 export const API_BASE_URL = 'https://pasha-backend-production.up.railway.app'; // API sunucusunun adresi
 
 export async function getProducts(): Promise<Product[]> {
@@ -873,6 +1114,226 @@ export async function removeUserFromStore(userId: string): Promise<RemoveUserFro
     return result;
   } catch (error) {
     
+    throw error;
+  }
+}
+
+export async function getStoreUsers(storeId: string): Promise<StoreUser[]> {
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('Token bulunamadı');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/stores/${storeId}/users`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Mağaza kullanıcıları alınırken bir hata oluştu');
+    }
+
+    const data: GetStoreUsersResponse = await response.json();
+    return data.data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function getAdminOrderCreateInfo(request: AdminOrderCreateRequest): Promise<AdminOrderCreateData> {
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('Token bulunamadı');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/orders/create-for-store`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(request)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Sipariş oluşturma bilgileri alınırken bir hata oluştu');
+    }
+
+    const data: AdminOrderCreateResponse = await response.json();
+    return data.data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+// Admin sepet sistemi API fonksiyonları
+export async function addToAdminCart(request: AddToAdminCartRequest): Promise<AddToAdminCartResponse['data']> {
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('Token bulunamadı');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/cart/add-to-admin-cart`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(request)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Ürün admin sepete eklenirken bir hata oluştu');
+    }
+
+    const data: AddToAdminCartResponse = await response.json();
+    return data.data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function getAdminCart(targetUserId: string, storeId: string): Promise<AdminCart> {
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('Token bulunamadı');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/cart/${targetUserId}/${storeId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Admin sepeti alınırken bir hata oluştu');
+    }
+
+    const data: GetAdminCartResponse = await response.json();
+    return data.data.adminCart;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function clearAdminCart(targetUserId: string, storeId: string): Promise<void> {
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('Token bulunamadı');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/cart/${targetUserId}/${storeId}/clear`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Admin sepeti temizlenirken bir hata oluştu');
+    }
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function removeFromAdminCart(targetUserId: string, storeId: string, adminCartItemId: number): Promise<void> {
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('Token bulunamadı');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/cart/${targetUserId}/${storeId}/item/${adminCartItemId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Ürün admin sepetten çıkarılırken bir hata oluştu');
+    }
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function updateAdminCartItem(
+  targetUserId: string, 
+  storeId: string, 
+  adminCartItemId: number, 
+  updates: UpdateAdminCartItemRequest
+): Promise<AdminCartItem> {
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('Token bulunamadı');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/cart/${targetUserId}/${storeId}/item/${adminCartItemId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(updates)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Admin sepet öğesi güncellenirken bir hata oluştu');
+    }
+
+    const data = await response.json();
+    return data.data.adminCartItem;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function createOrderFromAdminCart(request: CreateOrderFromAdminCartRequest): Promise<CreateOrderFromAdminCartResponse['data']> {
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('Token bulunamadı');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/cart/create-order-from-admin-cart`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(request)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Admin sepetinden sipariş oluşturulurken bir hata oluştu');
+    }
+
+    const data: CreateOrderFromAdminCartResponse = await response.json();
+    return data.data;
+  } catch (error) {
     throw error;
   }
 }
