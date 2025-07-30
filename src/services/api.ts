@@ -397,6 +397,18 @@ export interface AdminOrderProduct {
     id: number;
     name: string;
   }>;
+  productvariations?: Array<{
+    id: number;
+    product_id: string;
+    cut_type_id: number | null;
+    has_fringe: boolean;
+    width: number;
+    height: number;
+    stock_quantity: number;
+    stock_area_m2: string;
+    created_at: string;
+    updated_at: string;
+  }>;
 }
 
 export interface AdminOrderPriceList {
