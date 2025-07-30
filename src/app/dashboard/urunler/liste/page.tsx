@@ -136,7 +136,7 @@ export default function ProductList() {
     if ('sizeOptions' in product) {
       // AdminOrderProduct tipinde
       const hasStockResult = product.sizeOptions && product.sizeOptions.length > 0 && 
-        product.sizeOptions.some(option => {
+        product.sizeOptions.some((option: any) => {
           // İsteğe bağlı yükseklik varsa alan bazında kontrol et
           if (option.is_optional_height) {
             return (option.stockAreaM2 || 0) > 0;
