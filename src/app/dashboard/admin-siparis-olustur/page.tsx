@@ -143,6 +143,7 @@ const AdminSiparisOlustur = () => {
   const fetchNormalProducts = async () => {
     try {
       const productList = await getProducts();
+      console.log('Gelen ürünler:', productList);
       setProducts(productList);
       
       // Mock order data oluştur
@@ -371,11 +372,22 @@ const AdminSiparisOlustur = () => {
   const hasStock = (product: AdminOrderProduct | Product) => {
     if ('sizeOptions' in product) {
       // AdminOrderProduct tipinde
-      return product.sizeOptions && product.sizeOptions.length > 0 && 
-        product.sizeOptions.some(option => (option.stockQuantity || 0) > 0);
+      const hasStockResult = product.sizeOptions && product.sizeOptions.length > 0 && 
+        product.sizeOptions.some(option => {
+          // İsteğe bağlı yükseklik varsa alan bazında kontrol et
+          if (option.is_optional_height) {
+            return (option.stockAreaM2 || 0) > 0;
+          }
+          // Normal ürünler için adet bazında kontrol et
+          return (option.stockQuantity || 0) > 0;
+        });
+      console.log(`Ürün ${product.name} stok kontrolü:`, hasStockResult, product.sizeOptions);
+      return hasStockResult;
     } else {
       // Normal Product tipinde
-      return (product.stock || 0) > 0;
+      const hasStockResult = (product.stock || 0) > 0;
+      console.log(`Ürün ${product.name} stok kontrolü:`, hasStockResult, `stok: ${product.stock}`);
+      return hasStockResult;
     }
   };
 
@@ -653,6 +665,18 @@ const AdminSiparisOlustur = () => {
                               <p className="text-sm text-gray-500 mb-2 line-clamp-2">
                                 {product.description}
                               </p>
+                              {/* Stok bilgisi debug */}
+                              <div className="text-xs text-gray-400 mt-1">
+                                {('sizeOptions' in product) ? (
+                                  <span>
+                                    Stok: {product.sizeOptions?.some(opt => 
+                                      opt.is_optional_height ? (opt.stockAreaM2 || 0) > 0 : (opt.stockQuantity || 0) > 0
+                                    ) ? 'Var' : 'Yok'}
+                                  </span>
+                                ) : (
+                                  <span>Stok: {product.stock || 0} adet</span>
+                                )}
+                              </div>
                             </div>
                             
                             <div className="flex items-center gap-2">
