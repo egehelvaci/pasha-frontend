@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { FaTrash } from "react-icons/fa";
@@ -105,6 +105,7 @@ export default function ProductList() {
   const [sortBy, setSortBy] = useState("id_asc");
   const [collections, setCollections] = useState<{collectionId: string, name: string}[]>([]);
   const [selectedCollection, setSelectedCollection] = useState("");
+  const [stockFilter, setStockFilter] = useState("all"); // YENİ - stok filtresi
   const productsFetchedRef = useRef(false);
   const collectionsFetchedRef = useRef(false);
   const router = useRouter();
@@ -125,9 +126,66 @@ export default function ProductList() {
   // Custom dropdown state'leri
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const [collectionFilterDropdownOpen, setCollectionFilterDropdownOpen] = useState(false);
+  const [stockFilterDropdownOpen, setStockFilterDropdownOpen] = useState(false); // YENİ
   
   // Debounce timer için ref
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Stok kontrolü fonksiyonu
+  const hasStock = (product: any): boolean => {
+    if ('sizeOptions' in product) {
+      // AdminOrderProduct tipinde
+      const hasStockResult = product.sizeOptions && product.sizeOptions.length > 0 && 
+        product.sizeOptions.some(option => {
+          // İsteğe bağlı yükseklik varsa alan bazında kontrol et
+          if (option.is_optional_height) {
+            return (option.stockAreaM2 || 0) > 0;
+          }
+          // Sabit yükseklik varsa adet bazında kontrol et
+          return (option.stockQuantity || 0) > 0;
+        });
+      console.log(`Ürün ${product.name} stok kontrolü:`, hasStockResult, product.sizeOptions);
+      return hasStockResult;
+    } else {
+      // Normal Product tipinde
+      const hasStockResult = (product.stock || 0) > 0;
+      console.log(`Ürün ${product.name} stok kontrolü:`, hasStockResult, `stok: ${product.stock}`);
+      return hasStockResult;
+    }
+  };
+
+  // Sıralama için frontend-side sıralama (sayfalı veri olduğu için)
+  const sortedProducts = useMemo(() => {
+    if (!products || products.length === 0) return [];
+    return [...products].sort((a, b) => {
+      switch (sortBy) {
+        case "id_asc":
+          return a.productId.localeCompare(b.productId);
+        case "id_desc":
+          return b.productId.localeCompare(a.productId);
+        case "name_asc":
+          return a.name.localeCompare(b.name);
+        case "name_desc":
+          return b.name.localeCompare(a.name);
+        case "date_asc":
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case "date_desc":
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        default:
+          return 0;
+      }
+    });
+  }, [products, sortBy]);
+
+  // Stok filtresine göre ürünleri filtrele
+  const filteredProducts = useMemo(() => {
+    return sortedProducts.filter(product => {
+      if (stockFilter === "all") return true;
+      if (stockFilter === "inStock") return hasStock(product);
+      if (stockFilter === "outOfStock") return !hasStock(product);
+      return true;
+    });
+  }, [sortedProducts, stockFilter]);
 
   useEffect(() => {
     if (!productsFetchedRef.current) {
@@ -150,6 +208,7 @@ export default function ProductList() {
       if (!target.closest('.dropdown-container')) {
         setSortDropdownOpen(false);
         setCollectionFilterDropdownOpen(false);
+        setStockFilterDropdownOpen(false); // YENİ
       }
     };
 
@@ -183,6 +242,56 @@ export default function ProductList() {
     setCurrentPage(1);
     fetchProducts(1, searchTerm, selectedCollection);
   }, [selectedCollection]);
+
+  // Stok filtresi değiştiğinde
+  useEffect(() => {
+    if (stockFilter === "all") {
+      // Stok filtresi "all" ise normal sayfalama ile çalış
+      fetchProducts(1, searchTerm, selectedCollection);
+    } else {
+      // Stok filtresi aktifse tüm ürünleri getir
+      fetchAllProducts(searchTerm, selectedCollection);
+    }
+  }, [stockFilter, searchTerm, selectedCollection]);
+
+  // Tüm ürünleri getiren fonksiyon (stok filtresi için)
+  const fetchAllProducts = async (searchQuery: string = '', collectionId: string = '') => {
+    try {
+      setLoading(true);
+      const authToken = token;
+      
+      const params = new URLSearchParams({
+        limit: '1000', // Tüm ürünleri getir
+        page: '1',
+        ...(searchQuery && { search: searchQuery }),
+        ...(collectionId && { collectionId: collectionId })
+      });
+      
+      const response = await fetch(`${API_BASE_URL}/api/products?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        setProducts(result.data);
+        setPagination(null); // Sayfalama bilgisini temizle
+        setCurrentPage(1);
+      } else {
+        console.error('Ürünler yüklenemedi:', result.message);
+        setProducts([]);
+        setPagination(null);
+      }
+    } catch (error) {
+      console.error('API hatası:', error);
+      setProducts([]);
+      setPagination(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Optimizasyonlu ürün getirme fonksiyonu
   const fetchProducts = async (page: number = 1, searchQuery: string = '', collectionId: string = '') => {
@@ -259,26 +368,6 @@ export default function ProductList() {
   const handlePageChange = (newPage: number, search: string = searchTerm, collectionId: string = selectedCollection) => {
     fetchProducts(newPage, search, collectionId);
   };
-
-  // Sıralama için frontend-side sıralama (sayfalı veri olduğu için)
-  const sortedProducts = [...products].sort((a, b) => {
-    switch (sortBy) {
-      case "id_asc":
-        return a.productId.localeCompare(b.productId);
-      case "id_desc":
-        return b.productId.localeCompare(a.productId);
-      case "name_asc":
-        return a.name.localeCompare(b.name);
-      case "name_desc":
-        return b.name.localeCompare(a.name);
-      case "date_asc":
-        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      case "date_desc":
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      default:
-        return 0;
-    }
-  });
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -1791,7 +1880,7 @@ export default function ProductList() {
                       <button
                         type="button"
                         onClick={() => setRuleDropdownOpen(!ruleDropdownOpen)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left bg-white"
                       >
                         <span className={form.rule_id ? "text-gray-900" : "text-gray-500"}>
                           {form.rule_id 
@@ -2190,6 +2279,71 @@ export default function ProductList() {
               </div>
             </div>
             
+            <div className="w-full md:w-auto dropdown-container">
+              <label htmlFor="stock-filter" className="block text-sm font-medium text-gray-700 mb-1">
+                Stok Durumu
+              </label>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setStockFilterDropdownOpen(!stockFilterDropdownOpen)}
+                  className="w-full md:w-80 lg:w-96 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all text-left bg-white text-sm"
+                >
+                  <span className={stockFilter !== "all" ? "text-gray-900" : "text-gray-500"}>
+                    {stockFilter === "inStock" ? "Stokta Olanlar" :
+                     stockFilter === "outOfStock" ? "Stokta Olmayanlar" :
+                     "Tüm Ürünler"}
+                  </span>
+                  <svg 
+                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${stockFilterDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {stockFilterDropdownOpen && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                    <div
+                      className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                        stockFilter === "all" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      }`}
+                      onClick={() => {
+                        setStockFilter("all");
+                        setStockFilterDropdownOpen(false);
+                      }}
+                    >
+                      Tüm Ürünler
+                    </div>
+                    <div
+                      className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                        stockFilter === "inStock" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      }`}
+                      onClick={() => {
+                        setStockFilter("inStock");
+                        setStockFilterDropdownOpen(false);
+                      }}
+                    >
+                      Stokta Olanlar
+                    </div>
+                    <div
+                      className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                        stockFilter === "outOfStock" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      }`}
+                      onClick={() => {
+                        setStockFilter("outOfStock");
+                        setStockFilterDropdownOpen(false);
+                      }}
+                    >
+                      Stokta Olmayanlar
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
             <div className="w-full md:w-auto">
               <label htmlFor="search-input" className="block text-sm font-medium text-gray-700 mb-1">
                 Ara
@@ -2222,13 +2376,14 @@ export default function ProductList() {
               </div>
             </div>
             
-            {(search || selectedCollection) && (
+            {(search || selectedCollection || stockFilter !== "all") && (
               <div className="w-full md:w-auto flex items-end">
                 <button
                   className="px-4 py-2 border border-gray-300 rounded-md text-gray-600 hover:bg-gray-50"
                   onClick={() => {
                     setSearch("");
                     setSelectedCollection("");
+                    setStockFilter("all");
                   }}
                 >
                   Filtreleri Temizle
@@ -2242,7 +2397,7 @@ export default function ProductList() {
       <div className="bg-white rounded-lg">
         {loading ? (
           <LoadingSpinner />
-        ) : sortedProducts.length === 0 ? (
+        ) : filteredProducts.length === 0 ? (
           <div className="py-16 text-center">
             <svg 
               className="mx-auto h-12 w-12 text-gray-400" 
@@ -2267,27 +2422,42 @@ export default function ProductList() {
           </div>
         ) : (
           <>
-            {(searchTerm || selectedCollection) && pagination && (
+            {(searchTerm || selectedCollection || stockFilter !== "all") && (
               <div className="p-4 border-b text-sm text-gray-600">
-                <span className="font-medium">{pagination.total}</span> adet ürün bulundu 
+                <span className="font-medium">{filteredProducts.length}</span> adet ürün gösteriliyor 
                 {searchTerm && <span> (arama: <span className="italic">"{searchTerm}"</span>)</span>}
                 {selectedCollection && (
                   <span> (koleksiyon: <span className="font-medium">{collections.find(c => c.collectionId === selectedCollection)?.name || selectedCollection}</span>)</span>
                 )}
-                <span className="ml-2 text-xs text-gray-500">
-                  (Sayfa {pagination.page}/{pagination.totalPages})
-                </span>
+                {stockFilter !== "all" && (
+                  <span> (stok: <span className="font-medium">
+                    {stockFilter === "inStock" ? "Stokta olanlar" : "Stokta olmayanlar"}
+                  </span>)</span>
+                )}
+                {pagination && stockFilter === "all" && (
+                  <span className="ml-2 text-xs text-gray-500">
+                    (Toplam {pagination.total} ürün, Sayfa {pagination.page}/{pagination.totalPages})
+                  </span>
+                )}
+                {stockFilter !== "all" && (
+                  <span className="ml-2 text-xs text-gray-500">
+                    (Tüm ürünler arasından filtrelendi)
+                  </span>
+                )}
               </div>
             )}
             <div className="flex flex-wrap justify-center lg:justify-start gap-6 p-6">
-              {sortedProducts.map((product) => {
+              {filteredProducts.map((product) => {
                 // Ürünün boyut seçeneklerinde is_optional_height true olan varsa kesim ürünü
                 const hasOptionalHeight = product.sizeOptions && product.sizeOptions.some((size: any) => size.is_optional_height === true);
                 const isCustomCut = hasOptionalHeight;
                 const statusText = isCustomCut ? 'KESİM' : 'HAZIR';
+                const productHasStock = hasStock(product);
                 
                 return (
-                  <div key={product.productId} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow relative cursor-pointer" style={{ width: '350px', height: '550px' }}
+                  <div key={product.productId} 
+                       className={`border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow relative cursor-pointer ${productHasStock ? 'bg-white' : 'bg-gray-100'}`} 
+                       style={{ width: '350px', height: '550px' }}
                        onClick={() => router.push(`/dashboard/urunler/${product.productId}`)}>
                     {/* Koleksiyon adı - sol üst */}
                     <div className="absolute top-3 left-3 z-10">
@@ -2310,32 +2480,53 @@ export default function ProductList() {
                         alt={product.name} 
                         width={350}
                         height={400}
-                        className="w-full h-full object-contain p-3" 
+                        className={`w-full h-full object-contain p-3 ${!productHasStock ? 'grayscale opacity-50' : ''}`} 
                       />
+                      {/* Stok durumu badge */}
+                      {!productHasStock && (
+                        <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded-md font-medium">
+                          Stok Yok
+                        </div>
+                      )}
                     </div>
                     
                     {/* Ürün bilgileri - kompakt alan */}
                     <div className="p-4 h-[150px] flex flex-col justify-between">
                       <div className="flex-1">
-                        <h3 className="text-black font-medium text-sm mb-2 line-clamp-2">
+                        <h3 className={`font-medium text-sm mb-2 line-clamp-2 ${productHasStock ? 'text-black' : 'text-gray-500'}`}>
                           {statusText} {product.name}
                         </h3>
+                        {/* Stok bilgisi */}
+                        <div className="text-xs text-gray-500 mb-2">
+                          {productHasStock ? (
+                            <span className="text-green-600">✓ Stokta</span>
+                          ) : (
+                            <span className="text-red-600">✗ Stokta değil</span>
+                          )}
+                        </div>
                       </div>
                       
                       <div className="flex items-center gap-2">
                         <button 
-                          className="flex-1 px-3 py-2 bg-green-600 text-white rounded-md flex items-center justify-center gap-2 text-sm shadow-sm hover:bg-green-700 transition-colors font-semibold"
+                          className={`flex-1 px-3 py-2 rounded-md flex items-center justify-center gap-2 text-sm shadow-sm transition-colors font-semibold ${
+                            productHasStock 
+                              ? 'bg-green-600 text-white hover:bg-green-700' 
+                              : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                          }`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSelectedProductId(product.productId);
-                            setDetailModalOpen(true);
+                            if (productHasStock) {
+                              setSelectedProductId(product.productId);
+                              setDetailModalOpen(true);
+                            }
                           }}
-                          title="Sepete Ekle"
+                          title={productHasStock ? "Sepete Ekle" : "Stokta olmayan ürün"}
+                          disabled={!productHasStock}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                           </svg>
-                          Sepete Ekle
+                          {productHasStock ? 'Sepete Ekle' : 'Stok Yok'}
                         </button>
                         {isAdmin && (
                           <button 
@@ -2404,8 +2595,8 @@ export default function ProductList() {
           }}
         />
       )}
-      {/* Sayfalama artık yukarıda yapılıyor */}
-      {pagination && (
+      {/* Sayfalama - stok filtresi aktifken gizle */}
+      {pagination && stockFilter === "all" && (
         <Pagination 
           pagination={pagination} 
           onPageChange={handlePageChange} 
