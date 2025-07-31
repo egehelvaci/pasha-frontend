@@ -1023,7 +1023,7 @@ const AdminSiparisOlustur = () => {
                                         return `${productForm.width}x${displayHeight} cm (Stok: ${selectedOption.is_optional_height ? `${(selectedOption.stockAreaM2 || 0).toFixed(1)} m²` : `${selectedOption.stockQuantity || 0} adet`})`;
                                       }
                                     }
-                                    return `${productForm.width}x${(productForm.height || 100).toFixed(2)} cm (Stok: ${('stock' in selectedProduct ? selectedProduct.stock : 0) || 0} adet)`;
+                                    return `${productForm.width}x${(typeof productForm.height === 'string' ? (parseFloat(productForm.height) || 100) : (productForm.height || 100)).toFixed(2)} cm (Stok: ${('stock' in selectedProduct ? selectedProduct.stock : 0) || 0} adet)`;
                                   })()
                                 : "Boyut Seçin"
                               }
@@ -1305,7 +1305,7 @@ const AdminSiparisOlustur = () => {
                             type="button"
                             className="mt-2 w-full py-3 bg-[#00365a] text-white rounded-md font-semibold flex items-center justify-center disabled:opacity-70 hover:bg-[#004170] transition-colors"
                             onClick={handleAddToAdminCart}
-                            disabled={!productForm.width || (!productForm.height && !(('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions.find((s: any) => s.width === productForm.width && s.is_optional_height) : false)) || !productForm.cutType || productForm.quantity < 1 || (typeof productForm.height === 'string' && productForm.height && parseFloat(productForm.height) < 10)}
+                            disabled={!productForm.width || (!productForm.height && !(('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions.find((s: any) => s.width === productForm.width && s.is_optional_height) : false)) || !productForm.cutType || productForm.quantity < 1 || (typeof productForm.height === 'string' && productForm.height !== '' && parseFloat(productForm.height) < 10)}
                           >
                             Sepete Ekle
                           </button>
