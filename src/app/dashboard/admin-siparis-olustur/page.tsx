@@ -45,12 +45,14 @@ const AdminSiparisOlustur = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCollection, setSelectedCollection] = useState('all');
   const [collectionDropdownOpen, setCollectionDropdownOpen] = useState(false);
+  const [stockFilter, setStockFilter] = useState('all');
+  const [stockFilterDropdownOpen, setStockFilterDropdownOpen] = useState(false);
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<AdminOrderProduct | Product | null>(null);
   const [productForm, setProductForm] = useState({
     quantity: 1,
     width: 80,
-    height: 100,
+    height: 100 as number | string,
     hasFringe: false,
     cutType: '',
     notes: ''
@@ -84,6 +86,7 @@ const AdminSiparisOlustur = () => {
       const target = event.target as Element;
       if (!target.closest('.dropdown-container')) {
         setCollectionDropdownOpen(false);
+        setStockFilterDropdownOpen(false);
         setSizeDropdownOpen(false);
         setCutTypeDropdownOpen(false);
       }
@@ -199,6 +202,43 @@ const AdminSiparisOlustur = () => {
     }
   };
 
+  // Stok kontrolü fonksiyonu
+  const hasStock = (product: AdminOrderProduct | Product) => {
+    if ('sizeOptions' in product) {
+      // AdminOrderProduct tipinde
+      let hasStockResult = false;
+      
+      // Önce sizeOptions içindeki stockAreaM2 ve stockQuantity'yi kontrol et
+      if (product.sizeOptions && product.sizeOptions.length > 0) {
+        hasStockResult = product.sizeOptions.some(option => {
+          const hasAreaStock = (option.stockAreaM2 || 0) > 0;
+          const hasQuantityStock = (option.stockQuantity || 0) > 0;
+          return hasAreaStock || hasQuantityStock;
+        });
+      }
+      
+      // Eğer sizeOptions'da stok yoksa, productvariations'ı kontrol et
+      if (!hasStockResult && product.productvariations && product.productvariations.length > 0) {
+        hasStockResult = product.productvariations.some((variation: any) => {
+          const hasAreaStock = parseFloat(variation.stock_area_m2 || 0) > 0;
+          const hasQuantityStock = (variation.stock_quantity || 0) > 0;
+          return hasAreaStock || hasQuantityStock;
+        });
+      }
+      
+      console.log(`Ürün ${product.name} stok kontrolü:`, hasStockResult, {
+        sizeOptions: product.sizeOptions,
+        productvariations: product.productvariations
+      });
+      return hasStockResult;
+    } else {
+      // Normal Product tipinde
+      const hasStockResult = (product.stock || 0) > 0;
+      console.log(`Ürün ${product.name} stok kontrolü:`, hasStockResult, `stok: ${product.stock}`);
+      return hasStockResult;
+    }
+  };
+
   // Filtreleme
   const filteredProducts = (orderData?.products && orderData.products.length > 0)
     ? orderData.products.filter(product => {
@@ -211,7 +251,11 @@ const AdminSiparisOlustur = () => {
         const matchesCollection = selectedCollection === 'all' || 
           product.collectionName === selectedCollection;
         
-        return matchesSearch && matchesCollection;
+        const matchesStock = stockFilter === 'all' || 
+          (stockFilter === 'inStock' && hasStock(product)) ||
+          (stockFilter === 'outOfStock' && !hasStock(product));
+        
+        return matchesSearch && matchesCollection && matchesStock;
       })
     : products.filter(product => {
         const searchTermUpper = searchTerm.trim().toUpperCase();
@@ -223,7 +267,11 @@ const AdminSiparisOlustur = () => {
         const matchesCollection = selectedCollection === 'all' || 
           product.collection?.name === selectedCollection;
         
-        return matchesSearch && matchesCollection;
+        const matchesStock = stockFilter === 'all' || 
+          (stockFilter === 'inStock' && hasStock(product)) ||
+          (stockFilter === 'outOfStock' && !hasStock(product));
+        
+        return matchesSearch && matchesCollection && matchesStock;
       });
 
   const handleAddToAdminCart = async () => {
@@ -244,7 +292,7 @@ const AdminSiparisOlustur = () => {
           productId: selectedProduct.productId,
           quantity: productForm.quantity,
           width: productForm.width,
-          height: productForm.height,
+          height: typeof productForm.height === 'string' ? (parseFloat(productForm.height) || 100) : (productForm.height || 100),
           hasFringe: productForm.hasFringe,
           cutType: productForm.cutType,
           notes: productForm.notes
@@ -257,7 +305,7 @@ const AdminSiparisOlustur = () => {
           productId: selectedProduct.productId,
           quantity: productForm.quantity,
           width: productForm.width,
-          height: productForm.height,
+          height: typeof productForm.height === 'string' ? (parseFloat(productForm.height) || 100) : (productForm.height || 100),
           hasFringe: productForm.hasFringe,
           cutType: productForm.cutType,
           notes: productForm.notes
@@ -273,7 +321,7 @@ const AdminSiparisOlustur = () => {
       setProductForm({
         quantity: 1,
         width: 80,
-        height: 100,
+        height: '',
         hasFringe: false,
         cutType: '',
         notes: ''
@@ -290,7 +338,7 @@ const AdminSiparisOlustur = () => {
     setProductForm({
       quantity: 1,
       width: isAdminProduct ? product.sizeOptions[0]?.width || 80 : product.width || 80,
-      height: isAdminProduct ? product.sizeOptions[0]?.height || 100 : product.height || 100,
+      height: isAdminProduct ? (product.sizeOptions[0]?.is_optional_height ? '' : product.sizeOptions[0]?.height || 100) : product.height || 100,
       hasFringe: isAdminProduct ? product.canHaveFringe : false,
       cutType: isAdminProduct ? product.cutTypes[0]?.name || 'standart' : 'standart',
       notes: ''
@@ -366,43 +414,6 @@ const AdminSiparisOlustur = () => {
 
   const getTotalPrice = () => {
     return adminCart?.totalPrice || 0;
-  };
-
-  // Stok kontrolü fonksiyonu
-  const hasStock = (product: AdminOrderProduct | Product) => {
-    if ('sizeOptions' in product) {
-      // AdminOrderProduct tipinde
-      let hasStockResult = false;
-      
-      // Önce sizeOptions içindeki stockAreaM2 ve stockQuantity'yi kontrol et
-      if (product.sizeOptions && product.sizeOptions.length > 0) {
-        hasStockResult = product.sizeOptions.some(option => {
-          const hasAreaStock = (option.stockAreaM2 || 0) > 0;
-          const hasQuantityStock = (option.stockQuantity || 0) > 0;
-          return hasAreaStock || hasQuantityStock;
-        });
-      }
-      
-      // Eğer sizeOptions'da stok yoksa, productvariations'ı kontrol et
-      if (!hasStockResult && product.productvariations && product.productvariations.length > 0) {
-        hasStockResult = product.productvariations.some((variation: any) => {
-          const hasAreaStock = parseFloat(variation.stock_area_m2 || 0) > 0;
-          const hasQuantityStock = (variation.stock_quantity || 0) > 0;
-          return hasAreaStock || hasQuantityStock;
-        });
-      }
-      
-      console.log(`Ürün ${product.name} stok kontrolü:`, hasStockResult, {
-        sizeOptions: product.sizeOptions,
-        productvariations: product.productvariations
-      });
-      return hasStockResult;
-    } else {
-      // Normal Product tipinde
-      const hasStockResult = (product.stock || 0) > 0;
-      console.log(`Ürün ${product.name} stok kontrolü:`, hasStockResult, `stok: ${product.stock}`);
-      return hasStockResult;
-    }
   };
 
   // Loading state
@@ -543,8 +554,8 @@ const AdminSiparisOlustur = () => {
                 </svg>
                 <h3 className="text-lg font-semibold text-[#00365a]">Filtreler</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="min-w-0">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Arama</label>
                   <div className="relative">
                     <input
@@ -560,7 +571,7 @@ const AdminSiparisOlustur = () => {
                     </svg>
                   </div>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Koleksiyon</label>
                   <div className="relative dropdown-container">
                     <button
@@ -608,6 +619,68 @@ const AdminSiparisOlustur = () => {
                             {collection}
                           </div>
                         ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="min-w-0">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Stok Durumu</label>
+                  <div className="relative dropdown-container">
+                    <button
+                      type="button"
+                      onClick={() => setStockFilterDropdownOpen(!stockFilterDropdownOpen)}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors text-left bg-white"
+                    >
+                      <span className="text-gray-900">
+                        {stockFilter === 'all' ? 'Tüm Ürünler' : 
+                         stockFilter === 'inStock' ? 'Stokta Olanlar' : 
+                         stockFilter === 'outOfStock' ? 'Stokta Olmayanlar' : 'Stok Durumu'}
+                      </span>
+                      <svg 
+                        className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${stockFilterDropdownOpen ? 'rotate-180' : ''}`}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    {stockFilterDropdownOpen && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                        <div
+                          className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                            stockFilter === 'all' ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                          }`}
+                          onClick={() => {
+                            setStockFilter('all');
+                            setStockFilterDropdownOpen(false);
+                          }}
+                        >
+                          Tüm Ürünler
+                        </div>
+                        <div
+                          className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                            stockFilter === 'inStock' ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                          }`}
+                          onClick={() => {
+                            setStockFilter('inStock');
+                            setStockFilterDropdownOpen(false);
+                          }}
+                        >
+                          Stokta Olanlar
+                        </div>
+                        <div
+                          className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                            stockFilter === 'outOfStock' ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                          }`}
+                          onClick={() => {
+                            setStockFilter('outOfStock');
+                            setStockFilterDropdownOpen(false);
+                          }}
+                        >
+                          Stokta Olmayanlar
+                        </div>
                       </div>
                     )}
                   </div>
@@ -938,18 +1011,19 @@ const AdminSiparisOlustur = () => {
                             onClick={() => setSizeDropdownOpen(!sizeDropdownOpen)}
                             className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                           >
-                            <span className={productForm.width && productForm.height ? "text-gray-900" : "text-gray-500"}>
-                              {productForm.width && productForm.height 
+                            <span className={productForm.width ? "text-gray-900" : "text-gray-500"}>
+                              {productForm.width 
                                 ? (() => {
                                     if ('sizeOptions' in selectedProduct) {
                                       const selectedOption = selectedProduct.sizeOptions.find((opt: any) => 
-                                        opt.width === productForm.width && opt.height === productForm.height
+                                        opt.width === productForm.width
                                       );
                                       if (selectedOption) {
-                                        return `${productForm.width}x${selectedOption.is_optional_height ? 'İsteğe Bağlı' : productForm.height} cm (Stok: ${selectedOption.is_optional_height ? `${(selectedOption.stockAreaM2 || 0).toFixed(1)} m²` : `${selectedOption.stockQuantity || 0} adet`})`;
+                                        const displayHeight = selectedOption.is_optional_height ? (productForm.height ? `${productForm.height} cm` : 'İsteğe Bağlı') : (typeof productForm.height === 'string' ? (parseFloat(productForm.height) || 100) : (productForm.height || 100));
+                                        return `${productForm.width}x${displayHeight} cm (Stok: ${selectedOption.is_optional_height ? `${(selectedOption.stockAreaM2 || 0).toFixed(1)} m²` : `${selectedOption.stockQuantity || 0} adet`})`;
                                       }
                                     }
-                                    return `${productForm.width}x${productForm.height} cm (Stok: ${('stock' in selectedProduct ? selectedProduct.stock : 0) || 0} adet)`;
+                                    return `${productForm.width}x${(productForm.height || 100).toFixed(2)} cm (Stok: ${('stock' in selectedProduct ? selectedProduct.stock : 0) || 0} adet)`;
                                   })()
                                 : "Boyut Seçin"
                               }
@@ -969,7 +1043,7 @@ const AdminSiparisOlustur = () => {
                               <div 
                                 className="px-3 py-2 text-gray-500 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
                                 onClick={() => {
-                                  setProductForm(prev => ({ ...prev, width: 0, height: 0 }));
+                                  setProductForm(prev => ({ ...prev, width: 0, height: '' }));
                                   setSizeDropdownOpen(false);
                                 }}
                               >
@@ -979,13 +1053,13 @@ const AdminSiparisOlustur = () => {
                                 <div
                                   key={option.id}
                                   className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                    `${option.width}x${option.height}` === `${productForm.width}x${productForm.height}` ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                    option.width === productForm.width ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
                                   }`}
                                   onClick={() => {
                                     setProductForm(prev => ({ 
                                       ...prev, 
                                       width: option.width, 
-                                      height: option.height 
+                                      height: option.is_optional_height ? '' : option.height 
                                     }));
                                     setSizeDropdownOpen(false);
                                   }}
@@ -1001,7 +1075,7 @@ const AdminSiparisOlustur = () => {
                                     setProductForm(prev => ({ 
                                       ...prev, 
                                       width: selectedProduct.width, 
-                                      height: selectedProduct.height 
+                                      height: selectedProduct.height || ''
                                     }));
                                     setSizeDropdownOpen(false);
                                   }}
@@ -1013,7 +1087,7 @@ const AdminSiparisOlustur = () => {
                           )}
                         </div>
                         
-                        {productForm.width && productForm.height && (('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions.find((s: any) => s.width === productForm.width && s.is_optional_height) : false) && (
+                        {productForm.width && (('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions.find((s: any) => s.width === productForm.width && s.is_optional_height) : false) && (
                           <div className="mt-2">
                             <label className="text-sm text-gray-500 block mb-1">Özel Yükseklik (cm)</label>
                             <div className="flex items-center gap-2">
@@ -1024,21 +1098,12 @@ const AdminSiparisOlustur = () => {
                                 value={productForm.height}
                                 onChange={(e) => {
                                   const value = e.target.value;
-                                  if (value === '') {
-                                    setProductForm(prev => ({ ...prev, height: 0 }));
-                                  } else {
-                                    const numValue = Number(value);
-                                    if (numValue >= 10) {
-                                      setProductForm(prev => ({ ...prev, height: numValue }));
-                                    } else if (value.length <= 1) {
-                                      setProductForm(prev => ({ ...prev, height: Number(value) }));
-                                    }
-                                  }
+                                  setProductForm(prev => ({ ...prev, height: value }));
                                 }}
                                 onBlur={(e) => {
                                   const value = e.target.value;
                                   if (value === '' || Number(value) < 10) {
-                                    setProductForm(prev => ({ ...prev, height: 100 }));
+                                    setProductForm(prev => ({ ...prev, height: '' }));
                                   }
                                 }}
                                 className="border rounded-md p-2 text-black w-24"
@@ -1046,7 +1111,7 @@ const AdminSiparisOlustur = () => {
                               <span className="text-sm text-gray-500">cm</span>
                             </div>
                             <span className="text-xs text-gray-500 block mt-1">
-                              {productForm.width}x{productForm.height} cm olarak hesaplanacak
+                              {productForm.width}x{typeof productForm.height === 'string' ? (parseFloat(productForm.height) || 100) : (productForm.height || 100)} cm olarak hesaplanacak
                             </span>
                           </div>
                         )}
@@ -1162,15 +1227,20 @@ const AdminSiparisOlustur = () => {
                         <div className="flex justify-between items-center">
                           <span className="text-sm font-medium text-blue-900">Toplam Tutar</span>
                           <span className="text-lg font-bold text-blue-900">
-                            {('pricing' in selectedProduct) ? 
-                              `${(selectedProduct.pricing.price * (productForm.width * productForm.height / 10000) * productForm.quantity).toFixed(2)} ${selectedProduct.pricing.currency}` :
+                            {('pricing' in selectedProduct) && productForm.width && (productForm.height || (('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions.find((s: any) => s.width === productForm.width && s.is_optional_height) : false)) ? 
+                              (() => {
+                                const height = typeof productForm.height === 'string' ? parseFloat(productForm.height) || 100 : (productForm.height || 100);
+                                const areaM2 = (productForm.width * height) / 10000;
+                                const totalPrice = selectedProduct.pricing.price * areaM2 * productForm.quantity;
+                                return `${totalPrice.toFixed(2)} ${selectedProduct.pricing.currency}`;
+                              })() :
                               'Fiyat hesaplanamıyor'
                             }
                           </span>
                         </div>
-                        {productForm.width && productForm.height && (
+                        {productForm.width && (productForm.height || (('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions.find((s: any) => s.width === productForm.width && s.is_optional_height) : false)) && (
                           <div className="text-xs mt-1 text-blue-700">
-                            {productForm.width} cm genişlik × {productForm.height} cm yükseklik × {productForm.quantity} adet için hesaplandı
+                            {productForm.width} cm genişlik × {typeof productForm.height === 'string' ? (parseFloat(productForm.height) || 100) : (productForm.height || 100)} cm yükseklik × {productForm.quantity} adet için hesaplandı
                           </div>
                         )}
                       </div>
@@ -1235,7 +1305,7 @@ const AdminSiparisOlustur = () => {
                             type="button"
                             className="mt-2 w-full py-3 bg-[#00365a] text-white rounded-md font-semibold flex items-center justify-center disabled:opacity-70 hover:bg-[#004170] transition-colors"
                             onClick={handleAddToAdminCart}
-                            disabled={!productForm.width || !productForm.height || !productForm.cutType || productForm.quantity < 1}
+                            disabled={!productForm.width || (!productForm.height && !(('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions.find((s: any) => s.width === productForm.width && s.is_optional_height) : false)) || !productForm.cutType || productForm.quantity < 1 || (typeof productForm.height === 'string' && productForm.height && parseFloat(productForm.height) < 10)}
                           >
                             Sepete Ekle
                           </button>
