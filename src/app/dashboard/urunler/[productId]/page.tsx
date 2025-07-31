@@ -42,6 +42,43 @@ export default function ProductDetail() {
   const [cutTypeDropdownOpen, setCutTypeDropdownOpen] = useState(false);
   const [fringeDropdownOpen, setFringeDropdownOpen] = useState(false);
 
+  // Stok kontrolü fonksiyonu
+  const hasStock = (product: any): boolean => {
+    if ('sizeOptions' in product) {
+      // AdminOrderProduct tipinde
+      let hasStockResult = false;
+      
+      // Önce sizeOptions içindeki stockAreaM2 ve stockQuantity'yi kontrol et
+      if (product.sizeOptions && product.sizeOptions.length > 0) {
+        hasStockResult = product.sizeOptions.some((option: any) => {
+          const hasAreaStock = (option.stockAreaM2 || 0) > 0;
+          const hasQuantityStock = (option.stockQuantity || 0) > 0;
+          return hasAreaStock || hasQuantityStock;
+        });
+      }
+      
+      // Eğer sizeOptions'da stok yoksa, productvariations'ı kontrol et
+      if (!hasStockResult && product.productvariations && product.productvariations.length > 0) {
+        hasStockResult = product.productvariations.some((variation: any) => {
+          const hasAreaStock = parseFloat(variation.stock_area_m2 || 0) > 0;
+          const hasQuantityStock = (variation.stock_quantity || 0) > 0;
+          return hasAreaStock || hasQuantityStock;
+        });
+      }
+      
+      console.log(`Ürün ${product.name} stok kontrolü:`, hasStockResult, {
+        sizeOptions: product.sizeOptions,
+        productvariations: product.productvariations
+      });
+      return hasStockResult;
+    } else {
+      // Normal Product tipinde
+      const hasStockResult = (product.stock || 0) > 0;
+      console.log(`Ürün ${product.name} stok kontrolü:`, hasStockResult, `stok: ${product.stock}`);
+      return hasStockResult;
+    }
+  };
+
   useEffect(() => {
     if (!productFetchedRef.current) {
       productFetchedRef.current = true;
@@ -751,9 +788,13 @@ export default function ProductDetail() {
                 
                 <button
                   type="button"
-                  className="w-full py-4 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-semibold flex items-center justify-center gap-3 hover:from-green-700 hover:to-green-800 transition-all duration-200 disabled:opacity-70 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+                  className={`w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-3 transition-all duration-200 disabled:opacity-70 shadow-lg hover:shadow-xl transform hover:scale-[1.02] ${
+                    product && !hasStock(product)
+                      ? 'bg-gray-400 text-gray-600 cursor-not-allowed hover:bg-gray-400'
+                      : 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800'
+                  }`}
                   onClick={addToCart}
-                  disabled={addToCartLoading || !selectedSize || !selectedCutType}
+                  disabled={addToCartLoading || !selectedSize || !selectedCutType || (product && !hasStock(product))}
                 >
                   {addToCartLoading ? (
                     <>
@@ -768,7 +809,7 @@ export default function ProductDetail() {
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                       </svg>
-                      Sepete Ekle
+                      {product && !hasStock(product) ? 'Stok Yok' : 'Sepete Ekle'}
                     </>
                   )}
                 </button>

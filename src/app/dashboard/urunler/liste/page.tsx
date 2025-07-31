@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { FaTrash } from "react-icons/fa";
 import { useAuth } from '@/app/context/AuthContext';
@@ -17,54 +17,92 @@ const Pagination = ({ pagination, onPageChange, searchTerm = '', collectionId = 
   searchTerm?: string;
   collectionId?: string;
 }) => {
-  if (!pagination) return null;
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const handlePageChange = (page: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', page.toString());
+    if (searchTerm) params.set('search', searchTerm);
+    if (collectionId) params.set('collection', collectionId);
+    
+    router.push(`/dashboard/urunler/liste?${params.toString()}`);
+    onPageChange(page, searchTerm, collectionId);
+  };
+
+  if (!pagination || pagination.totalPages <= 1) return null;
+
+  const pages = [];
+  const maxVisiblePages = 5;
+  let startPage = Math.max(1, pagination.page - Math.floor(maxVisiblePages / 2));
+  let endPage = Math.min(pagination.totalPages, startPage + maxVisiblePages - 1);
+
+  if (endPage - startPage + 1 < maxVisiblePages) {
+    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+  }
+
+  for (let i = startPage; i <= endPage; i++) {
+    pages.push(i);
+  }
 
   return (
-    <div style={{ 
-      marginTop: '20px', 
-      textAlign: 'center',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      gap: '15px'
-    }}>
-      <button 
+    <div className="flex justify-center items-center space-x-2 py-6">
+      <button
+        onClick={() => handlePageChange(pagination.page - 1)}
         disabled={pagination.page <= 1}
-        onClick={() => onPageChange(pagination.page - 1, searchTerm, collectionId)}
-        style={{
-          padding: '8px 16px',
-          border: '1px solid #ddd',
-          borderRadius: '4px',
-          cursor: pagination.page <= 1 ? 'not-allowed' : 'pointer',
-          opacity: pagination.page <= 1 ? 0.5 : 1,
-          backgroundColor: pagination.page <= 1 ? '#f5f5f5' : '#fff'
-        }}
+        className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        ← Önceki
+        Önceki
       </button>
       
-      <span style={{ 
-        fontSize: '14px',
-        color: '#666',
-        minWidth: '200px'
-      }}>
-        Sayfa {pagination.page} / {pagination.totalPages} 
-        (Toplam {pagination.total} ürün)
-      </span>
+      {startPage > 1 && (
+        <>
+          <button
+            onClick={() => handlePageChange(1)}
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+          >
+            1
+          </button>
+          {startPage > 2 && (
+            <span className="px-2 text-gray-500">...</span>
+          )}
+        </>
+      )}
       
-      <button 
-        disabled={!pagination.hasMore}
-        onClick={() => onPageChange(pagination.page + 1, searchTerm, collectionId)}
-        style={{
-          padding: '8px 16px',
-          border: '1px solid #ddd',
-          borderRadius: '4px',
-          cursor: !pagination.hasMore ? 'not-allowed' : 'pointer',
-          opacity: !pagination.hasMore ? 0.5 : 1,
-          backgroundColor: !pagination.hasMore ? '#f5f5f5' : '#fff'
-        }}
+      {pages.map(page => (
+        <button
+          key={page}
+          onClick={() => handlePageChange(page)}
+          className={`px-3 py-2 border rounded-md text-sm font-medium ${
+            page === pagination.page
+              ? 'bg-blue-600 text-white border-blue-600'
+              : 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50'
+          }`}
+        >
+          {page}
+        </button>
+      ))}
+      
+      {endPage < pagination.totalPages && (
+        <>
+          {endPage < pagination.totalPages - 1 && (
+            <span className="px-2 text-gray-500">...</span>
+          )}
+          <button
+            onClick={() => handlePageChange(pagination.totalPages)}
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+          >
+            {pagination.totalPages}
+          </button>
+        </>
+      )}
+      
+      <button
+        onClick={() => handlePageChange(pagination.page + 1)}
+        disabled={pagination.page >= pagination.totalPages}
+        className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Sonraki →
+        Sonraki
       </button>
     </div>
   );
@@ -72,43 +110,45 @@ const Pagination = ({ pagination, onPageChange, searchTerm = '', collectionId = 
 
 // Loading Spinner Komponenti
 const LoadingSpinner = () => (
-  <div style={{
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: '40px',
-    fontSize: '16px',
-    color: '#666'
-  }}>
-    <div className="w-12 h-12 border-4 border-blue-900 border-t-transparent rounded-full animate-spin"></div>
-    <div style={{ marginLeft: '15px' }}>Ürünler yükleniyor...</div>
+  <div className="flex justify-center items-center py-12">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
   </div>
 );
 
 // Responsive sayfa boyutu fonksiyonu
 const getPageSize = () => {
-  if (typeof window === 'undefined') return 20;
-  const width = window.innerWidth;
-  if (width < 768) return 10;      // Mobil: 10 ürün
-  if (width < 1024) return 15;     // Tablet: 15 ürün
-  return 20;                       // Desktop: 20 ürün
+  if (typeof window !== 'undefined') {
+    const width = window.innerWidth;
+    if (width < 768) return 12; // Mobile
+    if (width < 1024) return 15; // Tablet
+    if (width < 1280) return 18; // Small desktop
+    return 24; // Large desktop
+  }
+  return 24; // Default
 };
 
 export default function ProductList() {
   const token = useToken();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // URL'den parametreleri al
+  const urlPage = parseInt(searchParams.get('page') || '1');
+  const urlSearch = searchParams.get('search') || '';
+  const urlCollection = searchParams.get('collection') || '';
+  
   const [products, setProducts] = useState<any[]>([]);
-  const [pagination, setPagination] = useState<any>(null); // YENİ
-  const [currentPage, setCurrentPage] = useState(1); // YENİ
-  const [search, setSearch] = useState("");
-  const [searchTerm, setSearchTerm] = useState(""); // YENİ - debounced search
+  const [pagination, setPagination] = useState<any>(null);
+  const [currentPage, setCurrentPage] = useState(urlPage);
+  const [search, setSearch] = useState(urlSearch);
+  const [searchTerm, setSearchTerm] = useState(urlSearch);
   const [selected, setSelected] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState("id_asc");
   const [collections, setCollections] = useState<{collectionId: string, name: string}[]>([]);
-  const [selectedCollection, setSelectedCollection] = useState("");
-  const [stockFilter, setStockFilter] = useState("all"); // YENİ - stok filtresi
+  const [selectedCollection, setSelectedCollection] = useState(urlCollection);
+  const [stockFilter, setStockFilter] = useState("all");
   const productsFetchedRef = useRef(false);
   const collectionsFetchedRef = useRef(false);
-  const router = useRouter();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -126,7 +166,7 @@ export default function ProductList() {
   // Custom dropdown state'leri
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const [collectionFilterDropdownOpen, setCollectionFilterDropdownOpen] = useState(false);
-  const [stockFilterDropdownOpen, setStockFilterDropdownOpen] = useState(false); // YENİ
+  const [stockFilterDropdownOpen, setStockFilterDropdownOpen] = useState(false);
   
   // Debounce timer için ref
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
@@ -201,10 +241,19 @@ export default function ProductList() {
     });
   }, [sortedProducts, stockFilter]);
 
+  // URL parametreleri değiştiğinde state'leri güncelle
+  useEffect(() => {
+    setCurrentPage(urlPage);
+    setSearch(urlSearch);
+    setSearchTerm(urlSearch);
+    setSelectedCollection(urlCollection);
+  }, [urlPage, urlSearch, urlCollection]);
+
   useEffect(() => {
     if (!productsFetchedRef.current) {
       productsFetchedRef.current = true;
-      fetchProducts(); // İlk yükleme
+      // URL'den gelen parametrelerle ilk yükleme
+      fetchProducts(urlPage, urlSearch, urlCollection);
     }
     
     if (!collectionsFetchedRef.current) {
@@ -213,7 +262,7 @@ export default function ProductList() {
     }
     
     fetchProductRules();
-  }, []);
+  }, [urlPage, urlSearch, urlCollection]);
 
   // Dropdown'ların dışına tıklandığında kapanması
   useEffect(() => {
@@ -222,7 +271,7 @@ export default function ProductList() {
       if (!target.closest('.dropdown-container')) {
         setSortDropdownOpen(false);
         setCollectionFilterDropdownOpen(false);
-        setStockFilterDropdownOpen(false); // YENİ
+        setStockFilterDropdownOpen(false);
       }
     };
 
@@ -240,33 +289,39 @@ export default function ProductList() {
     
     searchTimeoutRef.current = setTimeout(() => {
       setSearchTerm(search);
-      setCurrentPage(1); // Arama değiştiğinde ilk sayfaya dön
-      fetchProducts(1, search, selectedCollection);
-    }, 300); // 300ms debounce (500ms'den kısaltıldı)
+      // Sadece kullanıcı arama yaptığında sayfa 1'e dön
+      if (search !== urlSearch) {
+        setCurrentPage(1);
+        fetchProducts(1, search, selectedCollection);
+      }
+    }, 300);
 
     return () => {
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [search]);
+  }, [search, urlSearch, selectedCollection]);
 
   // Koleksiyon filtresi değiştiğinde
   useEffect(() => {
-    setCurrentPage(1);
-    fetchProducts(1, searchTerm, selectedCollection);
-  }, [selectedCollection]);
+    // Sadece kullanıcı koleksiyon değiştirdiğinde sayfa 1'e dön
+    if (selectedCollection !== urlCollection) {
+      setCurrentPage(1);
+      fetchProducts(1, searchTerm, selectedCollection);
+    }
+  }, [selectedCollection, urlCollection, searchTerm]);
 
   // Stok filtresi değiştiğinde
   useEffect(() => {
     if (stockFilter === "all") {
-      // Stok filtresi "all" ise normal sayfalama ile çalış
-      fetchProducts(1, searchTerm, selectedCollection);
+      // Stok filtresi "all" ise mevcut sayfa ve parametrelerle çalış
+      fetchProducts(currentPage, searchTerm, selectedCollection);
     } else {
       // Stok filtresi aktifse tüm ürünleri getir
       fetchAllProducts(searchTerm, selectedCollection);
     }
-  }, [stockFilter, searchTerm, selectedCollection]);
+  }, [stockFilter, currentPage, searchTerm, selectedCollection]);
 
   // Tüm ürünleri getiren fonksiyon (stok filtresi için)
   const fetchAllProducts = async (searchQuery: string = '', collectionId: string = '') => {
@@ -380,6 +435,7 @@ export default function ProductList() {
 
   // Sayfa değişikliği handler'ı
   const handlePageChange = (newPage: number, search: string = searchTerm, collectionId: string = selectedCollection) => {
+    setCurrentPage(newPage);
     fetchProducts(newPage, search, collectionId);
   };
 
@@ -1940,7 +1996,7 @@ export default function ProductList() {
                               >
                           {rule.id} - {rule.name}
                               </div>
-                      ))}
+                  ))}
                         </div>
                       )}
                     </div>
@@ -2460,19 +2516,31 @@ export default function ProductList() {
                 )}
               </div>
             )}
-            <div className="flex flex-wrap justify-center lg:justify-start gap-6 p-6">
+            <div className="flex flex-wrap justify-center gap-6 p-6">
               {filteredProducts.map((product) => {
                 // Ürünün boyut seçeneklerinde is_optional_height true olan varsa kesim ürünü
                 const hasOptionalHeight = product.sizeOptions && product.sizeOptions.some((size: any) => size.is_optional_height === true);
                 const isCustomCut = hasOptionalHeight;
                 const statusText = isCustomCut ? 'KESİM' : 'HAZIR';
-                const productHasStock = hasStock(product);
+                const isOutOfStock = !hasStock(product);
                 
                 return (
                   <div key={product.productId} 
-                       className={`border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow relative cursor-pointer ${productHasStock ? 'bg-white' : 'bg-gray-100'}`} 
+                       className={`border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow relative cursor-pointer ${
+                         isOutOfStock ? 'opacity-50 grayscale' : 'bg-white'
+                       }`} 
                        style={{ width: '350px', height: '550px' }}
                        onClick={() => router.push(`/dashboard/urunler/${product.productId}`)}>
+                    
+                    {/* Stok yoksa overlay */}
+                    {isOutOfStock && (
+                      <div className="absolute inset-0 bg-gray-200 bg-opacity-20 z-20 flex items-center justify-center">
+                        <div className="bg-red-500 text-white px-3 py-1 rounded-md text-sm font-medium">
+                          Ürünü İncele
+                        </div>
+                      </div>
+                    )}
+                    
                     {/* Koleksiyon adı - sol üst */}
                     <div className="absolute top-3 left-3 z-10">
                       <span className="bg-[#00365a] text-white text-xs px-2 py-1 rounded-md font-medium">
@@ -2494,28 +2562,29 @@ export default function ProductList() {
                         alt={product.name} 
                         width={350}
                         height={400}
-                        className={`w-full h-full object-contain p-3 ${!productHasStock ? 'grayscale opacity-50' : ''}`} 
+                        className="w-full h-full object-contain p-3"
                       />
-                      {/* Stok durumu badge */}
-                      {!productHasStock && (
-                        <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded-md font-medium">
-                          Stok Yok
-                        </div>
-                      )}
                     </div>
                     
                     {/* Ürün bilgileri - kompakt alan */}
                     <div className="p-4 h-[150px] flex flex-col justify-between">
                       <div className="flex-1">
-                        <h3 className={`font-medium text-sm mb-2 line-clamp-2 ${productHasStock ? 'text-black' : 'text-gray-500'}`}>
+                        <h3 className="text-black font-medium text-sm mb-2 line-clamp-2">
                           {statusText} {product.name}
                         </h3>
+                        <p className="text-sm text-gray-500 mb-2 line-clamp-2">
+                          {product.description}
+                        </p>
                         {/* Stok bilgisi */}
-                        <div className="text-xs text-gray-500 mb-2">
-                          {productHasStock ? (
-                            <span className="text-green-600">✓ Stokta</span>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {('sizeOptions' in product) ? (
+                            <span>
+                              Stok: {product.sizeOptions?.some((opt: any) => 
+                                opt.is_optional_height ? (opt.stockAreaM2 || 0) > 0 : (opt.stockQuantity || 0) > 0
+                              ) ? 'Var' : 'Yok'}
+                            </span>
                           ) : (
-                            <span className="text-red-600">✗ Stokta değil</span>
+                            <span>Stok: {product.stock || 0} adet</span>
                           )}
                         </div>
                       </div>
@@ -2523,24 +2592,24 @@ export default function ProductList() {
                       <div className="flex items-center gap-2">
                         <button 
                           className={`flex-1 px-3 py-2 rounded-md flex items-center justify-center gap-2 text-sm shadow-sm transition-colors font-semibold ${
-                            productHasStock 
-                              ? 'bg-green-600 text-white hover:bg-green-700' 
-                              : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                            isOutOfStock 
+                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                              : 'bg-green-600 hover:bg-green-700 text-white hover:shadow-md'
                           }`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (productHasStock) {
+                            if (!isOutOfStock) {
                               setSelectedProductId(product.productId);
                               setDetailModalOpen(true);
                             }
                           }}
-                          title={productHasStock ? "Sepete Ekle" : "Stokta olmayan ürün"}
-                          disabled={!productHasStock}
+                          title={isOutOfStock ? "Stokta olmayan ürün" : "Sepete Ekle"}
+                          disabled={isOutOfStock}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                           </svg>
-                          {productHasStock ? 'Sepete Ekle' : 'Stok Yok'}
+                          {isOutOfStock ? 'Stok Yok' : 'Sepete Ekle'}
                         </button>
                         {isAdmin && (
                           <button 

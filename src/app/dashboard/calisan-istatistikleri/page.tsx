@@ -21,6 +21,9 @@ export default function CalisanIstatistikleri() {
   const [error, setError] = useState<string | null>(null);
   const [employees, setEmployees] = useState<AdminUser[]>([]);
   const [employeesLoading, setEmployeesLoading] = useState(true);
+  
+  // Custom dropdown state'i
+  const [employeeDropdownOpen, setEmployeeDropdownOpen] = useState(false);
 
   // Admin kontrolü
   useEffect(() => {
@@ -35,6 +38,21 @@ export default function CalisanIstatistikleri() {
       fetchEmployees();
     }
   }, [isAdmin]);
+
+  // Dropdown dışına tıklandığında kapatma
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.dropdown-container')) {
+        setEmployeeDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const fetchEmployees = async () => {
     setEmployeesLoading(true);
@@ -124,18 +142,62 @@ export default function CalisanIstatistikleri() {
                   <span className="text-gray-600">Çalışanlar yükleniyor...</span>
                 </div>
               ) : (
-                <select
-                  value={selectedEmployeeId}
-                  onChange={(e) => handleEmployeeChange(e.target.value)}
-                  className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Çalışan seçin...</option>
-                  {employees.map((employee) => (
-                    <option key={employee.userId} value={employee.userId}>
-                      {employee.name} {employee.surname} ({employee.email})
-                    </option>
-                  ))}
-                </select>
+                <div className="relative dropdown-container">
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setEmployeeDropdownOpen(!employeeDropdownOpen)}
+                      className="w-full max-w-md border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors text-left bg-white"
+                    >
+                      <span className={selectedEmployeeId ? "text-gray-900" : "text-gray-500"}>
+                        {selectedEmployeeId 
+                          ? employees.find(emp => emp.userId === selectedEmployeeId) 
+                              ? `${employees.find(emp => emp.userId === selectedEmployeeId)?.name} ${employees.find(emp => emp.userId === selectedEmployeeId)?.surname} (${employees.find(emp => emp.userId === selectedEmployeeId)?.email})`
+                              : "Çalışan seçin..."
+                          : "Çalışan seçin..."
+                        }
+                      </span>
+                      <svg 
+                        className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${employeeDropdownOpen ? 'rotate-180' : ''}`}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    {employeeDropdownOpen && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                        <div
+                          className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                            !selectedEmployeeId ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                          }`}
+                          onClick={() => {
+                            handleEmployeeChange("");
+                            setEmployeeDropdownOpen(false);
+                          }}
+                        >
+                          Çalışan seçin...
+                        </div>
+                        {employees.map((employee) => (
+                          <div
+                            key={employee.userId}
+                            className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                              selectedEmployeeId === employee.userId ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                            }`}
+                            onClick={() => {
+                              handleEmployeeChange(employee.userId);
+                              setEmployeeDropdownOpen(false);
+                            }}
+                          >
+                            {employee.name} {employee.surname} ({employee.email})
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
               
               {employees.length === 0 && !employeesLoading && (
