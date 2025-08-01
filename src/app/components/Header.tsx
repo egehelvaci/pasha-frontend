@@ -170,7 +170,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 saniye timeout
         
-        const res = await fetch("https://pasha-backend-production.up.railway.app/api/cart", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/cart`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'

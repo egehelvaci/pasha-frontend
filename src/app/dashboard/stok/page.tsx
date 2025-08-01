@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useToken } from '@/app/hooks/useToken';
 
 // API Base URL
-const API_BASE_URL = "https://pasha-backend-production.up.railway.app";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://pashahomeapps.up.railway.app";
 
 // Sayfalama Komponenti
 const Pagination = ({ pagination, onPageChange, searchTerm = '' }: {

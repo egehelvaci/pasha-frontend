@@ -278,10 +278,10 @@ const Siparisler = () => {
 
       // Admin ise sadece admin/orders endpoint'ini kullan, my-orders asla kullanma
       if (isAdmin) {
-        endpoint = `https://pasha-backend-production.up.railway.app/api/admin/orders?${queryParams.toString()}`;
+        endpoint = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/admin/orders?${queryParams.toString()}`;
       } else {
         // Admin değilse my-orders endpoint'ini kullan - kesinlikle admin endpoint kullanma
-        endpoint = `https://pasha-backend-production.up.railway.app/api/orders/my-orders?${queryParams.toString()}`;
+                  endpoint = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/orders/my-orders?${queryParams.toString()}`;
         
         // Güvenlik kontrolü: Admin olmayan kullanıcılar asla admin endpoint'i kullanmamalı
         if (endpoint.includes('/admin/')) {
@@ -326,7 +326,7 @@ const Siparisler = () => {
         return;
       }
 
-      const endpoint = 'https://pasha-backend-production.up.railway.app/api/admin/orders';
+      const endpoint = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/admin/orders`;
       
       const response = await fetch(endpoint, {
         headers: {
@@ -376,11 +376,11 @@ const Siparisler = () => {
       
       // Admin ise sadece admin/orders endpoint'ini kullan
       if (isAdmin) {
-        endpoint = `https://pasha-backend-production.up.railway.app/api/admin/orders/${orderId}`;
+                  endpoint = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/admin/orders/${orderId}`;
 
       } else {
         // Admin değilse normal orders endpoint'ini kullan - kesinlikle admin endpoint kullanma
-        endpoint = `https://pasha-backend-production.up.railway.app/api/orders/${orderId}`;
+                  endpoint = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/orders/${orderId}`;
 
         
         // Güvenlik kontrolü: Admin olmayan kullanıcılar asla admin endpoint'i kullanmamalı
@@ -416,7 +416,7 @@ const Siparisler = () => {
   const generateQRCodes = async (orderId: string) => {
     try {
       const authToken = token;
-      const response = await fetch(`https://pasha-backend-production.up.railway.app/api/admin/orders/${orderId}/generate-qr-images`, {
+              const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/admin/orders/${orderId}/generate-qr-images`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${authToken}`,
@@ -668,7 +668,7 @@ const Siparisler = () => {
       const authToken = token;
       
       // İlk olarak sipariş durumunu güncelle
-      const response = await fetch(`https://pasha-backend-production.up.railway.app/api/admin/orders/${orderId}/status`, {
+              const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/admin/orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${authToken}`,

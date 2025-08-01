@@ -31,7 +31,7 @@ export default function CollectionDetail() {
   useEffect(() => {
     const fetchCollection = async () => {
       try {
-        const res = await fetch(`https://pasha-backend-production.up.railway.app/api/collections/${params.collectionId}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/collections/${params.collectionId}`);
         if (!res.ok) throw new Error("Koleksiyon bulunamadı");
         const data = await res.json();
         setCollection(data.data);

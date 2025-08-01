@@ -37,7 +37,7 @@ function AddCollectionModal({ open, onClose, onSuccess }: { open: boolean, onClo
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("https://pasha-backend-production.up.railway.app/api/collections", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/collections`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form)
@@ -274,7 +274,7 @@ export default function CollectionList() {
 
   const fetchCollections = () => {
     setLoading(true);
-    fetch("https://pasha-backend-production.up.railway.app/api/collections/")
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/collections/`)
       .then(res => res.json())
       .then(data => {
         setCollections(data.data || []);
@@ -332,7 +332,7 @@ export default function CollectionList() {
     setDeleteLoading(true);
     setDeleteError("");
     try {
-      const res = await fetch(`https://pasha-backend-production.up.railway.app/api/collections/${deleteId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/collections/${deleteId}`, {
         method: "DELETE"
       });
       if (!res.ok) throw new Error("Koleksiyon silinemedi");

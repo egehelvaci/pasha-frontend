@@ -52,7 +52,7 @@ const EKatalogPage = () => {
         page: '1'
       });
       
-      const response = await fetch(`https://pasha-backend-production.up.railway.app/api/products?${params}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/products?${params}`, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json'

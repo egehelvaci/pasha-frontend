@@ -177,7 +177,7 @@ export default function EditPriceListPage() {
     setLoadingData(true);
     try {
       // Koleksiyonları getir
-      const collectionsResponse = await fetch('https://pasha-backend-production.up.railway.app/api/collections/');
+      const collectionsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/collections/`);
       const collectionsData = await collectionsResponse.json();
       setCollections(collectionsData.data || []);
 
@@ -196,7 +196,7 @@ export default function EditPriceListPage() {
       // Doğrudan fiyat listesi detaylarını getir
       try {
         const authToken = token;
-        const detailResponse = await fetch(`https://pasha-backend-production.up.railway.app/api/price-lists/${params.priceListId}`, {
+        const detailResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/price-lists/${params.priceListId}`, {
           headers: {
             'Authorization': `Bearer ${authToken}`
           }

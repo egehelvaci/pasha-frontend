@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/app/context/AuthContext';
 
 // API Base URL
-const API_BASE_URL = "https://pasha-backend-production.up.railway.app";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://pashahomeapps.up.railway.app";
 
 // Token'ı localStorage veya sessionStorage'dan al
 function getAuthToken(): string | null {

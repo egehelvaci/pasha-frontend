@@ -152,7 +152,7 @@ export default function ProductDetail() {
   const fetchProduct = async () => {
     try {
       const authToken = token;
-      const res = await fetch(`https://pasha-backend-production.up.railway.app/api/products/${params.productId}`, {
+              const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/products/${params.productId}`, {
         headers: {
           'Authorization': `Bearer ${authToken}`
         }
@@ -170,7 +170,7 @@ export default function ProductDetail() {
   const fetchCollections = async () => {
     try {
       const authToken = token;
-      const res = await fetch("https://pasha-backend-production.up.railway.app/api/collections/", {
+              const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/collections/`, {
         headers: {
           'Authorization': `Bearer ${authToken}`
         }
@@ -338,7 +338,7 @@ export default function ProductDetail() {
         Object.entries(form).forEach(([key, value]) => {
           if (value !== null && value !== "") fd.append(key, value as any);
         });
-        const res = await fetch(`https://pasha-backend-production.up.railway.app/api/products/${product.productId}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/products/${product.productId}`, {
           method: "PUT",
           headers: {
             'Authorization': `Bearer ${authToken}`
@@ -400,7 +400,7 @@ export default function ProductDetail() {
     setDeleteError("");
     try {
       const authToken = token;
-      const res = await fetch(`https://pasha-backend-production.up.railway.app/api/products/${product.productId}`, {
+              const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/products/${product.productId}`, {
         method: "DELETE",
         headers: {
           'Authorization': `Bearer ${authToken}`

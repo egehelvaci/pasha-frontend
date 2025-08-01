@@ -29,7 +29,7 @@ export default function EditProduct() {
     const fetchProduct = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`https://pasha-backend-production.up.railway.app/api/products/${params.id}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/products/${params.id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -68,7 +68,7 @@ export default function EditProduct() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`https://pasha-backend-production.up.railway.app/api/products/${params.id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/products/${params.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

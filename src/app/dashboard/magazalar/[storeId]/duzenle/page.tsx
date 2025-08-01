@@ -25,7 +25,7 @@ export default function EditStorePage() {
   const fetchStore = async () => {
     try {
       // Admin API endpoint'ini kullan
-      const response = await fetch(`https://pasha-backend-production.up.railway.app/api/admin/stores`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/admin/stores`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -77,7 +77,7 @@ export default function EditStorePage() {
     setLoading(true);
     try {
       // Admin API endpoint'ini kullan
-      const response = await fetch(`https://pasha-backend-production.up.railway.app/api/admin/stores/${store.store_id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/admin/stores/${store.store_id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

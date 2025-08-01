@@ -169,7 +169,7 @@ const MuhasebePage = () => {
             }
 
             // Yeni API - tek endpoint'ten hem transactions hem bakiye bilgileri
-            const response = await fetch('https://pasha-backend-production.up.railway.app/api/admin/muhasebe-hareketleri', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/admin/muhasebe-hareketleri`, {
                 headers: {
                     'Authorization': `Bearer ${authToken}`,
                     'Content-Type': 'application/json'
@@ -212,7 +212,7 @@ const MuhasebePage = () => {
             const authToken = token;
             if (!authToken) return;
 
-            const response = await fetch('https://pasha-backend-production.up.railway.app/api/admin/muhasebe/income-types', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/admin/muhasebe/income-types`, {
                 headers: {
                     'Authorization': `Bearer ${authToken}`,
                     'Content-Type': 'application/json'
@@ -236,7 +236,7 @@ const MuhasebePage = () => {
             const authToken = token;
             if (!authToken) return;
 
-            const response = await fetch('https://pasha-backend-production.up.railway.app/api/admin/muhasebe/expense-types', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/admin/muhasebe/expense-types`, {
                 headers: {
                     'Authorization': `Bearer ${authToken}`,
                     'Content-Type': 'application/json'
@@ -417,7 +417,7 @@ const MuhasebePage = () => {
 
 
 
-            const response = await fetch('https://pasha-backend-production.up.railway.app/api/admin/muhasebe-hareketleri', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/admin/muhasebe-hareketleri`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${authToken}`,

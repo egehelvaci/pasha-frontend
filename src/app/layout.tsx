@@ -51,8 +51,8 @@ export default function RootLayout({
     <html lang="tr" className="scroll-smooth">
       <head>
         {/* Preconnect to external domains for performance */}
-        <link rel="preconnect" href="https://pasha-backend-production.up.railway.app" />
-        <link rel="dns-prefetch" href="https://pasha-backend-production.up.railway.app" />
+        <link rel="preconnect" href={process.env.NEXT_PUBLIC_API_BASE_URL || "https://pashahomeapps.up.railway.app"} />
+        <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_API_BASE_URL || "https://pashahomeapps.up.railway.app"} />
         
         {/* Additional meta tags for better browser compatibility */}
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />

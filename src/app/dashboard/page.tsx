@@ -150,7 +150,7 @@ export default function Dashboard() {
     if (!token) return;
     
     try {
-      const response = await fetch('https://pasha-backend-production.up.railway.app/api/collections', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/collections`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -175,7 +175,7 @@ export default function Dashboard() {
     if (!token) return;
     
     try {
-      const response = await fetch('https://pasha-backend-production.up.railway.app/api/products?limit=20&page=1', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/products?limit=20&page=1`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

@@ -63,7 +63,7 @@ const SiparisOlustur = () => {
           return;
         }
 
-        const response = await fetch('https://pasha-backend-production.up.railway.app/api/cart', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/cart`, {
           headers: {
             'Authorization': `Bearer ${authToken}`,
             'Content-Type': 'application/json'
@@ -117,7 +117,7 @@ const SiparisOlustur = () => {
         return;
       }
 
-      const response = await fetch('https://pasha-backend-production.up.railway.app/api/orders/check-limits', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/orders/check-limits`, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json'
@@ -188,7 +188,7 @@ const SiparisOlustur = () => {
         notes: orderNotes.trim() || ''
       };
 
-      const response = await fetch('https://pasha-backend-production.up.railway.app/api/orders/create-from-cart', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/orders/create-from-cart`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${authToken}`,

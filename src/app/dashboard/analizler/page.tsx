@@ -123,7 +123,7 @@ export default function AnalyticsPage() {
         return;
       }
 
-      const baseUrl = 'https://pasha-backend-production.up.railway.app/api/admin/statistics';
+      const baseUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/admin/statistics`;
       const headers = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'

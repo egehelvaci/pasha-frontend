@@ -1,4 +1,4 @@
-const API_URL = "https://pasha-backend-production.up.railway.app";
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://ppashahomeapps.up.railway.app";
 
 // Token'ı localStorage veya sessionStorage'dan al
 function getAuthToken(): string | null {
@@ -601,7 +601,7 @@ export interface CreateOrderFromAdminCartResponse {
   };
 }
 
-export const API_BASE_URL = 'https://pasha-backend-production.up.railway.app'; // API sunucusunun adresi
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'; // API sunucusunun adresi
 
 export async function getProducts(): Promise<Product[]> {
   try {
@@ -1408,7 +1408,7 @@ export interface BalanceResponse {
 
 // Şifre sıfırlama API fonksiyonları
 export async function forgotPassword(data: ForgotPasswordData): Promise<ForgotPasswordResponse> {
-  const response = await fetch('https://pasha-backend-production.up.railway.app/api/auth/forgot-password', {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/auth/forgot-password`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -1424,7 +1424,7 @@ export async function forgotPassword(data: ForgotPasswordData): Promise<ForgotPa
 }
 
 export async function validateResetToken(token: string): Promise<ValidateResetTokenResponse> {
-  const response = await fetch(`https://pasha-backend-production.up.railway.app/api/auth/validate-reset-token/${token}`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/auth/validate-reset-token/${token}`, {
     method: 'GET',
   });
 
@@ -1436,7 +1436,7 @@ export async function validateResetToken(token: string): Promise<ValidateResetTo
 }
 
 export async function resetPassword(data: ResetPasswordData): Promise<ResetPasswordResponse> {
-  const response = await fetch('https://pasha-backend-production.up.railway.app/api/auth/reset-password', {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/auth/reset-password`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
