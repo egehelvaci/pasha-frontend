@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://ppashahomeapps.up.railway.app";
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://pashahomeapps.up.railway.app";
 
 // Token'ı localStorage veya sessionStorage'dan al
 function getAuthToken(): string | null {
