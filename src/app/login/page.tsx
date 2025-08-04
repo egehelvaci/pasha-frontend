@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -12,8 +12,11 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [backgroundImage, setBackgroundImage] = useState("");
+  const [imageLoading, setImageLoading] = useState(true);
   const router = useRouter();
   const { login, user, isLoading } = useAuth();
+  const hasFetchedImage = useRef(false);
 
   useEffect(() => {
     if (!isLoading && user) {
@@ -21,6 +24,61 @@ export default function Login() {
       router.push("/dashboard");
     }
   }, [user, isLoading, router]);
+
+  // Rastgele halı mağazası görseli al - sadece bir kez
+  useEffect(() => {
+    // Eğer daha önce görsel yüklendiyse tekrar yükleme
+    if (hasFetchedImage.current) {
+      return;
+    }
+
+    const fetchRandomImage = async () => {
+      try {
+        // Session storage'dan cache'lenmiş görseli kontrol et
+        const cachedImage = sessionStorage.getItem('loginBackgroundImage');
+        const cachedTimestamp = sessionStorage.getItem('loginBackgroundImageTimestamp');
+        
+        // Cache'de görsel varsa ve 1 saatten eski değilse kullan
+        if (cachedImage && cachedTimestamp) {
+          const now = Date.now();
+          const cacheAge = now - parseInt(cachedTimestamp);
+          const oneHour = 60 * 60 * 1000; // 1 saat
+          
+          if (cacheAge < oneHour) {
+            setBackgroundImage(cachedImage);
+            setImageLoading(false);
+            hasFetchedImage.current = true;
+            return;
+          }
+        }
+
+        setImageLoading(true);
+        setBackgroundImage(""); // Görseli temizle
+        
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "https://pashahomeapps.up.railway.app"}/api/login-assets/random`);
+        const data = await response.json();
+        
+        if (data.success && data.data.imageUrl) {
+          setBackgroundImage(data.data.imageUrl);
+          // Görseli session storage'a cache'le
+          sessionStorage.setItem('loginBackgroundImage', data.data.imageUrl);
+          sessionStorage.setItem('loginBackgroundImageTimestamp', Date.now().toString());
+        } else {
+          // API başarısız olursa varsayılan görsel kullan
+          setBackgroundImage("/login-background.jpg");
+        }
+      } catch (error) {
+        console.error('Rastgele görsel yüklenirken hata:', error);
+        // Hata durumunda varsayılan görsel kullan
+        setBackgroundImage("/login-background.jpg");
+      } finally {
+        setImageLoading(false);
+        hasFetchedImage.current = true;
+      }
+    };
+
+    fetchRandomImage();
+  }, []); // Boş dependency array - sadece component mount olduğunda çalışır
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,15 +121,36 @@ export default function Login() {
           </h1>
           <p className="text-white text-sm mt-2">© 2025 Paşa Home</p>
         </div>
+        
+        {/* Loading durumu */}
+        {imageLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 z-20">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
+              <p className="text-white text-lg font-medium">Görsel Yükleniyor...</p>
+              <p className="text-gray-300 text-sm mt-2">Halı mağazası görseli hazırlanıyor</p>
+            </div>
+          </div>
+        )}
+        
+        {/* Overlay */}
         <div className="absolute inset-0 bg-black bg-opacity-40 z-0"></div>
-        <Image 
-          src="/login-background.jpg" 
-          alt="Paşa Home"
-          fill
-          style={{ objectFit: "cover" }}
-          priority
-          className="z-[-1]"
-        />
+        
+        {/* Görsel - sadece yüklendiğinde göster */}
+        {backgroundImage && !imageLoading && (
+          <Image 
+            src={backgroundImage}
+            alt="Halı Mağazası"
+            fill
+            style={{ objectFit: "cover" }}
+            priority
+            className="z-[-1]"
+            onError={() => {
+              setImageLoading(false);
+              setBackgroundImage("/login-background.jpg");
+            }}
+          />
+        )}
       </div>
 
       {/* Sağ taraftaki login formu */}

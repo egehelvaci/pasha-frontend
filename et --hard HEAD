@@ -1,0 +1,5 @@
+[33m378a282[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m api url fixed
+[33mf46211b[m api url envye eklendi
+[33m9a2144a[m Fix TypeScript errors in admin-siparis-olustur page - resolve toFixed() method type issues
+[33m36908f6[m Admin sipariş oluştur: Yükseklik silinince ebatlar kaybolma sorunu ve stok filtresi hizası düzeltildi
+[33m37f516f[m main
