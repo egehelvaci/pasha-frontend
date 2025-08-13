@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { useToken } from '@/app/hooks/useToken';
 import OptimizedImage from '@/app/components/OptimizedImage';
 import { getOptimalSettings, measurePerformance, isLowEndDevice } from '@/app/utils/performance';
@@ -24,15 +25,43 @@ interface ProductResponse {
 }
 
 const EKatalogPage = () => {
+  const router = useRouter();
   const token = useToken();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    fetchProducts();
+    // Mobile detection logic
+    const checkIfMobile = () => {
+      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+      const isMobileAgent = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+      const isSmallScreen = window.innerWidth < 1024; // Less than lg breakpoint
+      return isMobileAgent || isSmallScreen;
+    };
+
+    if (typeof window !== 'undefined') {
+      const mobileCheck = checkIfMobile();
+      setIsMobile(mobileCheck);
+      
+      // Handle window resize for screen size changes
+      const handleResize = () => {
+        const mobileCheck = checkIfMobile();
+        setIsMobile(mobileCheck);
+      };
+      
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
   }, []);
+
+  useEffect(() => {
+    if (!isMobile) {
+      fetchProducts();
+    }
+  }, [isMobile]);
 
   // Get optimal settings based on device capabilities
   const optimalSettings = useMemo(() => getOptimalSettings(), []);
@@ -190,6 +219,52 @@ const EKatalogPage = () => {
           setTimeout(processGeneration, optimalSettings.imageLoadDelay);
         }
   }, [selectedProducts]);
+
+  // Mobile restriction screen
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center max-w-md mx-auto">
+          <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
+            <div className="mb-6">
+              <svg
+                className="w-20 h-20 mx-auto text-[#00365a] mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
+              </svg>
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                Sadece Masaüstü Kullanımı
+              </h2>
+              <p className="text-gray-600 leading-relaxed">
+                E-Katalog özelliği sadece masaüstü bilgisayarlarda kullanılabilir. 
+                Daha iyi bir deneyim için lütfen bir bilgisayar kullanarak tekrar deneyin.
+              </p>
+            </div>
+            
+            <div className="space-y-3">
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="w-full px-6 py-3 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors font-medium"
+              >
+                Ana Sayfaya Dön
+              </button>
+              <p className="text-sm text-gray-500">
+                Önerilen minimum çözünürlük: 1024px ve üzeri
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

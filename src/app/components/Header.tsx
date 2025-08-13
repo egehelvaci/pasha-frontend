@@ -58,11 +58,36 @@ const Header = ({ title, user, className }: HeaderProps) => {
   const [balanceInfo, setBalanceInfo] = useState<BalanceInfo | null>(null);
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [lastBalanceUpdate, setLastBalanceUpdate] = useState<number>(0);
+  const [isMobile, setIsMobile] = useState(false);
   
   // Component mount kontrolü
   useEffect(() => {
     setIsMounted(true);
     return () => setIsMounted(false);
+  }, []);
+
+  // Mobile detection logic
+  useEffect(() => {
+    const checkIfMobile = () => {
+      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+      const isMobileAgent = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+      const isSmallScreen = window.innerWidth < 1024; // Less than lg breakpoint
+      return isMobileAgent || isSmallScreen;
+    };
+
+    if (typeof window !== 'undefined') {
+      const mobileCheck = checkIfMobile();
+      setIsMobile(mobileCheck);
+      
+      // Handle window resize for screen size changes
+      const handleResize = () => {
+        const mobileCheck = checkIfMobile();
+        setIsMobile(mobileCheck);
+      };
+      
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
   }, []);
   
   // Menü açıldığında body scroll'unu devre dışı bırak
@@ -598,7 +623,8 @@ const Header = ({ title, user, className }: HeaderProps) => {
             {(() => {
               // Admin ve normal menü öğelerini ayır
               const regularNavItems = navigation
-                .filter(item => !item.adminOnly && item.name !== 'Sepetim'); // Sepetim hariç normal menü öğeleri
+                .filter(item => !item.adminOnly && item.name !== 'Sepetim') // Sepetim hariç normal menü öğeleri
+                .filter(item => !(isMobile && item.name === 'E-Katalog')); // Mobilde E-Katalog'u gizle
               const adminNavItems = navigation.filter(item => item.adminOnly);
 
               return (
@@ -742,6 +768,8 @@ const Header = ({ title, user, className }: HeaderProps) => {
                     const isActive = isAnalysisPage || pathname === item.href;
                     // Admin olmayan kullanıcılar için admin-only öğeleri gizle
                     if (!isAdmin && item.adminOnly === true) return null;
+                    // Mobilde E-Katalog'u gizle
+                    if (isMobile && item.name === 'E-Katalog') return null;
                     return (
                       <Link
                         key={item.name}

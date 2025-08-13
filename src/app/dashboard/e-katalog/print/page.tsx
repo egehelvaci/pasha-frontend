@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useToken } from '@/app/hooks/useToken';
 
 interface Product {
@@ -18,12 +19,32 @@ interface GroupedProducts {
 }
 
 const PrintCatalogPage = () => {
+  const router = useRouter();
   const token = useToken();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+  const [isMobile, setIsMobile] = useState(false);
   
   useEffect(() => {
+    // Mobile detection logic
+    const checkIfMobile = () => {
+      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+      const isMobileAgent = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+      const isSmallScreen = window.innerWidth < 1024; // Less than lg breakpoint
+      return isMobileAgent || isSmallScreen;
+    };
+
+    if (typeof window !== 'undefined') {
+      const mobileCheck = checkIfMobile();
+      setIsMobile(mobileCheck);
+      
+      if (mobileCheck) {
+        setLoading(false);
+        return;
+      }
+    }
+
     // localStorage'dan seçili ürün ID'lerini al
     const selectedProductIds = localStorage.getItem('selectedProductsForPrint');
     
@@ -196,6 +217,52 @@ const PrintCatalogPage = () => {
   }, []);
 
   const groupedProducts = getGroupedProducts();
+
+  // Mobile restriction screen
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center max-w-md mx-auto">
+          <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
+            <div className="mb-6">
+              <svg
+                className="w-20 h-20 mx-auto text-[#00365a] mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                />
+              </svg>
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                Yazdırma Sadece Masaüstünde
+              </h2>
+              <p className="text-gray-600 leading-relaxed">
+                Katalog yazdırma özelliği sadece masaüstü bilgisayarlarda çalışmaktadır. 
+                Lütfen bir bilgisayar kullanarak tekrar deneyin.
+              </p>
+            </div>
+            
+            <div className="space-y-3">
+              <button
+                onClick={() => router.push('/dashboard/e-katalog')}
+                className="w-full px-6 py-3 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors font-medium"
+              >
+                E-Katalog Sayfasına Dön
+              </button>
+              <p className="text-sm text-gray-500">
+                PDF oluşturma ve yazdırma için masaüstü gereklidir
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
