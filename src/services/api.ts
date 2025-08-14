@@ -2319,6 +2319,13 @@ export interface OverallStats {
   averageAmount: number;
   averageAreaM2: number;
   averageItems: number;
+  preparedOrders: number;
+  preparedAmount: number;
+  preparedAreaM2: number;
+  preparedItems: number;
+  averagePreparedAmount: number;
+  averagePreparedAreaM2: number;
+  averagePreparedItems: number;
 }
 
 export interface RecentStats {
@@ -2327,6 +2334,10 @@ export interface RecentStats {
   totalAmount: number;
   totalAreaM2: number;
   totalItems: number;
+  preparedOrders: number;
+  preparedAmount: number;
+  preparedAreaM2: number;
+  preparedItems: number;
 }
 
 export interface CompletedOrder {
@@ -2340,6 +2351,17 @@ export interface CompletedOrder {
   orderTotalPrice: number;
 }
 
+export interface PreparedOrder {
+  orderId: string;
+  preparedAt: string;
+  totalAmount: number;
+  totalAreaM2: number;
+  totalItems: number;
+  orderStatus: string;
+  orderCreatedAt: string;
+  qrCodeId: string;
+}
+
 export interface EmployeeStatisticsResponse {
   success: boolean;
   data: {
@@ -2347,6 +2369,7 @@ export interface EmployeeStatisticsResponse {
     overallStats: OverallStats;
     recentStats: RecentStats;
     completedOrders: CompletedOrder[];
+    preparedOrders: PreparedOrder[];
   };
 }
 

@@ -84,6 +84,10 @@ interface Order {
     is_scanned: boolean;
     scanned_at: string;
     created_at: string;
+    first_scan_employee_id?: string;
+    first_scan_at?: string;
+    second_scan_employee_id?: string;
+    second_scan_at?: string;
     order_item: {
       id: string;
       order_id: string;
@@ -162,7 +166,7 @@ interface OrderStats {
   total: number;
   pending: number;
   confirmed: number;
-  shipped: number;
+  ready: number;
   delivered: number;
   canceled: number;
 }
@@ -170,7 +174,7 @@ interface OrderStats {
 const statusLabels: { [key: string]: string } = {
   'PENDING': 'Beklemede',
   'CONFIRMED': 'Onaylandı',
-  'SHIPPED': 'Teslimatta',
+  'READY': 'Hazır',
   'DELIVERED': 'Teslim Edildi',
   'CANCELED': 'İptal Edildi'
 };
@@ -178,7 +182,7 @@ const statusLabels: { [key: string]: string } = {
 const statusColors: { [key: string]: string } = {
   'PENDING': 'bg-yellow-100 text-yellow-800',
   'CONFIRMED': 'bg-blue-100 text-[#00365a]',
-  'SHIPPED': 'bg-purple-100 text-purple-800',
+  'READY': 'bg-orange-100 text-orange-800',
   'DELIVERED': 'bg-green-100 text-green-800',
   'CANCELED': 'bg-red-100 text-red-800'
 };
@@ -222,7 +226,7 @@ const Siparisler = () => {
       total: totalCount, // Toplam değeri sabit kalmalı
       pending: 0,
       confirmed: 0,
-      shipped: 0,
+      ready: 0,
       delivered: 0,
       canceled: 0
     };
@@ -237,8 +241,8 @@ const Siparisler = () => {
           case 'CONFIRMED':
             stats.confirmed++;
             break;
-          case 'SHIPPED':
-            stats.shipped++;
+          case 'READY':
+            stats.ready++;
             break;
           case 'DELIVERED':
             stats.delivered++;
@@ -474,160 +478,111 @@ const Siparisler = () => {
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { 
               font-family: Arial, sans-serif; 
-              line-height: 1.4; 
-              color: #333; 
+              line-height: 1.2; 
+              color: #000; 
               background: white;
-              padding: 0;
+              padding: 5mm;
               margin: 0;
-              min-height: 100vh;
-            }
-            .header { 
-              width: 100%;
-              text-align: center; 
-              background: #00365a;
-              color: white;
-              padding: 15px;
-              margin-bottom: 15px;
-              border-radius: 0;
-            }
-            .header h1 { 
-              font-size: 20px; 
-              margin-bottom: 8px; 
-              color: white; 
-            }
-            .header p {
-              color: white;
-              opacity: 0.85;
-              font-size: 14px;
-            }
-            .order-info {
-              border: 1px solid #000;
-              padding: 10px;
-              margin-bottom: 15px;
-              background: #f9f9f9;
-              font-size: 12px;
-            }
-            .order-info h3 {
-              font-size: 14px;
-              margin-bottom: 5px;
             }
             .qr-grid {
-              display: block;
-              margin: 0;
-              padding: 0;
+              display: flex;
+              flex-wrap: wrap;
+              gap: 5mm;
+              justify-content: flex-start;
             }
             .qr-item {
+              width: 100mm;
+              height: 100mm;
               border: 1px solid #000;
-              padding: 15px;
+              padding: 3mm;
               text-align: center;
               page-break-inside: avoid;
-              page-break-after: always;
-              height: 100vh;
               display: flex;
               flex-direction: column;
               justify-content: space-between;
-              margin: 0;
               box-sizing: border-box;
               overflow: hidden;
             }
-            .qr-item:last-child {
-              page-break-after: avoid;
-            }
-            .qr-content {
-              flex: 1;
-              display: flex;
-              flex-direction: column;
-              justify-content: center;
-              align-items: center;
-              margin-top: 10px;
+            .qr-header {
+              font-size: 8pt;
+              font-weight: bold;
+              margin-bottom: 2mm;
+              color: #000;
             }
             .qr-image {
-              max-width: 180px;
-              max-height: 180px;
+              width: 50mm;
+              height: 50mm;
+              margin: 0 auto;
               border: 1px solid #000;
-              margin: 10px auto;
             }
             .product-info {
+              font-size: 7pt;
               text-align: left;
-              margin-top: 10px;
-              font-size: 11px;
+              margin-top: 2mm;
             }
             .product-info p {
-              margin: 2px 0;
+              margin: 1mm 0;
+              line-height: 1.2;
             }
-            .delivery-info {
-              border: 1px solid #000;
-              padding: 8px;
-              margin: 8px 0;
-              background: #f0f0f0;
-              font-size: 10px;
+            .product-info strong {
+              font-weight: bold;
             }
-            .delivery-info h4 {
-              font-size: 12px;
-              margin-bottom: 5px;
+            .store-info {
+              font-size: 6pt;
+              text-align: center;
+              margin-top: 2mm;
+              padding-top: 2mm;
+              border-top: 1px solid #000;
             }
             @media print {
               body { 
                 padding: 0; 
                 margin: 0;
-                min-height: 100vh;
+              }
+              .qr-grid {
+                gap: 0;
               }
               .qr-item { 
-                page-break-inside: avoid; 
-                height: 100vh;
-                margin: 0;
-                padding: 15px;
-                overflow: hidden;
-              }
-              .qr-item:last-child {
-                page-break-after: avoid;
+                page-break-inside: avoid;
+                border: 0.5mm solid #000;
               }
               @page { 
-                margin: 0; 
+                margin: 5mm;
                 size: A4;
               }
             }
           </style>
         </head>
         <body>
-          ${order.qr_codes.map((qrCode, index) => {
-            // Ürün adedi kadar QR kod oluştur
-            const qrCodes = [];
-            for (let i = 0; i < qrCode.order_item.quantity; i++) {
-              qrCodes.push(`
-                <div class="qr-item">
-                  <div class="header">
-                    <h1 style="color: black;">Sipariş QR Kodları</h1>
-                    <p style="color: black;">Sipariş No: ${order.id.slice(0, 8)}</p>
-                  </div>
-
-                  <div class="order-info">
-                    <h3>Sipariş Bilgileri</h3>
-                    <p><strong>Mağaza:</strong> ${order.store_name}</p>
-                  </div>
-
-                  <div class="delivery-info">
-                    <h4>Teslimat Adresi</h4>
-                    <p><strong>Mağaza:</strong> ${order.store_name}</p>
-                    <p><strong>Adres:</strong> ${order.delivery_address}</p>
-                    <p><strong>Telefon:</strong> ${order.store_phone}</p>
-                    <p><strong>E-posta:</strong> ${order.store_email}</p>
-                  </div>
-
-                  <div class="qr-content">
-                    <h4 style="margin-bottom: 15px; font-size: 16px;">${qrCode.product.name}</h4>
-                    <img src="${qrCode.qrCodeImageUrl}" alt="QR Kod ${index + 1}-${i + 1}" class="qr-image" />
+          <div class="qr-grid">
+            ${order.qr_codes.map((qrCode, index) => {
+              // Ürün adedi kadar QR kod oluştur
+              const qrCodes = [];
+              for (let i = 0; i < qrCode.order_item.quantity; i++) {
+                qrCodes.push(`
+                  <div class="qr-item">
+                    <div class="qr-header">
+                      SİPARİŞ: ${order.id.slice(0, 8).toUpperCase()}
+                    </div>
+                    
+                    <img src="${qrCode.qrCodeImageUrl}" alt="QR Kod" class="qr-image" />
+                    
                     <div class="product-info">
-                      <p><strong>Boyut:</strong> ${qrCode.order_item.width}×${qrCode.order_item.height} cm</p>
-                      <p><strong>Saçak:</strong> ${qrCode.order_item.has_fringe ? 'Saçaklı' : 'Saçaksız'}</p>
-                      <p><strong>Kesim Türü:</strong> ${qrCode.order_item.cut_type.charAt(0).toUpperCase() + qrCode.order_item.cut_type.slice(1)}</p>
+                      <p><strong>${qrCode.product.name}</strong></p>
+                      <p>Boyut: ${qrCode.order_item.width}×${qrCode.order_item.height} cm</p>
+                      <p>${qrCode.order_item.has_fringe ? 'Saçaklı' : 'Saçaksız'} • ${qrCode.order_item.cut_type.charAt(0).toUpperCase() + qrCode.order_item.cut_type.slice(1)} Kesim</p>
+                      <p>Adet: ${i + 1}/${qrCode.order_item.quantity}</p>
+                    </div>
+                    
+                    <div class="store-info">
+                      ${order.store_name} • ${order.store_phone}
                     </div>
                   </div>
-                </div>
-              `);
-            }
-            return qrCodes.join('');
-          }).join('')}
+                `);
+              }
+              return qrCodes.join('');
+            }).join('')}
+          </div>
         </body>
       </html>
     `);
@@ -777,7 +732,7 @@ const Siparisler = () => {
 
         {/* Admin İstatistikleri */}
         {isAdmin && fixedStats && (
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
             <button
               onClick={() => handleStatusFilter('')}
               className={`p-4 rounded-lg border transition-all duration-200 text-left hover:shadow-md ${
@@ -812,15 +767,15 @@ const Siparisler = () => {
               <div className="text-sm text-[#00365a]">Onaylandı</div>
             </button>
             <button
-              onClick={() => handleStatusFilter('SHIPPED')}
+              onClick={() => handleStatusFilter('READY')}
               className={`p-4 rounded-lg border transition-all duration-200 text-left hover:shadow-md ${
-                statusFilter === 'SHIPPED' 
-                  ? 'bg-purple-100 border-purple-300 shadow-md' 
-                  : 'bg-purple-50 border-purple-200 hover:bg-purple-100'
+                statusFilter === 'READY' 
+                  ? 'bg-orange-100 border-orange-300 shadow-md' 
+                  : 'bg-orange-50 border-orange-200 hover:bg-orange-100'
               }`}
             >
-              <div className="text-2xl font-bold text-purple-800">{fixedStats.shipped}</div>
-              <div className="text-sm text-purple-600">Teslimatta</div>
+              <div className="text-2xl font-bold text-orange-800">{fixedStats.ready}</div>
+              <div className="text-sm text-orange-600">Hazır</div>
             </button>
             <button
               onClick={() => handleStatusFilter('DELIVERED')}
@@ -886,7 +841,7 @@ const Siparisler = () => {
                 <option value="">Tüm Durumlar</option>
                 <option value="PENDING">Beklemede</option>
                 <option value="CONFIRMED">Onaylandı</option>
-                <option value="SHIPPED">Teslimatta</option>
+                <option value="READY">Hazır</option>
                 <option value="DELIVERED">Teslim Edildi</option>
                 <option value="CANCELED">İptal Edildi</option>
               </select>
@@ -1037,8 +992,8 @@ const Siparisler = () => {
                       Detayları Gör
                     </button>
 
-                    {/* QR Kodları Yazdır Butonu - Sadece CONFIRMED durumunda ve QR kodları varsa */}
-                    {order.status === 'CONFIRMED' && order.qr_codes && order.qr_codes.length > 0 && (
+                    {/* QR Kodları Yazdır Butonu - CONFIRMED veya READY durumunda ve QR kodları varsa */}
+                    {(order.status === 'CONFIRMED' || order.status === 'READY') && order.qr_codes && order.qr_codes.length > 0 && (
                       <button
                         onClick={() => printOrderQRCodes(order)}
                         className="px-4 py-2 text-white rounded-lg transition-colors text-sm flex items-center gap-1"
@@ -1349,30 +1304,43 @@ const Siparisler = () => {
                                 <div className="text-sm text-gray-600">QR Kod</div>
                               </div>
                               <div className="text-center">
-                                <div className="text-2xl font-bold text-green-600">
-                                  {selectedOrder.qr_codes.filter(qr => qr.is_scanned).length}
+                                <div className="text-2xl font-bold text-orange-600">
+                                  {selectedOrder.qr_codes.filter(qr => qr.first_scan_at && !qr.second_scan_at).length}
                                 </div>
-                                <div className="text-sm text-gray-600">Tamamlandı</div>
+                                <div className="text-sm text-gray-600">Hazır</div>
                               </div>
                               <div className="text-center">
-                                <div className="text-2xl font-bold text-yellow-600">
-                                  {selectedOrder.qr_codes.reduce((total, qr) => total + qr.scan_count, 0)}
+                                <div className="text-2xl font-bold text-green-600">
+                                  {selectedOrder.qr_codes.filter(qr => qr.second_scan_at).length}
                                 </div>
-                                <div className="text-sm text-gray-600">Toplam Tarama</div>
+                                <div className="text-sm text-gray-600">Tamamlandı</div>
                               </div>
                             </div>
                             
                             {/* Genel İlerleme Çubuğu */}
-                            <div className="w-full bg-gray-200 rounded-full h-3">
-                              <div 
-                                className="bg-green-600 h-3 rounded-full transition-all duration-300" 
-                                style={{
-                                  width: `${selectedOrder.qr_codes.length > 0 ? (selectedOrder.qr_codes.filter(qr => qr.is_scanned).length / selectedOrder.qr_codes.length) * 100 : 0}%`
-                                }}
-                              ></div>
+                            <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                              <div className="h-3 flex">
+                                {/* Tamamlanmış kısım - yeşil */}
+                                <div 
+                                  className="bg-green-600 transition-all duration-300" 
+                                  style={{
+                                    width: `${selectedOrder.qr_codes.length > 0 ? (selectedOrder.qr_codes.filter(qr => qr.second_scan_at).length / selectedOrder.qr_codes.length) * 100 : 0}%`
+                                  }}
+                                ></div>
+                                {/* Hazır kısım - turuncu */}
+                                <div 
+                                  className="bg-orange-500 transition-all duration-300" 
+                                  style={{
+                                    width: `${selectedOrder.qr_codes.length > 0 ? (selectedOrder.qr_codes.filter(qr => qr.first_scan_at && !qr.second_scan_at).length / selectedOrder.qr_codes.length) * 100 : 0}%`
+                                  }}
+                                ></div>
+                              </div>
                             </div>
                             <div className="text-center text-sm text-gray-600 mt-1">
-                              {selectedOrder.qr_codes.length > 0 ? Math.round((selectedOrder.qr_codes.filter(qr => qr.is_scanned).length / selectedOrder.qr_codes.length) * 100) : 0}% Tamamlandı
+                              {selectedOrder.qr_codes.length > 0 ? Math.round((selectedOrder.qr_codes.filter(qr => qr.second_scan_at).length / selectedOrder.qr_codes.length) * 100) : 0}% Tamamlandı
+                              {selectedOrder.qr_codes.filter(qr => qr.first_scan_at && !qr.second_scan_at).length > 0 && 
+                                ` • ${Math.round((selectedOrder.qr_codes.filter(qr => qr.first_scan_at && !qr.second_scan_at).length / selectedOrder.qr_codes.length) * 100)}% Hazır`
+                              }
                             </div>
                           </div>
                           
@@ -1409,12 +1377,12 @@ const Siparisler = () => {
                                     </div>
                                     <div className="text-xs text-[#00365a] mt-1">
                                       Adet: {qrCode.order_item.quantity} • 
-                                      Tarama: {qrCode.scan_count}/{qrCode.required_scans}
+                                      Tarama: {qrCode.first_scan_at ? (qrCode.second_scan_at ? '2/2' : '1/2') : '0/2'}
                                     </div>
                                     <div className="w-24 bg-gray-200 rounded-full h-2 mt-1">
                                       <div 
                                         className="bg-green-600 h-2 rounded-full" 
-                                        style={{width: `${Math.min((qrCode.scan_count / qrCode.required_scans) * 100, 100)}%`}}
+                                        style={{width: `${qrCode.second_scan_at ? 100 : (qrCode.first_scan_at ? 50 : 0)}%`}}
                                       ></div>
                                     </div>
                                   </div>
@@ -1423,9 +1391,25 @@ const Siparisler = () => {
                                   {qrCode.is_scanned ? (
                                     <div className="text-xs text-center">
                                       <span className="text-green-600 font-medium">✓ Tamamlandı</span>
-                                      {qrCode.scanned_at && (
+                                      {qrCode.second_scan_at && (
                                         <div className="text-gray-500">
-                                          {new Date(qrCode.scanned_at).toLocaleDateString('tr-TR', {
+                                          {new Date(qrCode.second_scan_at).toLocaleDateString('tr-TR', {
+                                            day: '2-digit',
+                                            month: '2-digit',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                          })}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ) : qrCode.first_scan_at ? (
+                                    <div className="text-xs text-center">
+                                      <span className="text-orange-600 font-medium">
+                                        Hazır - 2. okuma bekliyor
+                                      </span>
+                                      {qrCode.first_scan_at && (
+                                        <div className="text-gray-500">
+                                          1. Okuma: {new Date(qrCode.first_scan_at).toLocaleDateString('tr-TR', {
                                             day: '2-digit',
                                             month: '2-digit',
                                             hour: '2-digit',
@@ -1437,7 +1421,7 @@ const Siparisler = () => {
                                   ) : (
                                     <div className="text-xs text-center">
                                       <span className="text-yellow-600 font-medium">
-                                        {qrCode.scan_count > 0 ? `${qrCode.required_scans - qrCode.scan_count} tarama kaldı` : 'Bekliyor'}
+                                        Bekliyor
                                       </span>
                                     </div>
                                   )}
@@ -1493,10 +1477,10 @@ const Siparisler = () => {
                                           // QR kod URL'ini yeni sekmede aç
                                           window.open(qrCode.qr_code, '_blank');
                                         }}
-                                        disabled={qrCode.scan_count >= qrCode.required_scans}
+                                        disabled={qrCode.second_scan_at !== null}
                                         className="text-green-600 hover:text-green-800 text-xs underline disabled:text-gray-400 disabled:cursor-not-allowed"
                                       >
-                                        {qrCode.scan_count >= qrCode.required_scans ? 'Tamamlandı' : 'QR Okutma'}
+                                        {qrCode.second_scan_at ? 'Tamamlandı' : (qrCode.first_scan_at ? '2. Okuma' : '1. Okuma')}
                                       </button>
                                     )}
                                   </div>
@@ -1509,7 +1493,7 @@ const Siparisler = () => {
                     )}
 
                     {/* Fiş Görüntüle Butonu - PENDING hariç tüm durumlarda */}
-                    {['CONFIRMED', 'SHIPPED', 'DELIVERED'].includes(selectedOrder.status) && (
+                    {['CONFIRMED', 'READY', 'DELIVERED'].includes(selectedOrder.status) && (
                       <div className="mt-6 text-center">
                         <button
                           onClick={() => {
@@ -1720,8 +1704,8 @@ const Siparisler = () => {
                       </div>
                     )}
 
-                    {/* QR Kodu yoksa ama sipariş onaylanmışsa */}
-                    {isAdmin && selectedOrder.status === 'CONFIRMED' && (!selectedOrder.qr_codes || selectedOrder.qr_codes.length === 0) && (
+                    {/* QR Kodu yoksa ama sipariş onaylanmış veya hazır durumda */}
+                    {isAdmin && (selectedOrder.status === 'CONFIRMED' || selectedOrder.status === 'READY') && (!selectedOrder.qr_codes || selectedOrder.qr_codes.length === 0) && (
                       <div className="mt-6">
                         <h4 className="text-lg font-semibold text-gray-900 mb-3">QR Kodları</h4>
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
