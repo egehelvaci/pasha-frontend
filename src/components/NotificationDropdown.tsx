@@ -144,11 +144,13 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ userId }) =
       {/* Bildirim Bell Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="relative p-2 sm:p-3 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors duration-200 
+                 focus:outline-none focus:ring-2 focus:ring-blue-500 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
       >
         <FaBell className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium
+                         shadow-md border-2 border-white">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
@@ -156,35 +158,41 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ userId }) =
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50 max-h-96 overflow-hidden">
+        <div className="fixed sm:absolute right-2 sm:right-0 top-16 sm:top-auto sm:mt-2 left-2 sm:left-auto sm:w-80 md:w-96 lg:w-80 
+                      bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-[calc(100vh-5rem)] sm:max-h-96 overflow-hidden"
+             style={{ 
+               width: typeof window !== 'undefined' && window.innerWidth < 640 ? 'calc(100vw - 1rem)' : undefined
+             }}>
           {/* Header */}
-          <div className="p-4 border-b border-gray-200 bg-gray-50">
+          <div className="p-3 sm:p-4 border-b border-gray-200 bg-gray-50">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">Bildirimler</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Bildirimler</h3>
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllAsRead}
                   disabled={markingAllAsRead}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 disabled:opacity-50"
+                  className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 disabled:opacity-50
+                           px-2 py-1 rounded-md hover:bg-blue-50 transition-colors touch-manipulation"
                 >
                   <FaCheckDouble className="w-3 h-3" />
-                  {markingAllAsRead ? 'İşleniyor...' : 'Tümünü Okundu İşaretle'}
+                  <span className="hidden sm:inline">{markingAllAsRead ? 'İşleniyor...' : 'Tümünü Okundu İşaretle'}</span>
+                  <span className="sm:hidden">{markingAllAsRead ? '...' : 'Tümü'}</span>
                 </button>
               )}
             </div>
           </div>
 
           {/* Content */}
-          <div className="max-h-80 overflow-y-auto">
+          <div className="max-h-[60vh] sm:max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             {loading ? (
-              <div className="p-4 text-center">
+              <div className="p-4 sm:p-6 text-center">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
                 <p className="text-sm text-gray-500 mt-2">Bildirimler yükleniyor...</p>
               </div>
             ) : notifications.length === 0 ? (
-              <div className="p-6 text-center">
-                <FaBell className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-gray-500">Henüz bildirim yok</p>
+              <div className="p-4 sm:p-6 text-center">
+                <FaBell className="w-6 h-6 sm:w-8 sm:h-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">Henüz bildirim yok</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
@@ -193,22 +201,22 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ userId }) =
                   return (
                     <div
                       key={notification.id}
-                      className={`p-4 hover:bg-gray-50 transition-colors border-l-4 ${
+                      className={`p-3 sm:p-4 hover:bg-gray-50 transition-colors border-l-4 ${
                         !notification.isRead ? getNotificationColor(notification.type) : 'border-l-gray-200 bg-white'
                       }`}
                     >
-                      <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <div className="flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center">
                           {getNotificationIcon(notification.type)}
                         </div>
                         
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <h4 className={`text-sm font-medium ${!notification.isRead ? 'text-gray-900' : 'text-gray-700'}`}>
+                            <div className="flex-1 pr-2">
+                              <h4 className={`text-sm font-medium leading-tight ${!notification.isRead ? 'text-gray-900' : 'text-gray-700'}`}>
                                 {notification.title}
                               </h4>
-                              <p className={`text-sm mt-1 ${!notification.isRead ? 'text-gray-700' : 'text-gray-500'}`}>
+                              <p className={`text-xs sm:text-sm mt-1 leading-tight ${!notification.isRead ? 'text-gray-700' : 'text-gray-500'}`}>
                                 {notification.message}
                               </p>
                               {metadata.orderNumber && (
@@ -225,7 +233,8 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ userId }) =
                               <button
                                 onClick={() => handleMarkAsRead(notification.id)}
                                 disabled={markingAsRead === notification.id}
-                                className="ml-2 p-1 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
+                                className="ml-1 p-2 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50
+                                         hover:bg-gray-100 rounded-md touch-manipulation flex-shrink-0"
                                 title="Okundu İşaretle"
                               >
                                 {markingAsRead === notification.id ? (
@@ -247,9 +256,10 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ userId }) =
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="p-3 border-t border-gray-200 bg-gray-50">
+            <div className="p-2 sm:p-3 border-t border-gray-200 bg-gray-50">
               <button 
-                className="w-full text-sm text-blue-600 hover:text-blue-800 font-medium text-center py-1"
+                className="w-full text-xs sm:text-sm text-blue-600 hover:text-blue-800 font-medium text-center py-2
+                         hover:bg-blue-50 rounded-md transition-colors touch-manipulation"
                 onClick={() => {
                   setIsOpen(false);
                   // Tüm bildirimleri göster sayfasına yönlendir
