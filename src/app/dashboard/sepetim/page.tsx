@@ -25,6 +25,21 @@ function getAuthToken(): string | null {
   }
 }
 
+// Kesim türlerini Türkçe'ye çeviren fonksiyon
+const translateCutType = (cutType: string): string => {
+  const translations: { [key: string]: string } = {
+    'custom': 'Normal Kesim',
+    'rectangle': 'Normal Kesim',
+    'standart': 'Normal Kesim',
+    'oval': 'Oval Kesim',
+    'round': 'Daire Kesim',
+    'daire': 'Daire Kesim',
+    'post kesim': 'Post Kesim'
+  };
+  
+  return translations[cutType.toLowerCase()] || (cutType.charAt(0).toUpperCase() + cutType.slice(1) + ' Kesim');
+};
+
 export default function CartPage() {
   const { token } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -385,7 +400,7 @@ export default function CartPage() {
                             <div className="mt-1 text-xs text-gray-500">
                               {item.width}×{item.height} cm
                               {item.has_fringe ? ', Saçaklı' : ', Saçaksız'}
-                              {item.cut_type && `, ${item.cut_type.charAt(0).toUpperCase() + item.cut_type.slice(1)} Kesim`}
+                              {item.cut_type && `, ${translateCutType(item.cut_type)}`}
                             </div>
                             {item.notes && (
                               <div className="mt-1 text-xs text-gray-500 italic">

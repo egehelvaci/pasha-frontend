@@ -8,6 +8,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import { FaUser, FaSignOutAlt, FaCog, FaShoppingCart } from 'react-icons/fa';
 import { getMyBalance, BalanceInfo } from '../../services/api';
+import NotificationDropdown from '../../components/NotificationDropdown';
 
 // Token'ı localStorage veya sessionStorage'dan al
 function getAuthToken(): string | null {
@@ -515,6 +516,11 @@ const Header = ({ title, user, className }: HeaderProps) => {
               </div>
             )}
             
+            {/* Bildirim Dropdown */}
+            {authUser?.userId && (
+              <NotificationDropdown userId={authUser.userId} />
+            )}
+            
             {/* Sepet ikonu */}
             <Link href="/dashboard/sepetim" className="relative group">
               <div className="p-3 hover:bg-gray-50 rounded-xl transition-all duration-200 border border-transparent hover:border-gray-200 shadow-sm hover:shadow-md">
@@ -590,6 +596,11 @@ const Header = ({ title, user, className }: HeaderProps) => {
           
           {/* Mobil: Sağ taraf kontrolleri */}
           <div className="flex lg:hidden items-center space-x-2">
+            {/* Bildirim Dropdown */}
+            {authUser?.userId && (
+              <NotificationDropdown userId={authUser.userId} />
+            )}
+            
             {/* Sepet ikonu */}
             <Link href="/dashboard/sepetim" className="relative p-2 rounded-lg hover:bg-gray-50 transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-gray-600">

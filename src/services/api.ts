@@ -2457,4 +2457,189 @@ export async function getAdminUsers(): Promise<AdminUser[]> {
     console.error('Admin kullanıcıları getirme hatası:', error);
     throw error;
   }
+}
+
+// Notification API Interfaces
+export interface NotificationMetadata {
+  orderNumber?: string;
+  productName?: string;
+  storeName?: string;
+  [key: string]: any;
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  type: 'ORDER_CONFIRMED' | 'ORDER_SHIPPED' | 'ORDER_DELIVERED' | 'ORDER_CANCELLED' | 'PAYMENT_SUCCESS' | 'PAYMENT_FAILED' | 'STOCK_ALERT' | 'GENERAL';
+  orderId?: string;
+  metadata?: string | NotificationMetadata;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface GetNotificationsResponse {
+  success: boolean;
+  data: Notification[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+  message?: string;
+}
+
+export interface UnreadCountResponse {
+  success: boolean;
+  data: {
+    unreadCount: number;
+  };
+  message?: string;
+}
+
+export interface MarkAsReadResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    id: string;
+    isRead: boolean;
+  };
+}
+
+export interface NotificationQueryParams {
+  page?: number;
+  limit?: number;
+  unreadOnly?: boolean;
+}
+
+// Kullanıcı bildirimlerini getir
+export async function getUserNotifications(
+  userId: string, 
+  params: NotificationQueryParams = {}
+): Promise<GetNotificationsResponse> {
+  const token = getAuthToken();
+
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  const { page = 1, limit = 20, unreadOnly = false } = params;
+  const queryParams = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+    unreadOnly: unreadOnly.toString()
+  });
+
+  try {
+    const response = await fetch(`${API_URL}/api/notifications/user/${userId}?${queryParams}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data: GetNotificationsResponse = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Bildirimler getirilemedi');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Bildirimleri getirme hatası:', error);
+    throw error;
+  }
+}
+
+// Okunmamış bildirim sayısını getir
+export async function getUnreadNotificationCount(userId: string): Promise<number> {
+  const token = getAuthToken();
+
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/notifications/user/${userId}/unread-count`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data: UnreadCountResponse = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Okunmamış bildirim sayısı getirilemedi');
+    }
+
+    return data.data.unreadCount;
+  } catch (error) {
+    console.error('Okunmamış bildirim sayısını getirme hatası:', error);
+    throw error;
+  }
+}
+
+// Bildirimi okundu olarak işaretle
+export async function markNotificationAsRead(notificationId: string): Promise<MarkAsReadResponse> {
+  const token = getAuthToken();
+
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/notifications/read/${notificationId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data: MarkAsReadResponse = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Bildirim okundu olarak işaretlenemedi');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Bildirimi okundu işaretleme hatası:', error);
+    throw error;
+  }
+}
+
+// Tüm bildirimleri okundu olarak işaretle
+export async function markAllNotificationsAsRead(userId: string): Promise<MarkAsReadResponse> {
+  const token = getAuthToken();
+
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/notifications/read-all/${userId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data: MarkAsReadResponse = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Tüm bildirimler okundu olarak işaretlenemedi');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Tüm bildirimleri okundu işaretleme hatası:', error);
+    throw error;
+  }
 } 

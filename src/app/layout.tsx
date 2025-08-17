@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "./context/AuthContext";
+import { NotificationProvider } from "./context/NotificationContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -70,7 +71,9 @@ export default function RootLayout({
       </head>
       <body className="antialiased font-smoothing text-rendering-optimize touch-manipulation">
         <AuthProvider>
-          {children}
+          <NotificationProvider>
+            {children}
+          </NotificationProvider>
         </AuthProvider>
       </body>
     </html>

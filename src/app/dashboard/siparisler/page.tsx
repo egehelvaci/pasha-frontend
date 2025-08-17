@@ -187,6 +187,21 @@ const statusColors: { [key: string]: string } = {
   'CANCELED': 'bg-red-100 text-red-800'
 };
 
+// Kesim türlerini Türkçe'ye çeviren fonksiyon
+const translateCutType = (cutType: string): string => {
+  const translations: { [key: string]: string } = {
+    'custom': 'Normal Kesim',
+    'rectangle': 'Normal Kesim',
+    'standart': 'Normal Kesim',
+    'oval': 'Oval Kesim',
+    'round': 'Daire Kesim',
+    'daire': 'Daire Kesim',
+    'post kesim': 'Post Kesim'
+  };
+  
+  return translations[cutType.toLowerCase()] || (cutType.charAt(0).toUpperCase() + cutType.slice(1) + ' Kesim');
+};
+
 const Siparisler = () => {
   const { user, isAdmin, isLoading: authLoading } = useAuth();
   const token = useToken();
@@ -485,16 +500,18 @@ const Siparisler = () => {
               margin: 0;
             }
             .qr-grid {
-              display: flex;
-              flex-wrap: wrap;
-              gap: 5mm;
-              justify-content: flex-start;
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              grid-template-rows: repeat(2, 1fr);
+              gap: 3mm;
+              width: 100%;
+              height: 100%;
             }
             .qr-item {
-              width: 100mm;
-              height: 100mm;
+              width: 60mm;
+              height: 85mm;
               border: 1px solid #000;
-              padding: 3mm;
+              padding: 2mm;
               text-align: center;
               page-break-inside: avoid;
               display: flex;
@@ -504,34 +521,34 @@ const Siparisler = () => {
               overflow: hidden;
             }
             .qr-header {
-              font-size: 8pt;
+              font-size: 7pt;
               font-weight: bold;
-              margin-bottom: 2mm;
+              margin-bottom: 1mm;
               color: #000;
             }
             .qr-image {
-              width: 50mm;
-              height: 50mm;
+              width: 35mm;
+              height: 35mm;
               margin: 0 auto;
               border: 1px solid #000;
             }
             .product-info {
-              font-size: 7pt;
+              font-size: 6pt;
               text-align: left;
-              margin-top: 2mm;
+              margin-top: 1mm;
             }
             .product-info p {
-              margin: 1mm 0;
-              line-height: 1.2;
+              margin: 0.5mm 0;
+              line-height: 1.1;
             }
             .product-info strong {
               font-weight: bold;
             }
             .store-info {
-              font-size: 6pt;
+              font-size: 5pt;
               text-align: center;
-              margin-top: 2mm;
-              padding-top: 2mm;
+              margin-top: 1mm;
+              padding-top: 1mm;
               border-top: 1px solid #000;
             }
             @media print {
@@ -540,26 +557,30 @@ const Siparisler = () => {
                 margin: 0;
               }
               .qr-grid {
-                gap: 0;
+                gap: 2mm;
+                height: 280mm;
+                width: 200mm;
+                page-break-inside: avoid;
               }
               .qr-item { 
                 page-break-inside: avoid;
                 border: 0.5mm solid #000;
+                break-inside: avoid;
               }
               @page { 
                 margin: 5mm;
-                size: A4;
+                size: A4 portrait;
               }
             }
           </style>
         </head>
         <body>
-          <div class="qr-grid">
-            ${order.qr_codes.map((qrCode, index) => {
-              // Ürün adedi kadar QR kod oluştur
-              const qrCodes = [];
+          ${(() => {
+            // Tüm QR kodları tek bir dizi haline getir
+            const allQrItems: string[] = [];
+            order.qr_codes.forEach((qrCode, index) => {
               for (let i = 0; i < qrCode.order_item.quantity; i++) {
-                qrCodes.push(`
+                allQrItems.push(`
                   <div class="qr-item">
                     <div class="qr-header">
                       SİPARİŞ: ${order.id.slice(0, 8).toUpperCase()}
@@ -570,7 +591,7 @@ const Siparisler = () => {
                     <div class="product-info">
                       <p><strong>${qrCode.product.name}</strong></p>
                       <p>Boyut: ${qrCode.order_item.width}×${qrCode.order_item.height} cm</p>
-                      <p>${qrCode.order_item.has_fringe ? 'Saçaklı' : 'Saçaksız'} • ${qrCode.order_item.cut_type.charAt(0).toUpperCase() + qrCode.order_item.cut_type.slice(1)} Kesim</p>
+                      <p>${qrCode.order_item.has_fringe ? 'Saçaklı' : 'Saçaksız'} • ${translateCutType(qrCode.order_item.cut_type)}</p>
                       <p>Adet: ${i + 1}/${qrCode.order_item.quantity}</p>
                     </div>
                     
@@ -580,9 +601,21 @@ const Siparisler = () => {
                   </div>
                 `);
               }
-              return qrCodes.join('');
-            }).join('')}
-          </div>
+            });
+            
+            // 6'şar gruplara böl ve sayfalar oluştur
+            const pages = [];
+            for (let i = 0; i < allQrItems.length; i += 6) {
+              const pageItems = allQrItems.slice(i, i + 6);
+              pages.push(`
+                <div class="qr-grid" ${i > 0 ? 'style="page-break-before: always;"' : ''}>
+                  ${pageItems.join('')}
+                </div>
+              `);
+            }
+            
+            return pages.join('');
+          })()}
         </body>
       </html>
     `);
@@ -1261,7 +1294,7 @@ const Siparisler = () => {
                               <div className="mt-1 text-xs text-gray-500">
                                 {item.width}×{item.height} cm
                                 {item.has_fringe ? ', Saçaklı' : ', Saçaksız'}
-                                {item.cut_type && `, ${item.cut_type.charAt(0).toUpperCase() + item.cut_type.slice(1)} Kesim`}
+                                {item.cut_type && `, ${translateCutType(item.cut_type)}`}
                               </div>
                               <div className="mt-2 flex justify-between items-center">
                                 <span className="text-sm text-gray-600">
@@ -1373,7 +1406,7 @@ const Siparisler = () => {
                                     <div className="text-xs text-gray-500">
                                       {qrCode.order_item.width}×{qrCode.order_item.height} cm • 
                                       {qrCode.order_item.has_fringe ? ' Saçaklı' : ' Saçaksız'} • 
-                                      {qrCode.order_item.cut_type.charAt(0).toUpperCase() + qrCode.order_item.cut_type.slice(1)} Kesim
+                                      {translateCutType(qrCode.order_item.cut_type)}
                                     </div>
                                     <div className="text-xs text-[#00365a] mt-1">
                                       Adet: {qrCode.order_item.quantity} • 
@@ -1456,7 +1489,7 @@ const Siparisler = () => {
                                                     <p style="margin: 3px 0;"><strong>Boyut:</strong> ${qrCode.order_item.width}×${qrCode.order_item.height} cm</p>
                                                     <p style="margin: 3px 0;"><strong>Adet:</strong> ${qrCode.order_item.quantity}</p>
                                                     <p style="margin: 3px 0;"><strong>Saçak:</strong> ${qrCode.order_item.has_fringe ? 'Saçaklı' : 'Saçaksız'}</p>
-                                                    <p style="margin: 3px 0;"><strong>Kesim Türü:</strong> ${qrCode.order_item.cut_type.charAt(0).toUpperCase() + qrCode.order_item.cut_type.slice(1)}</p>
+                                                    <p style="margin: 3px 0;"><strong>Kesim Türü:</strong> ${translateCutType(qrCode.order_item.cut_type)}</p>
                                                   </div>
                                                 </div>
                                               </body>
@@ -1663,7 +1696,7 @@ const Siparisler = () => {
                                               <td>${item.width} × ${item.height}</td>
                                               <td>${item.quantity}</td>
                                               <td>${item.has_fringe ? 'Saçaklı' : 'Saçaksız'}</td>
-                                              <td>${item.cut_type.charAt(0).toUpperCase() + item.cut_type.slice(1)}</td>
+                                              <td>${translateCutType(item.cut_type)}</td>
                                               <td>${parseFloat(item.unit_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</td>
                                               <td>${parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</td>
                                             </tr>
