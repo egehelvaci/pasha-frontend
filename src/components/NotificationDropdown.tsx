@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { FaBell, FaCheck, FaCheckDouble, FaTimes, FaBox, FaTruck, FaCheckCircle, FaExclamationTriangle, FaCreditCard } from 'react-icons/fa';
+import { FaBell, FaCheck, FaCheckDouble, FaTimes, FaBox, FaTruck, FaCheckCircle, FaExclamationTriangle, FaCreditCard, FaChevronLeft, FaChevronRight, FaPlus } from 'react-icons/fa';
 import { NotificationMetadata } from '@/services/api';
 import { useNotifications } from '@/app/context/NotificationContext';
 
@@ -19,9 +19,12 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ userId }) =
     notifications,
     unreadCount,
     loading,
+    pagination,
     fetchNotifications,
     markAsRead,
-    markAllAsRead
+    markAllAsRead,
+    loadMore,
+    goToPage
   } = useNotifications();
 
   // Bildirim tipine göre ikon getir
@@ -254,19 +257,70 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ userId }) =
             )}
           </div>
 
-          {/* Footer */}
+          {/* Pagination Footer */}
           {notifications.length > 0 && (
-            <div className="p-2 sm:p-3 border-t border-gray-200 bg-gray-50">
-              <button 
-                className="w-full text-xs sm:text-sm text-blue-600 hover:text-blue-800 font-medium text-center py-2
-                         hover:bg-blue-50 rounded-md transition-colors touch-manipulation"
-                onClick={() => {
-                  setIsOpen(false);
-                  // Tüm bildirimleri göster sayfasına yönlendir
-                }}
-              >
-                Tüm Bildirimleri Görüntüle
-              </button>
+            <div className="border-t border-gray-200 bg-gray-50">
+              {/* Pagination Controls */}
+              {pagination.totalPages > 1 && (
+                <div className="flex items-center justify-between p-2 sm:p-3 border-b border-gray-200">
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => goToPage(pagination.currentPage - 1)}
+                      disabled={pagination.currentPage <= 1 || loading}
+                      className="p-1.5 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed
+                               hover:bg-gray-100 rounded transition-colors touch-manipulation"
+                    >
+                      <FaChevronLeft className="w-3 h-3" />
+                    </button>
+                    
+                    <span className="text-xs sm:text-sm text-gray-600 px-2">
+                      {pagination.currentPage} / {pagination.totalPages}
+                    </span>
+                    
+                    <button
+                      onClick={() => goToPage(pagination.currentPage + 1)}
+                      disabled={pagination.currentPage >= pagination.totalPages || loading}
+                      className="p-1.5 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed
+                               hover:bg-gray-100 rounded transition-colors touch-manipulation"
+                    >
+                      <FaChevronRight className="w-3 h-3" />
+                    </button>
+                  </div>
+                  
+                  {/* Load More Button */}
+                  {pagination.hasMore && (
+                    <button
+                      onClick={loadMore}
+                      disabled={loading}
+                      className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium
+                               px-2 py-1 hover:bg-blue-50 rounded transition-colors touch-manipulation disabled:opacity-50"
+                    >
+                      <FaPlus className="w-3 h-3" />
+                      <span className="hidden sm:inline">Daha Fazla</span>
+                      <span className="sm:hidden">+</span>
+                    </button>
+                  )}
+                </div>
+              )}
+              
+              {/* Info & View All Button */}
+              <div className="p-2 sm:p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">
+                    {notifications.length} / {pagination.total} bildirim
+                  </span>
+                  <button 
+                    className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 font-medium
+                             hover:bg-blue-50 rounded-md px-2 py-1 transition-colors touch-manipulation"
+                    onClick={() => {
+                      setIsOpen(false);
+                      // Tüm bildirimleri göster sayfasına yönlendir
+                    }}
+                  >
+                    Tümünü Görüntüle
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>

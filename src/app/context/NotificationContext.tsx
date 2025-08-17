@@ -15,12 +15,20 @@ interface NotificationContextType {
   unreadCount: number;
   loading: boolean;
   error: string | null;
-  fetchNotifications: () => Promise<void>;
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    total: number;
+    hasMore: boolean;
+  };
+  fetchNotifications: (page?: number, append?: boolean) => Promise<void>;
   fetchUnreadCount: () => Promise<void>;
   markAsRead: (notificationId: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   addNotification: (notification: Notification) => void;
   refreshNotifications: () => Promise<void>;
+  loadMore: () => Promise<void>;
+  goToPage: (page: number) => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -35,6 +43,12 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    total: 0,
+    hasMore: false
+  });
   
   // API çağrılarını takip etmek için ref'ler
   const lastFetchTime = useRef<number>(0);
@@ -45,16 +59,17 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   // Minimum bekleme süreleri (ms)
   const FETCH_COOLDOWN = 30000; // 30 saniye
   const UNREAD_COUNT_COOLDOWN = 10000; // 10 saniye
+  const NOTIFICATIONS_PER_PAGE = 10; // Sayfa başına bildirim sayısı
 
-  // Bildirimleri getir (cooldown ile)
-  const fetchNotifications = useCallback(async () => {
+  // Bildirimleri getir (pagination desteği ile)
+  const fetchNotifications = useCallback(async (page: number = 1, append: boolean = false) => {
     if (!user?.userId || authLoading || fetchingRef.current) {
       console.log('🔄 fetchNotifications skipped:', { userId: !!user?.userId, authLoading, fetching: fetchingRef.current });
       return;
     }
     
     const now = Date.now();
-    if (now - lastFetchTime.current < FETCH_COOLDOWN) {
+    if (!append && now - lastFetchTime.current < FETCH_COOLDOWN) {
       console.log('⏰ fetchNotifications cooldown active, remaining:', Math.round((FETCH_COOLDOWN - (now - lastFetchTime.current)) / 1000), 'seconds');
       return;
     }
@@ -62,14 +77,30 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     fetchingRef.current = true;
     setLoading(true);
     setError(null);
-    lastFetchTime.current = now;
+    if (!append) lastFetchTime.current = now;
     
-    console.log('📥 Fetching notifications...');
+    console.log('📥 Fetching notifications page:', page, append ? '(append)' : '(replace)');
     
     try {
-      const response = await getUserNotifications(user.userId, { limit: 50 });
-      setNotifications(response.data);
-      console.log('✅ Notifications fetched:', response.data.length);
+      const response = await getUserNotifications(user.userId, { 
+        page, 
+        limit: NOTIFICATIONS_PER_PAGE 
+      });
+      
+      if (append) {
+        setNotifications(prev => [...prev, ...response.data]);
+      } else {
+        setNotifications(response.data);
+      }
+      
+      setPagination({
+        currentPage: response.pagination.page,
+        totalPages: response.pagination.totalPages,
+        total: response.pagination.total,
+        hasMore: response.pagination.page < response.pagination.totalPages
+      });
+      
+      console.log('✅ Notifications fetched:', response.data.length, 'total:', response.pagination.total);
     } catch (err: any) {
       setError(err.message || 'Bildirimler alınamadı');
       console.error('❌ Bildirimler getirme hatası:', err);
@@ -161,13 +192,30 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     }
   }, []);
 
+  // Daha fazla yükle (infinite scroll için)
+  const loadMore = useCallback(async () => {
+    if (!pagination.hasMore || loading) return;
+    
+    console.log('📄 Loading more notifications, page:', pagination.currentPage + 1);
+    await fetchNotifications(pagination.currentPage + 1, true);
+  }, [fetchNotifications, pagination.hasMore, pagination.currentPage, loading]);
+
+  // Belirli sayfaya git
+  const goToPage = useCallback(async (page: number) => {
+    if (page < 1 || page > pagination.totalPages || loading) return;
+    
+    console.log('📄 Going to page:', page);
+    await fetchNotifications(page, false);
+  }, [fetchNotifications, pagination.totalPages, loading]);
+
   // Bildirimleri yenile (manuel)
   const refreshNotifications = useCallback(async () => {
     console.log('🔄 Manual refresh requested');
     // Reset cooldown for manual refresh
     lastFetchTime.current = 0;
     lastUnreadCountFetch.current = 0;
-    await Promise.all([fetchNotifications(), fetchUnreadCount()]);
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
+    await Promise.all([fetchNotifications(1, false), fetchUnreadCount()]);
   }, [fetchNotifications, fetchUnreadCount]);
 
   // İlk yüklemede veri çek (sadece bir kez)
@@ -200,23 +248,29 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     unreadCount,
     loading,
     error,
+    pagination,
     fetchNotifications,
     fetchUnreadCount,
     markAsRead,
     markAllAsRead,
     addNotification,
-    refreshNotifications
+    refreshNotifications,
+    loadMore,
+    goToPage
   }), [
     notifications,
     unreadCount,
     loading,
     error,
+    pagination,
     fetchNotifications,
     fetchUnreadCount,
     markAsRead,
     markAllAsRead,
     addNotification,
-    refreshNotifications
+    refreshNotifications,
+    loadMore,
+    goToPage
   ]);
 
   return (
