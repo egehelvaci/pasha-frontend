@@ -987,9 +987,16 @@ export default function Settings() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {typeof user.userType === 'object'
-                        ? (user.userType.description || user.userType.name)
-                        : user.userType}
+                      {(() => {
+                        const userTypeName = typeof user.userType === 'object' ? user.userType.name : user.userType;
+                        switch(userTypeName) {
+                          case 'admin': return 'Admin';
+                          case 'editor': return 'Editör';
+                          case 'viewer': return 'Görüntüleyici';
+                          case 'employee': return 'Çalışan';
+                          default: return userTypeName;
+                        }
+                      })()}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -1045,7 +1052,7 @@ export default function Settings() {
       {/* Kullanıcı Detay/Düzenleme Modalı */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="bg-white rounded-2xl max-w-4xl w-full h-[95vh] overflow-y-auto shadow-2xl" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {/* Modal Header */}
             <div className="bg-gradient-to-r from-[#00365a] to-[#004170] text-white rounded-t-2xl p-6">
               <div className="flex justify-between items-center">
@@ -1201,7 +1208,7 @@ export default function Settings() {
                     </button>
                     
                     {userTypeDropdownOpen && (
-                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                      <div className="absolute z-[100] w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
                         <div
                           className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
                             formData.userTypeName === "admin" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
@@ -1278,7 +1285,7 @@ export default function Settings() {
                       </button>
                       
                       {storeDropdownOpen && (
-                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                        <div className="absolute z-[100] w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
                           {stores.map((store) => (
                             <div
                               key={store.store_id}
