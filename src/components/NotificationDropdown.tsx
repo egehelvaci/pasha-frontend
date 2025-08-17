@@ -131,12 +131,13 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ userId }) =
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Dropdown açıldığında bildirimleri getir
+  // Dropdown açıldığında bildirimleri getir (sadece açılış anında)
   useEffect(() => {
     if (isOpen) {
+      console.log('🔔 Notification dropdown opened, fetching notifications');
       fetchNotifications();
     }
-  }, [isOpen, fetchNotifications]);
+  }, [isOpen]); // fetchNotifications dependency'sini kaldırıyoruz
 
   return (
     <div className="relative" ref={dropdownRef}>
