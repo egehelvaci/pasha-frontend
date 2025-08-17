@@ -44,7 +44,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   
   // Minimum bekleme süreleri (ms)
   const FETCH_COOLDOWN = 30000; // 30 saniye
-  const UNREAD_COUNT_COOLDOWN = 60000; // 1 dakika
+  const UNREAD_COUNT_COOLDOWN = 10000; // 10 saniye
 
   // Bildirimleri getir (cooldown ile)
   const fetchNotifications = useCallback(async () => {
@@ -178,15 +178,15 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     }
   }, [user?.userId, authLoading, fetchUnreadCount]);
 
-  // Periyodik olarak okunmamış sayıyı güncelle (10 dakikada bir, daha seyrek)
+  // Periyodik olarak okunmamış sayıyı güncelle (10 saniyede bir)
   useEffect(() => {
     if (!user?.userId || authLoading) return;
 
-    console.log('⏲️ Setting up periodic unread count check (10 minutes)');
+    console.log('⏲️ Setting up periodic unread count check (10 seconds)');
     const interval = setInterval(() => {
-      console.log('⏰ Periodic unread count check triggered');
+      console.log('⏰ Periodic unread count check triggered (every 10s)');
       fetchUnreadCount();
-    }, 10 * 60 * 1000); // 10 dakika (daha seyrek)
+    }, 10 * 1000); // 10 saniye
 
     return () => {
       console.log('🛑 Clearing periodic unread count check');
