@@ -67,6 +67,24 @@ const SiparisOlustur = () => {
   const [orderNotes, setOrderNotes] = useState('');
   const [userProfile, setUserProfile] = useState<UserProfileInfo | null>(null);
 
+  // Limit mesajını kullanıcı dostu hale getiren fonksiyon
+  const formatLimitMessage = (message: string): string => {
+    // Minimum ödeme tutarını çıkarmaya çalış
+    const minPaymentMatch = message.match(/Minimum ödeme tutarı:\s*([\d.,]+)\s*TL/i);
+    
+    if (minPaymentMatch) {
+      const minPaymentAmount = minPaymentMatch[1];
+      return `Sipariş verebilmek için minimum ${minPaymentAmount} TL ödeme yapmanız gerekmektedir.`;
+    }
+    
+    // Eğer minimum ödeme tutarı bulunamadıysa genel mesaj
+    if (message.includes('yetersiz') || message.includes('ödeme')) {
+      return 'Sipariş verebilmek için ödeme yapmanız gerekmektedir.';
+    }
+    
+    return message;
+  };
+
   // Sepet verilerini getir
   useEffect(() => {
     const fetchCartData = async () => {
@@ -328,7 +346,7 @@ const SiparisOlustur = () => {
                       ? 'text-green-800' 
                       : 'text-red-800'
                   }`}>
-                    {limitInfo.message}
+                    {formatLimitMessage(limitInfo.message)}
                   </p>
                   {limitInfo.requiresPayment && (
                     <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
@@ -365,7 +383,7 @@ const SiparisOlustur = () => {
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <h3 className="text-sm font-medium text-green-900 mb-2">💳 Ödeme Bilgileri</h3>
                   <p className="text-sm text-green-800">
-                    Ödeme mevcut açık hesap limitinizden otomatik olarak düşülecektir.
+                    Ödeme hesap bakiyenizden otomatik olarak düşülecektir.
                   </p>
                 </div>
               </div>
