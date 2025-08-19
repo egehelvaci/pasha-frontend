@@ -1826,11 +1826,13 @@ const MuhasebePage = () => {
                                     Tutar <span className="text-red-500">*</span>
                                 </label>
                                 <input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    value={formData.tutar}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, tutar: parseFloat(e.target.value) || 0 }))}
+                                    type="text"
+                                    inputMode="decimal"
+                                    value={formData.tutar === 0 ? '' : formData.tutar}
+                                    onChange={(e) => {
+                                        const value = e.target.value.replace(/[^0-9.-]/g, '');
+                                        setFormData(prev => ({ ...prev, tutar: value === '' ? 0 : parseFloat(value) || 0 }));
+                                    }}
                                                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors"
                                     placeholder="0.00"
                                     required

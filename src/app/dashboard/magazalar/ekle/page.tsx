@@ -367,7 +367,6 @@ export default function AddStorePage() {
                     <input
                       type="number"
                       step="0.01"
-                      min="0"
                       value={formData.bakiye}
                       onChange={(e) => handleInputChange('bakiye', parseFloat(e.target.value) || 0)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all"
@@ -435,28 +434,16 @@ export default function AddStorePage() {
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  💡 Yeni Ödeme Sistemi Bilgileri
+                  💡 Ödeme Sistemi Bilgileri
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-blue-700">
-                  <div className="space-y-2">
-                    <div className="flex items-start">
-                      <span className="font-semibold mr-2">Bakiye:</span>
-                      <span>Mağazanın doğrudan kullanabileceği para miktarı</span>
-                    </div>
-                    <div className="flex items-start">
-                      <span className="font-semibold mr-2">Açık Hesap:</span>
-                      <span>Bakiye bittiğinde kullanılabilecek kredi tutarı</span>
-                    </div>
+                <div className="text-xs text-blue-700 space-y-2">
+                  <div className="flex items-start">
+                    <span className="font-semibold mr-2">Bakiye:</span>
+                    <span>Mağazanın kullanabileceği para miktarı. Negatif değer borç anlamına gelir.</span>
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex items-start">
-                      <span className="font-semibold mr-2">Toplam:</span>
-                      <span>Bakiye + Açık Hesap Limiti</span>
-                    </div>
-                    <div className="flex items-start">
-                      <span className="font-semibold mr-2">Sipariş:</span>
-                      <span>Önce bakiyeden, sonra açık hesaptan düşülür</span>
-                    </div>
+                  <div className="flex items-start">
+                    <span className="font-semibold mr-2">Sipariş:</span>
+                    <span>Sipariş tutarları mağaza bakiyesinden düşülür.</span>
                   </div>
                 </div>
               </div>

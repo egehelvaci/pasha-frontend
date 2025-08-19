@@ -238,8 +238,7 @@ export default function EditStorePage() {
                 <InputNumber
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors"
                   formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  parser={(value: string | undefined) => value ? Number(value.replace(/[^\d.]/g, '')) : 0}
-                  min={0}
+                  parser={(value: string | undefined) => value ? Number(value.replace(/[^\d.-]/g, '')) : 0}
                   precision={2}
                   placeholder="0.00"
                 />
@@ -306,12 +305,10 @@ export default function EditStorePage() {
 
             {/* Bilgilendirme Kartı */}
             <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <h4 className="text-sm font-semibold text-blue-800 mb-2">💡 Yeni Ödeme Sistemi Bilgileri:</h4>
+              <h4 className="text-sm font-semibold text-blue-800 mb-2">💡 Ödeme Sistemi Bilgileri:</h4>
               <ul className="text-xs text-blue-700 space-y-1">
-                <li>• <strong>Bakiye:</strong> Mağazanın doğrudan kullanabileceği para miktarı</li>
-                <li>• <strong>Açık Hesap Limiti:</strong> Bakiye bittiğinde kullanılabilecek kredi tutarı</li>
-                <li>• <strong>Toplam Kullanılabilir:</strong> Bakiye + Açık Hesap Limiti</li>
-                <li>• <strong>Sipariş Mantığı:</strong> Önce bakiyeden, sonra açık hesaptan düşülür</li>
+                <li>• <strong>Bakiye:</strong> Mağazanın kullanabileceği para miktarı. Negatif değer borç anlamına gelir.</li>
+                <li>• <strong>Sipariş:</strong> Sipariş tutarları mağaza bakiyesinden düşülür.</li>
               </ul>
             </div>
 

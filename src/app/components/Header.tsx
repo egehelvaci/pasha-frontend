@@ -51,7 +51,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
   const pathname = usePathname();
   const router = useRouter();
   const { logout, isAdmin, user: authUser } = useAuth(); // AuthContext'teki user'ı al
-  const [isBlurred, setIsBlurred] = useState(true);
+
   const [cartItems, setCartItems] = useState<number>(0);
   const [isMounted, setIsMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -127,13 +127,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
     };
   }, [isProfileModalOpen]);
   
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('headerBlur');
-      if (stored === 'false') setIsBlurred(false);
-      else setIsBlurred(true);
-    }
-  }, []);
+
   
   // Manuel bakiye yenileme fonksiyonu
   const refreshBalance = async () => {
@@ -235,14 +229,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
     }
   };
   
-  const handleBlurToggle = () => {
-    setIsBlurred((prev) => {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('headerBlur', String(!prev));
-      }
-      return !prev;
-    });
-  };
+
 
   // Finansal bilgileri API'den gelen veriler veya fallback olarak AuthContext'teki store'dan al
   const getFinancialInfo = () => {
@@ -449,70 +436,31 @@ const Header = ({ title, user, className }: HeaderProps) => {
                     <span className="text-sm text-gray-600">Güncelleniyor...</span>
                   </div>
                 ) : (
-                  <div className={`${isBlurred ? 'blur-sm' : ''} flex gap-4 transition-all duration-200`}>
-                    <div className="text-center">
-                      <span className="block font-semibold text-gray-700">Bakiye</span>
-                      <span className={`font-medium ${financialInfo.bakiye < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                        {financialInfo.bakiye.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                      </span>
-                    </div>
-                    <div className="text-center">
-                      <span className="block font-semibold text-gray-700">Açık Hesap</span>
-                      <span className="text-[#00365a] font-medium">
-                        {financialInfo.limitsizAcikHesap 
-                          ? 'Limitsiz' 
-                          : `${financialInfo.acikHesapLimiti.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`
-                        }
-                      </span>
-                    </div>
-                    <div className="text-center">
-                      <span className="block font-semibold text-gray-700">Toplam</span>
-                      <span className="text-purple-600 font-medium">
-                        {financialInfo.limitsizAcikHesap 
-                          ? 'Limitsiz' 
-                          : `${financialInfo.toplamKullanilabilir.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`
-                        }
-                      </span>
-                    </div>
+                  <div className="text-center">
+                    <span className="block font-semibold text-gray-700">Bakiye</span>
+                    <span className={`font-medium ${financialInfo.bakiye < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {financialInfo.bakiye.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                    </span>
                   </div>
                 )}
-                <div className="flex gap-1">
-                  <button
-                    type="button"
-                    className="p-1.5 bg-white rounded-full hover:bg-gray-100 transition-colors"
-                    onClick={refreshBalance}
-                    title="Bakiye Bilgilerini Yenile"
-                    disabled={isLoadingBalance}
+                <button
+                  type="button"
+                  className="p-1.5 bg-white rounded-full hover:bg-gray-100 transition-colors"
+                  onClick={refreshBalance}
+                  title="Bakiye Bilgilerini Yenile"
+                  disabled={isLoadingBalance}
+                >
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    strokeWidth={1.5} 
+                    stroke="currentColor" 
+                    className={`w-4 h-4 text-[#00365a] ${isLoadingBalance ? 'animate-spin' : ''}`}
                   >
-                    <svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      fill="none" 
-                      viewBox="0 0 24 24" 
-                      strokeWidth={1.5} 
-                      stroke="currentColor" 
-                      className={`w-4 h-4 text-[#00365a] ${isLoadingBalance ? 'animate-spin' : ''}`}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    className="p-1.5 bg-white rounded-full hover:bg-gray-100 transition-colors"
-                    onClick={handleBlurToggle}
-                    title={isBlurred ? 'Bilgileri Göster' : 'Bilgileri Gizle'}
-                  >
-                    {isBlurred ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-[#00365a]">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12.001C3.226 15.376 7.113 19.5 12 19.5c1.772 0 3.432-.457 4.899-1.277M6.228 6.228A10.45 10.45 0 0112 4.5c4.887 0 8.774 4.124 10.066 7.499a10.523 10.523 0 01-4.293 5.226M6.228 6.228l11.544 11.544M6.228 6.228L3 3m15 15l-3-3" />
-                      </svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-[#00365a]">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12S5.25 6.75 12 6.75 21.75 12 21.75 12S18.75 17.25 12 17.25 2.25 12 2.25 12z" />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
-                    )}
-                  </button>
-                </div>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                  </svg>
+                </button>
               </div>
             )}
             
@@ -522,7 +470,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
             )}
             
             {/* Sepet ikonu */}
-            <Link href="/dashboard/sepetim" className="relative group">
+            <Link href="/dashboard/sepetim" className="relative group flex flex-col items-center">
               <div className="p-3 hover:bg-gray-50 rounded-xl transition-all duration-200 border border-transparent hover:border-gray-200 shadow-sm hover:shadow-md">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-gray-600 group-hover:text-[#00365a] transition-colors">
                   <path fillRule="evenodd" d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 004.25 22.5h15.5a1.875 1.875 0 001.865-2.071l-1.263-12a1.875 1.875 0 00-1.865-1.679H16.5V6a4.5 4.5 0 10-9 0zM12 3a3 3 0 00-3 3v.75h6V6a3 3 0 00-3-3zm-3 8.25a3 3 0 106 0v-.75a.75.75 0 011.5 0v.75a4.5 4.5 0 11-9 0v-.75a.75.75 0 011.5 0v.75z" clipRule="evenodd" />
@@ -533,6 +481,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
                   </span>
                 )}
               </div>
+              <span className="text-xs text-gray-600 group-hover:text-[#00365a] transition-colors mt-1">Sepetim</span>
             </Link>
             
             {/* Kullanıcı dropdown */}
@@ -602,15 +551,16 @@ const Header = ({ title, user, className }: HeaderProps) => {
             )}
             
             {/* Sepet ikonu */}
-            <Link href="/dashboard/sepetim" className="relative p-2 rounded-lg hover:bg-gray-50 transition-colors">
+            <Link href="/dashboard/sepetim" className="relative flex flex-col items-center p-2 rounded-lg hover:bg-gray-50 transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-gray-600">
                 <path fillRule="evenodd" d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 004.25 22.5h15.5a1.875 1.875 0 001.865-2.071l-1.263-12a1.875 1.875 0 00-1.865-1.679H16.5V6a4.5 4.5 0 10-9 0zM12 3a3 3 0 00-3 3v.75h6V6a3 3 0 00-3-3zm-3 8.25a3 3 0 106 0v-.75a.75.75 0 011.5 0v.75a4.5 4.5 0 11-9 0v-.75a.75.75 0 011.5 0v.75z" clipRule="evenodd" />
               </svg>
               {cartItems > 0 && (
-                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
+                <span className="absolute top-1 right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
                   {cartItems > 99 ? '99+' : cartItems}
                 </span>
               )}
+              <span className="text-xs text-gray-600 mt-1">Sepetim</span>
             </Link>
             
             {/* Hamburger menü */}
@@ -850,48 +800,22 @@ const Header = ({ title, user, className }: HeaderProps) => {
                           <span className="ml-2 text-xs text-gray-600">Yükleniyor...</span>
                         </div>
                       ) : (
-                        <div className="grid grid-cols-3 gap-2 text-center">
-                          <div className={`${isBlurred ? 'blur-sm' : ''} transition-all duration-200`}>
-                            <p className="text-xs text-gray-600">Bakiye</p>
-                            <p className={`text-sm font-bold ${financialInfo.bakiye < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                              {financialInfo.bakiye.toLocaleString('tr-TR', { minimumFractionDigits: 0 })} ₺
-                            </p>
-                          </div>
-                          <div className={`${isBlurred ? 'blur-sm' : ''} transition-all duration-200`}>
-                            <p className="text-xs text-gray-600">Açık Hesap</p>
-                            <p className="text-sm font-bold text-[#00365a]">
-                              {financialInfo.limitsizAcikHesap 
-                                ? 'Limitsiz' 
-                                : `${financialInfo.acikHesapLimiti.toLocaleString('tr-TR', { minimumFractionDigits: 0 })} ₺`
-                              }
-                            </p>
-                          </div>
-                          <div className={`${isBlurred ? 'blur-sm' : ''} transition-all duration-200`}>
-                            <p className="text-xs text-gray-600">Toplam</p>
-                            <p className="text-sm font-bold text-purple-600">
-                              {financialInfo.limitsizAcikHesap 
-                                ? 'Limitsiz' 
-                                : `${financialInfo.toplamKullanilabilir.toLocaleString('tr-TR', { minimumFractionDigits: 0 })} ₺`
-                              }
-                            </p>
-                          </div>
+                        <div className="text-center">
+                          <p className="text-xs text-gray-600">Bakiye</p>
+                          <p className={`text-sm font-bold ${financialInfo.bakiye < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                            {financialInfo.bakiye.toLocaleString('tr-TR', { minimumFractionDigits: 0 })} ₺
+                          </p>
                         </div>
                       )}
                       
-                      {/* Minimal butonlar */}
-                      <div className="flex gap-2 pt-1">
+                      {/* Yenile butonu */}
+                      <div className="flex justify-center pt-1">
                         <button
                           onClick={refreshBalance}
                           disabled={isLoadingBalance}
-                          className="flex-1 px-2 py-1 text-xs bg-white/80 border border-green-300 text-green-700 rounded hover:bg-green-50 transition-colors disabled:opacity-50"
+                          className="px-4 py-1 text-xs bg-white/80 border border-green-300 text-green-700 rounded hover:bg-green-50 transition-colors disabled:opacity-50"
                         >
                           {isLoadingBalance ? 'Yükleniyor...' : 'Yenile'}
-                        </button>
-                        <button
-                          onClick={handleBlurToggle}
-                          className="flex-1 px-2 py-1 text-xs bg-white/80 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
-                        >
-                          {isBlurred ? 'Göster' : 'Gizle'}
                         </button>
                       </div>
                     </div>
