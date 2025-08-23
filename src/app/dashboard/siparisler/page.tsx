@@ -64,6 +64,8 @@ interface Order {
   notes?: string;
   created_at: string;
   updated_at: string;
+  receipt_printed?: boolean;
+  receipt_printed_at?: string;
   address?: {
     id: string;
     store_id: string;
@@ -240,6 +242,7 @@ const Siparisler = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [receiptFilter, setReceiptFilter] = useState(''); // '', 'printed', 'not_printed'
   const [tempSearchQuery, setTempSearchQuery] = useState('');
   
   // Cancel order modal
@@ -302,7 +305,7 @@ const Siparisler = () => {
   }, []);
 
   // Siparişleri getir
-  const fetchOrders = useCallback(async (page: number = 1, status: string = '', search: string = '') => {
+  const fetchOrders = useCallback(async (page: number = 1, status: string = '', search: string = '', receiptPrinted: string = '') => {
     // AuthContext yüklemesi tamamlanmadıysa fetch yapma
     if (authLoading) {
       return;
@@ -323,6 +326,13 @@ const Siparisler = () => {
 
       if (status) queryParams.append('status', status);
       if (search) queryParams.append('search', search);
+      // receiptPrinted filtresi sadece admin için
+      if (receiptPrinted && isAdmin) queryParams.append('receiptPrinted', receiptPrinted === 'printed' ? 'true' : 'false');
+
+      console.log('🔍 FILTRELEME DEBUG:');
+      console.log('📝 Parametreler:', { page, status, search, receiptPrinted, isAdmin });
+      console.log('🔗 Query String:', queryParams.toString());
+      console.log('🎯 Endpoint:', isAdmin ? 'admin/orders' : 'my-orders');
 
       // Admin ise sadece admin/orders endpoint'ini kullan, my-orders asla kullanma
       if (isAdmin) {
@@ -349,8 +359,34 @@ const Siparisler = () => {
       }
 
       const data = await response.json();
+      console.log('📦 API Response:', data);
+      console.log('📊 Gelen Sipariş Sayısı:', data.data?.orders?.length);
+      
       if (data.success) {
-        setOrdersData(data.data);
+        // Geçici çözüm: Frontend'de fiş filtrelemesi yapın (backend API henüz desteklemiyor)
+        let filteredOrders = data.data.orders;
+        
+        if (receiptPrinted && isAdmin) {
+          console.log('🔧 Frontend fiş filtresi uygulanıyor:', receiptPrinted);
+          if (receiptPrinted === 'printed') {
+            // Yazdırılan fişler: receipt_printed = true olan siparişler
+            filteredOrders = data.data.orders.filter((order: any) => order.receipt_printed === true);
+          } else if (receiptPrinted === 'not_printed') {
+            // Yazdırılmayan fişler: Sadece DELIVERED (teslim edilen) durumunda ve receipt_printed = false
+            filteredOrders = data.data.orders.filter((order: any) => 
+              order.status === 'DELIVERED' && 
+              order.receipt_printed === false
+            );
+          }
+          console.log('📊 Filtreleme sonrası sipariş sayısı:', filteredOrders.length);
+        }
+        
+        const processedData = {
+          ...data.data,
+          orders: filteredOrders
+        };
+        
+        setOrdersData(processedData);
       } else {
         throw new Error(data.message || 'Siparişler alınamadı');
       }
@@ -360,7 +396,7 @@ const Siparisler = () => {
     } finally {
       setLoading(false);
     }
-  }, [router, isAdmin, calculateOrderStats, authLoading, token, statusFilter, searchQuery, totalOrdersCount]);
+  }, [router, isAdmin, calculateOrderStats, authLoading, token, statusFilter, searchQuery, receiptFilter, totalOrdersCount]);
 
   // Tüm siparişleri getir (istatistikler için)
   const fetchAllOrdersForStats = useCallback(async () => {
@@ -406,8 +442,8 @@ const Siparisler = () => {
       return;
     }
     
-    fetchOrders(currentPage, statusFilter, searchQuery);
-  }, [fetchOrders, currentPage, statusFilter, searchQuery, authLoading]);
+    fetchOrders(currentPage, statusFilter, searchQuery, receiptFilter);
+  }, [fetchOrders, currentPage, statusFilter, searchQuery, receiptFilter, authLoading]);
 
   // Sadece bir kez tüm siparişleri getir (istatistikler için)
   useEffect(() => {
@@ -712,7 +748,7 @@ const Siparisler = () => {
         alert(data.message || 'Sipariş başarıyla iptal edildi.');
         
         // Siparişleri yeniden yükle
-        await fetchOrders(currentPage, statusFilter, searchQuery);
+        await fetchOrders(currentPage, statusFilter, searchQuery, receiptFilter);
         
         // Modal'ı kapat
         setCancelOrderModal({
@@ -777,7 +813,7 @@ const Siparisler = () => {
         }
 
         // Siparişleri yeniden yükle
-        await fetchOrders(currentPage, statusFilter, searchQuery);
+        await fetchOrders(currentPage, statusFilter, searchQuery, receiptFilter);
         // Modal'daki sipariş detayını da güncelle
         if (selectedOrder && selectedOrder.id === orderId) {
           await handleViewOrderDetail(orderId);
@@ -802,6 +838,12 @@ const Siparisler = () => {
   // Filtreleme fonksiyonu
   const handleStatusFilter = (status: string) => {
     setStatusFilter(status);
+    setCurrentPage(1);
+  };
+  
+  // Fiş filtresi
+  const handleReceiptFilter = (filter: string) => {
+    setReceiptFilter(filter);
     setCurrentPage(1);
   };
 
@@ -836,6 +878,33 @@ const Siparisler = () => {
       }
     } catch (error: any) {
       console.error('Fiş alma hatası:', error);
+      throw error;
+    }
+  };
+
+  // Fiş yazdırıldı olarak işaretleme fonksiyonu (sadece admin)
+  const markReceiptAsPrinted = async (orderId: string): Promise<void> => {
+    try {
+      const authToken = token;
+      const endpoint = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/orders/${orderId}/mark-printed`;
+
+      const response = await fetch(endpoint, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Fiş durumu güncellenemedi');
+      }
+
+      const result = await response.json();
+      console.log('Fiş durumu güncellendi:', result.message);
+    } catch (error: any) {
+      console.error('Fiş durumu güncelleme API hatası:', error);
       throw error;
     }
   };
@@ -999,10 +1068,28 @@ const Siparisler = () => {
                 <option value="CANCELED">İptal Edildi</option>
               </select>
             </div>
+
+            {/* Fiş Durumu Filtresi - Sadece Admin için */}
+            {isAdmin && (
+              <div className="md:w-64">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Fiş Durumu
+                </label>
+                <select
+                  value={receiptFilter}
+                  onChange={(e) => handleReceiptFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Tüm Fişler</option>
+                  <option value="printed">Yazdırılan Fişler</option>
+                  <option value="not_printed">Yazdırılmayan Fişler</option>
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Aktif Filtreler */}
-          {(statusFilter || searchQuery) && (
+          {(statusFilter || searchQuery || receiptFilter) && (
             <div className="mt-4 flex flex-wrap gap-2">
               {statusFilter && (
                 <div className="flex items-center bg-blue-100 text-[#00365a] px-3 py-1 rounded-full text-sm">
@@ -1010,6 +1097,17 @@ const Siparisler = () => {
                   <button
                     onClick={() => handleStatusFilter('')}
                     className="ml-2 text-[#00365a] hover:text-[#004170]"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+              {receiptFilter && (
+                <div className="flex items-center bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
+                  Fiş: {receiptFilter === 'printed' ? 'Yazdırılan' : 'Yazdırılmayan'}
+                  <button
+                    onClick={() => handleReceiptFilter('')}
+                    className="ml-2 text-purple-800 hover:text-purple-900"
                   >
                     ×
                   </button>
@@ -1038,17 +1136,17 @@ const Siparisler = () => {
           <div className="text-center py-12">
             <div className="text-gray-400 text-6xl mb-4">📦</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              {statusFilter || searchQuery ? 'Filtreye uygun sipariş bulunamadı' : 'Henüz sipariş yok'}
+              {statusFilter || searchQuery || receiptFilter ? 'Filtreye uygun sipariş bulunamadı' : 'Henüz sipariş yok'}
             </h3>
             <p className="text-gray-600 mb-6">
-              {statusFilter || searchQuery 
+              {statusFilter || searchQuery || receiptFilter 
                 ? 'Farklı filtreler deneyin veya filtreleri temizleyin.'
                 : isAdmin 
                 ? 'Henüz sisteme hiç sipariş girilmemiş.'
                 : 'Henüz bir sipariş vermemişsiniz.'
               }
             </p>
-            {!isAdmin && !statusFilter && !searchQuery && (
+            {!isAdmin && !statusFilter && !searchQuery && !receiptFilter && (
               <Link
                 href="/dashboard/sepetim"
                 className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
@@ -1176,8 +1274,34 @@ const Siparisler = () => {
                       </button>
                     )}
 
-                    {/* Admin için fiş yazdır butonu - CONFIRMED, READY, DELIVERED durumlarında */}
-                    {isAdmin && ['CONFIRMED', 'READY', 'DELIVERED'].includes(order.status) && (
+                    {/* Fiş durumu göstergesi - Sadece DELIVERED durumunda */}
+                    {order.status === 'DELIVERED' && (
+                      <div className="flex items-center gap-2">
+                        {order.receipt_printed ? (
+                          <div className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Fiş Yazdırıldı
+                            {order.receipt_printed_at && (
+                              <span className="ml-1 text-xs text-green-600">
+                                ({new Date(order.receipt_printed_at).toLocaleDateString('tr-TR')})
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Fiş Yazdırılmadı
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Admin için fiş yazdır butonu - sadece DELIVERED durumunda ve yazdırılmamış fişler için */}
+                    {isAdmin && order.status === 'DELIVERED' && !order.receipt_printed && (
                       <button
                         onClick={async () => {
                           try {
@@ -1439,6 +1563,17 @@ const Siparisler = () => {
                               receiptWindow.onload = () => {
                                 setTimeout(() => {
                                   receiptWindow.print();
+                                  
+                                  // Yazdırma işleminden sonra fiş durumunu güncelle
+                                  setTimeout(async () => {
+                                    try {
+                                      await markReceiptAsPrinted(order.id);
+                                      // Siparişleri yenile
+                                      await fetchOrders(currentPage, statusFilter, searchQuery, receiptFilter);
+                                    } catch (error) {
+                                      console.error('Fiş durumu güncelleme hatası:', error);
+                                    }
+                                  }, 1000); // Yazdırma dialogu kapandıktan sonra
                                 }, 500);
                               };
                             }
@@ -1634,6 +1769,35 @@ const Siparisler = () => {
                             {statusLabels[selectedOrder.status]}
                           </span>
                         </div>
+                        
+                        {/* Fiş durumu - Sadece DELIVERED durumunda */}
+                        {selectedOrder.status === 'DELIVERED' && (
+                          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span className="text-gray-600 font-medium">Fiş Durumu:</span>
+                            <div className="flex items-center gap-2">
+                              {selectedOrder.receipt_printed ? (
+                                <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded text-xs">
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                  Yazdırıldı
+                                  {selectedOrder.receipt_printed_at && (
+                                    <span className="ml-1 text-xs">
+                                      ({new Date(selectedOrder.receipt_printed_at).toLocaleDateString('tr-TR')})
+                                    </span>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  Yazdırılmadı
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                         <div className="flex justify-between items-center py-2">
                           <span className="text-gray-600 font-medium">Toplam Tutar:</span>
                           <span className="font-bold text-[#00365a] text-lg">
@@ -2021,8 +2185,8 @@ const Siparisler = () => {
                       </div>
                     )}
 
-                    {/* Fiş Görüntüle Butonu - PENDING hariç tüm durumlarda */}
-                    {['CONFIRMED', 'READY', 'DELIVERED'].includes(selectedOrder.status) && (
+                    {/* Fiş Görüntüle Butonu - Sadece DELIVERED durumunda */}
+                    {selectedOrder.status === 'DELIVERED' && (
                       <div className="mt-6 text-center">
                         <button
                           onClick={async () => {
