@@ -171,6 +171,13 @@ interface OrderStats {
   canceled: number;
 }
 
+interface CancelOrderModal {
+  isOpen: boolean;
+  orderId: string;
+  reason: string;
+  isLoading: boolean;
+}
+
 const statusLabels: { [key: string]: string } = {
   'PENDING': 'Beklemede',
   'CONFIRMED': 'Onaylandı',
@@ -220,6 +227,14 @@ const Siparisler = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [tempSearchQuery, setTempSearchQuery] = useState('');
+  
+  // Cancel order modal
+  const [cancelOrderModal, setCancelOrderModal] = useState<CancelOrderModal>({
+    isOpen: false,
+    orderId: '',
+    reason: '',
+    isLoading: false
+  });
 
   // Modal açıkken body scroll'unu engelle
   useEffect(() => {
@@ -647,6 +662,58 @@ const Siparisler = () => {
   };
 
 
+  // Sipariş iptal etme fonksiyonu (kullanıcılar için)
+  const handleCancelOrder = async (orderId: string, reason?: string) => {
+    try {
+      setCancelOrderModal(prev => ({ ...prev, isLoading: true }));
+      const authToken = token;
+      
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/orders/${orderId}/cancel`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: reason ? JSON.stringify({ reason }) : undefined
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Sipariş iptal edilemedi');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        alert(data.message || 'Sipariş başarıyla iptal edildi.');
+        
+        // Siparişleri yeniden yükle
+        await fetchOrders(currentPage, statusFilter, searchQuery);
+        
+        // Modal'ı kapat
+        setCancelOrderModal({
+          isOpen: false,
+          orderId: '',
+          reason: '',
+          isLoading: false
+        });
+        
+        // Eğer açık olan sipariş detayı iptal edilen siparişse, modal'ı kapat
+        if (selectedOrder && selectedOrder.id === orderId) {
+          setSelectedOrder(null);
+        }
+      } else {
+        throw new Error(data.message || 'Sipariş iptal edilemedi');
+      }
+    } catch (error: any) {
+      console.error('Sipariş iptal hatası:', error);
+      alert(error.message || 'Sipariş iptal edilirken bir hata oluştu. Lütfen tekrar deneyiniz.');
+    } finally {
+      setCancelOrderModal(prev => ({ ...prev, isLoading: false }));
+    }
+  };
+
   // Admin için sipariş durumu güncelleme
   const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
     if (!isAdmin) return;
@@ -1024,6 +1091,23 @@ const Siparisler = () => {
                     >
                       Detayları Gör
                     </button>
+
+                    {/* İptal Butonu - Sadece PENDING durumunda ve admin değilse */}
+                    {!isAdmin && order.status === 'PENDING' && (
+                      <button
+                        onClick={() => {
+                          setCancelOrderModal({
+                            isOpen: true,
+                            orderId: order.id,
+                            reason: '',
+                            isLoading: false
+                          });
+                        }}
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                      >
+                        İptal Et
+                      </button>
+                    )}
 
                     {/* QR Kodları Yazdır Butonu - CONFIRMED veya READY durumunda ve QR kodları varsa */}
                     {(order.status === 'CONFIRMED' || order.status === 'READY') && order.qr_codes && order.qr_codes.length > 0 && (
@@ -1809,6 +1893,63 @@ const Siparisler = () => {
                     className="px-6 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors font-medium"
                   >
                     Kapat
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Sipariş İptal Modal */}
+        {cancelOrderModal.isOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl max-w-md w-full mx-4 shadow-2xl">
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Siparişi İptal Et</h3>
+                
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-4">
+                    Bu siparişi iptal etmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve sipariş tutarı bakiyenize iade edilecektir.
+                  </p>
+                  
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    İptal Nedeni (İsteğe bağlı)
+                  </label>
+                  <textarea
+                    value={cancelOrderModal.reason}
+                    onChange={(e) => setCancelOrderModal(prev => ({ ...prev, reason: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                    rows={3}
+                    placeholder="Vazgeçtim, yanlış ürün seçtim, vb..."
+                    maxLength={500}
+                  />
+                  <div className="text-xs text-gray-400 mt-1">
+                    {cancelOrderModal.reason.length}/500 karakter
+                  </div>
+                </div>
+
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={() => setCancelOrderModal({
+                      isOpen: false,
+                      orderId: '',
+                      reason: '',
+                      isLoading: false
+                    })}
+                    disabled={cancelOrderModal.isLoading}
+                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+                  >
+                    Vazgeç
+                  </button>
+                  <button
+                    onClick={() => handleCancelOrder(cancelOrderModal.orderId, cancelOrderModal.reason || undefined)}
+                    disabled={cancelOrderModal.isLoading}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {cancelOrderModal.isLoading && (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    )}
+                    {cancelOrderModal.isLoading ? 'İptal Ediliyor...' : 'Siparişi İptal Et'}
                   </button>
                 </div>
               </div>

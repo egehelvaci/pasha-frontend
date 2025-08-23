@@ -1895,6 +1895,230 @@ export const deleteCutType = async (cutTypeId: number): Promise<void> => {
 }; 
 
 // Bakiye bilgilerini çeken API fonksiyonu
+// Muhasebe Hareketlerim API Tipi
+export interface MuhasebeOzet {
+  guncelBakiye: number;
+  toplamHarcama: number;
+  toplamOdeme: number;
+  toplamSiparisTutari: number;
+  toplamSiparisSayisi: number;
+  bekleyenSiparisler: number;
+  teslimEdilenSiparisler: number;
+}
+
+export interface MuhasebeHareketi {
+  id: number;
+  islemTuru: string;
+  tutar: number;
+  harcamaMi: boolean;
+  tarih: string;
+  aciklama: string;
+  createdAt: string;
+}
+
+export interface SiparisUrun {
+  urunAdi: string;
+  koleksiyonAdi: string;
+  koleksiyonKodu: string;
+  miktar: number;
+  birimFiyat: number;
+  toplamFiyat: number;
+  en: number;
+  boy: number;
+  sasakVar: boolean;
+  kesimTipi: string;
+}
+
+export interface Siparis {
+  id: string;
+  toplamTutar: number;
+  durum: string;
+  olusturmaTarihi: string;
+  guncellemeTarihi: string;
+  urunSayisi: number;
+  urunler: SiparisUrun[];
+}
+
+export interface Odeme {
+  id: string;
+  tutar: number;
+  aciklama: string;
+  durum: string;
+  odemeTarihi: string;
+  olusturmaTarihi: string;
+  referansNo: string;
+}
+
+export interface MuhasebeHareketleriResponse {
+  success: boolean;
+  data: {
+    ozet: MuhasebeOzet;
+    muhasebeHareketleri: MuhasebeHareketi[];
+    siparisler: Siparis[];
+    odemeler: Odeme[];
+  };
+}
+
+export const getMuhasebeHareketleri = async (): Promise<MuhasebeHareketleriResponse> => {
+  try {
+    const token = getAuthToken();
+    if (!token) throw new Error('Token bulunamadı');
+
+    const response = await fetch(`${API_URL}/api/profile/accounting`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Muhasebe hareketlerini getirirken hata:', error);
+    throw error;
+  }
+};
+
+// Sipariş iptal API
+export interface CancelOrderResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    id: string;
+    status: string;
+    total_price: number;
+    updated_at: string;
+  };
+}
+
+export const cancelOrder = async (orderId: string, reason?: string): Promise<CancelOrderResponse> => {
+  try {
+    const token = getAuthToken();
+    if (!token) throw new Error('Token bulunamadı');
+
+    const response = await fetch(`${API_URL}/api/orders/${orderId}/cancel`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: reason ? JSON.stringify({ reason }) : undefined
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return data;
+  } catch (error: any) {
+    console.error('Sipariş iptal edilirken hata:', error);
+    throw error;
+  }
+};
+
+// Sipariş fiş API
+export interface OrderReceiptData {
+  siparis: {
+    id: string;
+    siparisNumarasi: string;
+    durum: string;
+    olusturmaTarihi: string;
+    guncellemeTarihi: string;
+    toplamTutar: number;
+  };
+  musteri: {
+    ad: string;
+    soyad: string;
+    email: string;
+    telefon: string;
+    adres: string;
+  };
+  magaza: {
+    kurumAdi: string;
+    vergiNumarasi: string;
+    vergiDairesi: string;
+    yetkiliAdi: string;
+    yetkiliSoyadi: string;
+    telefon: string;
+    eposta: string;
+  };
+  urunler: Array<{
+    urunAdi: string;
+    aciklama: string;
+    koleksiyon: {
+      adi: string;
+      kodu: string;
+    };
+    miktar: number;
+    birimFiyat: number;
+    toplamFiyat: number;
+    olculer: {
+      en: number;
+      boy: number;
+      alanM2: number;
+    };
+    ozellikler: {
+      sasakVar: boolean;
+      kesimTipi: string;
+    };
+  }>;
+  bakiye: {
+    siparisOncesi: number;
+    siparisSonrasi: number;
+    siparisKesintisi: number;
+    tarih: string;
+  };
+  ozet: {
+    toplamUrunSayisi: number;
+    toplamMiktar: number;
+    toplamAlanM2: number;
+    toplamTutar: number;
+  };
+  fis: {
+    fisNumarasi: string;
+    olusturmaTarihi: string;
+    gecerlilikTarihi: string;
+  };
+}
+
+export interface OrderReceiptResponse {
+  success: boolean;
+  data: OrderReceiptData;
+}
+
+export const getOrderReceipt = async (orderId: string): Promise<OrderReceiptResponse> => {
+  try {
+    const token = getAuthToken();
+    if (!token) throw new Error('Token bulunamadı');
+
+    const response = await fetch(`${API_URL}/api/orders/${orderId}/receipt`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return data;
+  } catch (error: any) {
+    console.error('Sipariş fişi alınırken hata:', error);
+    throw error;
+  }
+};
+
 export const getMyBalance = async (): Promise<BalanceInfo> => {
   try {
     const token = getAuthToken();

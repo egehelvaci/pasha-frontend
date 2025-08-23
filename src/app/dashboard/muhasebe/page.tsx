@@ -80,6 +80,8 @@ const MuhasebePage = () => {
     const [selectedCustomer, setSelectedCustomer] = useState<string>('');
     const [selectedCollection, setSelectedCollection] = useState<string>('');
     const [collections, setCollections] = useState<any[]>([]);
+    const [customerSearchTerm, setCustomerSearchTerm] = useState<string>('');
+    const [filteredStores, setFilteredStores] = useState<Store[]>([]);
     const [incomeTypes, setIncomeTypes] = useState<string[]>([]);
     const [expenseTypes, setExpenseTypes] = useState<string[]>([]);
     
@@ -201,8 +203,53 @@ const MuhasebePage = () => {
         try {
             const storesData = await getStores();
             setStores(storesData);
+            setFilteredStores(storesData); // İlk başta tüm mağazaları göster
         } catch (error) {
             console.error('Mağazalar alınamadı:', error);
+        }
+    };
+
+    // Türkçe karakterler için gelişmiş normalizasyon fonksiyonu
+    const normalizeText = (text: string): string => {
+        const turkishMap: { [key: string]: string } = {
+            'İ': 'i', 'I': 'i', 'ı': 'i', 'i': 'i',
+            'Ğ': 'g', 'ğ': 'g', 'G': 'g', 'g': 'g',
+            'Ü': 'u', 'ü': 'u', 'U': 'u', 'u': 'u',
+            'Ş': 's', 'ş': 's', 'S': 's', 's': 's',
+            'Ö': 'o', 'ö': 'o', 'O': 'o', 'o': 'o',
+            'Ç': 'c', 'ç': 'c', 'C': 'c', 'c': 'c'
+        };
+
+        return text
+            .toLowerCase()
+            .split('')
+            .map(char => turkishMap[char] || char)
+            .join('');
+    };
+
+    // Müşteri arama fonksiyonu
+    const handleCustomerSearch = (searchTerm: string) => {
+        setCustomerSearchTerm(searchTerm);
+        
+        if (searchTerm.trim() === '') {
+            setFilteredStores(stores);
+        } else {
+            const normalizedSearch = normalizeText(searchTerm.trim());
+            console.log('Arama terimi:', searchTerm, '-> Normalize:', normalizedSearch); // Debug log
+            
+            const filtered = stores.filter(store => {
+                const normalizedStoreName = normalizeText(store.kurum_adi);
+                const isMatch = normalizedStoreName.includes(normalizedSearch);
+                
+                if (isMatch) {
+                    console.log('Eşleşen mağaza:', store.kurum_adi, '-> Normalize:', normalizedStoreName); // Debug log
+                }
+                
+                return isMatch;
+            });
+            
+            console.log('Bulunan mağaza sayısı:', filtered.length); // Debug log
+            setFilteredStores(filtered);
         }
     };
 
@@ -347,6 +394,12 @@ const MuhasebePage = () => {
         setSelectedCustomer(customerId);
         setSelectedCollection('');
         setFormData(prev => ({ ...prev, storeId: customerId, collection_id: '', tutar: 0 }));
+        
+        // Seçilen müşteriyi arama kutusunda göster
+        const selectedStore = stores.find(store => store.store_id === customerId);
+        if (selectedStore) {
+            setCustomerSearchTerm(selectedStore.kurum_adi);
+        }
 
         if (customerId) {
             // Sadece bir kez çağır
@@ -389,6 +442,8 @@ const MuhasebePage = () => {
         });
         setSelectedCustomer('');
         setSelectedCollection('');
+        setCustomerSearchTerm('');
+        setFilteredStores(stores);
         setProducts([]);
         setCollections([]);
     };
@@ -1594,33 +1649,34 @@ const MuhasebePage = () => {
                                     Müşteri <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
-                                    <button
-                                        type="button"
-                                        onClick={() => setCustomerDropdownOpen(!customerDropdownOpen)}
-                                        className={`w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors text-left ${
+                                    <input
+                                        type="text"
+                                        value={customerSearchTerm}
+                                        onChange={(e) => handleCustomerSearch(e.target.value)}
+                                        onFocus={() => setCustomerDropdownOpen(true)}
+                                        placeholder="Müşteri ara..."
+                                        className={`w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors ${
                                             formLoading ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
                                         }`}
-                                    disabled={formLoading}
-                                >
-                                        <span className="text-gray-900">
-                                            {selectedCustomer ? 
-                                                stores.find(s => s.store_id === selectedCustomer)?.kurum_adi || 'Seçili Müşteri' :
-                                                'Müşteri seçin...'
-                                            }
-                                        </span>
-                                        <svg 
-                                            className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${customerDropdownOpen ? 'rotate-180' : ''}`}
-                                            fill="none" 
-                                            stroke="currentColor" 
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </button>
+                                        disabled={formLoading}
+                                    />
+                                    <svg 
+                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
                                     
                                     {customerDropdownOpen && !formLoading && (
                                         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
-                                    {stores.map((store) => (
+                                            {filteredStores.length === 0 ? (
+                                                <div className="px-3 py-2 text-gray-500 text-center">
+                                                    Müşteri bulunamadı
+                                                </div>
+                                            ) : (
+                                                filteredStores.map((store) => (
                                                 <div
                                                     key={store.store_id}
                                                     className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
@@ -1631,9 +1687,10 @@ const MuhasebePage = () => {
                                                         setCustomerDropdownOpen(false);
                                                     }}
                                                 >
-                                            {store.kurum_adi}
+                                                    {store.kurum_adi}
                                                 </div>
-                                    ))}
+                                                ))
+                                            )}
                                         </div>
                                     )}
                                 </div>

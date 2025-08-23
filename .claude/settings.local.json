@@ -3,7 +3,13 @@
     "allow": [
       "Bash(npm run build:*)",
       "Bash(git add:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(sed:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx next build:*)",
+      "Bash(git checkout:*)",
+      "Read(/C:\\c\\Users\\ege_h/**)",
+      "Read(/C:\\c\\Users\\ege_h/**)"
     ],
     "deny": [],
     "ask": [],
