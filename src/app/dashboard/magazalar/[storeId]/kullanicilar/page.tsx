@@ -1,14 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/app/context/AuthContext';
 import { getStoreUsers, StoreUser, getStores, Store } from '@/services/api';
 
 export default function StoreUsersPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const { isAdmin, isLoading: authLoading } = useAuth();
+  
+  const selectedAddressId = searchParams.get('selectedAddressId');
+  const selectedAddressTitle = searchParams.get('selectedAddressTitle');
   const [users, setUsers] = useState<StoreUser[]>([]);
   const [store, setStore] = useState<Store | null>(null);
   const [loading, setLoading] = useState(true);
@@ -76,7 +80,7 @@ export default function StoreUsersPage() {
       user.surname.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.phone && user.phone.toLowerCase().includes(searchTerm.toLowerCase()));
+      (user.phone_number && user.phone_number.toLowerCase().includes(searchTerm.toLowerCase()));
     
     return matchesSearch;
   });
@@ -148,8 +152,18 @@ export default function StoreUsersPage() {
                   </svg>
                 </button>
                 <h1 className="text-3xl font-bold text-[#00365a] flex items-center">
-                  Mağaza Kullanıcıları
+                  {selectedAddressTitle ? 'Kullanıcı Seçin - Sipariş Ver' : 'Mağaza Kullanıcıları'}
                 </h1>
+                {selectedAddressTitle && (
+                  <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <strong>Seçilen Adres:</strong> {decodeURIComponent(selectedAddressTitle)}
+                    </p>
+                    <p className="text-xs text-blue-600 mt-1">
+                      Bu adrese sipariş vermek için bir kullanıcı seçin
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -193,27 +207,13 @@ export default function StoreUsersPage() {
                         İletişim
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Eylemler
+                        Durum
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredUsers.map((user) => (
-                      <tr key={user.user_id} className="hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => {
-                        console.log('Kullanıcı verisi:', user);
-                        console.log('Kullanıcı ID alanları:', {
-                          user_id: user.user_id,
-                          id: (user as any).id,
-                          userId: (user as any).userId
-                        });
-                        
-                        // Farklı ID alanlarını kontrol et
-                        const userId = user.user_id || (user as any).id || (user as any).userId;
-                        
-                        const url = `/dashboard/admin-siparis-olustur?storeId=${storeId}&userId=${userId}&userName=${encodeURIComponent(`${user.name} ${user.surname}`)}`;
-                        console.log('Oluşturulan URL:', url);
-                        router.push(url);
-                      }}>
+                      <tr key={user.user_id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4">
                           <div>
                             <div className="text-sm font-semibold text-gray-900">{user.name} {user.surname}</div>
@@ -230,15 +230,7 @@ export default function StoreUsersPage() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center justify-center">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                console.log('Kullanıcı detayına git:', user);
-                              }}
-                              className="px-4 py-2 bg-[#00365a] hover:bg-[#004170] text-white text-xs rounded-lg font-medium transition-colors"
-                            >
-                              Detay
-                            </button>
+                            <span className="text-xs text-gray-500">-</span>
                           </div>
                         </td>
                       </tr>
@@ -292,15 +284,7 @@ export default function StoreUsersPage() {
                                 Adres bilgileri artık mağaza bazlı yönetilmektedir
                               </p>
                             </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                console.log('Kullanıcı detayına git (mobil):', user);
-                              }}
-                              className="ml-3 px-4 py-2 bg-[#00365a] hover:bg-[#004170] text-white text-xs rounded-lg font-medium transition-colors"
-                            >
-                              Detay
-                            </button>
+
                           </div>
                         </div>
                       </div>

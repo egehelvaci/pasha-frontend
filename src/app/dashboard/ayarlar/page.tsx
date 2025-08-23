@@ -4,8 +4,8 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useToken } from '@/app/hooks/useToken';
-import { FaPlus, FaEdit, FaTrash, FaStore, FaUser, FaLock, FaBuilding, FaEye, FaEyeSlash } from 'react-icons/fa';
-import { getStores, assignUserToStore, removeUserFromStore, getMyProfile, updateStoreProfile, changePassword, updateUserProfile, StoreUpdateData, PasswordChangeData, UserProfileInfo, StoreProfileInfo, UserUpdateData } from '@/services/api';
+import { FaPlus, FaEdit, FaTrash, FaStore, FaUser, FaLock, FaBuilding, FaEye, FaEyeSlash, FaMapMarkerAlt } from 'react-icons/fa';
+import { getStores, assignUserToStore, removeUserFromStore, getMyProfile, updateStoreProfile, changePassword, updateUserProfile, StoreUpdateData, PasswordChangeData, UserProfileInfo, StoreProfileInfo, UserUpdateData, getStoreAddresses, createStoreAddress, updateStoreAddress, deleteStoreAddress, setDefaultStoreAddress, StoreAddress, CreateStoreAddressRequest } from '@/services/api';
 
 interface User {
   userId: string;
@@ -75,11 +75,26 @@ export default function Settings() {
   const [assignStoreDropdownOpen, setAssignStoreDropdownOpen] = useState(false);
   
   // Normal kullanıcı için yeni state'ler
-  const [activeTab, setActiveTab] = useState<'profile' | 'store' | 'password'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'store' | 'address' | 'password'>('profile');
   const [userProfile, setUserProfile] = useState<UserProfileInfo | null>(null);
   const [storeProfile, setStoreProfile] = useState<StoreProfileInfo | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
   
+  // Adres yönetimi state'leri
+  const [addresses, setAddresses] = useState<StoreAddress[]>([]);
+  const [addressesLoading, setAddressesLoading] = useState(false);
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<StoreAddress | null>(null);
+  const [newAddress, setNewAddress] = useState<CreateStoreAddressRequest>({
+    title: '',
+    address: '',
+    city: '',
+    district: '',
+    postal_code: '',
+    is_default: false
+  });
+  const [addingAddress, setAddingAddress] = useState(false);
+
   // Şifre değiştirme form state'leri
   const [passwordForm, setPasswordForm] = useState<PasswordChangeData>({
     currentPassword: '',
@@ -201,6 +216,105 @@ export default function Settings() {
     } finally {
       setProfileLoading(false);
     }
+  };
+
+  // Adres yönetimi fonksiyonları
+  const fetchAddresses = async () => {
+    try {
+      setAddressesLoading(true);
+      const response = await getStoreAddresses();
+      if (response.success) {
+        setAddresses(response.data);
+      }
+    } catch (error) {
+      console.error('Adresler getirilemedi:', error);
+    } finally {
+      setAddressesLoading(false);
+    }
+  };
+
+  const handleAddressSubmit = async () => {
+    if (!newAddress.title || !newAddress.address) {
+      alert('Lütfen adres başlığı ve tam adres bilgilerini giriniz.');
+      return;
+    }
+
+    try {
+      setAddingAddress(true);
+      if (editingAddress) {
+        // Güncelleme modu
+        await updateStoreAddress(editingAddress.id, newAddress);
+        alert('Adres başarıyla güncellendi!');
+      } else {
+        // Yeni adres ekleme modu
+        await createStoreAddress(newAddress);
+        alert('Yeni adres başarıyla eklendi!');
+      }
+      
+      setShowAddressModal(false);
+      setEditingAddress(null);
+      setNewAddress({
+        title: '',
+        address: '',
+        city: '',
+        district: '',
+        postal_code: '',
+        is_default: false
+      });
+      await fetchAddresses();
+    } catch (error: any) {
+      alert(error.message || 'Adres işlemi sırasında bir hata oluştu.');
+    } finally {
+      setAddingAddress(false);
+    }
+  };
+
+  const handleEditAddress = (address: StoreAddress) => {
+    setEditingAddress(address);
+    setNewAddress({
+      title: address.title,
+      address: address.address,
+      city: address.city,
+      district: address.district,
+      postal_code: address.postal_code,
+      is_default: address.is_default
+    });
+    setShowAddressModal(true);
+  };
+
+  const handleDeleteAddress = async (addressId: string) => {
+    if (confirm('Bu adresi silmek istediğinizden emin misiniz?')) {
+      try {
+        await deleteStoreAddress(addressId);
+        alert('Adres başarıyla silindi!');
+        await fetchAddresses();
+      } catch (error: any) {
+        alert(error.message || 'Adres silinemedi.');
+      }
+    }
+  };
+
+  const handleSetDefaultAddress = async (addressId: string) => {
+    try {
+      await setDefaultStoreAddress(addressId);
+      alert('Varsayılan adres değiştirildi!');
+      await fetchAddresses();
+    } catch (error: any) {
+      alert(error.message || 'Varsayılan adres ayarlanamadı.');
+    }
+  };
+
+  const openCreateModal = () => {
+    setEditingAddress(null);
+    setNewAddress({
+      title: '',
+      address: '',
+      city: '',
+      district: '',
+      postal_code: '',
+      is_default: false
+    });
+    setShowAddressModal(true);
   };
 
   // Şifre değiştirme form handler'ı
@@ -544,6 +658,22 @@ export default function Settings() {
                 Mağaza Bilgileri
               </button>
             )}
+            <button
+              onClick={() => {
+                setActiveTab('address');
+                if (addresses.length === 0) {
+                  fetchAddresses();
+                }
+              }}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'address'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <FaMapMarkerAlt className="inline mr-2" />
+              Adres Yönetimi
+            </button>
             <button
               onClick={() => setActiveTab('password')}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
@@ -908,6 +1038,102 @@ export default function Settings() {
                 </form>
               </div>
             )}
+
+            {/* Adres Yönetimi Tab */}
+            {activeTab === 'address' && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-lg font-semibold text-gray-900">Adres Yönetimi</h2>
+                  <button
+                    onClick={openCreateModal}
+                    className="bg-[#00365a] text-white px-4 py-2 rounded-lg hover:bg-[#004170] transition-colors flex items-center gap-2"
+                  >
+                    <FaPlus className="w-4 h-4" />
+                    Yeni Adres Ekle
+                  </button>
+                </div>
+
+                {addressesLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  </div>
+                ) : addresses.length === 0 ? (
+                  <div className="text-center py-8">
+                    <FaMapMarkerAlt className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Henüz adres yok</h3>
+                    <p className="text-gray-600 mb-4">İlk adresinizi ekleyerek başlayın</p>
+                    <button
+                      onClick={openCreateModal}
+                      className="bg-[#00365a] text-white px-6 py-2 rounded-lg hover:bg-[#004170] transition-colors"
+                    >
+                      İlk Adresi Ekle
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
+                    {addresses.map((address) => (
+                      <div
+                        key={address.id}
+                        className={`border rounded-lg p-4 ${
+                          address.is_default 
+                            ? 'border-green-200 bg-green-50' 
+                            : 'border-gray-200 bg-white'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-medium text-gray-900">{address.title}</h3>
+                              {address.is_default && (
+                                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                                  Varsayılan
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-gray-600 text-sm mb-1">{address.address}</p>
+                            {(address.city || address.district) && (
+                              <p className="text-gray-500 text-sm">
+                                {address.district && address.district + ', '}
+                                {address.city}
+                                {address.postal_code && ' - ' + address.postal_code}
+                              </p>
+                            )}
+                          </div>
+                          
+                          <div className="flex gap-2">
+                            {!address.is_default && (
+                              <button
+                                onClick={() => handleSetDefaultAddress(address.id)}
+                                className="text-green-600 hover:text-green-700 p-2 rounded-lg hover:bg-green-50 transition-colors"
+                                title="Varsayılan yap"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleEditAddress(address)}
+                              className="text-blue-600 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition-colors"
+                              title="Düzenle"
+                            >
+                              <FaEdit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteAddress(address.id)}
+                              className="text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors"
+                              title="Sil"
+                            >
+                              <FaTrash className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>
@@ -924,7 +1150,7 @@ export default function Settings() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
       {/* Modern Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
@@ -942,18 +1168,18 @@ export default function Settings() {
       </div>
 
       {/* Modern Table Container */}
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden w-full">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
+          <table className="w-full divide-y divide-gray-200">
             <thead className="bg-gradient-to-r from-[#00365a] to-[#004170]">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Kullanıcı Adı</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Ad Soyad</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">E-posta</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Kullanıcı Tipi</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Mağaza</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Durum</th>
-                <th className="px-6 py-4 text-right text-xs font-semibold text-white uppercase tracking-wider">İşlemler</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider w-1/7">Kullanıcı Adı</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider w-1/7">Ad Soyad</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider w-1/5">E-posta</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider w-1/8">Kullanıcı Tipi</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider w-1/4">Mağaza</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider w-1/8">Durum</th>
+                <th className="px-6 py-4 text-right text-xs font-semibold text-white uppercase tracking-wider w-1/8">İşlemler</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
@@ -964,23 +1190,23 @@ export default function Settings() {
                     !user.isActive ? 'opacity-60' : ''
                   }`}
                 >
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4">
                     <div className="flex items-center">
-                      <div className="h-8 w-8 rounded-full bg-gradient-to-r from-[#00365a] to-[#004170] flex items-center justify-center text-white text-sm font-semibold mr-3">
+                      <div className="h-8 w-8 rounded-full bg-gradient-to-r from-[#00365a] to-[#004170] flex items-center justify-center text-white text-sm font-semibold mr-3 flex-shrink-0">
                         {user.username.charAt(0).toUpperCase()}
                       </div>
-                      <span className="text-sm font-medium text-gray-900">{user.username}</span>
+                      <span className="text-sm font-medium text-gray-900 truncate">{user.username}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm text-gray-900">
+                  <td className="px-6 py-4">
+                    <span className="text-sm text-gray-900 truncate block">
                       {user.fullName || ((user.name || '') + ' ' + (user.surname || ''))}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm text-gray-900">{user.email}</span>
+                  <td className="px-6 py-4">
+                    <span className="text-sm text-gray-900 truncate block" title={user.email}>{user.email}</span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                       {(() => {
                         const userTypeName = typeof user.userType === 'object' ? user.userType.name : user.userType;
@@ -994,12 +1220,12 @@ export default function Settings() {
                       })()}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm text-gray-900">
+                  <td className="px-6 py-4">
+                    <span className="text-sm text-gray-900 truncate block" title={user.Store ? user.Store.kurum_adi : '-'}>
                       {user.Store ? user.Store.kurum_adi : '-'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                       user.isActive 
                         ? 'bg-green-100 text-green-800' 
@@ -1008,7 +1234,7 @@ export default function Settings() {
                       {user.isActive ? 'Aktif' : 'Pasif'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end space-x-2">
                       <button
                         onClick={() => handleUserClick(user.userId)}
@@ -1441,6 +1667,136 @@ export default function Settings() {
                       ? 'Kaldır' 
                       : 'Ata'
                   }
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Adres Ekleme/Düzenleme Modal */}
+      {showAddressModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-2xl w-full shadow-2xl">
+            <div className="bg-[#00365a] text-white rounded-t-xl p-6">
+              <h3 className="text-xl font-bold">
+                {editingAddress ? 'Adres Düzenle' : 'Yeni Adres Ekle'}
+              </h3>
+              <p className="text-blue-100 text-sm mt-1">
+                Adres bilgilerini girin
+              </p>
+            </div>
+            
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Adres Başlığı <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newAddress.title}
+                    onChange={(e) => setNewAddress(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Örn: Ana Mağaza, Depo, Şube 1"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tam Adres <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={newAddress.address}
+                    onChange={(e) => setNewAddress(prev => ({ ...prev, address: e.target.value }))}
+                    placeholder="Sokak, cadde, mahalle, bina no vs."
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">İlçe</label>
+                  <input
+                    type="text"
+                    value={newAddress.district}
+                    onChange={(e) => setNewAddress(prev => ({ ...prev, district: e.target.value }))}
+                    placeholder="Örn: Kadıköy"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Şehir</label>
+                  <input
+                    type="text"
+                    value={newAddress.city}
+                    onChange={(e) => setNewAddress(prev => ({ ...prev, city: e.target.value }))}
+                    placeholder="Örn: İstanbul"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Posta Kodu</label>
+                  <input
+                    type="text"
+                    value={newAddress.postal_code}
+                    onChange={(e) => setNewAddress(prev => ({ ...prev, postal_code: e.target.value }))}
+                    placeholder="Örn: 34710"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div className="flex items-center">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={newAddress.is_default}
+                      onChange={(e) => setNewAddress(prev => ({ ...prev, is_default: e.target.checked }))}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">Varsayılan adres olarak ayarla</span>
+                  </label>
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowAddressModal(false);
+                    setEditingAddress(null);
+                    setNewAddress({
+                      title: '',
+                      address: '',
+                      city: '',
+                      district: '',
+                      postal_code: '',
+                      is_default: false
+                    });
+                  }}
+                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                >
+                  İptal
+                </button>
+                <button
+                  onClick={handleAddressSubmit}
+                  disabled={addingAddress || !newAddress.title || !newAddress.address}
+                  className="px-6 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {addingAddress ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                      {editingAddress ? 'Güncelleniyor...' : 'Ekleniyor...'}
+                    </>
+                  ) : (
+                    <>
+                      <FaPlus className="w-4 h-4" />
+                      {editingAddress ? 'Güncelle' : 'Adres Ekle'}
+                    </>
+                  )}
                 </button>
               </div>
             </div>

@@ -16,7 +16,11 @@ import {
   AdminCart,
   AdminCartItem,
   getProducts,
-  Product
+  Product,
+  getStoreAddresses,
+  StoreAddress,
+  createStoreAddress,
+  CreateStoreAddressRequest
 } from '@/services/api';
 
 interface CartItem {
@@ -64,21 +68,51 @@ const AdminSiparisOlustur = () => {
   const [orderNotes, setOrderNotes] = useState('');
   const [orderLoading, setOrderLoading] = useState(false);
   
+  // Adres state'leri
+  const [storeAddresses, setStoreAddresses] = useState<StoreAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('');
+  const [addressesLoading, setAddressesLoading] = useState(false);
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [newAddress, setNewAddress] = useState<CreateStoreAddressRequest>({
+    title: '',
+    address: '',
+    city: '',
+    district: '',
+    postal_code: '',
+    is_default: false
+  });
+  const [addingAddress, setAddingAddress] = useState(false);
+  
 
 
   const storeId = searchParams.get('storeId');
   const userId = searchParams.get('userId');
   const userName = searchParams.get('userName');
+  const addressId = searchParams.get('addressId');
+  const addressTitle = searchParams.get('addressTitle');
+  const selectedAddressId_fromUrl = searchParams.get('selectedAddressId');
 
   // URL parametrelerini kontrol et
   useEffect(() => {
+    // Eğer selectedAddressId_fromUrl varsa, seçilen adresi ayarla
+    if (selectedAddressId_fromUrl) {
+      setSelectedAddressId(selectedAddressId_fromUrl);
+    }
     
+    // Eğer addressId varsa, kullanıcı seçimi olmadan sipariş verme modu
+    if (addressId && storeId) {
+      // Adres ID'si ile gelen sipariş modu
+      setSelectedAddressId(addressId);
+      return;
+    }
+    
+    // Normal kullanıcı seçimi modu
     if (!storeId || !userId || userId === 'undefined') {
       alert('Geçersiz URL parametreleri. Lütfen tekrar deneyiniz.');
       router.push('/dashboard/magazalar');
       return;
     }
-  }, [storeId, userId, userName, router]);
+  }, [storeId, userId, userName, addressId, selectedAddressId_fromUrl, router]);
 
   // Dropdown'ların dışına tıklandığında kapanması
   useEffect(() => {
@@ -120,11 +154,17 @@ const AdminSiparisOlustur = () => {
     }
     
     // Kimlik doğrulama yüklemesi tamamlandığında ve admin ise veri çek
-    if (!authLoading && isAdmin && storeId && userId) {
-      fetchOrderCreateInfo();
-      fetchAdminCart();
+    if (!authLoading && isAdmin && storeId) {
+      // Adres bazlı sipariş modu veya kullanıcı bazlı sipariş modu
+      if (addressId || userId) {
+        if (userId) {
+          fetchOrderCreateInfo();
+          fetchAdminCart();
+        }
+        fetchStoreAddresses();
+      }
     }
-  }, [isAdmin, authLoading, router, storeId, userId]);
+  }, [isAdmin, authLoading, router, storeId, userId, addressId]);
 
   const fetchOrderCreateInfo = async () => {
     setLoading(true);
@@ -184,6 +224,29 @@ const AdminSiparisOlustur = () => {
       });
     } catch (error: any) {
       console.error('Ürünler alınamadı:', error);
+    }
+  };
+
+  // Mağaza adreslerini getir
+  const fetchStoreAddresses = async () => {
+    if (!storeId) return;
+    
+    try {
+      setAddressesLoading(true);
+      // Admin için spesifik mağaza adreslerini getir
+      const response = await getStoreAddresses(storeId);
+      if (response.success) {
+        setStoreAddresses(response.data);
+        // Varsayılan adresi otomatik seç
+        const defaultAddress = response.data.find(addr => addr.is_default);
+        if (defaultAddress) {
+          setSelectedAddressId(defaultAddress.id);
+        }
+      }
+    } catch (error) {
+      console.error('Adres listesi getirme hatası:', error);
+    } finally {
+      setAddressesLoading(false);
     }
   };
 
@@ -379,21 +442,85 @@ const AdminSiparisOlustur = () => {
     }
   };
 
+  // Yeni adres ekleme (Admin için)
+  const handleAddNewAddress = async () => {
+    if (!newAddress.title || !newAddress.address || !storeId) {
+      alert('Lütfen adres başlığı ve tam adres bilgilerini giriniz.');
+      return;
+    }
+
+    try {
+      setAddingAddress(true);
+      const payload = { 
+        ...newAddress, 
+        store_id: storeId // Admin için store_id ekliyoruz 
+      };
+      const response = await createStoreAddress(payload);
+      if (response.success) {
+        alert('Yeni adres başarıyla eklendi!');
+        setShowAddressModal(false);
+        setNewAddress({
+          title: '',
+          address: '',
+          city: '',
+          district: '',
+          postal_code: '',
+          is_default: false
+        });
+        // Adres listesini yenile
+        await fetchStoreAddresses();
+        // Yeni eklenen adresi seç
+        if (response.data) {
+          setSelectedAddressId(response.data.id);
+        }
+      }
+    } catch (error: any) {
+      alert(error.message || 'Adres eklenirken bir hata oluştu.');
+    } finally {
+      setAddingAddress(false);
+    }
+  };
+
   const handleCreateOrderFromAdminCart = async () => {
-    if (!storeId || !userId) return;
+    if (!storeId) return;
+    
+    // Adres bazlı modda userId olmayabilir, o zaman boş sipariş veremeyiz
+    if (!userId && !addressId) {
+      alert('Sipariş vermek için kullanıcı seçimi veya adres seçimi gerekli.');
+      return;
+    }
     
     // Sepet boş mu kontrol et
     if (!adminCart || adminCart.items.length === 0) {
       alert('Sepet boş! Lütfen önce ürün ekleyin.');
       return;
     }
+
+    // Adres seçim kontrolü
+    if (!selectedAddressId) {
+      alert('Lütfen bir teslimat adresi seçin!');
+      return;
+    }
     
     try {
       setOrderLoading(true);
+      if (!userId) {
+        alert('Kullanıcı seçimi gerekli. Lütfen bir kullanıcı seçin.');
+        return;
+      }
+      
       const result = await createOrderFromAdminCart({
         targetUserId: userId,
         storeId: storeId,
-        notes: orderNotes
+        notes: orderNotes,
+        address_id: selectedAddressId
+      });
+      
+      // Admin sipariş oluştururken adres bilgisini log'layalım debug için
+      console.log('Admin sipariş oluşturuldu:', {
+        orderId: result.order?.id,
+        selectedAddressId: selectedAddressId,
+        orderData: result.order
       });
       
       alert('Sipariş başarıyla oluşturuldu!');

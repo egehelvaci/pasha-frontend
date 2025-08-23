@@ -4,48 +4,53 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
 import { useToken } from '@/app/hooks/useToken';
-import { getMyProfile, UserProfileInfo, getStoreAddresses, StoreAddress } from '@/services/api';
+import { getMyProfile, UserProfileInfo, getStoreAddresses, StoreAddress, createStoreAddress, CreateStoreAddressRequest } from '@/services/api';
+import OptimizedImage from '@/app/components/OptimizedImage';
 
 // Kesim türlerini Türkçe'ye çeviren fonksiyon
 const translateCutType = (cutType: string): string => {
-  const translations: { [key: string]: string } = {
-    'custom': 'Normal Kesim',
-    'rectangle': 'Normal Kesim',
-    'standart': 'Normal Kesim',
-    'oval': 'Oval Kesim',
-    'round': 'Daire Kesim',
-    'daire': 'Daire Kesim',
-    'post kesim': 'Post Kesim'
+  const cutTypeMap: { [key: string]: string } = {
+    'straight': 'Düz Kesim',
+    'rounded': 'Yuvarlak Kesim',
+    'custom': 'Özel Kesim'
   };
-  
-  return translations[cutType.toLowerCase()] || (cutType.charAt(0).toUpperCase() + cutType.slice(1) + ' Kesim');
+  return cutTypeMap[cutType] || cutType;
 };
 
 interface CartItem {
   id: number;
-  product: {
-    productId: string;
-    name: string;
-    productImage: string;
-    collection?: {
-      name: string;
-      code: string;
-    };
-  };
+  productId: string;
   quantity: number;
-  unit_price: string;
-  total_price: string;
   width: string;
   height: string;
+  area_m2: string;
+  unit_price: string;
+  total_price: string;
   has_fringe: boolean;
   cut_type: string;
   notes?: string;
+  created_at: string;
+  updated_at: string;
+  product: {
+    productId: string;
+    name: string;
+    description: string;
+    productImage: string;
+    collection: {
+      collectionId: string;
+      name: string;
+      code: string;
+    };
+    pricing: {
+      price: number;
+      currency: string;
+    };
+  };
 }
 
 interface CartData {
   items: CartItem[];
   totalPrice: string;
-  totalItems: number;
 }
 
 interface LimitCheckResult {
@@ -55,7 +60,7 @@ interface LimitCheckResult {
   cartTotal: string;
 }
 
-const SiparisOlustur = () => {
+const SiparisOlustur: React.FC = () => {
   const router = useRouter();
   const { user } = useAuth();
   const token = useToken();
@@ -69,6 +74,16 @@ const SiparisOlustur = () => {
   const [storeAddresses, setStoreAddresses] = useState<StoreAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
   const [addressesLoading, setAddressesLoading] = useState(false);
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [newAddress, setNewAddress] = useState<CreateStoreAddressRequest>({
+    title: '',
+    address: '',
+    city: '',
+    district: '',
+    postal_code: '',
+    is_default: false
+  });
+  const [addingAddress, setAddingAddress] = useState(false);
 
   // Limit mesajını kullanıcı dostu hale getiren fonksiyon
   const formatLimitMessage = (message: string): string => {
@@ -144,11 +159,32 @@ const SiparisOlustur = () => {
     }
   }, [token]);
 
+  // Mağaza adreslerini getir
+  const fetchStoreAddresses = async () => {
+    try {
+      setAddressesLoading(true);
+      const response = await getStoreAddresses();
+      if (response.success) {
+        setStoreAddresses(response.data);
+        // Varsayılan adresi otomatik seç
+        const defaultAddress = response.data.find(addr => addr.is_default);
+        if (defaultAddress) {
+          setSelectedAddressId(defaultAddress.id);
+        }
+      }
+    } catch (error) {
+      console.error('Adres listesi getirme hatası:', error);
+    } finally {
+      setAddressesLoading(false);
+    }
+  };
+
   // Sepet limitini kontrol et
   const performLimitCheck = async () => {
     try {
       setCheckingLimits(true);
       const authToken = token;
+
       if (!authToken) {
         router.push('/');
         return;
@@ -189,23 +225,38 @@ const SiparisOlustur = () => {
     }
   };
 
-  // Mağaza adreslerini getir
-  const fetchStoreAddresses = async () => {
+  // Yeni adres ekleme
+  const handleAddNewAddress = async () => {
+    if (!newAddress.title || !newAddress.address) {
+      alert('Lütfen adres başlığı ve tam adres bilgilerini giriniz.');
+      return;
+    }
+
     try {
-      setAddressesLoading(true);
-      const response = await getStoreAddresses();
+      setAddingAddress(true);
+      const response = await createStoreAddress(newAddress);
       if (response.success) {
-        setStoreAddresses(response.data);
-        // Varsayılan adresi otomatik seç
-        const defaultAddress = response.data.find(addr => addr.is_default);
-        if (defaultAddress) {
-          setSelectedAddressId(defaultAddress.id);
+        alert('Yeni adres başarıyla eklendi!');
+        setShowAddressModal(false);
+        setNewAddress({
+          title: '',
+          address: '',
+          city: '',
+          district: '',
+          postal_code: '',
+          is_default: false
+        });
+        // Adres listesini yenile
+        await fetchStoreAddresses();
+        // Yeni eklenen adresi seç
+        if (response.data) {
+          setSelectedAddressId(response.data.id);
         }
       }
-    } catch (error) {
-      console.error('Adres listesi getirme hatası:', error);
+    } catch (error: any) {
+      alert(error.message || 'Adres eklenirken bir hata oluştu.');
     } finally {
-      setAddressesLoading(false);
+      setAddingAddress(false);
     }
   };
 
@@ -315,8 +366,6 @@ const SiparisOlustur = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Sol taraf - Sipariş Bilgileri */}
           <div className="space-y-6">
-            {/* Artık adres uyarısı kaldırıldı - mağaza bazlı sistem */}
-
             {/* Limit Kontrolü */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Sipariş Durumu</h2>
@@ -385,9 +434,20 @@ const SiparisOlustur = () => {
               ) : storeAddresses.length > 0 ? (
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="address-select" className="block text-sm font-medium text-gray-700 mb-2">
-                      Teslimat Adresi Seçin <span className="text-red-500">*</span>
-                    </label>
+                    <div className="flex justify-between items-center mb-2">
+                      <label htmlFor="address-select" className="block text-sm font-medium text-gray-700">
+                        Teslimat Adresi Seçin <span className="text-red-500">*</span>
+                      </label>
+                      <button
+                        onClick={() => setShowAddressModal(true)}
+                        className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        Yeni Adres Ekle
+                      </button>
+                    </div>
                     <select
                       id="address-select"
                       value={selectedAddressId}
@@ -430,148 +490,151 @@ const SiparisOlustur = () => {
                   )}
                 </div>
               ) : (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="text-sm text-red-800">
-                    Mağaza adres bilgisi bulunamadı. Lütfen yöneticinizle iletişime geçin.
-                  </p>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-blue-800 font-medium">
+                        Henüz adres bulunamadı
+                      </p>
+                      <p className="text-xs text-blue-600 mt-1">
+                        Sipariş verebilmek için önce bir adres eklemeniz gerekiyor
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setShowAddressModal(true)}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm font-medium"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Adres Ekle
+                    </button>
+                  </div>
                 </div>
               )}
-              
             </div>
 
-            {/* Ödeme Bilgileri */}
+            {/* Sipariş Notları */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">💳 Ödeme Bilgileri</h2>
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="text-sm text-green-800">
-                    Ödeme hesap bakiyenizden otomatik olarak düşülecektir.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Sipariş Notu */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Sipariş Notu</h2>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Özel Talimatlar (Opsiyonel)
-                </label>
-                <textarea
-                  value={orderNotes}
-                  onChange={(e) => setOrderNotes(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                  rows={4}
-                  placeholder="Sipariş ile ilgili özel talimatlarınızı, teslimat notlarınızı veya diğer önemli bilgileri giriniz..."
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Bu alan opsiyoneldir. Boş bırakabilirsiniz.
-                </p>
-              </div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">📝 Sipariş Notları</h2>
+              <textarea
+                value={orderNotes}
+                onChange={(e) => setOrderNotes(e.target.value)}
+                placeholder="Sipariş ile ilgili özel notlarınızı buraya yazabilirsiniz..."
+                className="w-full h-24 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                maxLength={500}
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                {orderNotes.length}/500 karakter
+              </p>
             </div>
           </div>
 
-          {/* Sağ taraf - Sipariş Özeti */}
+          {/* Sağ taraf - Sepet Özeti */}
           <div className="space-y-6">
+            {/* Sepet Özeti */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Sipariş Özeti</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">🛒 Sepet Özeti</h2>
               
-              <div className="space-y-4">
-                {cartData.items.map((item) => (
-                  <div key={item.id} className="flex items-center space-x-4 pb-4 border-b border-gray-200 last:border-b-0">
-                    <img
-                      src={item.product.productImage || '/placeholder-product.jpg'}
-                      alt={item.product.name}
-                      className="w-16 h-16 object-cover rounded-lg"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.onerror = null;
-                        target.src = '/placeholder-product.jpg';
-                      }}
-                    />
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{item.product.name}</h3>
-                      {item.product.collection && (
-                        <p className="text-xs text-blue-600 mt-1">
-                          {item.product.collection.name}
-                        </p>
-                      )}
-                      <div className="mt-1 text-xs text-gray-500">
-                        {item.width}×{item.height} cm
-                        {item.has_fringe ? ', Saçaklı' : ', Saçaksız'}
-                        {item.cut_type && `, ${translateCutType(item.cut_type)}`}
-                      </div>
-                      {item.notes && (
-                        <div className="mt-1 text-xs text-gray-500 italic">
-                          Not: {item.notes}
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                {cartData.items.map((item) => {
+                  // console.log('Product Image URL:', item.product.productImage); // Debug log
+                  const imageUrl = item.product.productImage && 
+                                   item.product.productImage !== 'undefined' && 
+                                   item.product.productImage.trim() !== '' 
+                    ? item.product.productImage 
+                    : null;
+                  
+                  return (
+                    <div key={item.id} className="flex items-start space-x-4 pb-4 border-b border-gray-100 last:border-b-0">
+                      {imageUrl ? (
+                        <OptimizedImage
+                          src={imageUrl}
+                          alt={item.product.name}
+                          className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                          placeholder={
+                            <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center border border-gray-200">
+                              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                          }
+                          onError={() => console.log('Image failed to load:', imageUrl)}
+                        />
+                      ) : (
+                        <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200">
+                          <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
                         </div>
                       )}
-                      <p className="text-sm text-gray-600 mt-1">
-                        {item.quantity} adet × {parseFloat(item.unit_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                      </p>
+                      <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-medium text-gray-900 truncate">{item.product.name}</h3>
+                      <p className="text-xs text-gray-500">{item.product.collection.name}</p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span className="text-xs text-gray-600">
+                          {item.width}x{item.height} cm
+                        </span>
+                        <span className="text-xs text-gray-400">•</span>
+                        <span className="text-xs text-gray-600">
+                          {translateCutType(item.cut_type)}
+                        </span>
+                      </div>
+                      {item.notes && (
+                        <p className="text-xs text-gray-500 mt-1 italic">{item.notes}</p>
+                      )}
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-sm text-gray-600">Adet: {item.quantity}</span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                        </span>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-gray-900">
-                        {parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                      </p>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-gray-600">Toplam Ürün:</span>
-                  <span className="text-sm font-medium text-gray-900">{cartData.totalItems} adet</span>
-                </div>
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-lg font-semibold text-gray-900">Toplam Tutar:</span>
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-semibold text-gray-900">Toplam:</span>
                   <span className="text-xl font-bold text-blue-600">
                     {parseFloat(cartData.totalPrice).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                   </span>
                 </div>
-
-                <div className="space-y-3">
-                  <button
-                    onClick={handleSubmitOrder}
-                    disabled={submitting || !limitInfo || !limitInfo.canProceed}
-                    className={`w-full py-3 px-6 rounded-lg font-medium transition-colors ${
-                      !limitInfo || !limitInfo.canProceed
-                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                        : 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed'
-                    }`}
-                  >
-                    {submitting ? (
-                      <div className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Sipariş Oluşturuluyor...
-                      </div>
-                    ) : !limitInfo || !limitInfo.canProceed ? (
-                      'Sipariş Verilemez'
-                    ) : (
-                      'Siparişi Onayla ve Oluştur'
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() => router.push('/dashboard/sepetim')}
-                    className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-200 transition-colors font-medium"
-                  >
-                    Sepete Dön
-                  </button>
-                </div>
               </div>
             </div>
 
-            {/* Sipariş Süreci Bilgileri */}
+            {/* Sipariş Ver Butonu */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Sipariş Süreci</h3>
+              <button
+                onClick={handleSubmitOrder}
+                disabled={submitting || !limitInfo?.canProceed || !selectedAddressId}
+                className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-colors ${
+                  submitting || !limitInfo?.canProceed || !selectedAddressId
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
+              >
+                {submitting ? 'Sipariş Oluşturuluyor...' : 'Siparişi Onayla'}
+              </button>
+              
+              {(!limitInfo?.canProceed || !selectedAddressId) && (
+                <p className="text-sm text-red-600 mt-2 text-center">
+                  {!selectedAddressId ? 'Lütfen teslimat adresi seçin' : 'Sipariş durumunu kontrol edin'}
+                </p>
+              )}
+            </div>
+
+            {/* Sipariş Süreci */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">📋 Sipariş Süreci</h3>
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium">1</div>
+                  <div className="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-medium">1</div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">Sipariş Onayı</p>
-                    <p className="text-xs text-gray-500">Siparişiniz sistem tarafından onaylanır</p>
+                    <p className="text-sm font-medium text-gray-900">Onay</p>
+                    <p className="text-xs text-gray-500">Siparişiniz alınır ve onaylanır</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
@@ -593,8 +656,135 @@ const SiparisOlustur = () => {
           </div>
         </div>
       </div>
+
+      {/* Yeni Adres Ekleme Modal */}
+      {showAddressModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-2xl w-full shadow-2xl">
+            <div className="bg-[#00365a] text-white rounded-t-xl p-6">
+              <h3 className="text-xl font-bold">Yeni Teslimat Adresi Ekle</h3>
+              <p className="text-blue-100 text-sm mt-1">Bu adres sipariş teslimatı için kullanılacaktır</p>
+            </div>
+            
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Adres Başlığı <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newAddress.title}
+                    onChange={(e) => setNewAddress(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Örn: Ana Mağaza, Depo, Şube 1"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tam Adres <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={newAddress.address}
+                    onChange={(e) => setNewAddress(prev => ({ ...prev, address: e.target.value }))}
+                    placeholder="Sokak, cadde, mahalle, bina no vs."
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">İlçe</label>
+                  <input
+                    type="text"
+                    value={newAddress.district}
+                    onChange={(e) => setNewAddress(prev => ({ ...prev, district: e.target.value }))}
+                    placeholder="Örn: Kadıköy"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Şehir</label>
+                  <input
+                    type="text"
+                    value={newAddress.city}
+                    onChange={(e) => setNewAddress(prev => ({ ...prev, city: e.target.value }))}
+                    placeholder="Örn: İstanbul"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Posta Kodu</label>
+                  <input
+                    type="text"
+                    value={newAddress.postal_code}
+                    onChange={(e) => setNewAddress(prev => ({ ...prev, postal_code: e.target.value }))}
+                    placeholder="Örn: 34710"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div className="flex items-center">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={newAddress.is_default}
+                      onChange={(e) => setNewAddress(prev => ({ ...prev, is_default: e.target.checked }))}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">Varsayılan adres olarak ayarla</span>
+                  </label>
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowAddressModal(false);
+                    setNewAddress({
+                      title: '',
+                      address: '',
+                      city: '',
+                      district: '',
+                      postal_code: '',
+                      is_default: false
+                    });
+                  }}
+                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                >
+                  İptal
+                </button>
+                <button
+                  onClick={handleAddNewAddress}
+                  disabled={addingAddress || !newAddress.title || !newAddress.address}
+                  className="px-6 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {addingAddress ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                      Ekleniyor...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Adres Ekle
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default SiparisOlustur; 
+export default SiparisOlustur;

@@ -64,6 +64,19 @@ interface Order {
   notes?: string;
   created_at: string;
   updated_at: string;
+  address?: {
+    id: string;
+    store_id: string;
+    title: string;
+    address: string;
+    city: string;
+    district: string;
+    postal_code: string;
+    is_default: boolean;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+  };
   user?: User;
   items: OrderItem[];
   cart: {
@@ -174,6 +187,7 @@ interface OrderStats {
 interface CancelOrderModal {
   isOpen: boolean;
   orderId: string;
+  orderNumber?: string;
   reason: string;
   isLoading: boolean;
 }
@@ -560,11 +574,12 @@ const Siparisler = () => {
               font-weight: bold;
             }
             .store-info {
-              font-size: 5pt;
+              font-size: 6pt;
               text-align: center;
               margin-top: 1mm;
               padding-top: 1mm;
               border-top: 1px solid #000;
+              line-height: 1.2;
             }
             @media print {
               body { 
@@ -611,7 +626,15 @@ const Siparisler = () => {
                     </div>
                     
                     <div class="store-info">
-                      ${order.store_name} • ${order.store_phone}
+                      ${order.store_name} • ${order.store_phone}<br/>
+                      ${order.address ? `
+                        <strong>${(order.address as any).title}</strong><br/>
+                        ${(order.address as any).address}<br/>
+                        ${(order.address as any).district} / ${(order.address as any).city}
+                        ${(order.address as any).postal_code ? `<br/>PK: ${(order.address as any).postal_code}` : ''}
+                      ` : order.delivery_address ? `
+                        ${order.delivery_address}
+                      ` : ''}
                     </div>
                   </div>
                 `);
@@ -1485,13 +1508,6 @@ const Siparisler = () => {
                         {order.status === 'READY' && (
                           <>
                             <button
-                              onClick={() => handleUpdateOrderStatus(order.id, 'SHIPPED')}
-                              disabled={updatingStatus}
-                              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm disabled:opacity-50"
-                            >
-                              Kargola
-                            </button>
-                            <button
                               onClick={() => {
                                 setCancelOrderModal({
                                   isOpen: true,
@@ -1509,15 +1525,7 @@ const Siparisler = () => {
                           </>
                         )}
 
-                        {order.status === 'SHIPPED' && (
-                          <button
-                            onClick={() => handleUpdateOrderStatus(order.id, 'DELIVERED')}
-                            disabled={updatingStatus}
-                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm disabled:opacity-50"
-                          >
-                            Teslim Et
-                          </button>
-                        )}
+
                       </div>
                     )}
                   </div>
@@ -1685,9 +1693,35 @@ const Siparisler = () => {
                           <span className="text-gray-600 font-medium">E-posta:</span>
                           <span className="text-gray-900">{selectedOrder.store_email}</span>
                         </div>
-                        <div className="flex justify-between items-center py-2">
-                          <span className="text-gray-600 font-medium">Adres:</span>
-                          <span className="text-gray-900 text-right max-w-xs">{selectedOrder.delivery_address}</span>
+                        <div className="py-2">
+                          <span className="text-gray-600 font-medium block mb-2">Teslimat Adresi:</span>
+                          {selectedOrder.address ? (
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                              <h4 className="font-medium text-blue-900 mb-1">{selectedOrder.address.title}</h4>
+                              <p className="text-sm text-blue-800 mb-1">{selectedOrder.address.address}</p>
+                              <p className="text-xs text-blue-700">
+                                {selectedOrder.address.district && selectedOrder.address.district + ', '}
+                                {selectedOrder.address.city}
+                                {selectedOrder.address.postal_code && ' - ' + selectedOrder.address.postal_code}
+                              </p>
+                              {selectedOrder.address.is_default && (
+                                <span className="inline-block mt-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                                  Varsayılan Adres
+                                </span>
+                              )}
+                            </div>
+                          ) : selectedOrder.address ? (
+                            <div className="text-gray-900 text-right max-w-xs">
+                              <div className="font-semibold">{(selectedOrder.address as any).title}</div>
+                              <div className="text-sm">{(selectedOrder.address as any).address}</div>
+                              <div className="text-sm">{(selectedOrder.address as any).district} / {(selectedOrder.address as any).city}</div>
+                              {(selectedOrder.address as any).postal_code && (
+                                <div className="text-sm">Posta Kodu: {(selectedOrder.address as any).postal_code}</div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-gray-900 text-right max-w-xs">{selectedOrder.delivery_address}</span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1926,7 +1960,21 @@ const Siparisler = () => {
                                                   <div style="border: 1px solid black; padding: 15px; margin-bottom: 15px; text-align: left;">
                                                     <h3 style="color: black; margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">Teslimat Adresi</h3>
                                                     <p style="margin: 3px 0;"><strong>Mağaza:</strong> ${selectedOrder.store_name}</p>
-                                                    <p style="margin: 3px 0; line-height: 1.4;">${selectedOrder.delivery_address}</p>
+                                                    ${selectedOrder.address ? `
+                                                      <p style="margin: 3px 0;"><strong>Adres Başlığı:</strong> ${(selectedOrder.address as any).title}</p>
+                                                      <p style="margin: 3px 0; line-height: 1.4;"><strong>Adres:</strong> ${(selectedOrder.address as any).address}</p>
+                                                      <p style="margin: 3px 0;"><strong>Şehir/İlçe:</strong> ${(selectedOrder.address as any).district ? (selectedOrder.address as any).district + ', ' : ''}${(selectedOrder.address as any).city}</p>
+                                                      ${(selectedOrder.address as any).postal_code ? `<p style="margin: 3px 0;"><strong>Posta Kodu:</strong> ${(selectedOrder.address as any).postal_code}</p>` : ''}
+                                                    ` : `
+                                                      ${selectedOrder.address ? `
+                                                        <p style="margin: 3px 0; line-height: 1.4; font-weight: bold;">${(selectedOrder.address as any).title}</p>
+                                                        <p style="margin: 3px 0; line-height: 1.4;">${(selectedOrder.address as any).address}</p>
+                                                        <p style="margin: 3px 0; line-height: 1.4;">${(selectedOrder.address as any).district} / ${(selectedOrder.address as any).city}</p>
+                                                        ${(selectedOrder.address as any).postal_code ? `<p style="margin: 3px 0; line-height: 1.4;">Posta Kodu: ${(selectedOrder.address as any).postal_code}</p>` : ''}
+                                                      ` : `
+                                                        <p style="margin: 3px 0; line-height: 1.4;">${selectedOrder.delivery_address}</p>
+                                                      `}
+                                                    `}
                                                     <p style="margin: 3px 0;"><strong>Telefon:</strong> ${selectedOrder.user?.Store?.telefon || selectedOrder.store_phone}</p>
                                                     <p style="margin: 3px 0;"><strong>E-posta:</strong> ${selectedOrder.store_email}</p>
                                                   </div>

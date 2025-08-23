@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { processPayment, PaymentRequest, getMyProfile, UserProfileInfo, getMyStoreInfo } from '../../../services/api';
+import { processPayment, PaymentRequest, getMyStoreInfo } from '../../../services/api';
 
 interface Payment {
   id: string;
@@ -104,7 +104,7 @@ export default function PaymentsPage() {
     description: '',
     storeId: ''
   });
-  const [userProfile, setUserProfile] = useState<UserProfileInfo | null>(null);
+
 
   useEffect(() => {
     if (!user) {
@@ -113,7 +113,6 @@ export default function PaymentsPage() {
     }
     fetchPayments();
     initializeStores();
-    fetchUserProfile();
   }, [user, router, isAdmin, currentPage, statusFilter, selectedStoreFilter, startDate, endDate]);
 
   // Dropdown'ların dışına tıklandığında kapanması
@@ -133,15 +132,7 @@ export default function PaymentsPage() {
     };
   }, []);
 
-  // Kullanıcı profil bilgilerini getir
-  const fetchUserProfile = async () => {
-    try {
-      const profileData = await getMyProfile();
-      setUserProfile(profileData.user);
-    } catch (error) {
-      console.error('Profil bilgileri alınamadı:', error);
-    }
-  };
+
 
   const initializeStores = async () => {
     if (isAdmin) {
@@ -315,15 +306,6 @@ export default function PaymentsPage() {
       // Form validasyonu
       if (!paymentForm.storeId || !paymentForm.amount) {
         alert('Lütfen mağaza ve tutar alanlarını doldurun!');
-        return;
-      }
-
-      // Adres kontrolü
-      if (!userProfile?.adres || userProfile.adres.trim() === '') {
-        if (confirm('Adres bilginiz eksik. Profil sayfasında adres bilginizi güncellemek ister misiniz?')) {
-          router.push('/dashboard/ayarlar');
-          return;
-        }
         return;
       }
 

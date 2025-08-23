@@ -54,6 +54,79 @@ GET /api/store-addresses // Mağaza adreslerini getirir
 }
 ```
 
+## Sipariş Verme Değişiklikleri
+
+### Sipariş Verirken Adres Seçimi
+Artık sipariş verirken adres seçmek zorunlu. Frontend'den `address_id` parametresi gönderilmeli:
+
+```javascript
+// Normal kullanıcı sipariş verme
+POST /api/orders/create-from-cart
+Body: {
+  notes: "Sipariş notları",
+  address_id: "address_uuid" // ZORUNLU: Seçilen adres ID'si
+}
+
+// Admin sipariş verme (admin cart'tan)
+POST /api/admin/admin-cart/create-order
+Body: {
+  targetUserId: "user_id",
+  storeId: "store_id", 
+  notes: "Notlar",
+  address_id: "address_uuid" // ZORUNLU: Seçilen adres ID'si
+}
+
+// Admin manuel sipariş oluşturma
+POST /api/admin/orders/process
+Body: {
+  store_id: "store_id",
+  user_id: "user_id",
+  address_id: "address_uuid", // ZORUNLU: Seçilen adres ID'si
+  items: [...],
+  notes: "Notlar"
+}
+```
+
+### Sipariş Response Değişiklikleri
+```javascript
+// Sipariş oluşturulduğunda dönen response
+{
+  success: true,
+  order: {
+    id: "order_id",
+    address_id: "address_uuid", // Seçilen adres ID'si
+    // ... diğer alanlar
+    address: {  // Include edilmiş adres bilgisi
+      id: "address_uuid",
+      title: "Ana Mağaza",
+      address: "Tam adres",
+      city: "İstanbul",
+      district: "Kadıköy"
+    }
+  }
+}
+```
+
+### Fiş/Receipt Değişiklikleri
+```javascript
+// Fiş alınırken artık seçilen adres bilgisi gelir
+GET /api/orders/:orderId/receipt
+
+Response: {
+  success: true,
+  receipt: {
+    musteri: {
+      ad: "Müşteri Adı",
+      soyad: "Soyadı", 
+      email: "email@example.com",
+      telefon: "telefon",
+      adres: "Ana Mağaza: İstanbul Kadıköy Moda Caddesi No:123, Kadıköy İstanbul" // Seçilen adres
+    }
+    // ... diğer bilgiler
+  }
+}
+```
+
 ## Yeni Store Address API'ları
 
 ### Mağaza Adreslerini Listeleme
@@ -129,7 +202,9 @@ DELETE /api/store-addresses/:addressId
 ### 2. Sipariş Verme Sürecinde  
 - ESKİ: Kullanıcının adres bilgisi otomatik kullanılıyordu
 - YENİ: Kullanıcı mağaza adreslerinden birini seçmeli
+- **ZORUNLU:** Artık `address_id` parametresi gönderilmeli
 - Adres seçimi için dropdown/liste komponenti ekleyin
+- Varsayılan olarak `is_default: true` olan adres seçili gelsin
 
 ### 3. Admin Panelinde
 - Kullanıcı listesinde `adres` kolonunu kaldırın  
@@ -176,15 +251,45 @@ const OrderForm = () => {
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
 
+  const createOrder = async () => {
+    if (!selectedAddress) {
+      alert('Lütfen bir adres seçin!');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/orders/create-from-cart', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          notes: orderNotes,
+          address_id: selectedAddress.id // ZORUNLU!
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        console.log('Sipariş oluşturuldu:', data.order);
+        console.log('Seçilen adres:', data.order.address);
+      }
+    } catch (error) {
+      console.error('Sipariş oluşturma hatası:', error);
+    }
+  };
+
   return (
     <div>
-      <label>Teslimat Adresi:</label>
+      <label>Teslimat Adresi: *</label>
       <select 
         value={selectedAddress?.id || ''} 
         onChange={(e) => {
           const addr = addresses.find(a => a.id === e.target.value);
           setSelectedAddress(addr);
         }}
+        required
       >
         <option value="">Adres Seçin</option>
         {addresses.map(addr => (
@@ -194,7 +299,9 @@ const OrderForm = () => {
         ))}
       </select>
       
-      {/* Sipariş formu devamı */}
+      <button onClick={createOrder} disabled={!selectedAddress}>
+        Sipariş Ver
+      </button>
     </div>
   );
 };
@@ -254,8 +361,12 @@ const StoreAddressManagement = ({ storeId }) => {
 
 - [ ] Login sonrası user.adres null geldiğinde hata vermiyor mu?
 - [ ] Adres listesi düzgün yükleniyor mu?  
-- [ ] Sipariş verirken adres seçimi çalışıyor mu?
+- [ ] **YENİ:** Sipariş verirken address_id gönderilmediğinde hata alınıyor mu?
+- [ ] **YENİ:** Sipariş verirken address_id gönderildiğinde başarıyla sipariş oluşuyor mu?
+- [ ] **YENİ:** Oluşturulan siparişte address bilgisi doğru geliyor mu?
+- [ ] **YENİ:** Fiş çıktısında seçilen adres doğru görünüyor mu?
 - [ ] Admin panelinde adres yönetimi çalışıyor mu?
+- [ ] Admin sipariş verirken address_id seçimi çalışıyor mu?
 - [ ] Varsayılan adres değiştirme çalışıyor mu?
 - [ ] Adres silme işlemi çalışıyor mu?
 

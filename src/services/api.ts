@@ -564,6 +564,7 @@ export interface CreateOrderFromAdminCartRequest {
   targetUserId: string;
   storeId: string;
   notes?: string;
+  address_id: string; // ZORUNLU: Seçilen adres ID'si
 }
 
 export interface CreateOrderFromAdminCartResponse {
@@ -577,6 +578,19 @@ export interface CreateOrderFromAdminCartResponse {
       total_price: string;
       status: string;
       delivery_address: string;
+      address?: {
+        id: string;
+        store_id: string;
+        title: string;
+        address: string;
+        city: string;
+        district: string;
+        postal_code: string;
+        is_default: boolean;
+        is_active: boolean;
+        created_at: string;
+        updated_at: string;
+      };
       store_name: string;
       store_tax_number: string;
       store_tax_office: string;
