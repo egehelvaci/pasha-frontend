@@ -12,7 +12,9 @@
       "Read(/C:\\c\\Users\\ege_h/**)",
       "Read(/C:\\c\\Users\\ege_h/**)",
       "Read(/C:\\c\\Users\\ege_h/**)",
-      "Read(/C:\\c\\Users\\ege_h/**)"
+      "Read(/C:\\c\\Users\\ege_h/**)",
+      "Bash(git commit:*)",
+      "WebFetch(domain:)"
     ],
     "deny": [],
     "ask": [],

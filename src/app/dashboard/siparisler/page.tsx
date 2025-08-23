@@ -1447,7 +1447,60 @@ const Siparisler = () => {
                               Onayla
                             </button>
                             <button
-                              onClick={() => handleUpdateOrderStatus(order.id, 'CANCELED')}
+                              onClick={() => {
+                                setCancelOrderModal({
+                                  isOpen: true,
+                                  orderId: order.id,
+                                  orderNumber: order.id.slice(0, 8),
+                                  isLoading: false,
+                                  reason: ''
+                                });
+                              }}
+                              disabled={updatingStatus}
+                              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm disabled:opacity-50"
+                            >
+                              İptal Et
+                            </button>
+                          </>
+                        )}
+
+                        {order.status === 'CONFIRMED' && (
+                          <button
+                            onClick={() => {
+                              setCancelOrderModal({
+                                isOpen: true,
+                                orderId: order.id,
+                                orderNumber: order.id.slice(0, 8),
+                                isLoading: false,
+                                reason: ''
+                              });
+                            }}
+                            disabled={updatingStatus}
+                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm disabled:opacity-50"
+                          >
+                            İptal Et
+                          </button>
+                        )}
+
+                        {order.status === 'READY' && (
+                          <>
+                            <button
+                              onClick={() => handleUpdateOrderStatus(order.id, 'SHIPPED')}
+                              disabled={updatingStatus}
+                              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm disabled:opacity-50"
+                            >
+                              Kargola
+                            </button>
+                            <button
+                              onClick={() => {
+                                setCancelOrderModal({
+                                  isOpen: true,
+                                  orderId: order.id,
+                                  orderNumber: order.id.slice(0, 8),
+                                  isLoading: false,
+                                  reason: ''
+                                });
+                              }}
                               disabled={updatingStatus}
                               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm disabled:opacity-50"
                             >

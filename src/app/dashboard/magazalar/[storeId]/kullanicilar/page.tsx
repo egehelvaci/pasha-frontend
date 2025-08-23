@@ -76,7 +76,7 @@ export default function StoreUsersPage() {
       user.surname.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.adres && user.adres.toLowerCase().includes(searchTerm.toLowerCase()));
+      (user.phone && user.phone.toLowerCase().includes(searchTerm.toLowerCase()));
     
     return matchesSearch;
   });
@@ -193,7 +193,7 @@ export default function StoreUsersPage() {
                         İletişim
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Adres
+                        Eylemler
                       </th>
                     </tr>
                   </thead>
@@ -229,13 +229,16 @@ export default function StoreUsersPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center justify-between">
-                            <div className="text-sm text-gray-900 max-w-xs truncate flex-1">
-                              {user.adres || 'Adres bilgisi yok'}
-                            </div>
-                            <div className="ml-2 px-3 py-1 bg-[#00365a] hover:bg-[#004170] text-white text-xs rounded-lg font-medium transition-colors">
-                              Git
-                            </div>
+                          <div className="flex items-center justify-center">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                console.log('Kullanıcı detayına git:', user);
+                              }}
+                              className="px-4 py-2 bg-[#00365a] hover:bg-[#004170] text-white text-xs rounded-lg font-medium transition-colors"
+                            >
+                              Detay
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -282,26 +285,21 @@ export default function StoreUsersPage() {
                           {user.phone_number && <p className="text-sm text-gray-500">{user.phone_number}</p>}
                         </div>
 
-                        <div className="bg-green-50 rounded-lg p-4">
-                          <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                            <svg className="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            Adres
-                          </h4>
+                        <div className="bg-blue-50 rounded-lg p-4">
                           <div className="flex items-center justify-between">
-                            <p className="text-sm text-gray-900 flex-1">{user.adres || 'Adres bilgisi yok'}</p>
+                            <div className="flex-1">
+                              <p className="text-sm text-blue-700 font-medium">
+                                Adres bilgileri artık mağaza bazlı yönetilmektedir
+                              </p>
+                            </div>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                console.log('Git butonu tıklandı (mobil):', user);
-                                // Bir sonraki sayfaya yönlendirme
-                                router.push('/dashboard/urunler/liste');
+                                console.log('Kullanıcı detayına git (mobil):', user);
                               }}
-                              className="ml-2 px-3 py-1 bg-[#00365a] hover:bg-[#004170] text-white text-xs rounded-lg font-medium transition-colors"
+                              className="ml-3 px-4 py-2 bg-[#00365a] hover:bg-[#004170] text-white text-xs rounded-lg font-medium transition-colors"
                             >
-                              Git
+                              Detay
                             </button>
                           </div>
                         </div>

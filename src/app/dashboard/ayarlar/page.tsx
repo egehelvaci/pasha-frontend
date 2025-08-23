@@ -178,7 +178,7 @@ export default function Settings() {
           name: profileData.user.name || '',
           surname: profileData.user.surname || '',
           phoneNumber: profileData.user.phoneNumber || '',
-          adres: profileData.user.adres || ''
+          adres: '' // Artık kullanılmıyor - mağaza bazlı sistem
         });
       }
       
@@ -314,7 +314,7 @@ export default function Settings() {
         surname: (selectedUser.fullName || ((selectedUser.name || '') + ' ' + (selectedUser.surname || ''))).split(' ').slice(1).join(' '),
         email: selectedUser.email,
         phoneNumber: (selectedUser as any).phoneNumber || '',
-        adres: (selectedUser as any).adres || '',
+        adres: '', // Artık kullanılmıyor - mağaza bazlı sistem
         userTypeName:
           typeof selectedUser.userType === 'object'
             ? selectedUser.userType.name
@@ -638,14 +638,9 @@ export default function Settings() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Adres
                     </label>
-                    <textarea
-                      name="adres"
-                      value={userForm.adres}
-                      onChange={handleUserChange}
-                      rows={3}
-                      placeholder="Tam adres bilginizi giriniz..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    />
+                    <div className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-500 text-sm">
+                      Adres bilgileri artık mağaza bazlı yönetilmektedir. Mağaza adres yönetimi için lütfen admin ile iletişime geçiniz.
+                    </div>
                   </div>
                   
                   <div className="flex justify-end">
@@ -1167,18 +1162,12 @@ export default function Settings() {
                 </div>
               </div>
 
-              {/* Adres - Tam genişlik */}
+              {/* Adres - Artık kullanılmıyor */}
               <div>
                 <label htmlFor="adres" className="block text-sm font-medium text-gray-700 mb-2">Adres</label>
-                <textarea
-                  name="adres"
-                  id="adres"
-                  value={formData.adres}
-                  onChange={handleInputChange}
-                  placeholder="Kullanıcı adresini girin..."
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors resize-none"
-                />
+                <div className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 text-sm">
+                  Adres bilgileri artık mağaza bazlı yönetilmektedir. Mağaza ayarlarından adres yönetimini yapabilirsiniz.
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

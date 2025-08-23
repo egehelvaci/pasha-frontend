@@ -2866,4 +2866,191 @@ export async function markAllNotificationsAsRead(userId: string): Promise<MarkAs
     console.error('Tüm bildirimleri okundu işaretleme hatası:', error);
     throw error;
   }
+}
+
+// Store Address API Types and Functions
+export interface StoreAddress {
+  id: string;
+  store_id: string;
+  title: string;
+  address: string;
+  city?: string;
+  district?: string;
+  postal_code?: string;
+  is_default: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StoreAddressResponse {
+  success: boolean;
+  data: StoreAddress[];
+  message?: string;
+}
+
+export interface CreateStoreAddressRequest {
+  title: string;
+  address: string;
+  city?: string;
+  district?: string;
+  postal_code?: string;
+  is_default?: boolean;
+  store_id?: string; // Sadece admin için
+}
+
+// Mağaza adreslerini getir
+export async function getStoreAddresses(storeId?: string): Promise<StoreAddressResponse> {
+  const token = getAuthToken();
+
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  try {
+    const url = storeId 
+      ? `${API_URL}/api/store-addresses?storeId=${storeId}`
+      : `${API_URL}/api/store-addresses`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data: StoreAddressResponse = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Adres listesi getirilemedi');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Adres listesi getirme hatası:', error);
+    throw error;
+  }
+}
+
+// Yeni mağaza adresi ekle
+export async function createStoreAddress(addressData: CreateStoreAddressRequest): Promise<{ success: boolean; message?: string; data?: StoreAddress }> {
+  const token = getAuthToken();
+
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/store-addresses`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(addressData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Adres eklenemedi');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Adres ekleme hatası:', error);
+    throw error;
+  }
+}
+
+// Mağaza adresini güncelle
+export async function updateStoreAddress(addressId: string, addressData: Partial<CreateStoreAddressRequest>): Promise<{ success: boolean; message?: string; data?: StoreAddress }> {
+  const token = getAuthToken();
+
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/store-addresses/${addressId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(addressData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Adres güncellenemedi');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Adres güncelleme hatası:', error);
+    throw error;
+  }
+}
+
+// Varsayılan adresi değiştir
+export async function setDefaultStoreAddress(addressId: string): Promise<{ success: boolean; message?: string }> {
+  const token = getAuthToken();
+
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/store-addresses/${addressId}/set-default`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Varsayılan adres değiştirilemedi');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Varsayılan adres değiştirme hatası:', error);
+    throw error;
+  }
+}
+
+// Mağaza adresini sil
+export async function deleteStoreAddress(addressId: string): Promise<{ success: boolean; message?: string }> {
+  const token = getAuthToken();
+
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/store-addresses/${addressId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Adres silinemedi');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Adres silme hatası:', error);
+    throw error;
+  }
 } 

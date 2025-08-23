@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
 import { useToken } from '@/app/hooks/useToken';
-import { getMyProfile, UserProfileInfo } from '@/services/api';
+import { getMyProfile, UserProfileInfo, getStoreAddresses, StoreAddress } from '@/services/api';
 
 // Kesim türlerini Türkçe'ye çeviren fonksiyon
 const translateCutType = (cutType: string): string => {
@@ -66,6 +66,9 @@ const SiparisOlustur = () => {
   const [checkingLimits, setCheckingLimits] = useState(false);
   const [orderNotes, setOrderNotes] = useState('');
   const [userProfile, setUserProfile] = useState<UserProfileInfo | null>(null);
+  const [storeAddresses, setStoreAddresses] = useState<StoreAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('');
+  const [addressesLoading, setAddressesLoading] = useState(false);
 
   // Limit mesajını kullanıcı dostu hale getiren fonksiyon
   const formatLimitMessage = (message: string): string => {
@@ -137,6 +140,7 @@ const SiparisOlustur = () => {
 
     if (token) {
       fetchUserProfile();
+      fetchStoreAddresses(); // Adres listesini de yükle
     }
   }, [token]);
 
@@ -185,6 +189,26 @@ const SiparisOlustur = () => {
     }
   };
 
+  // Mağaza adreslerini getir
+  const fetchStoreAddresses = async () => {
+    try {
+      setAddressesLoading(true);
+      const response = await getStoreAddresses();
+      if (response.success) {
+        setStoreAddresses(response.data);
+        // Varsayılan adresi otomatik seç
+        const defaultAddress = response.data.find(addr => addr.is_default);
+        if (defaultAddress) {
+          setSelectedAddressId(defaultAddress.id);
+        }
+      }
+    } catch (error) {
+      console.error('Adres listesi getirme hatası:', error);
+    } finally {
+      setAddressesLoading(false);
+    }
+  };
+
   // Sipariş oluştur
   const handleSubmitOrder = async () => {
     if (!cartData || cartData.items.length === 0) {
@@ -192,12 +216,9 @@ const SiparisOlustur = () => {
       return;
     }
 
-    // Adres kontrolü yap
-    if (!userProfile?.adres || userProfile.adres.trim() === '') {
-      if (confirm('Adres bilginiz eksik. Profil sayfasında adres bilginizi güncellemek ister misiniz?')) {
-        router.push('/dashboard/ayarlar');
-        return;
-      }
+    // Adres seçim kontrolü
+    if (!selectedAddressId) {
+      alert('Lütfen bir teslimat adresi seçin!');
       return;
     }
 
@@ -216,9 +237,10 @@ const SiparisOlustur = () => {
         return;
       }
 
-      // API dokümantasyonuna göre sadece notes gönderiyoruz
+      // API dokümantasyonuna göre notes ve address_id gönderiyoruz
       const orderPayload = {
-        notes: orderNotes.trim() || ''
+        notes: orderNotes.trim() || '',
+        address_id: selectedAddressId
       };
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/orders/create-from-cart`, {
@@ -293,26 +315,7 @@ const SiparisOlustur = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Sol taraf - Sipariş Bilgileri */}
           <div className="space-y-6">
-            {/* Adres Uyarısı */}
-            {userProfile && (!userProfile.adres || userProfile.adres.trim() === '') && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <div className="flex items-center">
-                  <span className="text-2xl mr-2">⚠️</span>
-                  <div>
-                    <h3 className="text-yellow-800 font-semibold">Adres Bilgisi Eksik</h3>
-                    <p className="text-yellow-700 text-sm">
-                      Sipariş verebilmek için adres bilginizi güncellemeniz gerekmektedir.
-                    </p>
-                    <button
-                      onClick={() => router.push('/dashboard/ayarlar')}
-                      className="mt-2 text-yellow-800 hover:text-yellow-900 underline text-sm font-medium"
-                    >
-                      Profil ayarlarına git →
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Artık adres uyarısı kaldırıldı - mağaza bazlı sistem */}
 
             {/* Limit Kontrolü */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -368,21 +371,79 @@ const SiparisOlustur = () => {
               )}
             </div>
 
-            {/* Otomatik Bilgiler */}
+            {/* Teslimat Adresi Seçimi */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Otomatik Bilgiler</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">📍 Teslimat Adresi</h2>
               
-              <div className="space-y-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h3 className="text-sm font-medium text-blue-900 mb-2">📍 Teslimat Adresi</h3>
-                  <p className="text-sm text-blue-800">
-                    Teslimat adresi mağaza bilgilerinizden otomatik olarak alınacaktır.
+              {addressesLoading ? (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-blue-600"></div>
+                    <p className="text-sm text-gray-600">Adresler yükleniyor...</p>
+                  </div>
+                </div>
+              ) : storeAddresses.length > 0 ? (
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="address-select" className="block text-sm font-medium text-gray-700 mb-2">
+                      Teslimat Adresi Seçin <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      id="address-select"
+                      value={selectedAddressId}
+                      onChange={(e) => setSelectedAddressId(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    >
+                      <option value="">Teslimat adresi seçin</option>
+                      {storeAddresses
+                        .filter(addr => addr.is_active)
+                        .map(addr => (
+                          <option key={addr.id} value={addr.id}>
+                            {addr.title} - {addr.address}
+                            {addr.is_default && ' (Varsayılan)'}
+                          </option>
+                        ))
+                      }
+                    </select>
+                  </div>
+                  
+                  {selectedAddressId && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      {(() => {
+                        const selectedAddress = storeAddresses.find(addr => addr.id === selectedAddressId);
+                        return selectedAddress ? (
+                          <div>
+                            <h4 className="text-sm font-medium text-blue-900 mb-1">{selectedAddress.title}</h4>
+                            <p className="text-sm text-blue-800">{selectedAddress.address}</p>
+                            {(selectedAddress.city || selectedAddress.district) && (
+                              <p className="text-sm text-blue-700 mt-1">
+                                {selectedAddress.district && selectedAddress.district + ', '}
+                                {selectedAddress.city}
+                                {selectedAddress.postal_code && ' - ' + selectedAddress.postal_code}
+                              </p>
+                            )}
+                          </div>
+                        ) : null;
+                      })()}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <p className="text-sm text-red-800">
+                    Mağaza adres bilgisi bulunamadı. Lütfen yöneticinizle iletişime geçin.
                   </p>
                 </div>
+              )}
+              
+            </div>
 
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <h3 className="text-sm font-medium text-green-900 mb-2">💳 Ödeme Bilgileri</h3>
-                  <p className="text-sm text-green-800">
+            {/* Ödeme Bilgileri */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">💳 Ödeme Bilgileri</h2>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p className="text-sm text-green-800">
                     Ödeme hesap bakiyenizden otomatik olarak düşülecektir.
                   </p>
                 </div>
