@@ -787,6 +787,36 @@ const Siparisler = () => {
     setCurrentPage(page);
   };
 
+  // API'den sipariş fişi alma fonksiyonu
+  const getOrderReceiptFromAPI = async (orderId: string): Promise<any> => {
+    try {
+      const authToken = token;
+      // Hem admin hem kullanıcı için aynı endpoint
+      const endpoint = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/orders/${orderId}/receipt`;
+
+      const response = await fetch(endpoint, {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Fiş bilgileri alınamadı');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        return data.data;
+      } else {
+        throw new Error(data.message || 'Fiş bilgileri alınamadı');
+      }
+    } catch (error: any) {
+      console.error('Fiş alma hatası:', error);
+      throw error;
+    }
+  };
+
   if (loading || authLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -1120,6 +1150,287 @@ const Siparisler = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                         </svg>
                         QR Yazdır
+                      </button>
+                    )}
+
+                    {/* Admin için fiş yazdır butonu - CONFIRMED, READY, DELIVERED durumlarında */}
+                    {isAdmin && ['CONFIRMED', 'READY', 'DELIVERED'].includes(order.status) && (
+                      <button
+                        onClick={async () => {
+                          try {
+                            const receiptData = await getOrderReceiptFromAPI(order.id);
+                            
+                            // Detaylı fiş sayfasını yeni sekmede aç ve otomatik yazdır
+                            const receiptWindow = window.open('', '_blank', 'width=800,height=600');
+                            if (receiptWindow) {
+                              receiptWindow.document.write(`
+                                <!DOCTYPE html>
+                                <html>
+                                  <head>
+                                    <title>Sipariş Fişi - ${order.id.slice(0, 8)}</title>
+                                    <meta charset="utf-8">
+                                    <style>
+                                      * { margin: 0; padding: 0; box-sizing: border-box; }
+                                      body { 
+                                        font-family: Arial, sans-serif; 
+                                        line-height: 1.4; 
+                                        color: #333; 
+                                        max-width: 800px; 
+                                        margin: 0 auto; 
+                                        padding: 20px;
+                                        background: white;
+                                      }
+                                      .header { 
+                                        text-align: center; 
+                                        border-bottom: 2px solid #000; 
+                                        padding-bottom: 20px; 
+                                        margin-bottom: 30px; 
+                                      }
+                                      .header h1 { 
+                                        font-size: 24px; 
+                                        margin-bottom: 10px; 
+                                        color: #000; 
+                                      }
+                                      .section { 
+                                        margin-bottom: 25px; 
+                                        padding: 15px; 
+                                        border: 1px solid #000; 
+                                        border-radius: 0; 
+                                      }
+                                      .section h3 { 
+                                        font-size: 16px; 
+                                        margin-bottom: 10px; 
+                                        color: #000; 
+                                        border-bottom: 1px solid #000; 
+                                        padding-bottom: 5px; 
+                                      }
+                                      .info-grid { 
+                                        display: grid; 
+                                        grid-template-columns: 1fr 1fr; 
+                                        gap: 15px; 
+                                        margin-bottom: 15px; 
+                                      }
+                                      .info-item { 
+                                        display: flex; 
+                                        justify-content: space-between; 
+                                      }
+                                      .info-item strong { 
+                                        color: #000; 
+                                      }
+                                      table { 
+                                        width: 100%; 
+                                        border-collapse: collapse; 
+                                        margin-top: 10px; 
+                                      }
+                                      th, td { 
+                                        border: 1px solid #000; 
+                                        padding: 8px; 
+                                        text-align: left; 
+                                      }
+                                      th { 
+                                        background-color: #fff; 
+                                        font-weight: bold; 
+                                      }
+                                      .total-row { 
+                                        background-color: #fff; 
+                                        font-weight: bold; 
+                                      }
+                                      .footer { 
+                                        margin-top: 30px; 
+                                        text-align: center; 
+                                        font-size: 12px; 
+                                        color: #000; 
+                                        border-top: 1px solid #000; 
+                                        padding-top: 15px; 
+                                      }
+                                      @media print {
+                                        body { font-size: 12px; }
+                                        .section { break-inside: avoid; }
+                                        @page { margin: 0; }
+                                        * { -webkit-print-color-adjust: exact; }
+                                      }
+                                      @page { margin: 0; size: auto; }
+                                    </style>
+                                  </head>
+                                  <body>
+                                    <div class="header">
+                                      <h1>PAŞA HOME</h1>
+                                      <h2>SİPARİŞ FİŞİ</h2>
+                                      <p>Fiş No: <strong>${receiptData.fis?.fisNumarasi || 'N/A'}</strong></p>
+                                      <p>Sipariş No: <strong>${receiptData.siparis?.id || order.id}</strong></p>
+                                      <p>Tarih: <strong>${receiptData.siparis?.olusturmaTarihi ? new Date(receiptData.siparis.olusturmaTarihi).toLocaleDateString('tr-TR', {
+                                        year: 'numeric',
+                                        month: 'long', 
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      }) : new Date(order.created_at).toLocaleDateString('tr-TR', {
+                                        year: 'numeric',
+                                        month: 'long', 
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}</strong></p>
+                                      <p>Durum: <strong style="color: #000;">${statusLabels[receiptData.siparis?.durum || order.status] || (receiptData.siparis?.durum || order.status)}</strong></p>
+                                    </div>
+
+                                    <!-- Temel Bilgiler -->
+                                    <div class="section">
+                                      <h3>Sipariş Bilgileri</h3>
+                                      <div class="info-grid">
+                                        <div class="info-item">
+                                          <span><strong>Mağaza:</strong></span>
+                                          <span>${receiptData.magaza?.kurumAdi || order.store_name || 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                          <span><strong>Müşteri:</strong></span>
+                                          <span>${receiptData.musteri?.ad || order.user?.name || 'N/A'} ${receiptData.musteri?.soyad || order.user?.surname || ''}</span>
+                                        </div>
+                                        <div class="info-item">
+                                          <span><strong>Sipariş Tarihi:</strong></span>
+                                          <span>${receiptData.siparis?.olusturmaTarihi ? new Date(receiptData.siparis.olusturmaTarihi).toLocaleDateString('tr-TR', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                          }) : new Date(order.created_at).toLocaleDateString('tr-TR', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                          })}</span>
+                                        </div>
+                                        <div class="info-item">
+                                          <span><strong>Son Güncelleme:</strong></span>
+                                          <span>${receiptData.siparis?.guncellemeTarihi ? new Date(receiptData.siparis.guncellemeTarihi).toLocaleDateString('tr-TR', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                          }) : new Date(order.updated_at).toLocaleDateString('tr-TR', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                          })}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <!-- Sipariş Edilen Ürünler -->
+                                    <div class="section">
+                                      <h3>Sipariş Edilen Ürünler</h3>
+                                      <table>
+                                        <thead>
+                                          <tr>
+                                            <th>Ürün Adı</th>
+                                            <th>Boyut (cm)</th>
+                                            <th>Adet</th>
+                                            <th>Birim Fiyat</th>
+                                            <th>Toplam</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          ${receiptData.urunler && receiptData.urunler.length > 0 ? receiptData.urunler.map((urun: any) => `
+                                            <tr>
+                                              <td>
+                                                ${urun.urunAdi || 'N/A'}
+                                                ${urun.aciklama ? '<br><small>' + urun.aciklama + '</small>' : ''}
+                                              </td>
+                                              <td>${urun.olculer?.en || 'N/A'} × ${urun.olculer?.boy || 'N/A'}</td>
+                                              <td>${urun.miktar || 0}</td>
+                                              <td>${(urun.birimFiyat || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</td>
+                                              <td>${(urun.toplamFiyat || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</td>
+                                            </tr>
+                                          `).join('') : order.items.map(item => `
+                                            <tr>
+                                              <td>${item.product.name}</td>
+                                              <td>${item.width} × ${item.height}</td>
+                                              <td>${item.quantity}</td>
+                                              <td>${parseFloat(item.unit_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</td>
+                                              <td>${parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</td>
+                                            </tr>
+                                          `).join('')}
+                                          <tr class="total-row">
+                                            <td colspan="4"><strong>GENEL TOPLAM</strong></td>
+                                            <td><strong>${(receiptData.siparis?.toplamTutar || parseFloat(order.total_price)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</strong></td>
+                                          </tr>
+                                        </tbody>
+                                      </table>
+                                    </div>
+
+                                    <!-- Bakiye Bilgileri -->
+                                    ${receiptData.bakiye ? `
+                                    <div class="section">
+                                      <h3>Bakiye Bilgileri</h3>
+                                      <div class="info-grid">
+                                        <div class="info-item">
+                                          <span><strong>Sipariş Öncesi Bakiye:</strong></span>
+                                          <span>${receiptData.bakiye.siparisOncesi.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
+                                        </div>
+                                        <div class="info-item">
+                                          <span><strong>Sipariş Sonrası Bakiye:</strong></span>
+                                          <span>${receiptData.bakiye.siparisSonrasi.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
+                                        </div>
+                                        <div class="info-item">
+                                          <span><strong>Sipariş Kesinti Tutarı:</strong></span>
+                                          <span>${receiptData.bakiye.siparisKesintisi.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
+                                        </div>
+                                        <div class="info-item">
+                                          <span><strong>Bakiye Güncelleme Tarihi:</strong></span>
+                                          <span>${new Date(receiptData.bakiye.tarih).toLocaleDateString('tr-TR', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                          })}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    ` : ''}
+
+                                    ${order.notes ? `
+                                      <!-- Notlar -->
+                                      <div class="section">
+                                        <h3>Sipariş Notları</h3>
+                                        <p>${order.notes}</p>
+                                      </div>
+                                    ` : ''}
+
+                                    <!-- Footer -->
+                                    <div class="footer">
+                                      <p>Bu fiş ${new Date().toLocaleDateString('tr-TR')} tarihinde oluşturulmuştur.</p>
+                                      <p>Sipariş takibi için lütfen sipariş numaranızı saklayınız.</p>
+                                    </div>
+                                  </body>
+                                </html>
+                              `);
+                              receiptWindow.document.close();
+                              
+                              // Otomatik yazdırma
+                              receiptWindow.onload = () => {
+                                setTimeout(() => {
+                                  receiptWindow.print();
+                                }, 500);
+                              };
+                            }
+                          } catch (error: any) {
+                            console.error('Fiş alma hatası:', error);
+                            alert('Fiş bilgileri alınamadı: ' + (error.message || 'Bilinmeyen hata'));
+                          }
+                        }}
+                        className="px-4 py-2 text-white rounded-lg transition-colors text-sm flex items-center gap-1"
+                        style={{ backgroundColor: 'rgb(34 197 94)' }}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        📄 Fiş Yazdır
                       </button>
                     )}
 
@@ -1613,11 +1924,14 @@ const Siparisler = () => {
                     {['CONFIRMED', 'READY', 'DELIVERED'].includes(selectedOrder.status) && (
                       <div className="mt-6 text-center">
                         <button
-                          onClick={() => {
-                            // Fiş sayfasını yeni sekmede aç
-                            const receiptWindow = window.open('', '_blank');
-                            if (receiptWindow) {
-                              receiptWindow.document.write(`
+                          onClick={async () => {
+                            try {
+                              const receiptData = await getOrderReceiptFromAPI(selectedOrder.id);
+                              
+                              // Fiş sayfasını yeni sekmede aç
+                              const receiptWindow = window.open('', '_blank', 'width=800,height=600');
+                              if (receiptWindow) {
+                                receiptWindow.document.write(`
                                 <!DOCTYPE html>
                                 <html>
                                   <head>
@@ -1698,61 +2012,102 @@ const Siparisler = () => {
                                         border-top: 1px solid #000; 
                                         padding-top: 15px; 
                                       }
+                                      .print-button {
+                                        position: fixed;
+                                        top: 20px;
+                                        right: 20px;
+                                        background: #007bff;
+                                        color: white;
+                                        border: none;
+                                        padding: 10px 20px;
+                                        border-radius: 5px;
+                                        cursor: pointer;
+                                        font-size: 14px;
+                                        z-index: 1000;
+                                      }
+                                      .print-button:hover {
+                                        background: #0056b3;
+                                      }
                                       @media print {
                                         body { font-size: 12px; }
                                         .section { break-inside: avoid; }
+                                        .print-button { display: none; }
+                                        @page { margin: 0; }
+                                        * { -webkit-print-color-adjust: exact; }
                                       }
+                                      @page { margin: 0; size: auto; }
                                     </style>
                                   </head>
                                   <body>
+                                    <!-- Print Button -->
+                                    <button class="print-button" onclick="window.print()">🖨️ Yazdır</button>
+                                    
                                     <!-- Header -->
                                     <div class="header">
-                                      <h1>SİPARİŞ FİŞİ</h1>
-                                      <p>Sipariş No: <strong>${selectedOrder.id}</strong></p>
-                                      <p>Tarih: <strong>${new Date(selectedOrder.created_at).toLocaleDateString('tr-TR', {
+                                      <h1>PAŞA HOME</h1>
+                                      <h2>SİPARİŞ FİŞİ</h2>
+                                      <p>Fiş No: <strong>${receiptData.fis?.fisNumarasi || 'N/A'}</strong></p>
+                                      <p>Sipariş No: <strong>${receiptData.siparis?.id || selectedOrder.id}</strong></p>
+                                      <p>Tarih: <strong>${receiptData.siparis?.olusturmaTarihi ? new Date(receiptData.siparis.olusturmaTarihi).toLocaleDateString('tr-TR', {
+                                        year: 'numeric',
+                                        month: 'long', 
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      }) : new Date(selectedOrder.created_at).toLocaleDateString('tr-TR', {
                                         year: 'numeric',
                                         month: 'long', 
                                         day: 'numeric',
                                         hour: '2-digit',
                                         minute: '2-digit'
                                       })}</strong></p>
-                                      <p>Durum: <strong style="color: #000;">Onaylandı</strong></p>
+                                      <p>Durum: <strong style="color: #000;">${statusLabels[receiptData.siparis?.durum || selectedOrder.status] || (receiptData.siparis?.durum || selectedOrder.status)}</strong></p>
                                     </div>
 
-                                    <!-- Müşteri Bilgileri -->
+                                    <!-- Temel Bilgiler -->
                                     <div class="section">
-                                      <h3>Müşteri Bilgileri</h3>
+                                      <h3>Sipariş Bilgileri</h3>
                                       <div class="info-grid">
-                                        ${selectedOrder.user ? `
-                                          <div class="info-item">
-                                            <span><strong>Ad Soyad:</strong></span>
-                                            <span>${selectedOrder.user.name} ${selectedOrder.user.surname}</span>
-                                          </div>
-                                          <div class="info-item">
-                                            <span><strong>E-posta:</strong></span>
-                                            <span>${selectedOrder.user.email}</span>
-                                          </div>
-                                          <div class="info-item">
-                                            <span><strong>Telefon:</strong></span>
-                                            ${selectedOrder.user?.Store?.telefon || selectedOrder.store_phone}
-                                          </div>
-                                        ` : ''}
                                         <div class="info-item">
                                           <span><strong>Mağaza:</strong></span>
-                                          <span>${selectedOrder.store_name}</span>
+                                          <span>${receiptData.magaza?.kurumAdi || selectedOrder.store_name || 'N/A'}</span>
                                         </div>
                                         <div class="info-item">
-                                          <span><strong>Vergi No:</strong></span>
-                                          <span>${selectedOrder.store_tax_number}</span>
+                                          <span><strong>Müşteri:</strong></span>
+                                          <span>${receiptData.musteri?.ad || selectedOrder.user?.name || 'N/A'} ${receiptData.musteri?.soyad || selectedOrder.user?.surname || ''}</span>
                                         </div>
                                         <div class="info-item">
-                                          <span><strong>Vergi Dairesi:</strong></span>
-                                          <span>${selectedOrder.store_tax_office}</span>
+                                          <span><strong>Sipariş Tarihi:</strong></span>
+                                          <span>${receiptData.siparis?.olusturmaTarihi ? new Date(receiptData.siparis.olusturmaTarihi).toLocaleDateString('tr-TR', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                          }) : new Date(selectedOrder.created_at).toLocaleDateString('tr-TR', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                          })}</span>
                                         </div>
-                                      </div>
-                                      <div class="info-item">
-                                        <span><strong>Teslimat Adresi:</strong></span>
-                                        <span>${selectedOrder.delivery_address}</span>
+                                        <div class="info-item">
+                                          <span><strong>Son Güncelleme:</strong></span>
+                                          <span>${receiptData.siparis?.guncellemeTarihi ? new Date(receiptData.siparis.guncellemeTarihi).toLocaleDateString('tr-TR', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                          }) : new Date(selectedOrder.updated_at).toLocaleDateString('tr-TR', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                          })}</span>
+                                        </div>
                                       </div>
                                     </div>
 
@@ -1763,37 +2118,71 @@ const Siparisler = () => {
                                         <thead>
                                           <tr>
                                             <th>Ürün Adı</th>
-                                            <th>Koleksiyon</th>
                                             <th>Boyut (cm)</th>
                                             <th>Adet</th>
-                                            <th>Saçak</th>
-                                            <th>Kesim</th>
                                             <th>Birim Fiyat</th>
                                             <th>Toplam</th>
                                           </tr>
                                         </thead>
                                         <tbody>
-                                          ${selectedOrder.items.map(item => `
+                                          ${receiptData.urunler && receiptData.urunler.length > 0 ? receiptData.urunler.map((urun: any) => `
+                                            <tr>
+                                              <td>
+                                                ${urun.urunAdi || 'N/A'}
+                                                ${urun.aciklama ? '<br><small>' + urun.aciklama + '</small>' : ''}
+                                              </td>
+                                              <td>${urun.olculer?.en || 'N/A'} × ${urun.olculer?.boy || 'N/A'}</td>
+                                              <td>${urun.miktar || 0}</td>
+                                              <td>${(urun.birimFiyat || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</td>
+                                              <td>${(urun.toplamFiyat || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</td>
+                                            </tr>
+                                          `).join('') : selectedOrder.items.map(item => `
                                             <tr>
                                               <td>${item.product.name}</td>
-                                              <td>${item.product.collection?.name || '-'}</td>
                                               <td>${item.width} × ${item.height}</td>
                                               <td>${item.quantity}</td>
-                                              <td>${item.has_fringe ? 'Saçaklı' : 'Saçaksız'}</td>
-                                              <td>${translateCutType(item.cut_type)}</td>
                                               <td>${parseFloat(item.unit_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</td>
                                               <td>${parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</td>
                                             </tr>
                                           `).join('')}
                                           <tr class="total-row">
-                                            <td colspan="7"><strong>GENEL TOPLAM</strong></td>
-                                            <td><strong>${parseFloat(selectedOrder.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</strong></td>
+                                            <td colspan="4"><strong>GENEL TOPLAM</strong></td>
+                                            <td><strong>${(receiptData.siparis?.toplamTutar || parseFloat(selectedOrder.total_price)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</strong></td>
                                           </tr>
                                         </tbody>
                                       </table>
                                     </div>
 
-
+                                    <!-- Bakiye Bilgileri -->
+                                    ${receiptData.bakiye ? `
+                                    <div class="section">
+                                      <h3>Bakiye Bilgileri</h3>
+                                      <div class="info-grid">
+                                        <div class="info-item">
+                                          <span><strong>Sipariş Öncesi Bakiye:</strong></span>
+                                          <span>${receiptData.bakiye.siparisOncesi.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
+                                        </div>
+                                        <div class="info-item">
+                                          <span><strong>Sipariş Sonrası Bakiye:</strong></span>
+                                          <span>${receiptData.bakiye.siparisSonrasi.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
+                                        </div>
+                                        <div class="info-item">
+                                          <span><strong>Sipariş Kesinti Tutarı:</strong></span>
+                                          <span>${receiptData.bakiye.siparisKesintisi.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
+                                        </div>
+                                        <div class="info-item">
+                                          <span><strong>Bakiye Güncelleme Tarihi:</strong></span>
+                                          <span>${new Date(receiptData.bakiye.tarih).toLocaleDateString('tr-TR', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                          })}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    ` : ''}
 
                                     ${selectedOrder.notes ? `
                                       <!-- Notlar -->
@@ -1812,6 +2201,10 @@ const Siparisler = () => {
                                 </html>
                               `);
                               receiptWindow.document.close();
+                              }
+                            } catch (error: any) {
+                              console.error('Fiş alma hatası:', error);
+                              alert('Fiş bilgileri alınamadı: ' + (error.message || 'Bilinmeyen hata'));
                             }
                           }}
                           className="px-6 py-3 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors text-sm font-medium"
