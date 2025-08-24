@@ -168,6 +168,7 @@ export interface Store {
   acik_hesap_tutari: number;
   bakiye: number;                     // 🆕 Mağaza bakiyesi
   maksimum_taksit: number;            // 🆕 Maksimum taksit sayısı
+  store_type?: 'KARGO' | 'SERVIS' | 'KENDI_ALAN' | 'AMBAR'; // 🆕 Mağaza türü
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -2552,13 +2553,6 @@ export interface EmployeeStats {
 }
 
 export interface OverallStats {
-  totalCompletedOrders: number;
-  totalAmount: number;
-  totalAreaM2: number;
-  totalItems: number;
-  averageAmount: number;
-  averageAreaM2: number;
-  averageItems: number;
   preparedOrders: number;
   preparedAmount: number;
   preparedAreaM2: number;
@@ -2570,26 +2564,12 @@ export interface OverallStats {
 
 export interface RecentStats {
   period: string;
-  completedOrders: number;
-  totalAmount: number;
-  totalAreaM2: number;
-  totalItems: number;
   preparedOrders: number;
   preparedAmount: number;
   preparedAreaM2: number;
   preparedItems: number;
 }
 
-export interface CompletedOrder {
-  orderId: string;
-  completedAt: string;
-  totalAmount: number;
-  totalAreaM2: number;
-  totalItems: number;
-  orderStatus: string;
-  orderCreatedAt: string;
-  orderTotalPrice: number;
-}
 
 export interface PreparedOrder {
   orderId: string;
@@ -2608,7 +2588,6 @@ export interface EmployeeStatisticsResponse {
     employee: EmployeeStats;
     overallStats: OverallStats;
     recentStats: RecentStats;
-    completedOrders: CompletedOrder[];
     preparedOrders: PreparedOrder[];
   };
 }

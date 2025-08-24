@@ -104,7 +104,6 @@ interface Order {
     created_at: string;
     first_scan_employee_id?: string;
     first_scan_at?: string;
-    second_scan_employee_id?: string;
     second_scan_at?: string;
     order_item: {
       id: string;
@@ -2244,7 +2243,7 @@ const Siparisler = () => {
                                     {isAdmin && (
                                       <button
                                         onClick={() => {
-                                          // QR kod URL'ini yeni sekmede aç
+                                          // QR kod ID'sini kullanarak backend scan sayfasına yönlendir
                                           window.open(qrCode.qr_code, '_blank');
                                         }}
                                         disabled={qrCode.second_scan_at !== null}
@@ -2614,7 +2613,7 @@ const Siparisler = () => {
                             disabled={updatingStatus}
                             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
                           >
-                            {updatingStatus ? 'Güncelleniyor...' : 'Teslim Edildi Olarak İşaretle'}
+                            {updatingStatus ? 'Güncelleniyor...' : 'Sipariş Durumunu Güncelle'}
                           </button>
                         )}
                       </div>

@@ -3,13 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { getEmployeeStatistics, getAdminUsers, AdminUser, EmployeeStats, OverallStats, RecentStats, CompletedOrder, PreparedOrder } from '../../../services/api';
+import { getEmployeeStatistics, getAdminUsers, AdminUser, EmployeeStats, OverallStats, RecentStats, PreparedOrder } from '../../../services/api';
 
 interface EmployeeStatisticsData {
   employee: EmployeeStats;
   overallStats: OverallStats;
   recentStats: RecentStats;
-  completedOrders: CompletedOrder[];
   preparedOrders: PreparedOrder[];
 }
 
@@ -258,32 +257,10 @@ export default function CalisanIstatistikleri() {
                   </div>
                 </div>
 
-                {/* Genel İstatistikler - Tamamlanan */}
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Tamamlanan Siparişler - Genel İstatistikler</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="text-center">
-                      <p className="text-3xl font-bold text-blue-600">{statistics.overallStats.totalCompletedOrders}</p>
-                      <p className="text-sm text-gray-500">Toplam Tamamlanan</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-3xl font-bold text-green-600">{formatCurrency(statistics.overallStats.totalAmount)}</p>
-                      <p className="text-sm text-gray-500">Toplam Tutar</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-3xl font-bold text-purple-600">{statistics.overallStats.totalAreaM2.toFixed(2)} m²</p>
-                      <p className="text-sm text-gray-500">Toplam Alan</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-3xl font-bold text-orange-600">{statistics.overallStats.totalItems}</p>
-                      <p className="text-sm text-gray-500">Toplam Ürün</p>
-                    </div>
-                  </div>
-                </div>
 
                 {/* Genel İstatistikler - Hazırlanan */}
                 <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Hazırlanan Siparişler - Genel İstatistikler</h2>
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Genel İstatistikler</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div className="text-center">
                       <p className="text-3xl font-bold text-orange-600">{statistics.overallStats.preparedOrders}</p>
@@ -304,43 +281,21 @@ export default function CalisanIstatistikleri() {
                   </div>
                 </div>
 
-                {/* Ortalama İstatistikler - İki Sütun */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Tamamlanan Ortalamalar */}
-                  <div className="bg-white rounded-lg shadow-sm p-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Tamamlanan - Ortalama İstatistikler</h2>
-                    <div className="grid grid-cols-1 gap-4">
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                        <span className="text-sm text-gray-600">Ortalama Tutar</span>
-                        <span className="text-lg font-bold text-blue-600">{formatCurrency(statistics.overallStats.averageAmount)}</span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                        <span className="text-sm text-gray-600">Ortalama Alan</span>
-                        <span className="text-lg font-bold text-green-600">{statistics.overallStats.averageAreaM2.toFixed(2)} m²</span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                        <span className="text-sm text-gray-600">Ortalama Ürün</span>
-                        <span className="text-lg font-bold text-purple-600">{statistics.overallStats.averageItems.toFixed(1)}</span>
-                      </div>
+                {/* Ortalama İstatistikler */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Ortalama İstatistikler</h2>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                      <span className="text-sm text-gray-600">Ortalama Tutar</span>
+                      <span className="text-lg font-bold text-orange-600">{formatCurrency(statistics.overallStats.averagePreparedAmount)}</span>
                     </div>
-                  </div>
-
-                  {/* Hazırlanan Ortalamalar */}
-                  <div className="bg-white rounded-lg shadow-sm p-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Hazırlanan - Ortalama İstatistikler</h2>
-                    <div className="grid grid-cols-1 gap-4">
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                        <span className="text-sm text-gray-600">Ortalama Tutar</span>
-                        <span className="text-lg font-bold text-orange-600">{formatCurrency(statistics.overallStats.averagePreparedAmount)}</span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                        <span className="text-sm text-gray-600">Ortalama Alan</span>
-                        <span className="text-lg font-bold text-green-600">{statistics.overallStats.averagePreparedAreaM2.toFixed(2)} m²</span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                        <span className="text-sm text-gray-600">Ortalama Ürün</span>
-                        <span className="text-lg font-bold text-purple-600">{statistics.overallStats.averagePreparedItems.toFixed(1)}</span>
-                      </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                      <span className="text-sm text-gray-600">Ortalama Alan</span>
+                      <span className="text-lg font-bold text-green-600">{statistics.overallStats.averagePreparedAreaM2.toFixed(2)} m²</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                      <span className="text-sm text-gray-600">Ortalama Ürün</span>
+                      <span className="text-lg font-bold text-purple-600">{statistics.overallStats.averagePreparedItems.toFixed(1)}</span>
                     </div>
                   </div>
                 </div>
@@ -349,159 +304,75 @@ export default function CalisanIstatistikleri() {
                 <div className="bg-white rounded-lg shadow-sm p-6">
                   <h2 className="text-lg font-semibold text-gray-900 mb-4">{statistics.recentStats.period} İstatistikleri</h2>
                   
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Tamamlanan */}
-                    <div>
-                      <h3 className="text-md font-medium text-gray-700 mb-3">Tamamlanan Siparişler</h3>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="text-center p-3 bg-blue-50 rounded">
-                          <p className="text-xl font-bold text-blue-600">{statistics.recentStats.completedOrders}</p>
-                          <p className="text-xs text-gray-500">Sipariş</p>
-                        </div>
-                        <div className="text-center p-3 bg-green-50 rounded">
-                          <p className="text-xl font-bold text-green-600">{formatCurrency(statistics.recentStats.totalAmount)}</p>
-                          <p className="text-xs text-gray-500">Tutar</p>
-                        </div>
-                        <div className="text-center p-3 bg-purple-50 rounded">
-                          <p className="text-xl font-bold text-purple-600">{statistics.recentStats.totalAreaM2.toFixed(2)} m²</p>
-                          <p className="text-xs text-gray-500">Alan</p>
-                        </div>
-                        <div className="text-center p-3 bg-orange-50 rounded">
-                          <p className="text-xl font-bold text-orange-600">{statistics.recentStats.totalItems}</p>
-                          <p className="text-xs text-gray-500">Ürün</p>
-                        </div>
-                      </div>
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="text-center p-3 bg-orange-50 rounded">
+                      <p className="text-xl font-bold text-orange-600">{statistics.recentStats.preparedOrders}</p>
+                      <p className="text-xs text-gray-500">Hazırlanan Sipariş</p>
                     </div>
-
-                    {/* Hazırlanan */}
-                    <div>
-                      <h3 className="text-md font-medium text-gray-700 mb-3">Hazırlanan Siparişler</h3>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="text-center p-3 bg-orange-50 rounded">
-                          <p className="text-xl font-bold text-orange-600">{statistics.recentStats.preparedOrders}</p>
-                          <p className="text-xs text-gray-500">Sipariş</p>
-                        </div>
-                        <div className="text-center p-3 bg-green-50 rounded">
-                          <p className="text-xl font-bold text-green-600">{formatCurrency(statistics.recentStats.preparedAmount)}</p>
-                          <p className="text-xs text-gray-500">Tutar</p>
-                        </div>
-                        <div className="text-center p-3 bg-purple-50 rounded">
-                          <p className="text-xl font-bold text-purple-600">{statistics.recentStats.preparedAreaM2.toFixed(2)} m²</p>
-                          <p className="text-xs text-gray-500">Alan</p>
-                        </div>
-                        <div className="text-center p-3 bg-blue-50 rounded">
-                          <p className="text-xl font-bold text-blue-600">{statistics.recentStats.preparedItems}</p>
-                          <p className="text-xs text-gray-500">Ürün</p>
-                        </div>
-                      </div>
+                    <div className="text-center p-3 bg-green-50 rounded">
+                      <p className="text-xl font-bold text-green-600">{formatCurrency(statistics.recentStats.preparedAmount)}</p>
+                      <p className="text-xs text-gray-500">Tutar</p>
+                    </div>
+                    <div className="text-center p-3 bg-purple-50 rounded">
+                      <p className="text-xl font-bold text-purple-600">{statistics.recentStats.preparedAreaM2.toFixed(2)} m²</p>
+                      <p className="text-xs text-gray-500">Alan</p>
+                    </div>
+                    <div className="text-center p-3 bg-blue-50 rounded">
+                      <p className="text-xl font-bold text-blue-600">{statistics.recentStats.preparedItems}</p>
+                      <p className="text-xs text-gray-500">Ürün</p>
                     </div>
                   </div>
                 </div>
 
-                {/* Tablolar - İki Sütun */}
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                  {/* Tamamlanan Siparişler */}
-                  <div className="bg-white rounded-lg shadow-sm p-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Tamamlanan Siparişler ({statistics.completedOrders.length})</h2>
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              Sipariş ID
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              Tarih
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              Tutar
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              Durum
-                            </th>
+                {/* Hazırlanan Siparişler Tablosu */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Hazırlanan Siparişler ({statistics.preparedOrders?.length || 0})</h2>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Sipariş ID
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Tarih
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Tutar
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Durum
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {statistics.preparedOrders?.map((order) => (
+                          <tr key={`${order.orderId}-${order.qrCodeId}`} className="hover:bg-gray-50">
+                            <td className="px-4 py-4 text-sm font-medium text-gray-900">
+                              {order.orderId.slice(0, 8)}...
+                            </td>
+                            <td className="px-4 py-4 text-sm text-gray-500">
+                              {new Date(order.preparedAt).toLocaleDateString('tr-TR')}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-gray-900">
+                              {formatCurrency(order.totalAmount)}
+                            </td>
+                            <td className="px-4 py-4">
+                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
+                                {order.orderStatus}
+                              </span>
+                            </td>
                           </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {statistics.completedOrders.map((order) => (
-                            <tr key={order.orderId} className="hover:bg-gray-50">
-                              <td className="px-4 py-4 text-sm font-medium text-gray-900">
-                                {order.orderId.slice(0, 8)}...
-                              </td>
-                              <td className="px-4 py-4 text-sm text-gray-500">
-                                {new Date(order.completedAt).toLocaleDateString('tr-TR')}
-                              </td>
-                              <td className="px-4 py-4 text-sm text-gray-900">
-                                {formatCurrency(order.totalAmount)}
-                              </td>
-                              <td className="px-4 py-4">
-                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                  {order.orderStatus}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                          {statistics.completedOrders.length === 0 && (
-                            <tr>
-                              <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
-                                Henüz tamamlanmış sipariş bulunmamaktadır.
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  {/* Hazırlanan Siparişler */}
-                  <div className="bg-white rounded-lg shadow-sm p-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Hazırlanan Siparişler ({statistics.preparedOrders?.length || 0})</h2>
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                        )) || []}
+                        {(!statistics.preparedOrders || statistics.preparedOrders.length === 0) && (
                           <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              Sipariş ID
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              Tarih
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              Tutar
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              Durum
-                            </th>
+                            <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                              Henüz hazırlanmış sipariş bulunmamaktadır.
+                            </td>
                           </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {statistics.preparedOrders?.map((order) => (
-                            <tr key={`${order.orderId}-${order.qrCodeId}`} className="hover:bg-gray-50">
-                              <td className="px-4 py-4 text-sm font-medium text-gray-900">
-                                {order.orderId.slice(0, 8)}...
-                              </td>
-                              <td className="px-4 py-4 text-sm text-gray-500">
-                                {new Date(order.preparedAt).toLocaleDateString('tr-TR')}
-                              </td>
-                              <td className="px-4 py-4 text-sm text-gray-900">
-                                {formatCurrency(order.totalAmount)}
-                              </td>
-                              <td className="px-4 py-4">
-                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
-                                  {order.orderStatus}
-                                </span>
-                              </td>
-                            </tr>
-                          )) || []}
-                          {(!statistics.preparedOrders || statistics.preparedOrders.length === 0) && (
-                            <tr>
-                              <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
-                                Henüz hazırlanmış sipariş bulunmamaktadır.
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
