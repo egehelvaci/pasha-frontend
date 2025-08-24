@@ -1336,8 +1336,8 @@ const Siparisler = () => {
                       </button>
                     )}
 
-                    {/* QR Kodları Yazdır Butonu - CONFIRMED veya READY durumunda ve QR kodları varsa */}
-                    {(order.status === 'CONFIRMED' || order.status === 'READY') && order.qr_codes && order.qr_codes.length > 0 && (
+                    {/* QR Kodları Yazdır Butonu - CANCELLED hariç, CONFIRMED veya READY durumunda ve QR kodları varsa */}
+                    {order.status !== 'CANCELLED' && (order.status === 'CONFIRMED' || order.status === 'READY') && order.qr_codes && order.qr_codes.length > 0 && (
                       <button
                         onClick={() => printOrderQRCodes(order)}
                         className="px-4 py-2 text-white rounded-lg transition-colors text-sm flex items-center gap-1"
@@ -2032,8 +2032,8 @@ const Siparisler = () => {
                       ))}
                     </div>
 
-                    {/* QR Kodları Bölümü */}
-                    {selectedOrder.qr_codes && selectedOrder.qr_codes.length > 0 && (
+                    {/* QR Kodları Bölümü - CANCELLED durumunda gösterme */}
+                    {selectedOrder.status !== 'CANCELLED' && selectedOrder.qr_codes && selectedOrder.qr_codes.length > 0 && (
                       <div className="mt-6">
                         <div className="flex justify-between items-center mb-3">
                           <h4 className="text-lg font-semibold text-gray-900">QR Kodları</h4>
@@ -2555,8 +2555,8 @@ const Siparisler = () => {
                       </div>
                     )}
 
-                    {/* QR Kodu yoksa ama sipariş onaylanmış veya hazır durumda */}
-                    {isAdmin && (selectedOrder.status === 'CONFIRMED' || selectedOrder.status === 'READY') && (!selectedOrder.qr_codes || selectedOrder.qr_codes.length === 0) && (
+                    {/* QR Kodu yoksa ama sipariş onaylanmış veya hazır durumda (CANCELLED hariç) */}
+                    {isAdmin && selectedOrder.status !== 'CANCELLED' && (selectedOrder.status === 'CONFIRMED' || selectedOrder.status === 'READY') && (!selectedOrder.qr_codes || selectedOrder.qr_codes.length === 0) && (
                       <div className="mt-6">
                         <h4 className="text-lg font-semibold text-gray-900 mb-3">QR Kodları</h4>
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
