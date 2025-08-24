@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CreateStoreData, createStore } from '@/services/api';
 import { useAuth } from '@/app/context/AuthContext';
+import StoreTypeSelector, { StoreType } from '@/components/StoreTypeSelector';
 
 export default function AddStorePage() {
   const router = useRouter();
@@ -24,6 +25,7 @@ export default function AddStorePage() {
     maksimum_taksit: 1,
     limitsiz_acik_hesap: false,
     acik_hesap_tutari: 0,
+    store_type: undefined,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -45,6 +47,7 @@ export default function AddStorePage() {
     if (!formData.telefon.trim()) newErrors.telefon = 'Telefon numarası gereklidir';
     if (!formData.eposta.trim()) newErrors.eposta = 'E-posta adresi gereklidir';
     if (!formData.tckn.trim()) newErrors.tckn = 'TCKN gereklidir';
+    if (!formData.store_type) newErrors.store_type = 'Mağaza türü seçimi gereklidir';
 
     // TCKN validation
     if (formData.tckn && formData.tckn.length !== 11) {
@@ -200,6 +203,15 @@ export default function AddStorePage() {
                       placeholder="Örn: ABC Tekstil Ltd. Şti."
                     />
                     {errors.kurum_adi && <p className="mt-1 text-sm text-red-600">{errors.kurum_adi}</p>}
+                  </div>
+
+                  <div>
+                    <StoreTypeSelector
+                      value={formData.store_type || ''}
+                      onChange={(value) => handleInputChange('store_type', value)}
+                      required
+                    />
+                    {errors.store_type && <p className="mt-1 text-sm text-red-600">{errors.store_type}</p>}
                   </div>
 
                   <div>

@@ -194,6 +194,7 @@ export interface CreateStoreData {
   acik_hesap_tutari?: number;
   bakiye?: number;                    // 🆕 Mağaza bakiyesi
   maksimum_taksit?: number;           // 🆕 Maksimum taksit sayısı
+  store_type?: 'KARGO' | 'SERVIS' | 'KENDI_ALAN' | 'AMBAR'; // 🆕 Mağaza türü
 }
 
 export interface CreateStoreResponse {
@@ -216,6 +217,7 @@ export interface UpdateStoreData {
   acik_hesap_tutari?: number;
   bakiye?: number;                    // 🆕 Mağaza bakiyesi
   maksimum_taksit?: number;           // 🆕 Maksimum taksit sayısı
+  store_type?: 'KARGO' | 'SERVIS' | 'KENDI_ALAN' | 'AMBAR'; // 🆕 Mağaza türü
   is_active?: boolean;
 }
 

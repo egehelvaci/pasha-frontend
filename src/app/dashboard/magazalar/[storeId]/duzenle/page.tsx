@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Store, UpdateStoreData } from '@/services/api';
-import { Button, Form, Input, InputNumber, Switch, message } from 'antd';
+import { Button, Form, Input, InputNumber, Switch, message, Select } from 'antd';
 import { useAuth } from '@/app/context/AuthContext';
+import StoreTypeSelector, { StoreType, storeTypeLabels, storeTypeColors, storeTypeIcons } from '@/components/StoreTypeSelector';
 
 export default function EditStorePage() {
   const router = useRouter();
@@ -61,6 +62,7 @@ export default function EditStorePage() {
           acik_hesap_tutari: currentStore.acik_hesap_tutari,
           bakiye: currentStore.bakiye,                   // 🆕 Bakiye alanı
           maksimum_taksit: currentStore.maksimum_taksit, // 🆕 Maksimum taksit alanı
+          store_type: currentStore.store_type,           // 🆕 Mağaza türü alanı
           is_active: currentStore.is_active,
         });
       } else {
@@ -218,6 +220,32 @@ export default function EditStorePage() {
                 name="faks_numarasi"
               >
                 <Input className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors" />
+              </Form.Item>
+
+              <Form.Item
+                label={<span className="text-sm font-medium text-gray-700">Mağaza Türü <span className="text-red-500">*</span></span>}
+                name="store_type"
+                rules={[{ required: true, message: 'Lütfen mağaza türü seçiniz' }]}
+              >
+                <Select
+                  className="w-full"
+                  placeholder="Mağaza türü seçiniz..."
+                  optionRender={(option) => (
+                    <div className="flex items-center gap-2">
+                      {storeTypeIcons[option.value as StoreType]}
+                      <span>{option.label}</span>
+                    </div>
+                  )}
+                >
+                  {Object.entries(storeTypeLabels).map(([key, label]) => (
+                    <Select.Option key={key} value={key}>
+                      <div className="flex items-center gap-2">
+                        {storeTypeIcons[key as StoreType]}
+                        <span>{label}</span>
+                      </div>
+                    </Select.Option>
+                  ))}
+                </Select>
               </Form.Item>
 
               <Form.Item

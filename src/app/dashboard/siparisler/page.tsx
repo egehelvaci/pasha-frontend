@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import { useToken } from '@/app/hooks/useToken';
+import { StoreType, storeTypeLabels } from '@/components/StoreTypeSelector';
 
 interface OrderItem {
   id: string;
@@ -45,6 +46,7 @@ interface User {
     adres: string;
     acik_hesap_tutari: string;
     limitsiz_acik_hesap: boolean;
+    store_type: StoreType;
   };
 }
 
@@ -61,6 +63,7 @@ interface Order {
   store_phone: string;
   store_email: string;
   store_fax: string;
+  // store_type User.Store içinde geliyor
   notes?: string;
   created_at: string;
   updated_at: string;
@@ -524,6 +527,53 @@ const Siparisler = () => {
     }
   };
 
+  // Mağaza türüne göre QR kod şablonları - Backend'den gelen store_type değerine göre
+  const getQRTemplateByStoreType = (storeType: StoreType | null | undefined) => {
+    console.log('Store Type for QR Template:', storeType);
+    // KARGO ve AMBAR mağazaları için: adres + telefon + ürün bilgileri
+    if (storeType && (storeType === 'KARGO' || storeType === 'AMBAR')) {
+      return {
+        title: 'Teslimat Bilgileri',
+        showAddress: true,
+        showPhone: true,
+        showProductDetails: true,
+        showCustomerName: false,
+        showDimensions: true,
+        showCutType: true,
+        headerColor: '#dc2626', // Kırmızı (KARGO/AMBAR için)
+        headerText: storeType === 'KARGO' ? 'KARGO TESLİMATI' : 'AMBAR TESLİMATI'
+      };
+    }
+    
+    // SERVIS ve KENDI_ALAN mağazaları için: sadece müşteri adı + ürün bilgileri (adres ve telefon YOK)
+    if (storeType && (storeType === 'SERVIS' || storeType === 'KENDI_ALAN')) {
+      return {
+        title: 'Üretim Bilgileri',
+        showAddress: false,
+        showPhone: false,
+        showProductDetails: true,
+        showCustomerName: true,
+        showDimensions: true,
+        showCutType: true,
+        headerColor: '#059669', // Yeşil (SERVIS/KENDI_ALAN için)
+        headerText: storeType === 'SERVIS' ? 'SERVİS TESLİM' : 'KENDİ ALAN TESLİM'
+      };
+    }
+    
+    // Varsayılan şablon (mağaza türü belirtilmemişse)
+    return {
+      title: 'Sipariş Bilgileri',
+      showAddress: true,
+      showPhone: true,
+      showProductDetails: true,
+      showCustomerName: true,
+      showDimensions: true,
+      showCutType: true,
+      headerColor: '#1f2937',
+      headerText: 'SİPARİŞ BİLGİLERİ'
+    };
+  };
+
   // Sipariş bazlı QR kodları yazdırma fonksiyonu
   const printOrderQRCodes = (order: Order) => {
     if (!order.qr_codes || order.qr_codes.length === 0) {
@@ -586,10 +636,12 @@ const Siparisler = () => {
               overflow: hidden;
             }
             .qr-header {
-              font-size: 7pt;
+              font-size: 6pt;
               font-weight: bold;
               margin-bottom: 1mm;
-              color: #000;
+              color: white;
+              text-align: center;
+              line-height: 1.1;
             }
             .qr-image {
               width: 35mm;
@@ -648,30 +700,55 @@ const Siparisler = () => {
               for (let i = 0; i < qrCode.order_item.quantity; i++) {
                 allQrItems.push(`
                   <div class="qr-item">
-                    <div class="qr-header">
+                    ${(() => {
+                      // Backend'den gelen store_type değerini User.Store içinden al
+                      const storeType = order.user?.Store?.store_type;
+                      const template = getQRTemplateByStoreType(storeType);
+                      const customerName = order.user ? `${order.user.name} ${order.user.surname}` : '';
+                      
+                      // DEBUG: Detaylı log
+                      console.log('=== QR KOD DEBUG ===');
+                      console.log('User Store Type:', storeType);
+                      console.log('Template Header:', template.headerText);
+                      console.log('Template showAddress:', template.showAddress);
+                      console.log('Template showPhone:', template.showPhone);
+                      console.log('Template showCustomerName:', template.showCustomerName);
+                      
+                      return `
+                    <div class="qr-header" style="background-color: ${template.headerColor}; color: white; padding: 1mm; margin: -2mm -2mm 1mm -2mm;">
+                      ${template.headerText}<br/>
                       SİPARİŞ: ${order.id.slice(0, 8).toUpperCase()}
                     </div>
                     
                     <img src="${qrCode.qrCodeImageUrl}" alt="QR Kod" class="qr-image" />
                     
                     <div class="product-info">
+                      ${template.showCustomerName && customerName ? `<p><strong>MÜŞTERİ: ${customerName}</strong></p>` : ''}
                       <p><strong>${qrCode.product.name}</strong></p>
-                      <p>Boyut: ${qrCode.order_item.width}×${qrCode.order_item.height} cm</p>
-                      <p>${qrCode.order_item.has_fringe ? 'Saçaklı' : 'Saçaksız'} • ${translateCutType(qrCode.order_item.cut_type)}</p>
+                      ${template.showDimensions ? `<p>Boyut: ${qrCode.order_item.width}×${qrCode.order_item.height} cm</p>` : ''}
+                      <p>${qrCode.order_item.has_fringe ? 'Saçaklı' : 'Saçaksız'}${template.showCutType ? ` • ${translateCutType(qrCode.order_item.cut_type)}` : ''}</p>
                       <p>Adet: ${i + 1}/${qrCode.order_item.quantity}</p>
                     </div>
                     
                     <div class="store-info">
-                      ${order.store_name} • ${order.store_phone}<br/>
-                      ${order.address ? `
-                        <strong>${(order.address as any).title}</strong><br/>
-                        ${(order.address as any).address}<br/>
-                        ${(order.address as any).district} / ${(order.address as any).city}
-                        ${(order.address as any).postal_code ? `<br/>PK: ${(order.address as any).postal_code}` : ''}
-                      ` : order.delivery_address ? `
-                        ${order.delivery_address}
-                      ` : ''}
+                      <strong>${order.store_name}</strong><br/>
+                      ${template.showPhone ? `<strong>Tel:</strong> ${order.store_phone}<br/>` : ''}
+                      ${template.showAddress ? (
+                        order.address ? `
+                          <strong>TESLIMAT ADRESI:</strong><br/>
+                          ${(order.address as any).address}<br/>
+                          ${(order.address as any).district} / ${(order.address as any).city}
+                          ${(order.address as any).postal_code ? `<br/>Posta Kodu: ${(order.address as any).postal_code}` : ''}
+                        ` : order.delivery_address ? `
+                          <strong>TESLIMAT ADRESI:</strong><br/>
+                          ${order.delivery_address}
+                        ` : ''
+                      ) : (
+                        !template.showAddress && !template.showPhone ? '<br/><em>Mağaza üretim bilgileri</em>' : ''
+                      )}
                     </div>
+                      `;
+                    })()}
                   </div>
                 `);
               }

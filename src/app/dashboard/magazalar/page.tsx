@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Store, getStores, deleteStore, PriceList, getPriceLists, assignStorePriceList } from '@/services/api';
 import { useAuth } from '@/app/context/AuthContext';
+import { StoreType, storeTypeLabels, storeTypeColors, storeTypeIcons } from '@/components/StoreTypeSelector';
 
 export default function StoresPage() {
   const router = useRouter();
@@ -402,6 +403,9 @@ export default function StoresPage() {
                         Mağaza Bilgileri
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Mağaza Türü
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                         Yetkili
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -429,6 +433,16 @@ export default function StoresPage() {
                               VN: {store.vergi_numarasi} • {store.vergi_dairesi}
                             </div>
                           </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          {store.store_type ? (
+                            <div className={`inline-flex items-center gap-2 px-3 py-1 text-xs rounded-full border ${storeTypeColors[store.store_type as StoreType]}`}>
+                              {storeTypeIcons[store.store_type as StoreType]}
+                              {storeTypeLabels[store.store_type as StoreType]}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400">Belirtilmemiş</span>
+                          )}
                         </td>
                         <td className="px-6 py-4">
                           <div>
@@ -553,7 +567,15 @@ export default function StoresPage() {
                     <div key={store.store_id} className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-1">{store.kurum_adi}</h3>
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-lg font-semibold text-gray-900">{store.kurum_adi}</h3>
+                            {store.store_type && (
+                              <div className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full border ${storeTypeColors[store.store_type as StoreType]}`}>
+                                {storeTypeIcons[store.store_type as StoreType]}
+                                {storeTypeLabels[store.store_type as StoreType]}
+                              </div>
+                            )}
+                          </div>
                           <p className="text-sm text-gray-500">{store.aciklama}</p>
                           <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full mt-2 ${
                             store.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
