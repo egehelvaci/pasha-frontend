@@ -478,7 +478,10 @@ const Header = ({ title, user, className }: HeaderProps) => {
             
             {/* Bildirim Dropdown */}
             {authUser?.userId && (
-              <NotificationDropdown userId={authUser.userId} />
+              <div className="relative group flex flex-col items-center">
+                <NotificationDropdown userId={authUser.userId} />
+                <span className="text-xs text-gray-600 mt-1 group-hover:text-[#00365a] transition-colors">Bildirimler</span>
+              </div>
             )}
             
             {/* Sepet ikonu */}
@@ -559,7 +562,10 @@ const Header = ({ title, user, className }: HeaderProps) => {
           <div className="flex lg:hidden items-center space-x-2">
             {/* Bildirim Dropdown */}
             {authUser?.userId && (
-              <NotificationDropdown userId={authUser.userId} />
+              <div className="relative group flex flex-col items-center">
+                <NotificationDropdown userId={authUser.userId} />
+                <span className="text-xs text-gray-600 mt-1 group-hover:text-[#00365a] transition-colors">Bildirimler</span>
+              </div>
             )}
             
             {/* Sepet ikonu */}
