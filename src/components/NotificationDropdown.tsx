@@ -147,10 +147,10 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ userId }) =
       {/* Bildirim Bell Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 sm:p-3 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors duration-200 
-                 focus:outline-none focus:ring-2 focus:ring-blue-500 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
+        className="relative text-gray-600 hover:text-[#00365a] hover:bg-gray-100 rounded-full transition-colors duration-200 
+                 focus:outline-none focus:ring-2 focus:ring-blue-500 touch-manipulation w-6 h-6 flex items-center justify-center"
       >
-        <FaBell className="w-5 h-5" />
+        <FaBell className="w-6 h-6" />
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium
                          shadow-md border-2 border-white">
