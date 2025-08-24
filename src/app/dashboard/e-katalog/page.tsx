@@ -34,26 +34,19 @@ const EKatalogPage = () => {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // Mobile detection logic
+    // Mobile detection logic - only for actual mobile devices, not screen size
     const checkIfMobile = () => {
       const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-      const isMobileAgent = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
-      const isSmallScreen = window.innerWidth < 1024; // Less than lg breakpoint
-      return isMobileAgent || isSmallScreen;
+      // Only check for actual mobile devices, not screen size
+      return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
     };
 
     if (typeof window !== 'undefined') {
       const mobileCheck = checkIfMobile();
       setIsMobile(mobileCheck);
       
-      // Handle window resize for screen size changes
-      const handleResize = () => {
-        const mobileCheck = checkIfMobile();
-        setIsMobile(mobileCheck);
-      };
-      
-      window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
+      // Mobile detection doesn't change on resize since it's based on user agent
+      // Remove resize listener as it's not needed for mobile detection
     }
   }, []);
 
