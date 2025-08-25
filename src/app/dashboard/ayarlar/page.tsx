@@ -39,7 +39,7 @@ interface UserFormData {
 }
 
 export default function Settings() {
-  const { user, isAdmin, isLoading: authLoading } = useAuth();
+  const { user, isAdmin, isAdminOrEditor, isLoading: authLoading } = useAuth();
   const token = useToken();
   const router = useRouter();
   
@@ -139,8 +139,8 @@ export default function Settings() {
     // Auth yüklemesi tamamlanmadıysa bekle
     if (authLoading) return;
     
-    // Admin kullanıcılar için mevcut logic
-    if (isAdmin) {
+    // Admin veya Editör kullanıcılar için mevcut logic
+    if (isAdminOrEditor) {
       // Sadece bir kez çağrılmasını sağla
       if (!fetchedRef.current) {
         fetchedRef.current = true;
@@ -151,7 +151,7 @@ export default function Settings() {
       // Normal kullanıcılar için profil bilgilerini getir
       fetchUserProfile();
     }
-  }, [isAdmin, authLoading, router]);
+  }, [isAdminOrEditor, authLoading, router]);
 
   // Dropdown'ların dışına tıklandığında kapanması
   useEffect(() => {
@@ -629,7 +629,7 @@ export default function Settings() {
   };
 
   // Normal kullanıcı için profil yönetimi UI'ı
-  if (!isAdmin) {
+  if (!isAdminOrEditor) {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="mb-6">

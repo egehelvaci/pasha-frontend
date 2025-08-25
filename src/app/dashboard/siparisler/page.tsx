@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import { useToken } from '@/app/hooks/useToken';
 import { StoreType, storeTypeLabels } from '@/components/StoreTypeSelector';
+import { bulkConfirmOrders, BulkConfirmOrdersResponse } from '@/services/api';
 
 interface OrderItem {
   id: string;
@@ -228,7 +229,7 @@ const translateCutType = (cutType: string): string => {
 };
 
 const Siparisler = () => {
-  const { user, isAdmin, isLoading: authLoading } = useAuth();
+  const { user, isAdmin, isAdminOrEditor, isLoading: authLoading } = useAuth();
   const token = useToken();
   const router = useRouter();
   const [ordersData, setOrdersData] = useState<OrdersResponse | null>(null);
@@ -254,6 +255,13 @@ const Siparisler = () => {
     reason: '',
     isLoading: false
   });
+
+  // Toplu onaylama için state'ler
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  const [bulkConfirmModal, setBulkConfirmModal] = useState(false);
+  const [bulkConfirming, setBulkConfirming] = useState(false);
+  const [bulkConfirmResult, setBulkConfirmResult] = useState<BulkConfirmOrdersResponse | null>(null);
+  const [showBulkActions, setShowBulkActions] = useState(false);
 
   // Modal açıkken body scroll'unu engelle
   useEffect(() => {
@@ -329,15 +337,15 @@ const Siparisler = () => {
       if (status) queryParams.append('status', status);
       if (search) queryParams.append('search', search);
       // receiptPrinted filtresi sadece admin için
-      if (receiptPrinted && isAdmin) queryParams.append('receiptPrinted', receiptPrinted === 'printed' ? 'true' : 'false');
+      if (receiptPrinted && isAdminOrEditor) queryParams.append('receiptPrinted', receiptPrinted === 'printed' ? 'true' : 'false');
 
       console.log('🔍 FILTRELEME DEBUG:');
-      console.log('📝 Parametreler:', { page, status, search, receiptPrinted, isAdmin });
+      console.log('📝 Parametreler:', { page, status, search, receiptPrinted, isAdminOrEditor });
       console.log('🔗 Query String:', queryParams.toString());
-      console.log('🎯 Endpoint:', isAdmin ? 'admin/orders' : 'my-orders');
+      console.log('🎯 Endpoint:', isAdminOrEditor ? 'admin/orders' : 'my-orders');
 
-      // Admin ise sadece admin/orders endpoint'ini kullan, my-orders asla kullanma
-      if (isAdmin) {
+      // Admin veya Editör ise sadece admin/orders endpoint'ini kullan, my-orders asla kullanma
+      if (isAdminOrEditor) {
         endpoint = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/admin/orders?${queryParams.toString()}`;
       } else {
         // Admin değilse my-orders endpoint'ini kullan - kesinlikle admin endpoint kullanma
@@ -368,7 +376,7 @@ const Siparisler = () => {
         // Geçici çözüm: Frontend'de fiş filtrelemesi yapın (backend API henüz desteklemiyor)
         let filteredOrders = data.data.orders;
         
-        if (receiptPrinted && isAdmin) {
+        if (receiptPrinted && isAdminOrEditor) {
           console.log('🔧 Frontend fiş filtresi uygulanıyor:', receiptPrinted);
           if (receiptPrinted === 'printed') {
             // Yazdırılan fişler: receipt_printed = true olan siparişler
@@ -398,11 +406,11 @@ const Siparisler = () => {
     } finally {
       setLoading(false);
     }
-  }, [router, isAdmin, calculateOrderStats, authLoading, token, statusFilter, searchQuery, receiptFilter, totalOrdersCount]);
+  }, [router, isAdminOrEditor, calculateOrderStats, authLoading, token, statusFilter, searchQuery, receiptFilter, totalOrdersCount]);
 
   // Tüm siparişleri getir (istatistikler için)
   const fetchAllOrdersForStats = useCallback(async () => {
-    if (authLoading || !isAdmin) {
+    if (authLoading || !isAdminOrEditor) {
       return;
     }
 
@@ -436,7 +444,7 @@ const Siparisler = () => {
     } catch (error) {
       console.error('Tüm siparişler alınırken hata:', error);
     }
-  }, [authLoading, isAdmin, token, calculateOrderStats]);
+  }, [authLoading, isAdminOrEditor, token, calculateOrderStats]);
 
   useEffect(() => {
     // AuthContext yüklemesi tamamlanana kadar bekle
@@ -453,6 +461,53 @@ const Siparisler = () => {
       fetchAllOrdersForStats();
     }
   }, [authLoading, isAdmin, fixedStats, fetchAllOrdersForStats]);
+
+  // Toplu onaylama fonksiyonları
+  const handleSelectOrder = (orderId: string, isChecked: boolean) => {
+    setSelectedOrderIds(prev => {
+      if (isChecked) {
+        return [...prev, orderId];
+      } else {
+        return prev.filter(id => id !== orderId);
+      }
+    });
+  };
+
+  const handleSelectAll = (isChecked: boolean) => {
+    if (!ordersData?.orders) return;
+    
+    const pendingOrders = ordersData.orders.filter(order => order.status === 'PENDING');
+    if (isChecked) {
+      setSelectedOrderIds(pendingOrders.map(order => order.id));
+    } else {
+      setSelectedOrderIds([]);
+    }
+  };
+
+  const handleBulkConfirm = async () => {
+    if (selectedOrderIds.length === 0) return;
+    
+    setBulkConfirming(true);
+    try {
+      const result = await bulkConfirmOrders(selectedOrderIds);
+      setBulkConfirmResult(result);
+      setBulkConfirmModal(true);
+      
+      // Başarılı olan siparişleri seçimden çıkar
+      if (result.data.success.length > 0) {
+        const successfulIds = result.data.success.map(order => order.orderId);
+        setSelectedOrderIds(prev => prev.filter(id => !successfulIds.includes(id)));
+        
+        // Siparişleri yeniden yükle
+        await fetchOrders(currentPage, statusFilter, searchQuery, receiptFilter);
+      }
+    } catch (error) {
+      console.error('Toplu onaylama hatası:', error);
+      alert('Toplu onaylama işlemi başarısız: ' + (error instanceof Error ? error.message : 'Bilinmeyen hata'));
+    } finally {
+      setBulkConfirming(false);
+    }
+  };
 
   // Sipariş detayını getir
   const handleViewOrderDetail = async (orderId: string) => {
@@ -1207,6 +1262,55 @@ const Siparisler = () => {
           )}
         </div>
 
+        {/* Toplu İşlemler - Sadece Admin için ve PENDING siparişler varsa */}
+        {isAdmin && ordersData?.orders.some(order => order.status === 'PENDING') && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={
+                      ordersData?.orders.filter(order => order.status === 'PENDING').length > 0 &&
+                      ordersData?.orders.filter(order => order.status === 'PENDING').every(order => selectedOrderIds.includes(order.id))
+                    }
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Tüm beklemedeki siparişleri seç
+                  </span>
+                </label>
+                <span className="text-sm text-gray-600">
+                  ({selectedOrderIds.length} seçili)
+                </span>
+              </div>
+              
+              {selectedOrderIds.length > 0 && (
+                <button
+                  onClick={handleBulkConfirm}
+                  disabled={bulkConfirming}
+                  className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                >
+                  {bulkConfirming ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Onaylanıyor...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      {selectedOrderIds.length} Siparişi Onayla
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Siparişler Listesi */}
         {!ordersData || ordersData.orders.length === 0 ? (
           <div className="text-center py-12">
@@ -1239,6 +1343,18 @@ const Siparisler = () => {
                 className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
               >
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                  {/* Checkbox - Sadece Admin için ve PENDING siparişlerde */}
+                  {isAdmin && order.status === 'PENDING' && (
+                    <div className="mr-4 self-start lg:self-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedOrderIds.includes(order.id)}
+                        onChange={(e) => handleSelectOrder(order.id, e.target.checked)}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                    </div>
+                  )}
+                  
                   <div className="flex-1">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4">
                       <div>
@@ -2675,6 +2791,136 @@ const Siparisler = () => {
                     className="px-6 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors font-medium"
                   >
                     Kapat
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Toplu Onaylama Sonuç Modal */}
+        {bulkConfirmModal && bulkConfirmResult && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl max-w-2xl w-full mx-4 shadow-2xl max-h-[80vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Toplu Onaylama Sonuçları
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setBulkConfirmModal(false);
+                      setBulkConfirmResult(null);
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Özet */}
+                <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div>
+                      <div className="text-2xl font-bold text-gray-900">{bulkConfirmResult.data.summary.total}</div>
+                      <div className="text-sm text-gray-600">Toplam</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-green-600">{bulkConfirmResult.data.summary.successful}</div>
+                      <div className="text-sm text-gray-600">Başarılı</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-red-600">{bulkConfirmResult.data.summary.failed}</div>
+                      <div className="text-sm text-gray-600">Başarısız</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-blue-600">
+                        {bulkConfirmResult.data.summary.totalAmount.toLocaleString('tr-TR')} ₺
+                      </div>
+                      <div className="text-sm text-gray-600">Toplam Tutar</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Başarılı Siparişler */}
+                {bulkConfirmResult.data.success.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="text-md font-semibold text-green-700 mb-3 flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Başarıyla Onaylanan Siparişler
+                    </h4>
+                    <div className="space-y-2">
+                      {bulkConfirmResult.data.success.map((order) => (
+                        <div key={order.orderId} className="bg-green-50 border border-green-200 rounded-lg p-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="font-medium text-gray-900">
+                                {order.customerName} - {order.storeName}
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                Sipariş: {order.orderId.slice(0, 8)}...
+                              </div>
+                              <div className="text-sm text-green-700 mt-1">
+                                {order.message}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-medium text-gray-900">
+                                {order.amount.toLocaleString('tr-TR')} ₺
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                {order.qrCodeCount} QR Kod
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Başarısız Siparişler */}
+                {bulkConfirmResult.data.failed.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="text-md font-semibold text-red-700 mb-3 flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Onaylanamayan Siparişler
+                    </h4>
+                    <div className="space-y-2">
+                      {bulkConfirmResult.data.failed.map((order) => (
+                        <div key={order.orderId} className="bg-red-50 border border-red-200 rounded-lg p-3">
+                          <div>
+                            <div className="font-medium text-gray-900">
+                              {order.customerName}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              Sipariş: {order.orderId.slice(0, 8)}...
+                            </div>
+                            <div className="text-sm text-red-700 mt-1">
+                              Hata: {order.error}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => {
+                      setBulkConfirmModal(false);
+                      setBulkConfirmResult(null);
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Tamam
                   </button>
                 </div>
               </div>

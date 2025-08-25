@@ -3048,4 +3048,72 @@ export async function deleteStoreAddress(addressId: string): Promise<{ success: 
     console.error('Adres silme hatası:', error);
     throw error;
   }
+}
+
+// Toplu Sipariş Onaylama API
+export interface BulkConfirmOrderSuccess {
+  orderId: string;
+  customerName: string;
+  storeName: string;
+  amount: number;
+  qrCodeCount: number;
+  message: string;
+}
+
+export interface BulkConfirmOrderFailed {
+  orderId: string;
+  customerName: string;
+  error: string;
+}
+
+export interface BulkConfirmSummary {
+  total: number;
+  successful: number;
+  failed: number;
+  totalAmount: number;
+}
+
+export interface BulkConfirmOrdersResponse {
+  success: boolean;
+  message: string;
+  data: {
+    success: BulkConfirmOrderSuccess[];
+    failed: BulkConfirmOrderFailed[];
+    summary: BulkConfirmSummary;
+  };
+}
+
+export interface BulkConfirmOrdersRequest {
+  orderIds: string[];
+}
+
+// Toplu sipariş onaylama fonksiyonu
+export async function bulkConfirmOrders(orderIds: string[]): Promise<BulkConfirmOrdersResponse> {
+  const token = getAuthToken();
+
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/admin/orders/bulk-confirm`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ orderIds }),
+    });
+
+    const data: BulkConfirmOrdersResponse = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Toplu onaylama işlemi başarısız');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Toplu sipariş onaylama hatası:', error);
+    throw error;
+  }
 } 

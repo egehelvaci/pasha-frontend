@@ -174,7 +174,7 @@ interface StockUpdateResponse {
 }
 
 export default function StokPage() {
-  const { user, isLoading, isAdmin } = useAuth();
+  const { user, isLoading, isAdmin, isAdminOrEditor } = useAuth();
   const token = useToken();
   const router = useRouter();
 
@@ -237,13 +237,13 @@ export default function StokPage() {
     }
   }, [user, isLoading, router]);
 
-  // Admin kontrolü
+  // Admin ve Editör kontrolü
   useEffect(() => {
-    // Auth loading tamamlandığında admin kontrolü yap
-    if (!isLoading && user && !isAdmin) {
+    // Auth loading tamamlandığında admin/editör kontrolü yap
+    if (!isLoading && user && !isAdminOrEditor) {
       router.push('/dashboard');
     }
-  }, [user, isAdmin, isLoading, router]);
+  }, [user, isAdminOrEditor, isLoading, router]);
 
   useEffect(() => {
     if (!token) return;
@@ -709,8 +709,8 @@ export default function StokPage() {
     );
   }
 
-  // Admin olmayan kullanıcılar için erişim engeli
-  if (!isAdmin) {
+  // Admin veya Editör olmayan kullanıcılar için erişim engeli
+  if (!isAdminOrEditor) {
     return (
       <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center max-w-md">
@@ -720,7 +720,7 @@ export default function StokPage() {
             </svg>
           </div>
           <h3 className="text-xl font-bold text-gray-900 mb-3">Erişim Reddedildi</h3>
-          <p className="text-gray-600 mb-8 leading-relaxed">Bu sayfaya erişim yetkiniz bulunmamaktadır. Stok yönetimi sadece admin kullanıcılar tarafından kullanılabilir.</p>
+          <p className="text-gray-600 mb-8 leading-relaxed">Bu sayfaya erişim yetkiniz bulunmamaktadır. Stok yönetimi sadece admin ve editör kullanıcılar tarafından kullanılabilir.</p>
           <button
             onClick={() => router.push('/dashboard')}
             className="inline-flex items-center gap-2 px-6 py-3 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"

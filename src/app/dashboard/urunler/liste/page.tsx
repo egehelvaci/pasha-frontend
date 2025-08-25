@@ -161,7 +161,7 @@ export default function ProductList() {
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [selectedProductForUpdate, setSelectedProductForUpdate] = useState<any>(null);
   const [productRules, setProductRules] = useState<ProductRule[]>([]);
-  const { isAdmin } = useAuth();
+  const { isAdmin, isAdminOrEditor } = useAuth();
   
   // Custom dropdown state'leri
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
@@ -426,9 +426,12 @@ export default function ProductList() {
 
   const fetchProductRules = async () => {
     try {
+      console.log('🔄 Ürün kuralları çekiliyor...');
       const rules = await getProductRules();
+      console.log('✅ Ürün kuralları başarıyla çekildi:', rules);
       setProductRules(rules);
     } catch (error) {
+      console.error('❌ Ürün kuralları yüklenirken hata:', error);
       setProductRules([]);
     }
   };
@@ -2177,7 +2180,7 @@ export default function ProductList() {
       <div className="mb-6">
         <div className="flex justify-between items-center mb-3">
           <h2 className="text-xl font-semibold text-gray-800">Ürün Listesi</h2>
-          {isAdmin && (
+          {isAdminOrEditor && (
             <button
               className="bg-[#00365a] text-white rounded-full px-4 py-2 flex items-center justify-center shadow-sm hover:bg-[#004170] transition-colors"
               onClick={() => setModalOpen(true)}
@@ -2527,13 +2530,14 @@ export default function ProductList() {
                 return (
                   <div key={product.productId} 
                        className={`border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow relative cursor-pointer ${
-                         isOutOfStock ? 'opacity-50 grayscale' : 'bg-white'
+                         // Admin/editör için stok durumu görünümü devre dışı
+                         (!isAdminOrEditor && isOutOfStock) ? 'opacity-50 grayscale' : 'bg-white'
                        }`} 
                        style={{ width: '350px', height: '550px' }}
                        onClick={() => router.push(`/dashboard/urunler/${product.productId}`)}>
                     
-                    {/* Stok yoksa overlay */}
-                    {isOutOfStock && (
+                    {/* Stok yoksa overlay - sadece admin/editör değilse göster */}
+                    {!isAdminOrEditor && isOutOfStock && (
                       <div className="absolute inset-0 bg-gray-200 bg-opacity-20 z-20 flex items-center justify-center">
                         <div className="bg-red-500 text-white px-3 py-1 rounded-md text-sm font-medium">
                           Ürünü İncele
@@ -2592,26 +2596,27 @@ export default function ProductList() {
                       <div className="flex items-center gap-2">
                         <button 
                           className={`flex-1 px-3 py-2 rounded-md flex items-center justify-center gap-2 text-sm shadow-sm transition-colors font-semibold ${
-                            isOutOfStock 
+                            // Admin/editör için stok kontrolü yok
+                            (!isAdminOrEditor && isOutOfStock) 
                               ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                               : 'bg-green-600 hover:bg-green-700 text-white hover:shadow-md'
                           }`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (!isOutOfStock) {
+                            if (isAdminOrEditor || !isOutOfStock) {
                               setSelectedProductId(product.productId);
                               setDetailModalOpen(true);
                             }
                           }}
-                          title={isOutOfStock ? "Stokta olmayan ürün" : "Sepete Ekle"}
-                          disabled={isOutOfStock}
+                          title={(!isAdminOrEditor && isOutOfStock) ? "Stokta olmayan ürün" : "Sepete Ekle"}
+                          disabled={!isAdminOrEditor && isOutOfStock}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                           </svg>
-                          {isOutOfStock ? 'Stok Yok' : 'Sepete Ekle'}
+                          {(!isAdminOrEditor && isOutOfStock) ? 'Stok Yok' : 'Sepete Ekle'}
                         </button>
-                        {isAdmin && (
+                        {isAdminOrEditor && (
                           <button 
                             className="w-10 h-10 bg-blue-600 text-white rounded-md flex items-center justify-center text-xs shadow-sm hover:bg-blue-700 transition-colors"
                             onClick={(e) => {
@@ -2648,7 +2653,7 @@ export default function ProductList() {
           </div>
         </div>
       )}
-      {isAdmin && (
+      {isAdminOrEditor && (
         <AddProductModal 
           open={modalOpen} 
           onClose={() => setModalOpen(false)} 

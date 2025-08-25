@@ -8,7 +8,7 @@ import { StoreType, storeTypeLabels, storeTypeColors, storeTypeIcons } from '@/c
 
 export default function StoresPage() {
   const router = useRouter();
-  const { isAdmin, isLoading: authLoading } = useAuth();
+  const { isAdmin, isAdminOrEditor, isLoading: authLoading } = useAuth();
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -31,14 +31,14 @@ export default function StoresPage() {
   const priceListsFetchedRef = useRef(false);
 
   useEffect(() => {
-    // Kimlik doğrulama yüklemesi tamamlandığında ve admin değilse
-    if (!authLoading && !isAdmin) {
+    // Kimlik doğrulama yüklemesi tamamlandığında ve admin/editör değilse
+    if (!authLoading && !isAdminOrEditor) {
       router.push('/dashboard');
       return;
     }
     
-    // Kimlik doğrulama yüklemesi tamamlandığında ve admin ise veri çek
-    if (!authLoading && isAdmin) {
+    // Kimlik doğrulama yüklemesi tamamlandığında ve admin/editör ise veri çek
+    if (!authLoading && isAdminOrEditor) {
       if (!storesFetchedRef.current) {
         storesFetchedRef.current = true;
       fetchStores();
@@ -49,7 +49,7 @@ export default function StoresPage() {
       fetchPriceLists();
       }
     }
-  }, [isAdmin, authLoading, router]);
+  }, [isAdminOrEditor, authLoading, router]);
 
   // Dropdown'ların dışına tıklandığında kapanması
   useEffect(() => {
@@ -211,8 +211,8 @@ export default function StoresPage() {
     );
   }
 
-  // Admin kontrolü
-  if (!isAdmin) {
+  // Admin ve Editör kontrolü
+  if (!isAdminOrEditor) {
     return (
       <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center max-w-md">

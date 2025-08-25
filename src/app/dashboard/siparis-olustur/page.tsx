@@ -62,7 +62,7 @@ interface LimitCheckResult {
 
 const SiparisOlustur: React.FC = () => {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isEditor, isAdminOrEditor } = useAuth();
   const token = useToken();
   const [cartData, setCartData] = useState<CartData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -84,6 +84,12 @@ const SiparisOlustur: React.FC = () => {
     is_default: false
   });
   const [addingAddress, setAddingAddress] = useState(false);
+  
+  // Editör için mağaza seçimi
+  const [availableStores, setAvailableStores] = useState<any[]>([]);
+  const [selectedStoreId, setSelectedStoreId] = useState<string>('');
+  const [selectedStoreProfile, setSelectedStoreProfile] = useState<UserProfileInfo | null>(null);
+  const [loadingStores, setLoadingStores] = useState(false);
 
   // Limit mesajını kullanıcı dostu hale getiren fonksiyon
   const formatLimitMessage = (message: string): string => {

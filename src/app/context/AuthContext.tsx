@@ -48,6 +48,8 @@ type AuthContextType = {
   isLoading: boolean;
   token: string | null;
   isAdmin: boolean;
+  isEditor: boolean;
+  isAdminOrEditor: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -59,6 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isEditor, setIsEditor] = useState<boolean>(false);
+  const [isAdminOrEditor, setIsAdminOrEditor] = useState<boolean>(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -97,6 +101,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (storedUserType === "admin") {
           setIsAdmin(true);
+          setIsAdminOrEditor(true);
+        } else if (storedUserType === "editor") {
+          setIsEditor(true);
+          setIsAdminOrEditor(true);
         }
       } catch (error) {
         // Güvenli cleanup - client-side kontrolü ile
@@ -149,7 +157,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         setUser(userData);
         setToken(result.data.token);
-        setIsAdmin(result.data.user.userType === "admin");
+        const userType = result.data.user.userType;
+        setIsAdmin(userType === "admin");
+        setIsEditor(userType === "editor");
+        setIsAdminOrEditor(userType === "admin" || userType === "editor");
         
         // "Beni hatırla" seçeneğine göre localStorage'a kaydet
         if (rememberMe) {
@@ -194,6 +205,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         setToken(null);
         setIsAdmin(false);
+        setIsEditor(false);
+        setIsAdminOrEditor(false);
         localStorage.removeItem("user");
         localStorage.removeItem("token");
         localStorage.removeItem("userType");
@@ -209,6 +222,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Token yoksa sessiz çıkış yap
         setUser(null);
         setIsAdmin(false);
+        setIsEditor(false);
+        setIsAdminOrEditor(false);
         localStorage.removeItem("user");
         localStorage.removeItem("token");
         localStorage.removeItem("userType");
@@ -226,6 +241,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setToken(null);
       setIsAdmin(false);
+      setIsEditor(false);
+      setIsAdminOrEditor(false);
       localStorage.removeItem("user");
       localStorage.removeItem("token");
       localStorage.removeItem("userType");
@@ -243,7 +260,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isLoading, isAdmin }}>
+    <AuthContext.Provider value={{ user, token, login, logout, isLoading, isAdmin, isEditor, isAdminOrEditor }}>
       {children}
     </AuthContext.Provider>
   );

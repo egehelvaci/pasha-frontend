@@ -45,13 +45,15 @@ interface NavigationItem {
   href: string;
   icon: JSX.Element;
   adminOnly?: boolean;
+  editorOnly?: boolean;
   hideFromAdmin?: boolean;
+  hideFromEditor?: boolean;
 }
 
 const Header = ({ title, user, className }: HeaderProps) => {
   const pathname = usePathname();
   const router = useRouter();
-  const { logout, isAdmin, user: authUser } = useAuth(); // AuthContext'teki user'ı al
+  const { logout, isAdmin, isEditor, isAdminOrEditor, user: authUser } = useAuth(); // AuthContext'teki user'ı al
 
   const [cartItems, setCartItems] = useState<number>(0);
   const [isMounted, setIsMounted] = useState(false);
@@ -414,7 +416,62 @@ const Header = ({ title, user, className }: HeaderProps) => {
         </svg>
       ),
       adminOnly: false,
-    }, 
+    },
+    
+    // Editör Menu Items
+    {
+      name: 'Ürün Yönetimi',
+      href: '/dashboard/urunler/liste',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+          <path d="M3.375 3C2.339 3 1.5 3.84 1.5 4.875v.75c0 1.036.84 1.875 1.875 1.875h17.25c1.035 0 1.875-.84 1.875-1.875v-.75C22.5 3.839 21.66 3 20.625 3H3.375z" />
+          <path fillRule="evenodd" d="M3.087 9l.54 9.176A3 3 0 006.62 21h10.757a3 3 0 002.995-2.824L20.913 9H3.087zm6.163 3.75A.75.75 0 0110 12h4a.75.75 0 010 1.5h-4a.75.75 0 01-.75-.75z" clipRule="evenodd" />
+        </svg>
+      ),
+      editorOnly: true,
+    },
+    {
+      name: 'Stok Yönetimi',
+      href: '/dashboard/stok',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+          <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z" />
+          <path fillRule="evenodd" d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clipRule="evenodd" />
+        </svg>
+      ),
+      editorOnly: true,
+    },
+    {
+      name: 'Mağaza Yönetimi',
+      href: '/dashboard/magazalar',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+          <path d="M5.223 2.25c-.497 0-.974.198-1.325.55l-1.3 1.298A3.75 3.75 0 007.5 9.75c.627.47 1.406.75 2.25.75.844 0 1.623-.28 2.25-.75a3.75 3.75 0 004.902-5.652l-1.3-1.299a1.875 1.875 0 00-1.325-.549H5.223z" />
+          <path fillRule="evenodd" d="M3 20.25v-8.755c1.42.674 3.08.673 4.5 0A5.234 5.234 0 009.75 12c.804 0 1.568-.182 2.25-.506a5.234 5.234 0 002.25.506c.804 0 1.567-.182 2.25-.506 1.42.674 3.08.675 4.5.001v8.755h.75a.75.75 0 010 1.5H2.25a.75.75 0 010-1.5H3zm3-6a.75.75 0 01.75-.75h3a.75.75 0 01.75.75v3a.75.75 0 01-.75.75h-3a.75.75 0 01-.75-.75v-3zm8.25-.75a.75.75 0 00-.75.75v5.25c0 .414.336.75.75.75h3a.75.75 0 00.75-.75v-5.25a.75.75 0 00-.75-.75h-3z" clipRule="evenodd" />
+        </svg>
+      ),
+      editorOnly: true,
+    },
+    {
+      name: 'Kullanıcı Yönetimi',
+      href: '/dashboard/ayarlar',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+          <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
+        </svg>
+      ),
+      editorOnly: true,
+    },
+    {
+      name: 'Admin Sipariş Oluştur',
+      href: '/dashboard/admin-siparis-olustur',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+          <path d="M2.25 2.25a.75.75 0 000 1.5h1.386c.17 0 .318.114.362.278l2.558 9.592a3.752 3.752 0 00-2.806 3.63c0 .414.336.75.75.75h15.75a.75.75 0 000-1.5H5.378A2.25 2.25 0 017.5 15h11.218a.75.75 0 00.674-.421 60.358 60.358 0 002.96-7.228.75.75 0 00-.525-.965A60.864 60.864 0 005.68 4.509l-.232-.867A1.875 1.875 0 003.636 2.25H2.25zM3.75 20.25a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zM16.5 20.25a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" />
+        </svg>
+      ),
+      editorOnly: true,
+    },
   ];
 
   return (
@@ -606,12 +663,14 @@ const Header = ({ title, user, className }: HeaderProps) => {
         <nav className="hidden lg:block py-2">
           <div className="flex justify-center gap-1">
             {(() => {
-              // Admin ve normal menü öğelerini ayır
+              // Admin, editor ve normal menü öğelerini ayır
               const regularNavItems = navigation
-                .filter(item => !item.adminOnly && item.name !== 'Sepetim') // Sepetim hariç normal menü öğeleri
+                .filter(item => !item.adminOnly && !item.editorOnly && item.name !== 'Sepetim') // Sepetim, admin ve editör öğeleri hariç normal menü öğeleri
                 .filter(item => !(item.hideFromAdmin && isAdmin)) // Admin ise hideFromAdmin öğeleri gizle
+                .filter(item => !(item.hideFromEditor && isEditor)) // Editör ise hideFromEditor öğeleri gizle
                 .filter(item => !(isMobile && item.name === 'E-Katalog')); // Mobilde E-Katalog'u gizle
               const adminNavItems = navigation.filter(item => item.adminOnly);
+              const editorNavItems = navigation.filter(item => item.editorOnly);
 
               return (
                 <>
@@ -657,6 +716,44 @@ const Header = ({ title, user, className }: HeaderProps) => {
                       {/* Admin Dropdown Menü */}
                       <div className="absolute left-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                         {adminNavItems.map((item) => {
+                          const isActive = pathname === item.href;
+                          return (
+                            <Link
+                              key={item.name}
+                              href={item.href}
+                              className={`flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors ${
+                                isActive ? 'bg-gray-50 text-[#00365a] font-medium' : ''
+                              }`}
+                            >
+                              <span className="mr-2">{item.icon}</span>
+                              {item.name}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Editör Panel Dropdown - Sadece editör kullanıcıları için */}
+                  {isEditor && editorNavItems.length > 0 && (
+                    <div className="relative group">
+                      <button
+                        className="flex items-center px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors outline-none focus:ring-2 focus:ring-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                      >
+                        <span className="mr-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                            <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 01.67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 11-.671-1.34l.041-.022zM12 9a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+                          </svg>
+                        </span>
+                        Editör Panel
+                        <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+
+                      {/* Editör Dropdown Menü */}
+                      <div className="absolute left-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        {editorNavItems.map((item) => {
                           const isActive = pathname === item.href;
                           return (
                             <Link
@@ -754,8 +851,12 @@ const Header = ({ title, user, className }: HeaderProps) => {
                     const isActive = isAnalysisPage || pathname === item.href;
                     // Admin olmayan kullanıcılar için admin-only öğeleri gizle
                     if (!isAdmin && item.adminOnly === true) return null;
+                    // Editör olmayan kullanıcılar için editor-only öğeleri gizle
+                    if (!isEditor && item.editorOnly === true) return null;
                     // Admin kullanıcılar için hideFromAdmin öğeleri gizle
                     if (isAdmin && item.hideFromAdmin === true) return null;
+                    // Editör kullanıcılar için hideFromEditor öğeleri gizle
+                    if (isEditor && item.hideFromEditor === true) return null;
                     // Mobilde E-Katalog'u gizle
                     if (isMobile && item.name === 'E-Katalog') return null;
                     return (
@@ -784,7 +885,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
                   {isAdmin && (
                     <>
                       <div className="mt-6 mb-4">
-                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Yönetim</h3>
+                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Admin Yönetimi</h3>
                       </div>
                       <Link
                         href="/dashboard/ayarlar"
@@ -807,51 +908,54 @@ const Header = ({ title, user, className }: HeaderProps) => {
                       </Link>
                     </>
                   )}
+
+                  {/* Editör ayarlar */}
+                  {isEditor && (
+                    <>
+                      <div className="mt-6 mb-4">
+                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Editör Yönetimi</h3>
+                      </div>
+                      {/* Editör menü öğeleri otomatik olarak yukarıda gösterilecek çünkü navigation.map() içinde zaten filtreleniyor */}
+                    </>
+                  )}
                 </nav>
               </div>
               
-                            {/* Finansal özet - Minimal - Navigasyondan sonra */}
-              {(authUser?.store || isAdmin) && (
+                            {/* Finansal özet - Minimal - Navigasyondan sonra - Sadece mağaza kullanıcıları için */}
+              {authUser?.store && (
                 <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-3 border-b border-gray-200">
-                  {authUser?.store ? (
-                    <div className="space-y-2">
-                      {/* Mağaza adı - kompakt */}
+                  <div className="space-y-2">
+                    {/* Mağaza adı - kompakt */}
+                    <div className="text-center">
+                      <p className="text-xs text-gray-600">Mağaza</p>
+                      <p className="text-sm font-semibold text-gray-900 truncate">{authUser.store.kurum_adi}</p>
+                    </div>
+                    
+                    {isLoadingBalance ? (
+                      <div className="flex items-center justify-center py-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                        <span className="ml-2 text-xs text-gray-600">Yükleniyor...</span>
+                      </div>
+                    ) : (
                       <div className="text-center">
-                        <p className="text-xs text-gray-600">Mağaza</p>
-                        <p className="text-sm font-semibold text-gray-900 truncate">{authUser.store.kurum_adi}</p>
+                        <p className="text-xs text-gray-600">Bakiye</p>
+                        <p className={`text-sm font-bold ${financialInfo.bakiye < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                          {financialInfo.bakiye.toLocaleString('tr-TR', { minimumFractionDigits: 0 })} ₺
+                        </p>
                       </div>
-                      
-                      {isLoadingBalance ? (
-                        <div className="flex items-center justify-center py-2">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
-                          <span className="ml-2 text-xs text-gray-600">Yükleniyor...</span>
-                        </div>
-                      ) : (
-                        <div className="text-center">
-                          <p className="text-xs text-gray-600">Bakiye</p>
-                          <p className={`text-sm font-bold ${financialInfo.bakiye < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                            {financialInfo.bakiye.toLocaleString('tr-TR', { minimumFractionDigits: 0 })} ₺
-                          </p>
-                        </div>
-                      )}
-                      
-                      {/* Yenile butonu */}
-                      <div className="flex justify-center pt-1">
-                        <button
-                          onClick={refreshBalance}
-                          disabled={isLoadingBalance}
-                          className="px-4 py-1 text-xs bg-white/80 border border-green-300 text-green-700 rounded hover:bg-green-50 transition-colors disabled:opacity-50"
-                        >
-                          {isLoadingBalance ? 'Yükleniyor...' : 'Yenile'}
-                        </button>
-                      </div>
+                    )}
+                    
+                    {/* Yenile butonu */}
+                    <div className="flex justify-center pt-1">
+                      <button
+                        onClick={refreshBalance}
+                        disabled={isLoadingBalance}
+                        className="px-4 py-1 text-xs bg-white/80 border border-green-300 text-green-700 rounded hover:bg-green-50 transition-colors disabled:opacity-50"
+                      >
+                        {isLoadingBalance ? 'Yükleniyor...' : 'Yenile'}
+                      </button>
                     </div>
-                  ) : (
-                    <div className="text-center py-2">
-                      <p className="text-sm font-medium text-gray-700">Admin Kullanıcısı</p>
-                      <p className="text-xs text-gray-500">Tüm yetkilere sahipsiniz</p>
-                    </div>
-                  )}
+                  </div>
                 </div>
               )}
             
