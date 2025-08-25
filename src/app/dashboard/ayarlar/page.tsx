@@ -15,6 +15,7 @@ interface User {
   surname?: string;
   email: string;
   isActive: boolean;
+  canSeePrice?: boolean;
   userType: {
     id: number;
     name: string;
@@ -36,6 +37,7 @@ interface UserFormData {
   adres?: string;                     // 🆕 Kullanıcı adres alanı
   userTypeName: string;
   storeId?: string;
+  canSeePrice: boolean;
 }
 
 export default function Settings() {
@@ -60,7 +62,8 @@ export default function Settings() {
     phoneNumber: '',
     adres: '',
     userTypeName: 'viewer',
-    storeId: ''
+    storeId: '',
+    canSeePrice: true
   });
   const [assignStoreModalOpen, setAssignStoreModalOpen] = useState(false);
   const [assigningUserId, setAssigningUserId] = useState<string | null>(null);
@@ -433,7 +436,8 @@ export default function Settings() {
           typeof selectedUser.userType === 'object'
             ? selectedUser.userType.name
             : selectedUser.userType || '',
-        storeId: selectedUser.Store?.store_id || ''
+        storeId: selectedUser.Store?.store_id || '',
+        canSeePrice: selectedUser.canSeePrice ?? true
       });
     } else {
       setFormData({
@@ -445,7 +449,8 @@ export default function Settings() {
         phoneNumber: '',
         adres: '',
         userTypeName: 'viewer',
-        storeId: ''
+        storeId: '',
+        canSeePrice: true
       });
     }
   }, [selectedUser]);
@@ -1650,6 +1655,30 @@ export default function Settings() {
                     </div>
                   </div>
                 )}
+
+                {/* Fiyat Görme Yetkisi */}
+                <div className="md:col-span-2">
+                  <div className="flex items-center space-x-3 bg-gray-50 p-4 rounded-lg">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="canSeePrice"
+                        name="canSeePrice"
+                        checked={formData.canSeePrice}
+                        onChange={(e) => setFormData(prev => ({ ...prev, canSeePrice: e.target.checked }))}
+                        className="h-4 w-4 text-[#00365a] focus:ring-[#00365a] border-gray-300 rounded"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label htmlFor="canSeePrice" className="block text-sm font-medium text-gray-700">
+                        Fiyat Görme Yetkisi
+                      </label>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Bu kullanıcı ürün fiyatlarını görebilir
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Butonlar */}
