@@ -532,13 +532,19 @@ export default function Settings() {
       
       const method = selectedUser ? 'PUT' : 'POST';
       
+      // Boş adres alanını request'ten kaldır
+      const requestData = { ...formData };
+      if (!requestData.adres || requestData.adres.trim() === '') {
+        delete requestData.adres;
+      }
+      
       const res = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(requestData)
       });
       
       const data = await res.json();
