@@ -1292,7 +1292,7 @@ const Siparisler = () => {
                       </div>
                       <div>
                         <span className="text-gray-600">Ürün Sayısı:</span>
-                        <span className="ml-2 text-gray-900">{order.items.length} adet</span>
+                        <span className="ml-2 text-gray-900">{order.items.reduce((total, item) => total + item.quantity, 0)} adet</span>
                       </div>
                       <div>
                         <span className="text-gray-600">Toplam Tutar:</span>
@@ -1990,7 +1990,7 @@ const Siparisler = () => {
                         </svg>
                         Sipariş Edilen Ürünler
                       </h4>
-                      <p className="text-gray-500 text-sm">{selectedOrder.items.length} ürün</p>
+                      <p className="text-gray-500 text-sm">{selectedOrder.items.reduce((total, item) => total + item.quantity, 0)} ürün</p>
                     </div>
                     <div className="space-y-4">
                       {selectedOrder.items.map((item) => (
@@ -2054,19 +2054,29 @@ const Siparisler = () => {
                             <div className="grid grid-cols-3 gap-4 mb-3">
                               <div className="text-center">
                                 <div className="text-2xl font-bold text-[#00365a]">
-                                  {selectedOrder.qr_codes.length}
+                                  {selectedOrder.items.reduce((total, item) => total + item.quantity, 0)}
                                 </div>
                                 <div className="text-sm text-gray-600">QR Kod</div>
                               </div>
                               <div className="text-center">
                                 <div className="text-2xl font-bold text-orange-600">
-                                  {selectedOrder.qr_codes.filter(qr => qr.first_scan_at && !qr.second_scan_at).length}
+                                  {selectedOrder.qr_codes
+                                    .filter(qr => qr.first_scan_at && !qr.second_scan_at)
+                                    .reduce((total, qr) => {
+                                      const item = selectedOrder.items.find(i => i.id === qr.order_item_id);
+                                      return total + (item ? item.quantity : 0);
+                                    }, 0)}
                                 </div>
                                 <div className="text-sm text-gray-600">Hazır</div>
                               </div>
                               <div className="text-center">
                                 <div className="text-2xl font-bold text-green-600">
-                                  {selectedOrder.qr_codes.filter(qr => qr.second_scan_at).length}
+                                  {selectedOrder.qr_codes
+                                    .filter(qr => qr.second_scan_at)
+                                    .reduce((total, qr) => {
+                                      const item = selectedOrder.items.find(i => i.id === qr.order_item_id);
+                                      return total + (item ? item.quantity : 0);
+                                    }, 0)}
                                 </div>
                                 <div className="text-sm text-gray-600">Tamamlandı</div>
                               </div>
@@ -2079,23 +2089,61 @@ const Siparisler = () => {
                                 <div 
                                   className="bg-green-600 transition-all duration-300" 
                                   style={{
-                                    width: `${selectedOrder.qr_codes.length > 0 ? (selectedOrder.qr_codes.filter(qr => qr.second_scan_at).length / selectedOrder.qr_codes.length) * 100 : 0}%`
+                                    width: `${(() => {
+                                      const totalQuantity = selectedOrder.items.reduce((total, item) => total + item.quantity, 0);
+                                      const completedQuantity = selectedOrder.qr_codes
+                                        .filter(qr => qr.second_scan_at)
+                                        .reduce((total, qr) => {
+                                          const item = selectedOrder.items.find(i => i.id === qr.order_item_id);
+                                          return total + (item ? item.quantity : 0);
+                                        }, 0);
+                                      return totalQuantity > 0 ? (completedQuantity / totalQuantity) * 100 : 0;
+                                    })()}%`
                                   }}
                                 ></div>
                                 {/* Hazır kısım - turuncu */}
                                 <div 
                                   className="bg-orange-500 transition-all duration-300" 
                                   style={{
-                                    width: `${selectedOrder.qr_codes.length > 0 ? (selectedOrder.qr_codes.filter(qr => qr.first_scan_at && !qr.second_scan_at).length / selectedOrder.qr_codes.length) * 100 : 0}%`
+                                    width: `${(() => {
+                                      const totalQuantity = selectedOrder.items.reduce((total, item) => total + item.quantity, 0);
+                                      const readyQuantity = selectedOrder.qr_codes
+                                        .filter(qr => qr.first_scan_at && !qr.second_scan_at)
+                                        .reduce((total, qr) => {
+                                          const item = selectedOrder.items.find(i => i.id === qr.order_item_id);
+                                          return total + (item ? item.quantity : 0);
+                                        }, 0);
+                                      return totalQuantity > 0 ? (readyQuantity / totalQuantity) * 100 : 0;
+                                    })()}%`
                                   }}
                                 ></div>
                               </div>
                             </div>
                             <div className="text-center text-sm text-gray-600 mt-1">
-                              {selectedOrder.qr_codes.length > 0 ? Math.round((selectedOrder.qr_codes.filter(qr => qr.second_scan_at).length / selectedOrder.qr_codes.length) * 100) : 0}% Tamamlandı
-                              {selectedOrder.qr_codes.filter(qr => qr.first_scan_at && !qr.second_scan_at).length > 0 && 
-                                ` • ${Math.round((selectedOrder.qr_codes.filter(qr => qr.first_scan_at && !qr.second_scan_at).length / selectedOrder.qr_codes.length) * 100)}% Hazır`
-                              }
+                              {(() => {
+                                const totalQuantity = selectedOrder.items.reduce((total, item) => total + item.quantity, 0);
+                                const completedQuantity = selectedOrder.qr_codes
+                                  .filter(qr => qr.second_scan_at)
+                                  .reduce((total, qr) => {
+                                    const item = selectedOrder.items.find(i => i.id === qr.order_item_id);
+                                    return total + (item ? item.quantity : 0);
+                                  }, 0);
+                                const readyQuantity = selectedOrder.qr_codes
+                                  .filter(qr => qr.first_scan_at && !qr.second_scan_at)
+                                  .reduce((total, qr) => {
+                                    const item = selectedOrder.items.find(i => i.id === qr.order_item_id);
+                                    return total + (item ? item.quantity : 0);
+                                  }, 0);
+                                const completedPercentage = totalQuantity > 0 ? Math.round((completedQuantity / totalQuantity) * 100) : 0;
+                                const readyPercentage = totalQuantity > 0 ? Math.round((readyQuantity / totalQuantity) * 100) : 0;
+                                
+                                return (
+                                  <>
+                                    {completedPercentage}% Tamamlandı
+                                    {readyPercentage > 0 && ` • ${readyPercentage}% Hazır`}
+                                  </>
+                                );
+                              })()}
                             </div>
                           </div>
                           
