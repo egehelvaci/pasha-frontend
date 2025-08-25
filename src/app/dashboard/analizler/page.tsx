@@ -69,6 +69,14 @@ export default function AnalyticsPage() {
   const [error, setError] = useState("");
   const [selectedPeriod, setSelectedPeriod] = useState<'1_month' | '3_months' | '1_year'>('1_year');
 
+  // canSeePrice kontrolü
+  useEffect(() => {
+    if (user && !user.canSeePrice) {
+      router.push('/dashboard');
+      return;
+    }
+  }, [user, router]);
+
   useEffect(() => {
     // Auth yüklemesi tamamlanmadıysa bekle
     if (authLoading) return;

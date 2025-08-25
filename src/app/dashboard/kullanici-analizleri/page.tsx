@@ -47,6 +47,12 @@ export default function UserAnalyticsPage() {
       return;
     }
 
+    // canSeePrice kontrolü
+    if (user && !user.canSeePrice) {
+      router.push('/dashboard');
+      return;
+    }
+
     fetchUserStatistics();
   }, [user, isAdmin, router, selectedPeriod, authLoading]);
 

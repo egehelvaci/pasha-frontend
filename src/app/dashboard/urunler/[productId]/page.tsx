@@ -21,7 +21,7 @@ export default function ProductDetail() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState("");
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   
   // Sepete ekleme için state'ler
   const [addToCartLoading, setAddToCartLoading] = useState(false);
@@ -365,7 +365,9 @@ export default function ProductDetail() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <input name="name" value={form.name} onChange={handleChange} placeholder="Ad" className="border rounded px-3 py-2 text-black" />
             <textarea name="description" value={form.description} onChange={handleChange} placeholder="Açıklama" className="border rounded px-3 py-2 text-black" />
-            <input name="price" type="text" value={form.price} onChange={handleChange} placeholder="Fiyat" className="border rounded px-3 py-2 text-black" />
+            {user?.canSeePrice && (
+              <input name="price" type="text" value={form.price} onChange={handleChange} placeholder="Fiyat" className="border rounded px-3 py-2 text-black" />
+            )}
             <input name="stock" type="text" value={form.stock} onChange={handleChange} placeholder="Stok" className="border rounded px-3 py-2 text-black" />
             <input name="width" type="text" value={form.width} onChange={handleChange} placeholder="Genişlik" className="border rounded px-3 py-2 text-black" />
             <input name="height" type="text" value={form.height} onChange={handleChange} placeholder="Yükseklik" className="border rounded px-3 py-2 text-black" />
@@ -379,11 +381,13 @@ export default function ProductDetail() {
                 <option key={col.collectionId} value={col.collectionId}>{col.name}</option>
               ))}
             </select>
-            <select name="currency" value={form.currency} onChange={handleChange} className="border rounded px-3 py-2 text-black">
-              <option value="TRY">TRY</option>
-              <option value="USD">USD</option>
-              <option value="EUR">EUR</option>
-            </select>
+            {user?.canSeePrice && (
+              <select name="currency" value={form.currency} onChange={handleChange} className="border rounded px-3 py-2 text-black">
+                <option value="TRY">TRY</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+              </select>
+            )}
             <input name="productImage" type="file" accept="image/*" onChange={handleChange} className="border rounded px-3 py-2 text-black" />
             {error && <div className="text-red-500 text-sm">{error}</div>}
             <button type="submit" disabled={loading} className="bg-blue-900 text-white rounded-full px-6 py-2 font-semibold mt-2">
@@ -732,12 +736,14 @@ export default function ProductDetail() {
                 <p className="text-gray-800 leading-relaxed">{product.description}</p>
               </div>
               
-              <div className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-gray-700">Metrekare Fiyatı</span>
-                <span className="text-lg font-semibold text-gray-900">
-                  {product.pricing?.price} {product.pricing?.currency}/m²
-                </span>
-              </div>
+              {user?.canSeePrice && (
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm font-medium text-gray-700">Metrekare Fiyatı</span>
+                  <span className="text-lg font-semibold text-gray-900">
+                    {product.pricing?.price} {product.pricing?.currency}/m²
+                  </span>
+                </div>
+              )}
               
               <div className="flex flex-col gap-2">
                 <span className="text-sm font-medium text-gray-700">Notlar (Opsiyonel)</span>
@@ -749,28 +755,30 @@ export default function ProductDetail() {
                 />
               </div>
 
-              <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200">
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-lg font-semibold text-blue-900">Toplam Tutar</span>
-                  <span className="text-2xl font-bold text-blue-900">
-                    {totalPrice.toFixed(2)} {product.pricing?.currency}
-                  </span>
-                </div>
-                {selectedSize && (
-                  <div className="text-sm text-blue-700 bg-blue-50 p-3 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Hesaplama Detayı:</span>
-                      <span>
-                        {selectedSize.width} cm genişlik × 
-                        {selectedSize.is_optional_height 
-                          ? ` ${customHeight} cm yükseklik (özel)` 
-                          : ` ${selectedSize.height} cm yükseklik`} 
-                        × {quantity} adet
-                      </span>
-                    </div>
+              {user?.canSeePrice && (
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-lg font-semibold text-blue-900">Toplam Tutar</span>
+                    <span className="text-2xl font-bold text-blue-900">
+                      {totalPrice.toFixed(2)} {product.pricing?.currency}
+                    </span>
                   </div>
-                )}
-              </div>
+                  {selectedSize && (
+                    <div className="text-sm text-blue-700 bg-blue-50 p-3 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">Hesaplama Detayı:</span>
+                        <span>
+                          {selectedSize.width} cm genişlik × 
+                          {selectedSize.is_optional_height 
+                            ? ` ${customHeight} cm yükseklik (özel)` 
+                            : ` ${selectedSize.height} cm yükseklik`} 
+                          × {quantity} adet
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Sepete Ekle Butonu */}
               <div className="mt-4">

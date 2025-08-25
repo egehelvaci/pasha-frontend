@@ -70,6 +70,14 @@ const MuhasebePage = () => {
     const router = useRouter();
     const [data, setData] = useState<AccountingData | null>(null);
     const [loading, setLoading] = useState(true);
+
+    // canSeePrice kontrolü
+    useEffect(() => {
+        if (user && !user.canSeePrice) {
+            router.push('/dashboard');
+            return;
+        }
+    }, [user, router]);
     const [error, setError] = useState<string | null>(null);
 
     // Modal ve form state'leri

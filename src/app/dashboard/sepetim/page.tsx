@@ -41,7 +41,7 @@ const translateCutType = (cutType: string): string => {
 };
 
 export default function CartPage() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [cartData, setCartData] = useState<any>(null);
   const [error, setError] = useState("");
@@ -363,10 +363,10 @@ export default function CartPage() {
                   <h3 className="text-lg font-semibold text-white">Sepet İçeriği</h3>
                 </div>
                 <div className="grid grid-cols-12 gap-4 text-sm font-semibold text-blue-100">
-                  <div className="col-span-6">Ürün</div>
-                  <div className="col-span-2 text-center">Fiyat</div>
+                  <div className={user?.canSeePrice ? "col-span-6" : "col-span-8"}>Ürün</div>
+                  {user?.canSeePrice && <div className="col-span-2 text-center">Fiyat</div>}
                   <div className="col-span-2 text-center">Miktar</div>
-                  <div className="col-span-2 text-right">Toplam</div>
+                  {user?.canSeePrice && <div className="col-span-2 text-right">Toplam</div>}
                 </div>
               </div>
               
@@ -374,7 +374,7 @@ export default function CartPage() {
                 {cartData.items.map((item: any) => (
                   <div key={item.id} className="px-6 py-4">
                     <div className="grid grid-cols-12 gap-4 items-center">
-                      <div className="col-span-6">
+                      <div className={user?.canSeePrice ? "col-span-6" : "col-span-8"}>
                         <div className="flex items-center">
                           <div className="w-16 h-16 flex-shrink-0">
                             <img 
@@ -431,15 +431,17 @@ export default function CartPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="col-span-2 text-center">
-                        <div className="text-sm text-gray-900">
-                          {parseFloat(item.unit_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} 
-                          {item.product?.pricing?.currency || item.Product?.pricing?.currency || '₺'}
+                      {user?.canSeePrice && (
+                        <div className="col-span-2 text-center">
+                          <div className="text-sm text-gray-900">
+                            {parseFloat(item.unit_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} 
+                            {item.product?.pricing?.currency || item.Product?.pricing?.currency || '₺'}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            m² başına
+                          </div>
                         </div>
-                        <div className="text-xs text-gray-500">
-                          m² başına
-                        </div>
-                      </div>
+                      )}
                       <div className="col-span-2 text-center">
                         <div className="flex items-center justify-center">
                           <button 
@@ -488,10 +490,12 @@ export default function CartPage() {
                           <div className="text-xs text-blue-600 mt-1">Güncelleniyor...</div>
                         )}
                       </div>
-                      <div className="col-span-2 text-right font-medium text-gray-900">
-                        {parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} 
-                        {item.product?.pricing?.currency || item.Product?.pricing?.currency || '₺'}
-                      </div>
+                      {user?.canSeePrice && (
+                        <div className="col-span-2 text-right font-medium text-gray-900">
+                          {parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} 
+                          {item.product?.pricing?.currency || item.Product?.pricing?.currency || '₺'}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -509,13 +513,25 @@ export default function CartPage() {
               </div>
               <div className="px-6 py-6">
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                    <span className="text-gray-900 font-semibold text-lg">Toplam Tutar</span>
-                    <span className="text-2xl text-[#00365a] font-bold">
-                      {parseFloat(cartData.totalPrice).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} 
-                      {cartData.items[0]?.product?.pricing?.currency || cartData.items[0]?.Product?.pricing?.currency || '₺'}
-                    </span>
-                  </div>
+                  {user?.canSeePrice ? (
+                    <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                      <span className="text-gray-900 font-semibold text-lg">Toplam Tutar</span>
+                      <span className="text-2xl text-[#00365a] font-bold">
+                        {parseFloat(cartData.totalPrice).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} 
+                        {cartData.items[0]?.product?.pricing?.currency || cartData.items[0]?.Product?.pricing?.currency || '₺'}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.664-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                        <span className="text-yellow-800 font-medium">Fiyat Görme Yetkiniz Bulunmamaktadır</span>
+                      </div>
+                      <p className="text-yellow-700 text-sm mt-1">Sipariş vermek için yöneticinizle iletişime geçin.</p>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">

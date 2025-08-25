@@ -131,6 +131,7 @@ export default function ProductList() {
   const token = useToken();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
   
   // URL'den parametreleri al
   const urlPage = parseInt(searchParams.get('page') || '1');
@@ -1467,30 +1468,34 @@ export default function ProductList() {
                       <p className="text-black">{product.description}</p>
                     </div>
                     
-                    <div className="flex flex-col gap-2">
-                      <span className="text-sm text-gray-500">Metrekare Fiyatı</span>
-                      <span className="font-medium text-black">
-                        {product.pricing?.price} {product.pricing?.currency}/m²
-                      </span>
-                    </div>
-                    
-                    <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-blue-900">Toplam Tutar</span>
-                        <span className="text-lg font-bold text-blue-900">
-                          {totalPrice.toFixed(2)} {product.pricing?.currency}
+                    {user?.canSeePrice && (
+                      <div className="flex flex-col gap-2">
+                        <span className="text-sm text-gray-500">Metrekare Fiyatı</span>
+                        <span className="font-medium text-black">
+                          {product.pricing?.price} {product.pricing?.currency}/m²
                         </span>
                       </div>
-                      {selectedSize && (
-                        <div className="text-xs mt-1 text-blue-700">
-                          {selectedSize.width} cm genişlik × 
-                          {selectedSize.is_optional_height 
-                            ? ` ${customHeight} cm yükseklik (özel)` 
-                            : ` ${selectedSize.height} cm yükseklik`} 
-                          × {quantity} adet için hesaplandı
+                    )}
+                    
+                    {user?.canSeePrice && (
+                      <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-blue-900">Toplam Tutar</span>
+                          <span className="text-lg font-bold text-blue-900">
+                            {totalPrice.toFixed(2)} {product.pricing?.currency}
+                          </span>
                         </div>
-                      )}
-                    </div>
+                        {selectedSize && (
+                          <div className="text-xs mt-1 text-blue-700">
+                            {selectedSize.width} cm genişlik × 
+                            {selectedSize.is_optional_height 
+                              ? ` ${customHeight} cm yükseklik (özel)` 
+                              : ` ${selectedSize.height} cm yükseklik`} 
+                            × {quantity} adet için hesaplandı
+                          </div>
+                        )}
+                      </div>
+                    )}
                     <div className="mt-5">
                       <div className="flex flex-col gap-4">
                         <div className="flex flex-col gap-2">

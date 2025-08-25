@@ -876,7 +876,20 @@ const Siparisler = () => {
 
       const data = await response.json();
       if (data.success) {
-        alert(data.message || 'Sipariş başarıyla iptal edildi.');
+        let message = data.message || 'Sipariş başarıyla iptal edildi.';
+        
+        // canSeePrice=false ise bakiye/iade ile ilgili kısımları mesajdan çıkar
+        if (!user?.canSeePrice) {
+          message = message
+            .replace(/bakiye.*?iade.*?\./gi, '')
+            .replace(/iade.*?bakiye.*?\./gi, '')
+            .replace(/\d+([.,]\d+)?\s*(₺|TL|lira)/gi, '')
+            .replace(/tutarı.*?iade.*?\./gi, '')
+            .replace(/\.\s*\./g, '.')
+            .trim();
+        }
+        
+        alert(message);
         
         // Siparişleri yeniden yükle
         await fetchOrders(currentPage, statusFilter, searchQuery, receiptFilter);
@@ -1410,12 +1423,14 @@ const Siparisler = () => {
                         <span className="text-gray-600">Ürün Sayısı:</span>
                         <span className="ml-2 text-gray-900">{order.items.reduce((total, item) => total + item.quantity, 0)} adet</span>
                       </div>
-                      <div>
-                        <span className="text-gray-600">Toplam Tutar:</span>
-                        <span className="ml-2 font-semibold text-[#00365a]">
-                          {parseFloat(order.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                        </span>
-                      </div>
+                      {user?.canSeePrice && (
+                        <div>
+                          <span className="text-gray-600">Toplam Tutar:</span>
+                          <span className="ml-2 font-semibold text-[#00365a]">
+                            {parseFloat(order.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {order.notes && (
@@ -1990,12 +2005,14 @@ const Siparisler = () => {
                             </div>
                           </div>
                         )}
-                        <div className="flex justify-between items-center py-2">
-                          <span className="text-gray-600 font-medium">Toplam Tutar:</span>
-                          <span className="font-bold text-[#00365a] text-lg">
-                            {parseFloat(selectedOrder.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                          </span>
-                        </div>
+                        {user?.canSeePrice && (
+                          <div className="flex justify-between items-center py-2">
+                            <span className="text-gray-600 font-medium">Toplam Tutar:</span>
+                            <span className="font-bold text-[#00365a] text-lg">
+                              {parseFloat(selectedOrder.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -2136,11 +2153,13 @@ const Siparisler = () => {
                               </div>
                               <div className="mt-2 flex justify-between items-center">
                                 <span className="text-sm text-gray-600">
-                                  {item.quantity} adet × {parseFloat(item.unit_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                                  {item.quantity} adet{user?.canSeePrice ? ` × ${parseFloat(item.unit_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺` : ''}
                                 </span>
-                                <span className="font-semibold text-gray-900">
-                                  {parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                                </span>
+                                {user?.canSeePrice && (
+                                  <span className="font-semibold text-gray-900">
+                                    {parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -2937,7 +2956,7 @@ const Siparisler = () => {
                 
                 <div className="mb-4">
                   <p className="text-sm text-gray-600 mb-4">
-                    Bu siparişi iptal etmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve sipariş tutarı bakiyenize iade edilecektir.
+                    Bu siparişi iptal etmek istediğinizden emin misiniz? Bu işlem geri alınamaz{user?.canSeePrice ? ' ve sipariş tutarı bakiyenize iade edilecektir' : ''}.
                   </p>
                   
                   <label className="block text-sm font-medium text-gray-700 mb-2">

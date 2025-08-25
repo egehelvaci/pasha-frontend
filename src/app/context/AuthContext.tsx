@@ -38,6 +38,7 @@ type User = {
   avatar?: string;
   userType: string;
   userTypeId?: number;
+  canSeePrice: boolean;              // 🆕 Fiyat görme yetkisi
   store: Store | null;               // 🆕 Mağaza bilgileri (admin için null)
 } | null;
 
@@ -156,6 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           avatar: result.data.user.avatar,
           userType: result.data.user.userType,
           userTypeId: result.data.user.userTypeId,
+          canSeePrice: result.data.user.canSeePrice ?? true,  // 🆕 Fiyat görme yetkisi, default true
           store: result.data.user.store || null  // Admin için null, mağaza kullanıcısı için store objesi
         };
 

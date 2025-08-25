@@ -265,15 +265,16 @@ export default function Dashboard() {
         {/* Ana içerik - 3 kolonlu layout */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           
-          {/* Sol taraf - Fiyat Listesi */}
-          <div className="xl:col-span-1">
-            <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 h-[600px] flex flex-col">
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <h2 className="text-xl font-bold text-gray-800">Fiyat Listesi</h2>
-                  <p className="text-gray-500 text-sm mt-1">Güncel fiyatlarınız</p>
+          {/* Sol taraf - Fiyat Listesi - Sadece canSeePrice=true iken göster */}
+          {user.canSeePrice && (
+            <div className="xl:col-span-1">
+              <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 h-[600px] flex flex-col">
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-800">Fiyat Listesi</h2>
+                    <p className="text-gray-500 text-sm mt-1">Güncel fiyatlarınız</p>
+                  </div>
                 </div>
-              </div>
               
               {isLoadingPriceList ? (
                 <div className="flex items-center justify-center flex-1">
@@ -329,11 +330,12 @@ export default function Dashboard() {
                   </div>
                 </div>
               )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Sağ taraf - Koleksiyonlar ve Son Eklenen Ürünler */}
-          <div className="xl:col-span-2">
+          <div className={user.canSeePrice ? "xl:col-span-2" : "xl:col-span-3"}>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               
               {/* Koleksiyonlar Kartı */}

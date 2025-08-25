@@ -21,8 +21,14 @@ export default function MuhasebeHareketlerimPage() {
       return;
     }
 
+    // canSeePrice kontrolü
+    if (user && !user.canSeePrice) {
+      router.push('/dashboard');
+      return;
+    }
+
     fetchMuhasebeData();
-  }, [isAdmin, router]);
+  }, [isAdmin, user, router]);
 
   const fetchMuhasebeData = async () => {
     try {

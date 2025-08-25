@@ -48,6 +48,7 @@ interface NavigationItem {
   editorOnly?: boolean;
   hideFromAdmin?: boolean;
   hideFromEditor?: boolean;
+  requiresCanSeePrice?: boolean;
 }
 
 const Header = ({ title, user, className }: HeaderProps) => {
@@ -334,6 +335,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
         </svg>
       ),
       adminOnly: true,
+      requiresCanSeePrice: true,
     },
     {
       name: 'Koleksiyon',
@@ -353,6 +355,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
         </svg>
       ),
       adminOnly: false,
+      requiresCanSeePrice: true,
     },
     {
       name: 'Ürün Kuralları',
@@ -380,10 +383,11 @@ const Header = ({ title, user, className }: HeaderProps) => {
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
           <path d="M10.464 8.746c.227-.18.497-.311.786-.394v2.795a2.252 2.252 0 01-.786-.393c-.394-.313-.546-.681-.546-1.004 0-.323.152-.691.546-1.004zM12.75 15.662v-2.824c.347.085.664.228.921.421.427.32.579.686.579.991 0 .305-.152.671-.579.991a2.534 2.534 0 01-.921.42z" />
-          <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v.816a3.836 3.836 0 00-1.72.756c-.712.566-1.112 1.35-1.112 2.178 0 .829.4 1.612 1.118 2.178.502.395 1.101.647 1.714.756V15.75a.75.75 0 001.5 0v-.774a3.836 3.836 0 001.72-.755c.712-.566 1.112-1.35 1.112-2.178 0-.829-.4-1.612-1.118-2.178A3.836 3.836 0 0012.75 8.09V6z" clipRule="evenodd" />
+          <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v.816a3.836 3.836 0 00-1.72.756c-.712.566-1.112 1.35-1.112 2.178 0 .829.4 1.612 1.118 2.178.502.395 1.101.647 1.714.756V15.75a.75.75 0 001.5 0v-.774a3.836 3.836 0 001.72-.755c.712.566 1.112-1.35 1.112-2.178 0-.829-.4-1.612-1.118-2.178A3.836 3.836 0 0012.75 8.09V6z" clipRule="evenodd" />
         </svg>
       ),
       adminOnly: true,
+      requiresCanSeePrice: true,
     },
     {
       name: 'Muhasebe Hareketlerim',
@@ -395,6 +399,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
       ),
       adminOnly: false,
       hideFromAdmin: true, // Admin kullanıcılar görmeyecek
+      requiresCanSeePrice: true,
     },
     {
       name: 'Çalışan İstatistikleri',
@@ -496,8 +501,8 @@ const Header = ({ title, user, className }: HeaderProps) => {
           
           {/* Desktop: Sağ taraf kontrolleri */}
           <div className="hidden lg:flex items-center space-x-4">
-            {/* Finansal özet kutusu - Sadece mağaza kullanıcıları için */}
-            {authUser?.store && (
+            {/* Finansal özet kutusu - Sadece mağaza kullanıcıları ve canSeePrice=true olanlar için */}
+            {authUser?.store && authUser.canSeePrice && (
               <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
                 {isLoadingBalance ? (
                   <div className="flex items-center gap-2">
@@ -668,8 +673,11 @@ const Header = ({ title, user, className }: HeaderProps) => {
                 .filter(item => !item.adminOnly && !item.editorOnly && item.name !== 'Sepetim') // Sepetim, admin ve editör öğeleri hariç normal menü öğeleri
                 .filter(item => !(item.hideFromAdmin && isAdmin)) // Admin ise hideFromAdmin öğeleri gizle
                 .filter(item => !(item.hideFromEditor && isEditor)) // Editör ise hideFromEditor öğeleri gizle
-                .filter(item => !(isMobile && item.name === 'E-Katalog')); // Mobilde E-Katalog'u gizle
-              const adminNavItems = navigation.filter(item => item.adminOnly);
+                .filter(item => !(isMobile && item.name === 'E-Katalog')) // Mobilde E-Katalog'u gizle
+                .filter(item => !(item.requiresCanSeePrice && !authUser?.canSeePrice)); // canSeePrice=false ise requiresCanSeePrice olan öğeleri gizle
+              const adminNavItems = navigation
+                .filter(item => item.adminOnly)
+                .filter(item => !(item.requiresCanSeePrice && !authUser?.canSeePrice)); // canSeePrice=false ise requiresCanSeePrice olan admin öğeleri gizle
               const editorNavItems = navigation.filter(item => item.editorOnly);
 
               return (
@@ -859,6 +867,8 @@ const Header = ({ title, user, className }: HeaderProps) => {
                     if (isEditor && item.hideFromEditor === true) return null;
                     // Mobilde E-Katalog'u gizle
                     if (isMobile && item.name === 'E-Katalog') return null;
+                    // canSeePrice=false ise requiresCanSeePrice olan öğeleri gizle
+                    if (item.requiresCanSeePrice && !authUser?.canSeePrice) return null;
                     return (
                       <Link
                         key={item.name}
@@ -921,8 +931,8 @@ const Header = ({ title, user, className }: HeaderProps) => {
                 </nav>
               </div>
               
-                            {/* Finansal özet - Minimal - Navigasyondan sonra - Sadece mağaza kullanıcıları için */}
-              {authUser?.store && (
+                            {/* Finansal özet - Minimal - Navigasyondan sonra - Sadece mağaza kullanıcıları ve canSeePrice=true olanlar için */}
+              {authUser?.store && authUser.canSeePrice && (
                 <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-3 border-b border-gray-200">
                   <div className="space-y-2">
                     {/* Mağaza adı - kompakt */}
@@ -1036,7 +1046,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
                   </div>
                 )}
                 
-                {/* Mağaza kullanıcısı için finansal bilgiler */}
+                {/* Mağaza kullanıcısı için finansal bilgiler - Sadece canSeePrice=true olanlar için */}
                 {authUser?.store && (
                   <>
                     <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-200">
@@ -1049,54 +1059,66 @@ const Header = ({ title, user, className }: HeaderProps) => {
                       <p className="text-gray-900 font-medium">{authUser.store.kurum_adi}</p>
                     </div>
                     
-                    {isLoadingBalance ? (
-                      <div className="flex items-center justify-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00365a]"></div>
-                        <span className="ml-3 text-gray-600">Finansal bilgiler güncelleniyor...</span>
-                      </div>
+                    {authUser.canSeePrice ? (
+                      isLoadingBalance ? (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00365a]"></div>
+                          <span className="ml-3 text-gray-600">Finansal bilgiler güncelleniyor...</span>
+                        </div>
+                      ) : (
+                        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
+                          <div className="flex items-center gap-2 mb-4">
+                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                            </svg>
+                            <span className="text-sm font-semibold text-green-800">Finansal Durum</span>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 gap-3">
+                            <div className="bg-white/50 rounded-lg p-3">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium text-gray-600">Bakiye</span>
+                                <span className={`font-bold ${financialInfo.bakiye < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                  {financialInfo.bakiye.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                                </span>
+                              </div>
+                            </div>
+                            
+                            <div className="bg-white/50 rounded-lg p-3">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium text-gray-600">Açık Hesap Limiti</span>
+                                <span className="text-[#00365a] font-bold">
+                                  {financialInfo.limitsizAcikHesap 
+                                    ? 'Limitsiz' 
+                                    : `${financialInfo.acikHesapLimiti.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`
+                                  }
+                                </span>
+                              </div>
+                            </div>
+                            
+                            <div className="bg-white/50 rounded-lg p-3 border-2 border-purple-200">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-semibold text-gray-700">Toplam Kullanılabilir</span>
+                                <span className="text-purple-600 font-bold text-lg">
+                                  {financialInfo.limitsizAcikHesap 
+                                    ? 'Limitsiz' 
+                                    : `${financialInfo.toplamKullanilabilir.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`
+                                  }
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )
                     ) : (
-                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
-                        <div className="flex items-center gap-2 mb-4">
-                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                      <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-4 border border-yellow-200">
+                        <div className="flex items-center gap-2 mb-2">
+                          <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.664-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
                           </svg>
-                          <span className="text-sm font-semibold text-green-800">Finansal Durum</span>
+                          <span className="text-sm font-semibold text-yellow-800">Finansal Bilgilere Erişim Yok</span>
                         </div>
-                        
-                        <div className="grid grid-cols-1 gap-3">
-                          <div className="bg-white/50 rounded-lg p-3">
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm font-medium text-gray-600">Bakiye</span>
-                              <span className={`font-bold ${financialInfo.bakiye < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                {financialInfo.bakiye.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <div className="bg-white/50 rounded-lg p-3">
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm font-medium text-gray-600">Açık Hesap Limiti</span>
-                              <span className="text-[#00365a] font-bold">
-                                {financialInfo.limitsizAcikHesap 
-                                  ? 'Limitsiz' 
-                                  : `${financialInfo.acikHesapLimiti.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`
-                                }
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <div className="bg-white/50 rounded-lg p-3 border-2 border-purple-200">
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm font-semibold text-gray-700">Toplam Kullanılabilir</span>
-                              <span className="text-purple-600 font-bold text-lg">
-                                {financialInfo.limitsizAcikHesap 
-                                  ? 'Limitsiz' 
-                                  : `${financialInfo.toplamKullanilabilir.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`
-                                }
-                              </span>
-                            </div>
-                          </div>
-                        </div>
+                        <p className="text-sm text-yellow-700">Fiyat görme yetkiniz bulunmamaktadır.</p>
                       </div>
                     )}
                   </>

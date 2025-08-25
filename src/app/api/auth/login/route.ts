@@ -19,6 +19,7 @@ export async function POST(request: Request) {
         avatar: null,
         userType: 'admin',
         userTypeId: 1,
+        canSeePrice: false, // Test için false yap
         store: null
       };
 
