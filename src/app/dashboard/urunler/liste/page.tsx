@@ -2535,17 +2535,16 @@ export default function ProductList() {
                 return (
                   <div key={product.productId} 
                        className={`border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow relative cursor-pointer ${
-                         // Admin/editör için stok durumu görünümü devre dışı
-                         (!isAdminOrEditor && isOutOfStock) ? 'opacity-50 grayscale' : 'bg-white'
+                         isOutOfStock ? 'opacity-60 grayscale bg-gray-100' : 'bg-white'
                        }`} 
                        style={{ width: '350px', height: '550px' }}
                        onClick={() => router.push(`/dashboard/urunler/${product.productId}`)}>
                     
-                    {/* Stok yoksa overlay - sadece admin/editör değilse göster */}
-                    {!isAdminOrEditor && isOutOfStock && (
-                      <div className="absolute inset-0 bg-gray-200 bg-opacity-20 z-20 flex items-center justify-center">
-                        <div className="bg-red-500 text-white px-3 py-1 rounded-md text-sm font-medium">
-                          Ürünü İncele
+                    {/* Stok yoksa overlay - sadece ürün görseli alanını kapla */}
+                    {isOutOfStock && (
+                      <div className="absolute top-0 left-0 right-0 bg-gray-300 bg-opacity-30 z-20 flex items-center justify-center" style={{ height: '400px' }}>
+                        <div className="bg-gray-600 text-white px-3 py-1 rounded-md text-sm font-medium">
+                          Stokta Yok
                         </div>
                       </div>
                     )}
@@ -2566,22 +2565,40 @@ export default function ProductList() {
                     
                     {/* Ürün görseli - daha büyük alan */}
                     <div className="relative overflow-hidden bg-gray-50" style={{ height: '400px' }}>
-                      <Image 
-                        src={product.productImage || "https://tebi.io/pashahome/products/ornek-urun.jpg"} 
-                        alt={product.name} 
-                        width={350}
-                        height={400}
-                        className="w-full h-full object-contain p-3"
-                      />
+                      {product.productImage ? (
+                        <Image 
+                          src={product.productImage} 
+                          alt={product.name} 
+                          width={350}
+                          height={400}
+                          className="w-full h-full object-contain p-3"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center p-3">
+                          <div className="w-32 h-32 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+                            <img 
+                              src="/black-logo.svg" 
+                              alt="Paşa Home Logo" 
+                              className="w-20 h-20 opacity-80"
+                              onError={(e) => {
+                                e.currentTarget.src = '/logo.svg';
+                              }}
+                            />
+                          </div>
+                          <p className="text-gray-500 text-sm text-center font-medium">
+                            Ürün görseli<br />hazırlanıyor
+                          </p>
+                        </div>
+                      )}
                     </div>
                     
                     {/* Ürün bilgileri - kompakt alan */}
                     <div className="p-4 h-[150px] flex flex-col justify-between">
                       <div className="flex-1">
-                        <h3 className="text-black font-medium text-sm mb-2 line-clamp-2">
+                        <h3 className="text-black font-medium text-sm mb-2 line-clamp-1">
                           {statusText} {product.name}
                         </h3>
-                        <p className="text-sm text-gray-500 mb-2 line-clamp-2">
+                        <p className="text-sm text-gray-500 mb-2 line-clamp-1">
                           {product.description}
                         </p>
                         {/* Stok bilgisi */}
@@ -2601,25 +2618,24 @@ export default function ProductList() {
                       <div className="flex items-center gap-2">
                         <button 
                           className={`flex-1 px-3 py-2 rounded-md flex items-center justify-center gap-2 text-sm shadow-sm transition-colors font-semibold ${
-                            // Admin/editör için stok kontrolü yok
-                            (!isAdminOrEditor && isOutOfStock) 
-                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                            isOutOfStock 
+                              ? 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50' 
                               : 'bg-green-600 hover:bg-green-700 text-white hover:shadow-md'
                           }`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (isAdminOrEditor || !isOutOfStock) {
+                            if (!isOutOfStock) {
                               setSelectedProductId(product.productId);
                               setDetailModalOpen(true);
                             }
                           }}
-                          title={(!isAdminOrEditor && isOutOfStock) ? "Stokta olmayan ürün" : "Sepete Ekle"}
-                          disabled={!isAdminOrEditor && isOutOfStock}
+                          title={isOutOfStock ? "Stokta olmayan ürün" : "Sepete Ekle"}
+                          disabled={isOutOfStock}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                           </svg>
-                          {(!isAdminOrEditor && isOutOfStock) ? 'Stok Yok' : 'Sepete Ekle'}
+                          {isOutOfStock ? 'Stokta Yok' : 'Sepete Ekle'}
                         </button>
                         {isAdminOrEditor && (
                           <button 

@@ -460,11 +460,26 @@ export default function ProductDetail() {
         
         <div className="flex flex-col md:flex-row gap-8">
           <div className="w-full md:w-1/2">
-            <img 
-              src={product.productImage || "https://tebi.io/pashahome/products/ornek-urun.jpg"} 
-              alt={product.name} 
-              className="w-full rounded-lg shadow-md border border-gray-200 object-cover aspect-[250/390]" 
-            />
+            {product.productImage ? (
+              <img 
+                src={product.productImage} 
+                alt={product.name} 
+                className="w-full rounded-lg shadow-md border border-gray-200 object-cover aspect-[250/390]" 
+              />
+            ) : (
+              <div className="w-full rounded-lg shadow-md border border-gray-200 bg-gray-50 aspect-[250/390] flex flex-col items-center justify-center p-6">
+                <div className="w-32 h-32 bg-gray-700 rounded-lg flex items-center justify-center mb-4">
+                  <img 
+                    src="/logo.svg" 
+                    alt="Paşa Home Logo" 
+                    className="w-20 h-20 opacity-80"
+                  />
+                </div>
+                <p className="text-gray-500 text-sm text-center font-medium">
+                  Ürün görseli<br />hazırlanıyor
+                </p>
+              </div>
+            )}
           </div>
           
           <div className="w-full md:w-1/2">
