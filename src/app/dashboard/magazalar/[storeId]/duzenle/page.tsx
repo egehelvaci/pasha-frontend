@@ -10,18 +10,18 @@ import StoreTypeSelector, { StoreType, storeTypeLabels, storeTypeColors, storeTy
 export default function EditStorePage() {
   const router = useRouter();
   const params = useParams();
-  const { isAdmin, token } = useAuth();
+  const { isAdmin, isAdminOrEditor, token } = useAuth();
   const [loading, setLoading] = useState(false);
   const [store, setStore] = useState<Store | null>(null);
   const [form] = Form.useForm();
 
   useEffect(() => {
-    if (!isAdmin) {
+    if (!isAdminOrEditor) {
       router.push('/dashboard');
       return;
     }
     fetchStore();
-  }, [isAdmin, router]);
+  }, [isAdminOrEditor, router]);
 
   const fetchStore = async () => {
     try {
@@ -107,7 +107,7 @@ export default function EditStorePage() {
     }
   };
 
-  if (!isAdmin) return null;
+  if (!isAdminOrEditor) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">

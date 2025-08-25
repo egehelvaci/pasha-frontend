@@ -222,7 +222,7 @@ export default function StoresPage() {
             </svg>
           </div>
           <h3 className="text-xl font-bold text-gray-900 mb-3">Erişim Reddedildi</h3>
-          <p className="text-gray-600 mb-8 leading-relaxed">Bu sayfaya erişim yetkiniz bulunmamaktadır. Mağaza yönetimi sadece admin kullanıcılar tarafından kullanılabilir.</p>
+          <p className="text-gray-600 mb-8 leading-relaxed">Bu sayfaya erişim yetkiniz bulunmamaktadır. Mağaza yönetimi sadece admin ve editör kullanıcılar tarafından kullanılabilir.</p>
           <button
             onClick={() => router.push('/dashboard')}
             className="inline-flex items-center gap-2 px-6 py-3 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"

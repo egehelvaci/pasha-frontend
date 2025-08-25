@@ -8,7 +8,7 @@ import StoreTypeSelector, { StoreType } from '@/components/StoreTypeSelector';
 
 export default function AddStorePage() {
   const router = useRouter();
-  const { isAdmin, token } = useAuth();
+  const { isAdmin, isAdminOrEditor, token } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<CreateStoreData>({
     kurum_adi: '',
@@ -30,10 +30,10 @@ export default function AddStorePage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (!isAdmin) {
+    if (!isAdminOrEditor) {
       router.push('/dashboard');
     }
-  }, [isAdmin, router]);
+  }, [isAdminOrEditor, router]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -117,7 +117,7 @@ export default function AddStorePage() {
     }
   };
 
-  if (!isAdmin) {
+  if (!isAdminOrEditor) {
   return (
       <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center max-w-md">
@@ -127,7 +127,7 @@ export default function AddStorePage() {
             </svg>
           </div>
           <h3 className="text-xl font-bold text-gray-900 mb-3">Erişim Reddedildi</h3>
-          <p className="text-gray-600 mb-8 leading-relaxed">Bu sayfaya erişim yetkiniz bulunmamaktadır.</p>
+          <p className="text-gray-600 mb-8 leading-relaxed">Bu sayfaya erişim yetkiniz bulunmamaktadır. Mağaza ekleme sadece admin ve editör kullanıcılar tarafından kullanılabilir.</p>
           <button
             onClick={() => router.push('/dashboard')}
             className="inline-flex items-center gap-2 px-6 py-3 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"

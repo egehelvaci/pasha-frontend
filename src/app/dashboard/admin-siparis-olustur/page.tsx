@@ -41,7 +41,7 @@ interface CartItem {
 const AdminSiparisOlustur = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isAdmin, isLoading: authLoading } = useAuth();
+  const { isAdmin, user, isLoading: authLoading } = useAuth();
   
   const [orderData, setOrderData] = useState<AdminOrderCreateData | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -147,14 +147,8 @@ const AdminSiparisOlustur = () => {
   }, [showAddProductModal]);
 
   useEffect(() => {
-    // Kimlik doğrulama yüklemesi tamamlandığında ve admin değilse
-    if (!authLoading && !isAdmin) {
-      router.push('/dashboard');
-      return;
-    }
-    
-    // Kimlik doğrulama yüklemesi tamamlandığında ve admin ise veri çek
-    if (!authLoading && isAdmin && storeId) {
+    // Kimlik doğrulama yüklemesi tamamlandığında veri çek
+    if (!authLoading && user && storeId) {
       // Adres bazlı sipariş modu veya kullanıcı bazlı sipariş modu
       if (addressId || userId) {
         if (userId) {
@@ -164,7 +158,7 @@ const AdminSiparisOlustur = () => {
         fetchStoreAddresses();
       }
     }
-  }, [isAdmin, authLoading, router, storeId, userId, addressId]);
+  }, [user, authLoading, router, storeId, userId, addressId]);
 
   const fetchOrderCreateInfo = async () => {
     setLoading(true);
@@ -567,26 +561,26 @@ const AdminSiparisOlustur = () => {
     );
   }
 
-  // Admin kontrolü
-  if (!isAdmin) {
+  // Kullanıcı doğrulaması - giriş yapmış herkes sipariş verebilir
+  if (!user) {
     return (
       <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center max-w-md">
-          <div className="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
-            <svg className="h-10 w-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          <div className="w-20 h-20 mx-auto mb-6 bg-blue-100 rounded-full flex items-center justify-center">
+            <svg className="h-10 w-10 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-3">Erişim Reddedildi</h3>
-          <p className="text-gray-600 mb-8 leading-relaxed">Bu sayfaya erişim yetkiniz bulunmamaktadır. Admin sipariş oluşturma sadece admin kullanıcılar tarafından kullanılabilir.</p>
+          <h3 className="text-xl font-bold text-gray-900 mb-3">Giriş Gerekli</h3>
+          <p className="text-gray-600 mb-8 leading-relaxed">Sipariş verebilmek için lütfen giriş yapınız.</p>
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.push('/auth/login')}
             className="inline-flex items-center gap-2 px-6 py-3 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14" />
             </svg>
-            Dashboard'a Dön
+            Giriş Yap
           </button>
         </div>
       </div>

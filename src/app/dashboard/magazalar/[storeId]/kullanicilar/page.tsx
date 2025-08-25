@@ -9,7 +9,7 @@ export default function StoreUsersPage() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
-  const { isAdmin, isLoading: authLoading } = useAuth();
+  const { isAdmin, isAdminOrEditor, isLoading: authLoading } = useAuth();
   
   const selectedAddressId = searchParams.get('selectedAddressId');
   const selectedAddressTitle = searchParams.get('selectedAddressTitle');
@@ -21,18 +21,21 @@ export default function StoreUsersPage() {
   const storeId = params.storeId as string;
 
   useEffect(() => {
-    // Kimlik doğrulama yüklemesi tamamlandığında ve admin değilse
-    if (!authLoading && !isAdmin) {
+    // Sipariş modu (selectedAddressId varsa) - tüm kullanıcılar erişebilir
+    // Normal mod - sadece admin/editör erişebilir
+    const isOrderMode = !!selectedAddressId;
+    
+    if (!authLoading && !isOrderMode && !isAdminOrEditor) {
       router.push('/dashboard');
       return;
     }
     
-    // Kimlik doğrulama yüklemesi tamamlandığında ve admin ise veri çek
-    if (!authLoading && isAdmin && storeId) {
+    // Kimlik doğrulama yüklemesi tamamlandığında veri çek
+    if (!authLoading && storeId && (isOrderMode || isAdminOrEditor)) {
       fetchStoreUsers();
       fetchStoreInfo();
     }
-  }, [isAdmin, authLoading, router, storeId]);
+  }, [isAdminOrEditor, authLoading, router, storeId, selectedAddressId]);
 
   const fetchStoreUsers = async () => {
     setLoading(true);
@@ -109,8 +112,9 @@ export default function StoreUsersPage() {
     );
   }
 
-  // Admin kontrolü
-  if (!isAdmin) {
+  // Yetki kontrolü - sipariş modunda tüm kullanıcılar, normal modda sadece admin/editör
+  const isOrderMode = !!selectedAddressId;
+  if (!isOrderMode && !isAdminOrEditor) {
     return (
       <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center max-w-md">
@@ -120,7 +124,7 @@ export default function StoreUsersPage() {
             </svg>
           </div>
           <h3 className="text-xl font-bold text-gray-900 mb-3">Erişim Reddedildi</h3>
-          <p className="text-gray-600 mb-8 leading-relaxed">Bu sayfaya erişim yetkiniz bulunmamaktadır. Kullanıcı yönetimi sadece admin kullanıcılar tarafından kullanılabilir.</p>
+          <p className="text-gray-600 mb-8 leading-relaxed">Bu sayfaya erişim yetkiniz bulunmamaktadır. Kullanıcı yönetimi sadece admin ve editör kullanıcılar tarafından kullanılabilir.</p>
           <button
             onClick={() => router.push('/dashboard')}
             className="inline-flex items-center gap-2 px-6 py-3 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"

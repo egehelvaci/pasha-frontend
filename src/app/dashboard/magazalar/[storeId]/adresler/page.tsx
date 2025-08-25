@@ -23,7 +23,7 @@ export default function StoreAddressesPage() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isAdminOrEditor } = useAuth();
   
   const isOrderMode = searchParams.get('mode') === 'order';
   const [addresses, setAddresses] = useState<StoreAddress[]>([]);
@@ -42,12 +42,13 @@ export default function StoreAddressesPage() {
   const storeId = params.storeId as string;
 
   useEffect(() => {
-    if (!isAdmin) {
+    // Sipariş modunda tüm kullanıcılar erişebilir, normal modda sadece admin/editör
+    if (!isOrderMode && !isAdminOrEditor) {
       router.push('/dashboard');
       return;
     }
     fetchAddresses();
-  }, [isAdmin, router, storeId]);
+  }, [isAdminOrEditor, isOrderMode, router, storeId]);
 
   const fetchAddresses = async () => {
     try {
@@ -163,7 +164,8 @@ export default function StoreAddressesPage() {
     resetForm();
   };
 
-  if (!isAdmin) return null;
+  // Sipariş modunda tüm kullanıcılar erişebilir, normal modda sadece admin/editör
+  if (!isOrderMode && !isAdminOrEditor) return null;
 
   return (
     <div className="container mx-auto px-4 py-8">
