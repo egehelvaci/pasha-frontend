@@ -988,7 +988,7 @@ export default function StokPage() {
         {/* Gelişmiş Stok Ayarlama Modalı */}
         {isModalOpen && selectedProduct && (
           <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-            <div className="relative w-full max-w-4xl max-h-[90vh] shadow-2xl rounded-2xl bg-white overflow-hidden flex flex-col">
+            <div className="relative w-full max-w-5xl max-h-[95vh] shadow-2xl rounded-2xl bg-white overflow-hidden flex flex-col">
               {/* Modal Header - Sticky */}
               <div className="sticky top-0 bg-[#00365a] text-white border-b border-gray-200 px-6 py-6 rounded-t-2xl">
                 <div className="flex items-center justify-between">
@@ -1029,27 +1029,29 @@ export default function StokPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-3">
                         Boyut Seçeneği
                       </label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 max-h-72 overflow-y-auto p-2">
                         {selectedProduct.sizeOptions.map((option) => (
                           <button
                             key={option.id}
                             onClick={() => handleSizeOptionChange(option)}
-                            className={`p-4 text-sm border rounded-lg transition-colors min-h-[100px] flex flex-col justify-center ${
+                            className={`p-4 text-sm border-2 rounded-xl transition-all duration-200 h-32 flex flex-col justify-between shadow-sm hover:shadow-md ${
                               selectedSizeOption?.id === option.id
-                                ? 'border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-200'
-                                : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+                                ? 'border-blue-500 bg-blue-50 text-blue-700 ring-4 ring-blue-100 scale-105'
+                                : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
                             }`}
                           >
-                            <div className="font-semibold text-center text-base mb-2">{option.width}×{option.height} cm</div>
-                            <div className={`text-xs mt-1 text-center px-2 py-1 rounded-full ${
-                              option.is_optional_height 
-                                ? 'bg-purple-100 text-purple-700' 
-                                : 'bg-green-100 text-green-700'
-                            }`}>
-                              {option.is_optional_height ? 'Opsiyonel Yükseklik' : 'Hazır Kesim'}
+                            <div className="flex-1 flex flex-col justify-center">
+                              <div className="font-bold text-center text-base mb-2">{option.width}×{option.height} cm</div>
+                              <div className={`text-xs text-center px-3 py-1 rounded-full font-medium mx-auto ${
+                                option.is_optional_height 
+                                  ? 'bg-purple-100 text-purple-700' 
+                                  : 'bg-green-100 text-green-700'
+                              }`}>
+                                {option.is_optional_height ? 'Opsiyonel' : 'Hazır Kesim'}
+                              </div>
                             </div>
-                            <div className="text-xs text-gray-600 mt-2 text-center font-medium">
-                              Mevcut: {option.is_optional_height 
+                            <div className="text-xs text-gray-600 text-center font-semibold bg-gray-100 rounded-lg py-1 mt-2">
+                              {option.is_optional_height 
                                 ? `${(option.stockAreaM2 || 0).toFixed(1)} m²`
                                 : `${option.stockQuantity || 0} adet`
                               }
@@ -1097,9 +1099,9 @@ export default function StokPage() {
                       const isOptionalHeight = productType === 'optional_height';
                       
                       return (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {isOptionalHeight ? 'Eklenecek Stok (m²):' : 'Eklenecek Stok (Adet):'}
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <label className="block text-sm font-semibold text-gray-800 mb-3">
+                            {isOptionalHeight ? '📐 Eklenecek Stok (m²)' : '📦 Eklenecek Stok (Adet)'}
                     </label>
                           {isOptionalHeight ? (
                             <div className="space-y-3">
@@ -1249,8 +1251,11 @@ export default function StokPage() {
 
                   {/* Seçilen boyut özeti */}
                   {selectedSizeOption && (
-                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <div className="space-y-2 text-sm">
+                    <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl">
+                      <h4 className="text-lg font-semibold text-blue-800 mb-4 flex items-center">
+                        📋 İşlem Özeti
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         <div>
                           <span className="font-medium text-gray-700">Seçilen boyut:</span> 
                           <span className="ml-1 text-gray-900">{stockForm.width}x{stockForm.height} cm</span>
@@ -1287,14 +1292,16 @@ export default function StokPage() {
                             </span>
                           </div>
                         )}
-                        <div className="pt-1 border-t border-blue-200">
-                          <span className="font-medium text-blue-700">Yeni toplam stok:</span> 
-                          <span className="ml-1 text-blue-900 font-semibold">
-                            {selectedSizeOption.is_optional_height 
-                              ? `${((selectedSizeOption.stockAreaM2 || 0) + (stockForm.areaM2 || 0)).toFixed(1)} m²`
-                              : `${(selectedSizeOption.stockQuantity || 0) + stockForm.quantity} adet`
-                            }
-                          </span>
+                        <div className="col-span-full pt-4 border-t-2 border-blue-300">
+                          <div className="bg-blue-100 rounded-lg p-3 text-center">
+                            <span className="font-semibold text-blue-700 block">Yeni Toplam Stok</span> 
+                            <span className="text-xl text-blue-900 font-bold">
+                              {selectedSizeOption.is_optional_height 
+                                ? `${((selectedSizeOption.stockAreaM2 || 0) + (stockForm.areaM2 || 0)).toFixed(1)} m²`
+                                : `${(selectedSizeOption.stockQuantity || 0) + stockForm.quantity} adet`
+                              }
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
