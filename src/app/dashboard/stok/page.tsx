@@ -192,7 +192,7 @@ export default function StokPage() {
     height: 0,
     quantity: 0,
     areaM2: 0,
-    updateMode: 'quantity',
+    updateMode: 'add',
     areaM2ForFixed: 0
   });
   
@@ -426,7 +426,7 @@ export default function StokPage() {
         height: 10000, // Opsiyonel ürünlerde height sabit 10000
           quantity: 0,
           areaM2: 0,
-          updateMode: 'area'
+          updateMode: 'add'
         });
       } else {
         setStockForm({
@@ -435,7 +435,7 @@ export default function StokPage() {
           quantity: 0,
           areaM2: 0,
           areaM2ForFixed: 0,
-          updateMode: 'quantity'
+          updateMode: 'set'
       });
       }
     } else if (productToUse.variations && productToUse.variations.length > 0) {
@@ -447,7 +447,7 @@ export default function StokPage() {
           quantity: 0,
           areaM2: 0,
           areaM2ForFixed: 0,
-          updateMode: 'quantity'
+          updateMode: 'set'
       });
     } else {
       setSelectedSizeOption(null);
@@ -457,7 +457,7 @@ export default function StokPage() {
           quantity: 0,
           areaM2: 0,
           areaM2ForFixed: 0,
-          updateMode: 'quantity'
+          updateMode: 'set'
       });
     }
     
@@ -470,7 +470,7 @@ export default function StokPage() {
     setIsModalOpen(false);
     setSelectedProduct(null);
     setSelectedSizeOption(null);
-    setStockForm({ width: 0, height: 0, quantity: 0, areaM2: 0, updateMode: 'quantity', areaM2ForFixed: 0 });
+    setStockForm({ width: 0, height: 0, quantity: 0, areaM2: 0, updateMode: 'set', areaM2ForFixed: 0 });
     setInputValues({ height: '', areaM2: '', quantity: '', areaM2ForFixed: '' });
     // Modal kapandığında body scroll'u geri aç
     document.body.style.overflow = 'auto';
@@ -508,7 +508,7 @@ export default function StokPage() {
       height: 10000, // Opsiyonel ürünlerde height sabit 10000
         quantity: 0,
         areaM2: 0,
-        updateMode: 'area'
+        updateMode: 'add'
       }));
       setInputValues({ height: '', areaM2: '', quantity: '', areaM2ForFixed: '' });
           } else {
@@ -520,7 +520,7 @@ export default function StokPage() {
           quantity: 0,
           areaM2: 0,
           areaM2ForFixed: 0,
-          updateMode: 'quantity'
+          updateMode: 'set'
     }));
         setInputValues({ height: '', areaM2: '', quantity: '', areaM2ForFixed: '' });
       }
@@ -575,7 +575,7 @@ export default function StokPage() {
         width: stockForm.width,
         height: stockForm.height,
         quantity: stockForm.quantity,
-        updateMode: 'quantity'
+        updateMode: 'add'
       };
     }
 
@@ -887,7 +887,7 @@ export default function StokPage() {
                                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                   </svg>
-                                  <span>Stok Ekle</span>
+                                  <span>Stok Ayarla</span>
                                 </>
                               )}
                             </button>
@@ -985,10 +985,10 @@ export default function StokPage() {
           </div>
         </div>
 
-        {/* Gelişmiş Stok Ekleme Modalı */}
+        {/* Gelişmiş Stok Ayarlama Modalı */}
         {isModalOpen && selectedProduct && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 overflow-y-auto h-full w-full z-50 p-4">
-            <div className="relative min-h-screen md:min-h-0 md:top-10 mx-auto md:p-5 w-full max-w-3xl shadow-2xl rounded-2xl bg-white md:mb-10">
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+            <div className="relative w-full max-w-4xl max-h-[90vh] shadow-2xl rounded-2xl bg-white overflow-hidden flex flex-col">
               {/* Modal Header - Sticky */}
               <div className="sticky top-0 bg-[#00365a] text-white border-b border-gray-200 px-6 py-6 rounded-t-2xl">
                 <div className="flex items-center justify-between">
@@ -1001,7 +1001,7 @@ export default function StokPage() {
                       </div>
                       <div>
                         <h3 className="text-xl font-bold truncate">
-                          Stok Ekle: {selectedProduct.name}
+                          Stok Ayarla: {selectedProduct.name}
                         </h3>
                         <p className="text-blue-100 text-sm mt-1 truncate">
                           Koleksiyon: {selectedProduct.collection?.name || 'Koleksiyon Yok'}
@@ -1021,7 +1021,7 @@ export default function StokPage() {
               </div>
 
               {/* Modal Content - Scrollable */}
-              <div className="px-4 py-4 md:p-6 max-h-[calc(100vh-200px)] md:max-h-none overflow-y-auto">
+              <div className="flex-1 px-4 py-4 md:p-6 overflow-y-auto">
                 <div className="space-y-6">
                   {/* Boyut Seçimi */}
                   {selectedProduct.sizeOptions && selectedProduct.sizeOptions.length > 0 ? (
@@ -1029,22 +1029,26 @@ export default function StokPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-3">
                         Boyut Seçeneği
                       </label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto">
                         {selectedProduct.sizeOptions.map((option) => (
                           <button
                             key={option.id}
                             onClick={() => handleSizeOptionChange(option)}
-                            className={`p-4 text-sm border rounded-lg transition-colors ${
+                            className={`p-4 text-sm border rounded-lg transition-colors min-h-[100px] flex flex-col justify-center ${
                               selectedSizeOption?.id === option.id
-                                ? 'border-blue-500 bg-blue-50 text-blue-700'
-                                : 'border-gray-300 hover:border-gray-400'
+                                ? 'border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-200'
+                                : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
                             }`}
                           >
-                            <div className="font-medium text-center">{option.width}x{option.height} cm</div>
-                            <div className="text-xs text-gray-500 mt-1 text-center">
+                            <div className="font-semibold text-center text-base mb-2">{option.width}×{option.height} cm</div>
+                            <div className={`text-xs mt-1 text-center px-2 py-1 rounded-full ${
+                              option.is_optional_height 
+                                ? 'bg-purple-100 text-purple-700' 
+                                : 'bg-green-100 text-green-700'
+                            }`}>
                               {option.is_optional_height ? 'Opsiyonel Yükseklik' : 'Hazır Kesim'}
                             </div>
-                            <div className="text-xs text-gray-500 mt-1 text-center">
+                            <div className="text-xs text-gray-600 mt-2 text-center font-medium">
                               Mevcut: {option.is_optional_height 
                                 ? `${(option.stockAreaM2 || 0).toFixed(1)} m²`
                                 : `${option.stockQuantity || 0} adet`
@@ -1086,7 +1090,7 @@ export default function StokPage() {
                     </div>
                   )}
 
-                  {/* Stok Ekleme Formu - Ürün Tipine Göre */}
+                  {/* Stok Ayarlama Formu - Ürün Tipine Göre */}
                   {selectedProduct.sizeOptions && selectedProduct.sizeOptions.length > 0 && (
                     (() => {
                       const productType = getProductType(selectedProduct.sizeOptions);
@@ -1095,7 +1099,7 @@ export default function StokPage() {
                       return (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {isOptionalHeight ? 'Güncellenecek Stok (m²):' : 'Güncellenecek Stok (Adet):'}
+                            {isOptionalHeight ? 'Eklenecek Stok (m²):' : 'Eklenecek Stok (Adet):'}
                     </label>
                           {isOptionalHeight ? (
                             <div className="space-y-3">
@@ -1178,14 +1182,14 @@ export default function StokPage() {
                                   }}
                                   onWheel={(e) => (e.target as HTMLInputElement).blur()}
                                   className="w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                  placeholder="Güncellenecek adet miktarı"
+                                  placeholder="Eklenecek stok miktarı"
                     />
                   </div>
                               
                               {/* m² girişi */}
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                  Güncellenecek Stok (m²) - Adet olarak hesaplanır:
+                                  Eklenecek Stok (m²) - Adet olarak hesaplanır:
                                 </label>
                                 <input
                                   type="number"
@@ -1206,7 +1210,7 @@ export default function StokPage() {
                                     }));
                                   }}
                                   className="w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                  placeholder="Güncellenecek m² miktarı"
+                                  placeholder="Eklenecek stok m² miktarı"
                                 />
                               </div>
                             </div>
@@ -1220,7 +1224,7 @@ export default function StokPage() {
                   {(!selectedProduct.sizeOptions || selectedProduct.sizeOptions.length === 0) && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Güncellenecek Stok (Adet):
+                        Eklenecek Stok (Adet):
                       </label>
                       <input
                         type="number"
@@ -1238,7 +1242,7 @@ export default function StokPage() {
                           }));
                         }}
                         className="w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Güncellenecek adet miktarı"
+                        placeholder="Eklenecek stok miktarı"
                       />
                     </div>
                   )}
@@ -1267,7 +1271,7 @@ export default function StokPage() {
                           </span>
                         </div>
                         <div>
-                          <span className="font-medium text-gray-700">Güncellenecek:</span> 
+                          <span className="font-medium text-gray-700">Eklenecek:</span> 
                           <span className="ml-1 text-gray-900">
                             {selectedSizeOption.is_optional_height 
                               ? `${stockForm.areaM2 || 0} m² (${stockForm.width}x${stockForm.height} cm)`
@@ -1284,7 +1288,7 @@ export default function StokPage() {
                           </div>
                         )}
                         <div className="pt-1 border-t border-blue-200">
-                          <span className="font-medium text-blue-700">Yeni toplam:</span> 
+                          <span className="font-medium text-blue-700">Yeni toplam stok:</span> 
                           <span className="ml-1 text-blue-900 font-semibold">
                             {selectedSizeOption.is_optional_height 
                               ? `${((selectedSizeOption.stockAreaM2 || 0) + (stockForm.areaM2 || 0)).toFixed(1)} m²`
@@ -1299,7 +1303,7 @@ export default function StokPage() {
               </div>
 
               {/* Modal Footer - Sticky */}
-              <div className="sticky bottom-0 bg-white border-t border-gray-200 px-4 py-4 md:p-6 rounded-b-md">
+              <div className="flex-shrink-0 bg-white border-t border-gray-200 px-4 py-4 md:p-6 rounded-b-2xl">
                 <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3">
                   <button
                     onClick={closeStockModal}
@@ -1323,7 +1327,7 @@ export default function StokPage() {
                     }
                     className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isUpdatingStock ? 'Güncelleniyor...' : 'Stok Ekle'}
+                    {isUpdatingStock ? 'Güncelleniyor...' : 'Stok Ayarla'}
                   </button>
                 </div>
               </div>
