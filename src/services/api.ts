@@ -2629,6 +2629,7 @@ export interface AdminUser {
   surname: string;
   phoneNumber?: string;
   adres?: string;
+  canSeePrice: boolean;  // Yeni alan - fiyat görme yetkisi
   userType: {
     id: number;
     name: string;
@@ -2646,6 +2647,44 @@ export interface AdminUser {
 export interface GetAdminUsersResponse {
   success: boolean;
   data: AdminUser[];
+  message?: string;
+}
+
+// Kullanıcı oluşturma için interface
+export interface CreateAdminUserRequest {
+  username: string;
+  email: string;
+  password: string;
+  name: string;
+  surname: string;
+  phoneNumber?: string;
+  userTypeId: number;
+  storeId?: string;
+  canSeePrice?: boolean;  // Opsiyonel, default: true
+}
+
+export interface CreateAdminUserResponse {
+  success: boolean;
+  data: AdminUser;
+  message?: string;
+}
+
+// Kullanıcı güncelleme için interface
+export interface UpdateAdminUserRequest {
+  name?: string;
+  surname?: string;
+  email?: string;
+  phoneNumber?: string;
+  adres?: string;
+  canSeePrice?: boolean;  // Fiyat görme yetkisi
+  isActive?: boolean;
+  userTypeId?: number;
+  storeId?: string;
+}
+
+export interface UpdateAdminUserResponse {
+  success: boolean;
+  data: AdminUser;
   message?: string;
 }
 
@@ -2674,6 +2713,98 @@ export async function getAdminUsers(): Promise<AdminUser[]> {
     return data.data || [];
   } catch (error) {
     console.error('Admin kullanıcıları getirme hatası:', error);
+    throw error;
+  }
+}
+
+// Admin kullanıcı oluşturma
+export async function createAdminUser(userData: CreateAdminUserRequest): Promise<AdminUser> {
+  const token = getAuthToken();
+
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/admin/users`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
+
+    const data: CreateAdminUserResponse = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Kullanıcı oluşturulamadı');
+    }
+
+    return data.data;
+  } catch (error) {
+    console.error('Admin kullanıcı oluşturma hatası:', error);
+    throw error;
+  }
+}
+
+// Admin kullanıcı güncelleme
+export async function updateAdminUser(userId: string, userData: UpdateAdminUserRequest): Promise<AdminUser> {
+  const token = getAuthToken();
+
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
+
+    const data: UpdateAdminUserResponse = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Kullanıcı güncellenemedi');
+    }
+
+    return data.data;
+  } catch (error) {
+    console.error('Admin kullanıcı güncelleme hatası:', error);
+    throw error;
+  }
+}
+
+// Admin kullanıcı silme
+export async function deleteAdminUser(userId: string): Promise<{ success: boolean; message?: string }> {
+  const token = getAuthToken();
+
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Kullanıcı silinemedi');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Admin kullanıcı silme hatası:', error);
     throw error;
   }
 }
@@ -3114,6 +3245,192 @@ export async function bulkConfirmOrders(orderIds: string[]): Promise<BulkConfirm
     return data;
   } catch (error) {
     console.error('Toplu sipariş onaylama hatası:', error);
+    throw error;
+  }
+}
+
+// Kullanıcı Adres Yönetimi API Types and Functions
+export interface UserAddress {
+  id: string;
+  user_id: string;
+  title: string;
+  address: string;
+  city?: string;
+  district?: string;
+  postal_code?: string;
+  is_default: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserAddressResponse {
+  success: boolean;
+  data: UserAddress[];
+  message?: string;
+}
+
+export interface CreateUserAddressRequest {
+  title: string;
+  address: string;
+  city?: string;
+  district?: string;
+  postal_code?: string;
+  is_default?: boolean;
+}
+
+// Kullanıcı adreslerini getir
+export async function getUserAddresses(userId?: string): Promise<UserAddressResponse> {
+  const token = getAuthToken();
+
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  try {
+    const url = userId 
+      ? `${API_URL}/api/user-addresses?userId=${userId}`
+      : `${API_URL}/api/user-addresses`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data: UserAddressResponse = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Adres listesi getirilemedi');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Adres listesi getirme hatası:', error);
+    throw error;
+  }
+}
+
+// Yeni kullanıcı adresi ekle
+export async function createUserAddress(addressData: CreateUserAddressRequest): Promise<{ success: boolean; message?: string; data?: UserAddress }> {
+  const token = getAuthToken();
+
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/user-addresses`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(addressData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Adres eklenemedi');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Adres ekleme hatası:', error);
+    throw error;
+  }
+}
+
+// Kullanıcı adresini güncelle
+export async function updateUserAddress(addressId: string, addressData: Partial<CreateUserAddressRequest>): Promise<{ success: boolean; message?: string; data?: UserAddress }> {
+  const token = getAuthToken();
+
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/user-addresses/${addressId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(addressData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Adres güncellenemedi');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Adres güncelleme hatası:', error);
+    throw error;
+  }
+}
+
+// Varsayılan kullanıcı adresini değiştir
+export async function setDefaultUserAddress(addressId: string): Promise<{ success: boolean; message?: string }> {
+  const token = getAuthToken();
+
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/user-addresses/${addressId}/set-default`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Varsayılan adres değiştirilemedi');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Varsayılan adres değiştirme hatası:', error);
+    throw error;
+  }
+}
+
+// Kullanıcı adresini sil
+export async function deleteUserAddress(addressId: string): Promise<{ success: boolean; message?: string }> {
+  const token = getAuthToken();
+
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/user-addresses/${addressId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Adres silinemedi');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Adres silme hatası:', error);
     throw error;
   }
 } 

@@ -49,6 +49,7 @@ type AuthContextType = {
   token: string | null;
   isAdmin: boolean;
   isEditor: boolean;
+  isViewer: boolean;
   isAdminOrEditor: boolean;
 };
 
@@ -62,6 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [isEditor, setIsEditor] = useState<boolean>(false);
+  const [isViewer, setIsViewer] = useState<boolean>(false);
   const [isAdminOrEditor, setIsAdminOrEditor] = useState<boolean>(false);
   const router = useRouter();
 
@@ -105,6 +107,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else if (storedUserType === "editor") {
           setIsEditor(true);
           setIsAdminOrEditor(true);
+        } else if (storedUserType === "viewer") {
+          setIsViewer(true);
         }
       } catch (error) {
         // Güvenli cleanup - client-side kontrolü ile
@@ -160,6 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userType = result.data.user.userType;
         setIsAdmin(userType === "admin");
         setIsEditor(userType === "editor");
+        setIsViewer(userType === "viewer");
         setIsAdminOrEditor(userType === "admin" || userType === "editor");
         
         // "Beni hatırla" seçeneğine göre localStorage'a kaydet
@@ -206,6 +211,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setToken(null);
         setIsAdmin(false);
         setIsEditor(false);
+        setIsViewer(false);
         setIsAdminOrEditor(false);
         localStorage.removeItem("user");
         localStorage.removeItem("token");
@@ -223,6 +229,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         setIsAdmin(false);
         setIsEditor(false);
+        setIsViewer(false);
         setIsAdminOrEditor(false);
         localStorage.removeItem("user");
         localStorage.removeItem("token");
@@ -260,7 +267,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isLoading, isAdmin, isEditor, isAdminOrEditor }}>
+    <AuthContext.Provider value={{ user, token, login, logout, isLoading, isAdmin, isEditor, isViewer, isAdminOrEditor }}>
       {children}
     </AuthContext.Provider>
   );

@@ -39,7 +39,7 @@ interface UserFormData {
 }
 
 export default function Settings() {
-  const { user, isAdmin, isAdminOrEditor, isLoading: authLoading } = useAuth();
+  const { user, isAdmin, isLoading: authLoading } = useAuth();
   const token = useToken();
   const router = useRouter();
   
@@ -139,8 +139,8 @@ export default function Settings() {
     // Auth yüklemesi tamamlanmadıysa bekle
     if (authLoading) return;
     
-    // Admin veya Editör kullanıcılar için mevcut logic
-    if (isAdminOrEditor) {
+    // Admin kullanıcılar için mevcut logic
+    if (isAdmin) {
       // Sadece bir kez çağrılmasını sağla
       if (!fetchedRef.current) {
         fetchedRef.current = true;
@@ -151,7 +151,7 @@ export default function Settings() {
       // Normal kullanıcılar için profil bilgilerini getir
       fetchUserProfile();
     }
-  }, [isAdminOrEditor, authLoading, router]);
+  }, [isAdmin, authLoading, router]);
 
   // Dropdown'ların dışına tıklandığında kapanması
   useEffect(() => {
@@ -532,19 +532,13 @@ export default function Settings() {
       
       const method = selectedUser ? 'PUT' : 'POST';
       
-      // Boş adres alanını request'ten kaldır
-      const requestData = { ...formData };
-      if (!requestData.adres || requestData.adres.trim() === '') {
-        delete requestData.adres;
-      }
-      
       const res = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(requestData)
+        body: JSON.stringify(formData)
       });
       
       const data = await res.json();
@@ -629,7 +623,7 @@ export default function Settings() {
   };
 
   // Normal kullanıcı için profil yönetimi UI'ı
-  if (!isAdminOrEditor) {
+  if (!isAdmin) {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="mb-6">
@@ -1141,6 +1135,136 @@ export default function Settings() {
               </div>
             )}
           </>
+        )}
+        
+        {/* Adres Ekleme/Düzenleme Modal - Normal kullanıcı için */}
+        {showAddressModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
+            <div className="bg-white rounded-xl max-w-2xl w-full shadow-2xl">
+              <div className="bg-[#00365a] text-white rounded-t-xl p-6">
+                <h3 className="text-xl font-bold">
+                  {editingAddress ? 'Adres Düzenle' : 'Yeni Adres Ekle'}
+                </h3>
+                <p className="text-blue-100 text-sm mt-1">
+                  Adres bilgilerini girin
+                </p>
+              </div>
+              
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Adres Başlığı <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={newAddress.title}
+                      onChange={(e) => setNewAddress(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="Örn: Ana Mağaza, Depo, Şube 1"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tam Adres <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      value={newAddress.address}
+                      onChange={(e) => setNewAddress(prev => ({ ...prev, address: e.target.value }))}
+                      placeholder="Sokak, cadde, mahalle, bina no vs."
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">İlçe</label>
+                    <input
+                      type="text"
+                      value={newAddress.district}
+                      onChange={(e) => setNewAddress(prev => ({ ...prev, district: e.target.value }))}
+                      placeholder="Örn: Kadıköy"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Şehir</label>
+                    <input
+                      type="text"
+                      value={newAddress.city}
+                      onChange={(e) => setNewAddress(prev => ({ ...prev, city: e.target.value }))}
+                      placeholder="Örn: İstanbul"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Posta Kodu</label>
+                    <input
+                      type="text"
+                      value={newAddress.postal_code}
+                      onChange={(e) => setNewAddress(prev => ({ ...prev, postal_code: e.target.value }))}
+                      placeholder="Örn: 34710"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={newAddress.is_default}
+                        onChange={(e) => setNewAddress(prev => ({ ...prev, is_default: e.target.checked }))}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Varsayılan adres olarak ayarla</span>
+                    </label>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end gap-3 mt-6">
+                  <button
+                    onClick={() => {
+                      setShowAddressModal(false);
+                      setEditingAddress(null);
+                      setNewAddress({
+                        title: '',
+                        address: '',
+                        city: '',
+                        district: '',
+                        postal_code: '',
+                        is_default: false
+                      });
+                    }}
+                    className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                  >
+                    İptal
+                  </button>
+                  <button
+                    onClick={handleAddressSubmit}
+                    disabled={addingAddress || !newAddress.title || !newAddress.address}
+                    className="px-6 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {addingAddress ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                        {editingAddress ? 'Güncelleniyor...' : 'Ekleniyor...'}
+                      </>
+                    ) : (
+                      <>
+                        <FaPlus className="w-4 h-4" />
+                        {editingAddress ? 'Güncelle' : 'Adres Ekle'}
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     );
@@ -1680,135 +1804,6 @@ export default function Settings() {
         </div>
       )}
 
-      {/* Adres Ekleme/Düzenleme Modal */}
-      {showAddressModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-2xl w-full shadow-2xl">
-            <div className="bg-[#00365a] text-white rounded-t-xl p-6">
-              <h3 className="text-xl font-bold">
-                {editingAddress ? 'Adres Düzenle' : 'Yeni Adres Ekle'}
-              </h3>
-              <p className="text-blue-100 text-sm mt-1">
-                Adres bilgilerini girin
-              </p>
-            </div>
-            
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Adres Başlığı <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={newAddress.title}
-                    onChange={(e) => setNewAddress(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="Örn: Ana Mağaza, Depo, Şube 1"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-                
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tam Adres <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    value={newAddress.address}
-                    onChange={(e) => setNewAddress(prev => ({ ...prev, address: e.target.value }))}
-                    placeholder="Sokak, cadde, mahalle, bina no vs."
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">İlçe</label>
-                  <input
-                    type="text"
-                    value={newAddress.district}
-                    onChange={(e) => setNewAddress(prev => ({ ...prev, district: e.target.value }))}
-                    placeholder="Örn: Kadıköy"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Şehir</label>
-                  <input
-                    type="text"
-                    value={newAddress.city}
-                    onChange={(e) => setNewAddress(prev => ({ ...prev, city: e.target.value }))}
-                    placeholder="Örn: İstanbul"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Posta Kodu</label>
-                  <input
-                    type="text"
-                    value={newAddress.postal_code}
-                    onChange={(e) => setNewAddress(prev => ({ ...prev, postal_code: e.target.value }))}
-                    placeholder="Örn: 34710"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                
-                <div className="flex items-center">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={newAddress.is_default}
-                      onChange={(e) => setNewAddress(prev => ({ ...prev, is_default: e.target.checked }))}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Varsayılan adres olarak ayarla</span>
-                  </label>
-                </div>
-              </div>
-              
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  onClick={() => {
-                    setShowAddressModal(false);
-                    setEditingAddress(null);
-                    setNewAddress({
-                      title: '',
-                      address: '',
-                      city: '',
-                      district: '',
-                      postal_code: '',
-                      is_default: false
-                    });
-                  }}
-                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                >
-                  İptal
-                </button>
-                <button
-                  onClick={handleAddressSubmit}
-                  disabled={addingAddress || !newAddress.title || !newAddress.address}
-                  className="px-6 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  {addingAddress ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                      {editingAddress ? 'Güncelleniyor...' : 'Ekleniyor...'}
-                    </>
-                  ) : (
-                    <>
-                      <FaPlus className="w-4 h-4" />
-                      {editingAddress ? 'Güncelle' : 'Adres Ekle'}
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 } 
