@@ -226,15 +226,15 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     }
   }, [user?.userId, authLoading, fetchUnreadCount]);
 
-  // Periyodik olarak okunmamış sayıyı güncelle (10 saniyede bir)
+  // Periyodik olarak okunmamış sayıyı güncelle (60 saniyede bir)
   useEffect(() => {
     if (!user?.userId || authLoading) return;
 
-    console.log('⏲️ Setting up periodic unread count check (10 seconds)');
+    console.log('⏲️ Setting up periodic unread count check (60 seconds)');
     const interval = setInterval(() => {
-      console.log('⏰ Periodic unread count check triggered (every 10s)');
+      console.log('⏰ Periodic unread count check triggered (every 60s)');
       fetchUnreadCount();
-    }, 10 * 1000); // 10 saniye
+    }, 60 * 1000); // 60 saniye
 
     return () => {
       console.log('🛑 Clearing periodic unread count check');

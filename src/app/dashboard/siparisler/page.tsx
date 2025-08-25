@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import { useToken } from '@/app/hooks/useToken';
 import { StoreType, storeTypeLabels } from '@/components/StoreTypeSelector';
-import { bulkConfirmOrders, BulkConfirmOrdersResponse } from '@/services/api';
+import { bulkConfirmOrders, BulkConfirmOrdersResponse, getStores, Store } from '@/services/api';
 
 interface OrderItem {
   id: string;
@@ -244,9 +244,23 @@ const Siparisler = () => {
   // Filtreleme ve sayfalama
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [storeFilter, setStoreFilter] = useState(''); // Mağaza ID'si ile filtreleme
   const [receiptFilter, setReceiptFilter] = useState(''); // '', 'printed', 'not_printed'
-  const [tempSearchQuery, setTempSearchQuery] = useState('');
+  
+  // Mağaza listesi
+  const [stores, setStores] = useState<Store[]>([]);
+  const [loadingStores, setLoadingStores] = useState(false);
+  
+  // Custom dropdown state'leri
+  const [storeSearchQuery, setStoreSearchQuery] = useState('');
+  const [isStoreDropdownOpen, setIsStoreDropdownOpen] = useState(false);
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+  const [isReceiptDropdownOpen, setIsReceiptDropdownOpen] = useState(false);
+  
+  // Refs
+  const storeDropdownRef = useRef<HTMLDivElement>(null);
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
+  const receiptDropdownRef = useRef<HTMLDivElement>(null);
   
   // Cancel order modal
   const [cancelOrderModal, setCancelOrderModal] = useState<CancelOrderModal>({
@@ -314,8 +328,23 @@ const Siparisler = () => {
     return stats;
   }, []);
 
+  // Mağaza listesini getir (sadece admin/editor için)
+  const fetchStores = useCallback(async () => {
+    if (!isAdminOrEditor) return; // Sadece admin ve editörler tüm mağazaları görebilir
+    
+    try {
+      setLoadingStores(true);
+      const storeList = await getStores();
+      setStores(storeList);
+    } catch (error) {
+      console.error('Mağazalar yüklenirken hata:', error);
+    } finally {
+      setLoadingStores(false);
+    }
+  }, [isAdminOrEditor]);
+
   // Siparişleri getir
-  const fetchOrders = useCallback(async (page: number = 1, status: string = '', search: string = '', receiptPrinted: string = '') => {
+  const fetchOrders = useCallback(async (page: number = 1, status: string = '', receiptPrinted: string = '') => {
     // AuthContext yüklemesi tamamlanmadıysa fetch yapma
     if (authLoading) {
       return;
@@ -335,12 +364,11 @@ const Siparisler = () => {
       let queryParams = new URLSearchParams();
 
       if (status) queryParams.append('status', status);
-      if (search) queryParams.append('search', search);
       // receiptPrinted filtresi sadece admin için
       if (receiptPrinted && isAdminOrEditor) queryParams.append('receiptPrinted', receiptPrinted === 'printed' ? 'true' : 'false');
 
       console.log('🔍 FILTRELEME DEBUG:');
-      console.log('📝 Parametreler:', { page, status, search, receiptPrinted, isAdminOrEditor });
+      console.log('📝 Parametreler:', { page, status, receiptPrinted, isAdminOrEditor });
       console.log('🔗 Query String:', queryParams.toString());
       console.log('🎯 Endpoint:', isAdminOrEditor ? 'admin/orders' : 'my-orders');
 
@@ -406,7 +434,7 @@ const Siparisler = () => {
     } finally {
       setLoading(false);
     }
-  }, [router, isAdminOrEditor, calculateOrderStats, authLoading, token, statusFilter, searchQuery, receiptFilter, totalOrdersCount]);
+  }, [router, isAdminOrEditor, authLoading, token]);
 
   // Tüm siparişleri getir (istatistikler için)
   const fetchAllOrdersForStats = useCallback(async () => {
@@ -452,8 +480,67 @@ const Siparisler = () => {
       return;
     }
     
-    fetchOrders(currentPage, statusFilter, searchQuery, receiptFilter);
-  }, [fetchOrders, currentPage, statusFilter, searchQuery, receiptFilter, authLoading]);
+    fetchOrders(currentPage, statusFilter, receiptFilter);
+  }, [currentPage, statusFilter, receiptFilter, authLoading, fetchOrders]);
+
+  // Mağaza listesini yükle
+  useEffect(() => {
+    if (!authLoading && isAdminOrEditor) {
+      fetchStores();
+    }
+  }, [authLoading, isAdminOrEditor, fetchStores]);
+
+  // Click outside to close dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (storeDropdownRef.current && !storeDropdownRef.current.contains(event.target as Node)) {
+        setIsStoreDropdownOpen(false);
+      }
+      if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target as Node)) {
+        setIsStatusDropdownOpen(false);
+      }
+      if (receiptDropdownRef.current && !receiptDropdownRef.current.contains(event.target as Node)) {
+        setIsReceiptDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Frontend'de mağaza filtreleme
+  const filteredOrders = useMemo(() => {
+    if (!ordersData || !ordersData.orders) {
+      return { orders: [], totalPages: 0, currentPage: 1, totalOrders: 0 };
+    }
+
+    let filtered = ordersData.orders;
+
+    // Mağaza filtresi uygula (sadece admin/editor için)
+    if (storeFilter && isAdminOrEditor) {
+      filtered = filtered.filter(order => 
+        order.user?.Store?.store_id === storeFilter
+      );
+    }
+
+    return {
+      ...ordersData,
+      orders: filtered,
+      totalOrders: filtered.length
+    };
+  }, [ordersData, storeFilter, isAdminOrEditor]);
+
+  // Mağaza arama filtresi
+  const filteredStores = useMemo(() => {
+    if (!storeSearchQuery.trim()) {
+      return stores;
+    }
+    return stores.filter(store => 
+      store.kurum_adi.toLowerCase().includes(storeSearchQuery.toLowerCase())
+    );
+  }, [stores, storeSearchQuery]);
 
   // Sadece bir kez tüm siparişleri getir (istatistikler için)
   useEffect(() => {
@@ -474,9 +561,9 @@ const Siparisler = () => {
   };
 
   const handleSelectAll = (isChecked: boolean) => {
-    if (!ordersData?.orders) return;
+    if (!filteredOrders?.orders) return;
     
-    const pendingOrders = ordersData.orders.filter(order => order.status === 'PENDING');
+    const pendingOrders = filteredOrders.orders.filter(order => order.status === 'PENDING');
     if (isChecked) {
       setSelectedOrderIds(pendingOrders.map(order => order.id));
     } else {
@@ -499,7 +586,7 @@ const Siparisler = () => {
         setSelectedOrderIds(prev => prev.filter(id => !successfulIds.includes(id)));
         
         // Siparişleri yeniden yükle
-        await fetchOrders(currentPage, statusFilter, searchQuery, receiptFilter);
+        await fetchOrders(currentPage, statusFilter, receiptFilter);
       }
     } catch (error) {
       console.error('Toplu onaylama hatası:', error);
@@ -892,7 +979,7 @@ const Siparisler = () => {
         alert(message);
         
         // Siparişleri yeniden yükle
-        await fetchOrders(currentPage, statusFilter, searchQuery, receiptFilter);
+        await fetchOrders(currentPage, statusFilter, receiptFilter);
         
         // Modal'ı kapat
         setCancelOrderModal({
@@ -957,7 +1044,7 @@ const Siparisler = () => {
         }
 
         // Siparişleri yeniden yükle
-        await fetchOrders(currentPage, statusFilter, searchQuery, receiptFilter);
+        await fetchOrders(currentPage, statusFilter, receiptFilter);
         // Modal'daki sipariş detayını da güncelle
         if (selectedOrder && selectedOrder.id === orderId) {
           await handleViewOrderDetail(orderId);
@@ -973,21 +1060,30 @@ const Siparisler = () => {
     }
   };
 
-  // Arama fonksiyonu
-  const handleSearch = () => {
-    setSearchQuery(tempSearchQuery);
+  // Filtreleme fonksiyonları
+  const handleStatusFilter = (status: string) => {
+    setStatusFilter(status);
+    setIsStatusDropdownOpen(false);
     setCurrentPage(1);
   };
 
-  // Filtreleme fonksiyonu
-  const handleStatusFilter = (status: string) => {
-    setStatusFilter(status);
-    setCurrentPage(1);
+  const handleStoreFilter = (storeId: string) => {
+    setStoreFilter(storeId);
+    setIsStoreDropdownOpen(false);
+    // Seçilen mağaza adını search query'ye set et
+    if (storeId) {
+      const selectedStore = stores.find(store => store.store_id === storeId);
+      setStoreSearchQuery(selectedStore?.kurum_adi || '');
+    } else {
+      setStoreSearchQuery('');
+    }
+    // Frontend filtreleme yaptığımız için sayfa resetlemeye gerek yok
   };
   
   // Fiş filtresi
   const handleReceiptFilter = (filter: string) => {
     setReceiptFilter(filter);
+    setIsReceiptDropdownOpen(false);
     setCurrentPage(1);
   };
 
@@ -1171,69 +1267,203 @@ const Siparisler = () => {
         {/* Filtreleme ve Arama */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex flex-col md:flex-row gap-4">
-            {/* Arama */}
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {isAdmin ? 'Mağaza/Kullanıcı Ara' : 'Ara'}
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={tempSearchQuery}
-                  onChange={(e) => setTempSearchQuery(e.target.value)}
-                  placeholder={isAdmin ? "Mağaza adı, kullanıcı adı veya email..." : "Ara..."}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                />
-                <button
-                  onClick={handleSearch}
-                  className="px-4 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors"
-                >
-                  Ara
-                </button>
+            {/* Mağaza Filtresi (Sadece Admin/Editor için) */}
+            {isAdminOrEditor && (
+              <div className="flex-1" ref={storeDropdownRef}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Mağaza Seç
+                </label>
+                <div className="relative">
+                  <div
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-gray-400 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-colors"
+                    onClick={() => setIsStoreDropdownOpen(!isStoreDropdownOpen)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <input
+                        type="text"
+                        value={storeSearchQuery}
+                        onChange={(e) => {
+                          setStoreSearchQuery(e.target.value);
+                          setIsStoreDropdownOpen(true);
+                        }}
+                        placeholder={storeFilter ? (stores.find(s => s.store_id === storeFilter)?.kurum_adi || "Mağaza seç...") : "Mağaza ara..."}
+                        className="flex-1 outline-none bg-transparent"
+                        disabled={loadingStores}
+                      />
+                      <svg
+                        className={`w-5 h-5 text-gray-400 transition-transform ${isStoreDropdownOpen ? 'rotate-180' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                  
+                  {isStoreDropdownOpen && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      <div
+                        className="px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
+                        onClick={() => handleStoreFilter('')}
+                      >
+                        <span className="text-gray-600">Tüm Mağazalar</span>
+                      </div>
+                      {filteredStores.length > 0 ? (
+                        filteredStores.map((store) => (
+                          <div
+                            key={store.store_id}
+                            className={`px-3 py-2 hover:bg-blue-50 cursor-pointer ${
+                              storeFilter === store.store_id ? 'bg-blue-100 text-blue-900' : 'text-gray-900'
+                            }`}
+                            onClick={() => handleStoreFilter(store.store_id)}
+                          >
+                            <div className="font-medium">{store.kurum_adi}</div>
+                            <div className="text-xs text-gray-500">{store.telefon}</div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-3 py-2 text-gray-500 text-center">
+                          Mağaza bulunamadı
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {loadingStores && (
+                    <div className="absolute right-10 top-2 text-gray-400">
+                      <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="m12 2a10 10 0 0 1 10 10h-4a6 6 0 0 0-6-6z"></path>
+                      </svg>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Durum Filtresi */}
-            <div className="md:w-64">
+            <div className="md:w-64" ref={statusDropdownRef}>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Sipariş Durumu
               </label>
-              <select
-                value={statusFilter}
-                onChange={(e) => handleStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Tüm Durumlar</option>
-                <option value="PENDING">Beklemede</option>
-                <option value="CONFIRMED">Onaylandı</option>
-                <option value="READY">Hazır</option>
-                <option value="DELIVERED">Teslim Edildi</option>
-                <option value="CANCELED">İptal Edildi</option>
-              </select>
+              <div className="relative">
+                <div
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-gray-400 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-colors"
+                  onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-900">
+                      {statusFilter ? statusLabels[statusFilter] : 'Tüm Durumlar'}
+                    </span>
+                    <svg
+                      className={`w-5 h-5 text-gray-400 transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+                
+                {isStatusDropdownOpen && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                    <div
+                      className="px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
+                      onClick={() => handleStatusFilter('')}
+                    >
+                      <span className="text-gray-600">Tüm Durumlar</span>
+                    </div>
+                    {Object.entries(statusLabels).map(([status, label]) => (
+                      <div
+                        key={status}
+                        className={`px-3 py-2 hover:bg-blue-50 cursor-pointer flex items-center justify-between ${
+                          statusFilter === status ? 'bg-blue-100 text-blue-900' : 'text-gray-900'
+                        }`}
+                        onClick={() => handleStatusFilter(status)}
+                      >
+                        <span>{label}</span>
+                        <span className={`w-3 h-3 rounded-full ${
+                          status === 'PENDING' ? 'bg-yellow-400' :
+                          status === 'CONFIRMED' ? 'bg-blue-400' :
+                          status === 'READY' ? 'bg-orange-400' :
+                          status === 'DELIVERED' ? 'bg-green-400' :
+                          status === 'CANCELED' ? 'bg-red-400' : 'bg-gray-400'
+                        }`}></span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Fiş Durumu Filtresi - Sadece Admin için */}
             {isAdmin && (
-              <div className="md:w-64">
+              <div className="md:w-64" ref={receiptDropdownRef}>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Fiş Durumu
                 </label>
-                <select
-                  value={receiptFilter}
-                  onChange={(e) => handleReceiptFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Tüm Fişler</option>
-                  <option value="printed">Yazdırılan Fişler</option>
-                  <option value="not_printed">Yazdırılmayan Fişler</option>
-                </select>
+                <div className="relative">
+                  <div
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-gray-400 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-colors"
+                    onClick={() => setIsReceiptDropdownOpen(!isReceiptDropdownOpen)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-900">
+                        {receiptFilter === 'printed' ? 'Yazdırılan Fişler' : 
+                         receiptFilter === 'not_printed' ? 'Yazdırılmayan Fişler' : 
+                         'Tüm Fişler'}
+                      </span>
+                      <svg
+                        className={`w-5 h-5 text-gray-400 transition-transform ${isReceiptDropdownOpen ? 'rotate-180' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                  
+                  {isReceiptDropdownOpen && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                      <div
+                        className={`px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 flex items-center justify-between ${
+                          receiptFilter === '' ? 'bg-blue-100 text-blue-900' : 'text-gray-600'
+                        }`}
+                        onClick={() => handleReceiptFilter('')}
+                      >
+                        <span>Tüm Fişler</span>
+                        <span className="w-3 h-3 rounded-full bg-gray-400"></span>
+                      </div>
+                      <div
+                        className={`px-3 py-2 hover:bg-blue-50 cursor-pointer flex items-center justify-between ${
+                          receiptFilter === 'printed' ? 'bg-blue-100 text-blue-900' : 'text-gray-900'
+                        }`}
+                        onClick={() => handleReceiptFilter('printed')}
+                      >
+                        <span>Yazdırılan Fişler</span>
+                        <span className="w-3 h-3 rounded-full bg-green-400"></span>
+                      </div>
+                      <div
+                        className={`px-3 py-2 hover:bg-blue-50 cursor-pointer flex items-center justify-between ${
+                          receiptFilter === 'not_printed' ? 'bg-blue-100 text-blue-900' : 'text-gray-900'
+                        }`}
+                        onClick={() => handleReceiptFilter('not_printed')}
+                      >
+                        <span>Yazdırılmayan Fişler</span>
+                        <span className="w-3 h-3 rounded-full bg-red-400"></span>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
 
           {/* Aktif Filtreler */}
-          {(statusFilter || searchQuery || receiptFilter) && (
+          {(statusFilter || storeFilter || receiptFilter) && (
             <div className="mt-4 flex flex-wrap gap-2">
               {statusFilter && (
                 <div className="flex items-center bg-blue-100 text-[#00365a] px-3 py-1 rounded-full text-sm">
@@ -1257,14 +1487,11 @@ const Siparisler = () => {
                   </button>
                 </div>
               )}
-              {searchQuery && (
+              {storeFilter && (
                 <div className="flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
-                  Arama: {searchQuery}
+                  Mağaza: {stores.find(store => store.store_id === storeFilter)?.kurum_adi || storeFilter}
                   <button
-                    onClick={() => {
-                      setSearchQuery('');
-                      setTempSearchQuery('');
-                    }}
+                    onClick={() => handleStoreFilter('')}
                     className="ml-2 text-green-600 hover:text-green-800"
                   >
                     ×
@@ -1325,21 +1552,21 @@ const Siparisler = () => {
         )}
 
         {/* Siparişler Listesi */}
-        {!ordersData || ordersData.orders.length === 0 ? (
+        {!filteredOrders || filteredOrders.orders.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-gray-400 text-6xl mb-4">📦</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              {statusFilter || searchQuery || receiptFilter ? 'Filtreye uygun sipariş bulunamadı' : 'Henüz sipariş yok'}
+              {statusFilter || storeFilter || receiptFilter ? 'Filtreye uygun sipariş bulunamadı' : 'Henüz sipariş yok'}
             </h3>
             <p className="text-gray-600 mb-6">
-              {statusFilter || searchQuery || receiptFilter 
+              {statusFilter || storeFilter || receiptFilter 
                 ? 'Farklı filtreler deneyin veya filtreleri temizleyin.'
                 : isAdmin 
                 ? 'Henüz sisteme hiç sipariş girilmemiş.'
                 : 'Henüz bir sipariş vermemişsiniz.'
               }
             </p>
-            {!isAdmin && !statusFilter && !searchQuery && !receiptFilter && (
+            {!isAdmin && !statusFilter && !storeFilter && !receiptFilter && (
               <Link
                 href="/dashboard/sepetim"
                 className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
@@ -1350,7 +1577,7 @@ const Siparisler = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {ordersData.orders.map((order) => (
+            {filteredOrders.orders.map((order) => (
               <div
                 key={order.id}
                 className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
@@ -1776,7 +2003,7 @@ const Siparisler = () => {
                                     try {
                                       await markReceiptAsPrinted(order.id);
                                       // Siparişleri yenile
-                                      await fetchOrders(currentPage, statusFilter, searchQuery, receiptFilter);
+                                      await fetchOrders(currentPage, statusFilter, receiptFilter);
                                     } catch (error) {
                                       console.error('Fiş durumu güncelleme hatası:', error);
                                     }
@@ -1877,8 +2104,8 @@ const Siparisler = () => {
           </div>
         )}
 
-        {/* Sayfalama */}
-        {ordersData && ordersData.pagination && ordersData.pagination.totalPages > 1 && (
+        {/* Sayfalama - Mağaza filtresi aktif değilken göster */}
+        {ordersData && ordersData.pagination && ordersData.pagination.totalPages > 1 && !storeFilter && (
           <div className="mt-8 flex justify-center">
             <div className="flex items-center space-x-2">
               <button

@@ -269,15 +269,6 @@ const OrderForm = () => {
           address_id: selectedAddress.id // ZORUNLU!
         })
       });
-
-      const data = await response.json();
-      if (data.success) {
-        console.log('Sipariş oluşturuldu:', data.order);
-        console.log('Seçilen adres:', data.order.address);
-      }
-    } catch (error) {
-      console.error('Sipariş oluşturma hatası:', error);
-    }
   };
 
   return (
