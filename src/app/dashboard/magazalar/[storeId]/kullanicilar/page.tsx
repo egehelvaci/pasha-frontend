@@ -213,7 +213,28 @@ export default function StoreUsersPage() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredUsers.map((user) => (
-                      <tr key={user.user_id} className="hover:bg-gray-50 transition-colors">
+                      <tr 
+                        key={user.user_id} 
+                        className="hover:bg-gray-50 transition-colors cursor-pointer"
+                        onClick={() => {
+                          if (selectedAddressId && selectedAddressTitle) {
+                            // Sipariş modu - admin-siparis-olustur sayfasına yönlendir
+                            console.log('Kullanıcı verisi (desktop):', user);
+                            console.log('Kullanıcı ID alanları (desktop):', {
+                              user_id: user.user_id,
+                              id: (user as any).id,
+                              userId: (user as any).userId
+                            });
+                            
+                            // Farklı ID alanlarını kontrol et
+                            const userId = user.user_id || (user as any).id || (user as any).userId;
+                            
+                            const url = `/dashboard/admin-siparis-olustur?storeId=${storeId}&userId=${userId}&userName=${encodeURIComponent(`${user.name} ${user.surname}`)}&addressId=${selectedAddressId}&addressTitle=${selectedAddressTitle}`;
+                            console.log('Oluşturulan URL (desktop):', url);
+                            router.push(url);
+                          }
+                        }}
+                      >
                         <td className="px-6 py-4">
                           <div>
                             <div className="text-sm font-semibold text-gray-900">{user.name} {user.surname}</div>
@@ -230,7 +251,13 @@ export default function StoreUsersPage() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center justify-center">
-                            <span className="text-xs text-gray-500">-</span>
+                            {selectedAddressId && selectedAddressTitle ? (
+                              <button className="px-3 py-1 bg-[#00365a] text-white text-sm rounded-lg hover:bg-[#004170] transition-colors">
+                                Sipariş Ver
+                              </button>
+                            ) : (
+                              <span className="text-xs text-gray-500">-</span>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -243,21 +270,26 @@ export default function StoreUsersPage() {
               <div className="xl:hidden p-6">
                 <div className="space-y-6">
                   {filteredUsers.map((user) => (
-                    <div key={user.user_id} className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => {
-                      console.log('Kullanıcı verisi (mobil):', user);
-                      console.log('Kullanıcı ID alanları (mobil):', {
-                        user_id: user.user_id,
-                        id: (user as any).id,
-                        userId: (user as any).userId
-                      });
-                      
-                      // Farklı ID alanlarını kontrol et
-                      const userId = user.user_id || (user as any).id || (user as any).userId;
-                      
-                      const url = `/dashboard/admin-siparis-olustur?storeId=${storeId}&userId=${userId}&userName=${encodeURIComponent(`${user.name} ${user.surname}`)}`;
-                      console.log('Oluşturulan URL (mobil):', url);
-                      router.push(url);
-                    }}>
+                    <div 
+                      key={user.user_id} 
+                      className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer" 
+                      onClick={() => {
+                        if (selectedAddressId && selectedAddressTitle) {
+                          console.log('Kullanıcı verisi (mobil):', user);
+                          console.log('Kullanıcı ID alanları (mobil):', {
+                            user_id: user.user_id,
+                            id: (user as any).id,
+                            userId: (user as any).userId
+                          });
+                          
+                          // Farklı ID alanlarını kontrol et
+                          const userId = user.user_id || (user as any).id || (user as any).userId;
+                          
+                          const url = `/dashboard/admin-siparis-olustur?storeId=${storeId}&userId=${userId}&userName=${encodeURIComponent(`${user.name} ${user.surname}`)}&addressId=${selectedAddressId}&addressTitle=${selectedAddressTitle}`;
+                          console.log('Oluşturulan URL (mobil):', url);
+                          router.push(url);
+                        }
+                      }}>
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex-1">
                           <h3 className="text-lg font-semibold text-gray-900 mb-1">{user.name} {user.surname}</h3>
@@ -280,11 +312,19 @@ export default function StoreUsersPage() {
                         <div className="bg-blue-50 rounded-lg p-4">
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
-                              <p className="text-sm text-blue-700 font-medium">
-                                Adres bilgileri artık mağaza bazlı yönetilmektedir
-                              </p>
+                              {selectedAddressId && selectedAddressTitle ? (
+                                <button className="w-full px-4 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors flex items-center justify-center gap-2">
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5-5M17 13v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
+                                  </svg>
+                                  Sipariş Ver
+                                </button>
+                              ) : (
+                                <p className="text-sm text-blue-700 font-medium">
+                                  Adres bilgileri artık mağaza bazlı yönetilmektedir
+                                </p>
+                              )}
                             </div>
-
                           </div>
                         </div>
                       </div>
