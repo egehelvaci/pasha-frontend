@@ -377,6 +377,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
           <path d="M2.273 5.625A4.483 4.483 0 015.25 4.5h13.5c1.141 0 2.227.425 3.048 1.19A3.75 3.75 0 0121.75 9v.75a2.25 2.25 0 01-2.25 2.25H4.5A2.25 2.25 0 012.25 9.75V9a3.75 3.75 0 01.023-3.375zM4.5 15.75a2.25 2.25 0 00-2.25 2.25v.75c0 .414.336.75.75.75h18a.75.75 0 00.75-.75v-.75a2.25 2.25 0 00-2.25-2.25H4.5z" />
         </svg>
       ),
+      adminOnly: true,
     },
     {
       name: 'Muhasebe',
@@ -706,8 +707,8 @@ const Header = ({ title, user, className }: HeaderProps) => {
                     );
                   })}
 
-                  {/* Admin Panel Dropdown - Admin ve editör kullanıcıları için */}
-                  {isAdminOrEditor && adminNavItems.length > 0 && (
+                  {/* Admin Panel Dropdown - Sadece admin kullanıcıları için */}
+                  {isAdmin && adminNavItems.length > 0 && (
                     <div className="relative group">
                       <button
                         className="flex items-center px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors outline-none focus:ring-2 focus:ring-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
