@@ -18,6 +18,33 @@ function getAuthToken(): string | null {
   }
 }
 
+export interface Order {
+  id: string;
+  created_at: string;
+  store_name: string;
+  store_phone?: string;
+  store_email?: string;
+  store_tax_number?: string;
+  store_tax_office?: string;
+  delivery_address?: string;
+  address?: {
+    id: string;
+    address: string;
+    district: string;
+    city: string;
+    postal_code?: string;
+  };
+  user?: {
+    name: string;
+    surname: string;
+    phone?: string;
+    email?: string;
+  };
+  items: Array<{
+    quantity: number;
+  }>;
+}
+
 export interface Collection {
   id: string;
   collectionId: string;
