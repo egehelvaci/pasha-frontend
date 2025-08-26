@@ -1739,8 +1739,8 @@ const Siparisler = () => {
                       </div>
                     )}
 
-                    {/* Admin için fiş yazdır butonu - sadece DELIVERED durumunda ve yazdırılmamış fişler için */}
-                    {isAdmin && order.status === 'DELIVERED' && !order.receipt_printed && (
+                    {/* Admin için fiş yazdır butonu - sadece DELIVERED durumunda, yazdırılmamış fişler için ve canSeePrice=true olanlar için */}
+                    {isAdmin && order.status === 'DELIVERED' && !order.receipt_printed && user?.canSeePrice === true && (
                       <button
                         onClick={async () => {
                           try {
@@ -2039,8 +2039,8 @@ const Siparisler = () => {
                       </button>
                     )}
 
-                    {/* Kargo Fişi Butonu - Sadece DELIVERED durumunda */}
-                    {order.status === 'DELIVERED' && (
+                    {/* Kargo Fişi Butonu - Sadece admin için ve DELIVERED durumunda */}
+                    {isAdmin && order.status === 'DELIVERED' && (
                       <button
                         onClick={() => {
                           setSelectedOrderForCargo(order);

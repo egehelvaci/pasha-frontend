@@ -11,17 +11,17 @@ interface CargoReceiptProps {
 }
 
 export default function CargoReceipt({ order, isVisible, onClose }: CargoReceiptProps) {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   
   useEffect(() => {
-    if (isVisible && user && !user.canSeePrice) {
+    if (isVisible && !isAdmin) {
       onClose();
     }
-  }, [isVisible, user, onClose]);
+  }, [isVisible, isAdmin, onClose]);
   
   if (!isVisible) return null;
   
-  if (!user || !user.canSeePrice) {
+  if (!isAdmin) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
         <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl p-8">
