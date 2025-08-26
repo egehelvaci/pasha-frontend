@@ -107,9 +107,14 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
         ctx.font = 'bold 24px Arial';
         ctx.fillText('PAŞA HOME', canvas.width / 2, qrY + qrSize + 40);
 
+        // Ürün adı (kalın) - en üstte
+        ctx.font = 'bold 18px Arial';
+        let textY = qrY + qrSize + 70;
+        ctx.fillText(firstItem.product.name.toUpperCase(), canvas.width / 2, textY);
+        textY += 35;
+
         // Ürün bilgileri
         ctx.font = '16px Arial';
-        let textY = qrY + qrSize + 70;
         
         ctx.fillText(`${firstItem.width} x ${firstItem.height}`, canvas.width / 2, textY);
         textY += 25;
@@ -127,11 +132,6 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
           textY += 20;
         }
         textY += 15;
-
-        // Ürün adı (kalın)
-        ctx.font = 'bold 18px Arial';
-        ctx.fillText(firstItem.product.name.toUpperCase(), canvas.width / 2, textY);
-        textY += 35;
 
         // Miktar ve sipariş bilgisi
         ctx.font = '14px Arial';
@@ -208,9 +208,26 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
               ctx.font = 'bold 24px Arial';
               ctx.fillText('PAŞA HOME', canvas.width / 2, qrY + qrSize + 40);
 
+              // Ürün adı (kalın) - en üstte
+              ctx.font = 'bold 18px Arial';
+              let textY = qrY + qrSize + 70;
+              const productName = item.product.name.toUpperCase();
+              if (productName.length > 25) {
+                // Uzun ürün adlarını böl
+                const words = productName.split(' ');
+                const line1 = words.slice(0, Math.ceil(words.length / 2)).join(' ');
+                const line2 = words.slice(Math.ceil(words.length / 2)).join(' ');
+                ctx.fillText(line1, canvas.width / 2, textY);
+                textY += 25;
+                ctx.fillText(line2, canvas.width / 2, textY);
+                textY += 35;
+              } else {
+                ctx.fillText(productName, canvas.width / 2, textY);
+                textY += 35;
+              }
+
               // Ürün bilgileri
               ctx.font = '16px Arial';
-              let textY = qrY + qrSize + 70;
               
               ctx.fillText(`${item.width} x ${item.height}`, canvas.width / 2, textY);
               textY += 25;
@@ -228,23 +245,6 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
                 textY += 20;
               }
               textY += 15;
-
-              // Ürün adı (kalın)
-              ctx.font = 'bold 18px Arial';
-              const productName = item.product.name.toUpperCase();
-              if (productName.length > 25) {
-                // Uzun ürün adlarını böl
-                const words = productName.split(' ');
-                const line1 = words.slice(0, Math.ceil(words.length / 2)).join(' ');
-                const line2 = words.slice(Math.ceil(words.length / 2)).join(' ');
-                ctx.fillText(line1, canvas.width / 2, textY);
-                textY += 25;
-                ctx.fillText(line2, canvas.width / 2, textY);
-                textY += 35;
-              } else {
-                ctx.fillText(productName, canvas.width / 2, textY);
-                textY += 35;
-              }
 
               // Miktar ve sipariş bilgisi
               ctx.font = '14px Arial';

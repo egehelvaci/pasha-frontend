@@ -559,10 +559,10 @@ const Siparisler = () => {
 
   // Sadece bir kez tüm siparişleri getir (istatistikler için)
   useEffect(() => {
-    if (!authLoading && isAdmin && !fixedStats) {
+    if (!authLoading && isAdminOrEditor && !fixedStats) {
       fetchAllOrdersForStats();
     }
-  }, [authLoading, isAdmin, fixedStats, fetchAllOrdersForStats]);
+  }, [authLoading, isAdminOrEditor, fixedStats, fetchAllOrdersForStats]);
 
   // Toplu onaylama fonksiyonları
   const handleSelectOrder = (orderId: string, isChecked: boolean) => {
@@ -697,16 +697,16 @@ const Siparisler = () => {
       const authToken = token;
       let endpoint: string;
       
-      // Admin ise sadece admin/orders endpoint'ini kullan
-      if (isAdmin) {
+      // Admin veya Editor ise admin/orders endpoint'ini kullan
+      if (isAdminOrEditor) {
                   endpoint = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/admin/orders/${orderId}`;
 
       } else {
-        // Admin değilse normal orders endpoint'ini kullan - kesinlikle admin endpoint kullanma
+        // Admin/Editor değilse normal orders endpoint'ini kullan
                   endpoint = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/orders/${orderId}`;
 
         
-        // Güvenlik kontrolü: Admin olmayan kullanıcılar asla admin endpoint'i kullanmamalı
+        // Güvenlik kontrolü: Admin/Editor olmayan kullanıcılar asla admin endpoint'i kullanmamalı
         if (endpoint.includes('/admin/')) {
           throw new Error('Yetkisiz erişim: Admin endpoint\'i kullanılamaz');
         }
@@ -1083,7 +1083,7 @@ const Siparisler = () => {
       
       for (const order of ordersWithQR) {
         for (const item of order.items) {
-          for (let i = 0; i < item.quantity; i++) {
+            for (let i = 0; i < item.quantity; i++) {
             const qrData = JSON.stringify({
               urun: item.product.name,
               ebat: `${item.width} x ${item.height}`,
@@ -1212,13 +1212,13 @@ const Siparisler = () => {
           `).join('');
 
           const htmlContent = `
-            <!DOCTYPE html>
+        <!DOCTYPE html>
             <html lang="tr">
-            <head>
+          <head>
               <meta charset="UTF-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <title>Toplu QR Kod Etiketleri</title>
-              <style>
+            <style>
                 @page {
                   size: 10cm 15cm;
                   margin: 0;
@@ -1230,10 +1230,10 @@ const Siparisler = () => {
                   box-sizing: border-box;
                 }
                 
-                body {
+              body { 
                   font-family: 'Arial', sans-serif;
-                  background: white;
-                  margin: 0;
+                background: white;
+                margin: 0;
                   padding: 0;
                 }
                 
@@ -1264,7 +1264,7 @@ const Siparisler = () => {
                   }
                   
                   .label-page {
-                    page-break-inside: avoid;
+                page-break-inside: avoid;
                   }
                 }
               </style>
@@ -1480,11 +1480,11 @@ const Siparisler = () => {
                   box-sizing: border-box;
                 }
                 
-                body {
+                body { 
                   font-family: 'Arial', sans-serif;
                   background: white;
                   margin: 0;
-                  padding: 0;
+                  padding: 0; 
                 }
                 
                 .label-page {
@@ -1515,36 +1515,36 @@ const Siparisler = () => {
                   
                   .label-page {
                     page-break-inside: avoid;
-                  }
                 }
-              </style>
-            </head>
-            <body>
+              }
+            </style>
+          </head>
+          <body>
               ${labelsHtml}
-            </body>
-            </html>
+          </body>
+        </html>
           `;
 
           printWindow.document.write(htmlContent);
           printWindow.document.close();
           
           printWindow.onload = () => {
-            setTimeout(() => {
+        setTimeout(() => {
               try {
                 printWindow.focus();
                 printWindow.print();
               } catch (error) {
                 console.error('Yazdırma hatası:', error);
               }
-              setTimeout(() => {
+            setTimeout(() => {
                 try {
                   printWindow.close();
                 } catch (error) {
                   console.error('Pencere kapatma hatası:', error);
-                }
-              }, 3000);
+              }
+            }, 3000);
             }, 1500);
-          };
+      };
         }
       }
     } catch (error) {
@@ -1816,9 +1816,9 @@ const Siparisler = () => {
     }
   };
 
-  // Admin için sipariş durumu güncelleme
+  // Admin/Editor için sipariş durumu güncelleme
   const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
-    if (!isAdmin) return;
+    if (!isAdminOrEditor) return;
     
     setUpdatingStatus(true);
     try {
@@ -1994,18 +1994,18 @@ const Siparisler = () => {
         {/* Başlık */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {isAdmin ? 'Tüm Siparişler' : 'Siparişlerim'}
+            {isAdminOrEditor ? 'Tüm Siparişler' : 'Siparişlerim'}
           </h1>
           <p className="text-gray-600">
-            {isAdmin 
+            {isAdminOrEditor 
               ? 'Sistemdeki tüm siparişleri görüntüleyin ve yönetin.' 
               : 'Vermiş olduğunuz siparişlerin listesi.'
             }
           </p>
         </div>
 
-        {/* Admin İstatistikleri */}
-        {isAdmin && fixedStats && (
+        {/* Admin/Editor İstatistikleri */}
+        {isAdminOrEditor && fixedStats && (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
             <button
               onClick={() => handleStatusFilter('')}
@@ -2210,8 +2210,8 @@ const Siparisler = () => {
               </div>
             </div>
 
-            {/* Fiş Durumu Filtresi - Sadece Admin için */}
-            {isAdmin && (
+            {/* Fiş Durumu Filtresi - Sadece Admin/Editor için */}
+            {isAdminOrEditor && (
               <div className="md:w-64" ref={receiptDropdownRef}>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Fiş Durumu
@@ -2314,8 +2314,8 @@ const Siparisler = () => {
           )}
         </div>
 
-        {/* Toplu İşlemler - Sadece Admin için ve PENDING siparişler varsa */}
-        {isAdmin && ordersData?.orders.some(order => order.status === 'PENDING') && (
+        {/* Toplu İşlemler - Sadece Admin/Editor için ve PENDING siparişler varsa */}
+        {isAdminOrEditor && ordersData?.orders.some(order => order.status === 'PENDING') && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -2387,12 +2387,12 @@ const Siparisler = () => {
             <p className="text-gray-600 mb-6">
               {statusFilter || storeFilter || receiptFilter 
                 ? 'Farklı filtreler deneyin veya filtreleri temizleyin.'
-                : isAdmin 
+                : isAdminOrEditor 
                 ? 'Henüz sisteme hiç sipariş girilmemiş.'
                 : 'Henüz bir sipariş vermemişsiniz.'
               }
             </p>
-            {!isAdmin && !statusFilter && !storeFilter && !receiptFilter && (
+            {!isAdminOrEditor && !statusFilter && !storeFilter && !receiptFilter && (
               <Link
                 href="/dashboard/sepetim"
                 className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
@@ -2409,8 +2409,8 @@ const Siparisler = () => {
                 className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
               >
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                  {/* Checkbox - Sadece Admin için ve PENDING siparişlerde */}
-                  {isAdmin && order.status === 'PENDING' && (
+                  {/* Checkbox - Sadece Admin/Editor için ve PENDING siparişlerde */}
+                  {isAdminOrEditor && order.status === 'PENDING' && (
                     <div className="mr-4 self-start lg:self-center">
                       <input
                         type="checkbox"
@@ -2442,8 +2442,8 @@ const Siparisler = () => {
                       </span>
                     </div>
 
-                    {/* Admin için müşteri bilgileri */}
-                    {isAdmin && order.user && (
+                    {/* Admin/Editor için müşteri bilgileri */}
+                    {isAdminOrEditor && order.user && (
                       <div className="bg-gray-50 rounded-lg p-4 mb-4">
                         <h4 className="text-sm font-medium text-gray-900 mb-2">Müşteri Bilgileri</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -2503,8 +2503,8 @@ const Siparisler = () => {
                       Detayları Gör
                     </button>
 
-                    {/* İptal Butonu - Sadece PENDING durumunda ve admin değilse */}
-                    {!isAdmin && order.status === 'PENDING' && (
+                    {/* İptal Butonu - Sadece PENDING durumunda ve admin/editör değilse */}
+                    {!isAdminOrEditor && order.status === 'PENDING' && (
                       <button
                         onClick={() => {
                           setCancelOrderModal({
@@ -2561,8 +2561,8 @@ const Siparisler = () => {
                       </div>
                     )}
 
-                    {/* Admin için fiş yazdır butonu - sadece DELIVERED durumunda, yazdırılmamış fişler için ve canSeePrice=true olanlar için */}
-                    {isAdmin && order.status === 'DELIVERED' && !order.receipt_printed && user?.canSeePrice === true && (
+                    {/* Admin/Editor için fiş yazdır butonu - sadece DELIVERED durumunda, yazdırılmamış fişler için ve canSeePrice=true olanlar için */}
+                    {isAdminOrEditor && order.status === 'DELIVERED' && !order.receipt_printed && user?.canSeePrice === true && (
                       <button
                         onClick={async () => {
                           try {
@@ -2861,8 +2861,8 @@ const Siparisler = () => {
                       </button>
                     )}
 
-                    {/* Kargo Fişi Butonu - Sadece admin için ve DELIVERED durumunda */}
-                    {isAdmin && order.status === 'DELIVERED' && (
+                    {/* Kargo Fişi Butonu - Sadece admin/editor için ve DELIVERED durumunda */}
+                    {isAdminOrEditor && order.status === 'DELIVERED' && (
                       <button
                         onClick={() => {
                           setSelectedOrderForCargo(order);
@@ -2877,8 +2877,8 @@ const Siparisler = () => {
                       </button>
                     )}
 
-                    {/* Admin için durum güncelleme butonları */}
-                    {isAdmin && (
+                    {/* Admin/Editor için durum güncelleme butonları */}
+                    {isAdminOrEditor && (
                       <div className="flex flex-col sm:flex-row gap-2">
                         {order.status === 'PENDING' && (
                           <>
@@ -3094,8 +3094,8 @@ const Siparisler = () => {
                       </div>
                     </div>
 
-                    {/* Admin için müşteri bilgileri */}
-                    {isAdmin && selectedOrder.user && (
+                    {/* Admin/Editor için müşteri bilgileri */}
+                    {isAdminOrEditor && selectedOrder.user && (
                       <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                         <h4 className="text-lg font-semibold text-[#00365a] mb-4 flex items-center">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -3501,8 +3501,8 @@ const Siparisler = () => {
                                       Göster
                                     </button>
                                     
-                                    {/* QR Okutma Butonu - Sadece admin için */}
-                                    {isAdmin && (
+                                    {/* QR Okutma Butonu - Sadece admin/editor için */}
+                                    {isAdminOrEditor && (
                                       <button
                                         onClick={() => {
                                           // QR kod ID'sini kullanarak backend scan sayfasına yönlendir
@@ -3818,7 +3818,7 @@ const Siparisler = () => {
                     )}
 
                     {/* QR Kodu yoksa ama sipariş onaylanmış veya hazır durumda (CANCELLED hariç) */}
-                    {isAdmin && selectedOrder.status !== 'CANCELLED' && (selectedOrder.status === 'CONFIRMED' || selectedOrder.status === 'READY') && (!selectedOrder.qr_codes || selectedOrder.qr_codes.length === 0) && (
+                    {isAdminOrEditor && selectedOrder.status !== 'CANCELLED' && (selectedOrder.status === 'CONFIRMED' || selectedOrder.status === 'READY') && (!selectedOrder.qr_codes || selectedOrder.qr_codes.length === 0) && (
                       <div className="mt-6">
                         <h4 className="text-lg font-semibold text-gray-900 mb-3">QR Kodları</h4>
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
@@ -3847,8 +3847,8 @@ const Siparisler = () => {
                       </div>
                     )}
 
-                    {/* Admin için durum güncelleme */}
-                    {isAdmin && (
+                    {/* Admin/Editor için durum güncelleme */}
+                    {isAdminOrEditor && (
                       <div className="flex flex-wrap gap-2 mt-8 justify-center">
                         {selectedOrder.status === 'PENDING' && (
                           <>
@@ -3965,7 +3965,7 @@ const Siparisler = () => {
                             </div>
                             <div className="text-right">
                               <div className="text-sm text-gray-600">
-                                <span className="text-green-600">✓ QR Kodları Oluşturuldu</span>
+                                  <span className="text-green-600">✓ QR Kodları Oluşturuldu</span>
                               </div>
                             </div>
                           </div>
