@@ -3957,7 +3957,7 @@ const Siparisler = () => {
                           <div className="flex justify-between items-start">
                             <div>
                               <div className="font-medium text-gray-900">
-                                Sipariş #{order.orderNumber}
+                                Sipariş #{order.orderId.slice(0, 8)}
                               </div>
                               <div className="text-sm text-green-700 mt-1">
                                 Başarıyla onaylandı
@@ -3965,11 +3965,7 @@ const Siparisler = () => {
                             </div>
                             <div className="text-right">
                               <div className="text-sm text-gray-600">
-                                {order.warning ? (
-                                  <span className="text-yellow-600">{order.warning}</span>
-                                ) : (
-                                  <span className="text-green-600">✓ QR Kodları Oluşturuldu</span>
-                                )}
+                                <span className="text-green-600">✓ QR Kodları Oluşturuldu</span>
                               </div>
                             </div>
                           </div>
@@ -3993,7 +3989,7 @@ const Siparisler = () => {
                         <div key={order.orderId} className="bg-red-50 border border-red-200 rounded-lg p-3">
                           <div>
                             <div className="font-medium text-gray-900">
-                              Sipariş #{order.orderNumber}
+                              Sipariş #{order.orderId.slice(0, 8)}
                             </div>
                             <div className="text-sm text-red-700 mt-1">
                               Hata: {order.error}

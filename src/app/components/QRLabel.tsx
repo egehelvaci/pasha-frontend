@@ -154,7 +154,7 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
     if (!orderData.items.length) return;
 
     // Tüm QR etiketlerini oluştur
-    const allLabels = [];
+    const allLabels: string[] = [];
     
     for (const item of orderData.items) {
       for (let i = 0; i < item.quantity; i++) {

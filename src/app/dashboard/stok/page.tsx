@@ -564,7 +564,7 @@ export default function StokPage() {
       };
     } else {
       // Hazır kesim: adet bazlı stok ekleme
-      apiUrl = `${API_BASE_URL}/api/products/${selectedProduct.productId}/stock-hybrid`;
+      apiUrl = `${API_BASE_URL}/api/products/${selectedProduct.productId}/stock`;
       
       if (stockForm.width <= 0 || stockForm.height <= 0 || stockForm.quantity < 0) {
         alert('Lütfen geçerli boyut ve adet değerleri girin!');
@@ -574,8 +574,7 @@ export default function StokPage() {
       requestBody = {
         width: stockForm.width,
         height: stockForm.height,
-        quantity: stockForm.quantity,
-        updateMode: 'add'
+        quantity: stockForm.quantity
       };
     }
 
