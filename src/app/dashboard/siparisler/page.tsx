@@ -1873,6 +1873,14 @@ const Siparisler = () => {
                                           <span>${receiptData.musteri?.ad || order.user?.name || 'N/A'} ${receiptData.musteri?.soyad || order.user?.surname || ''}</span>
                                         </div>
                                         <div class="info-item">
+                                          <span><strong>Telefon:</strong></span>
+                                          <span>${receiptData.musteri?.telefon || order.user?.phone || order.store_phone || 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                          <span><strong>Adres:</strong></span>
+                                          <span>${receiptData.musteri?.adres || order.delivery_address || (order.address ? order.address.address + ', ' + order.address.district + ' / ' + order.address.city : 'N/A')}</span>
+                                        </div>
+                                        <div class="info-item">
                                           <span><strong>Sipariş Tarihi:</strong></span>
                                           <span>${receiptData.siparis?.olusturmaTarihi ? new Date(receiptData.siparis.olusturmaTarihi).toLocaleDateString('tr-TR', {
                                             year: 'numeric',
