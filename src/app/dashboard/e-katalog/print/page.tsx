@@ -560,9 +560,8 @@ const PrintCatalogPage = () => {
 
         {/* Product Pages - Optimized for performance */}
         {Object.entries(groupedProducts).map(([collectionName, collectionProducts], collectionIndex) => {
-          // Dynamic products per page based on total product count
-          const totalProducts = products.length;
-          const productsPerPage = totalProducts > 100 ? 6 : totalProducts > 50 ? 4 : totalProducts > 20 ? 3 : 2;
+          // Aynı koleksiyondaki ürünleri 6'şarlı grupla
+          const productsPerPage = 6;
           const pages = [];
           
           
@@ -594,7 +593,7 @@ const PrintCatalogPage = () => {
                 
                 {/* Page Content */}
                 <div className="page-content">
-                  <div className={`product-grid ${productsPerPage === 2 ? 'grid-2' : productsPerPage >= 6 ? 'grid-6' : ''}`}>
+                  <div className="product-grid grid-6">
                     {productsInPage.map((product) => (
                       <div key={product.productId} className="product-item">
                         {/* Optimized Product Image */}
