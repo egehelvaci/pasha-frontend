@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToken } from '@/app/hooks/useToken';
 import { StoreType, storeTypeLabels } from '@/components/StoreTypeSelector';
 import { bulkConfirmOrders, BulkConfirmOrdersResponse, getStores, Store } from '@/services/api';
+import CargoReceipt from '@/app/components/CargoReceipt';
 
 interface OrderItem {
   id: string;
@@ -269,6 +270,10 @@ const Siparisler = () => {
     reason: '',
     isLoading: false
   });
+
+  // Cargo receipt modal
+  const [cargoReceiptVisible, setCargoReceiptVisible] = useState(false);
+  const [selectedOrderForCargo, setSelectedOrderForCargo] = useState<Order | null>(null);
 
   // Toplu onaylama için state'ler
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
@@ -2026,6 +2031,22 @@ const Siparisler = () => {
                       </button>
                     )}
 
+                    {/* Kargo Fişi Butonu - Sadece DELIVERED durumunda */}
+                    {order.status === 'DELIVERED' && (
+                      <button
+                        onClick={() => {
+                          setSelectedOrderForCargo(order);
+                          setCargoReceiptVisible(true);
+                        }}
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors text-sm flex items-center gap-1"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        📦 Kargo Fişi
+                      </button>
+                    )}
+
                     {/* Admin için durum güncelleme butonları */}
                     {isAdmin && (
                       <div className="flex flex-col sm:flex-row gap-2">
@@ -3229,6 +3250,18 @@ const Siparisler = () => {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Cargo Receipt Modal */}
+        {cargoReceiptVisible && selectedOrderForCargo && (
+          <CargoReceipt
+            order={selectedOrderForCargo}
+            isVisible={cargoReceiptVisible}
+            onClose={() => {
+              setCargoReceiptVisible(false);
+              setSelectedOrderForCargo(null);
+            }}
+          />
         )}
       </div>
     </div>
