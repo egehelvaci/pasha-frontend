@@ -1080,33 +1080,16 @@ const Siparisler = () => {
         return;
       }
 
-      // Tüm etiketleri oluştur
+      // Backend'den gelen QR kodları ile etiket oluştur
       const allLabels: string[] = [];
       
       for (const order of ordersWithQR) {
-        for (const item of order.items) {
-            for (let i = 0; i < item.quantity; i++) {
-            const qrData = JSON.stringify({
-              urun: item.product.name,
-              ebat: `${item.width} x ${item.height}`,
-              kesim: item.has_fringe ? 'Saçaklı' : 'Saçaksız',
-              miktar: i + 1,
-              toplam: item.quantity,
-              siparis: order.id,
-              magaza: order.store_name,
-              tarih: new Date().toLocaleDateString('tr-TR')
-            });
-
+        // Backend'den gelen QR kodları varsa onları kullan
+        if (order.qr_codes && order.qr_codes.length > 0) {
+          for (const qrCodeData of order.qr_codes) {
+            const item = qrCodeData.order_item;
+            
             try {
-              const qrCodeDataURL = await QRCode.toDataURL(qrData, {
-                width: 200,
-                margin: 1,
-                color: {
-                  dark: '#000000',
-                  light: '#FFFFFF'
-                }
-              });
-
               // Her etiket için canvas oluştur
               const canvas = document.createElement('canvas');
               canvas.width = 378;
@@ -1117,6 +1100,16 @@ const Siparisler = () => {
               // Arka planı beyaz yap
               ctx.fillStyle = '#FFFFFF';
               ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+              // Backend QR kod string'ini kullanarak QR kod oluştur
+              const qrCodeDataURL = await QRCode.toDataURL(qrCodeData.qr_code, {
+                width: 200,
+                margin: 1,
+                color: {
+                  dark: '#000000',
+                  light: '#FFFFFF'
+                }
+              });
 
               // QR kod görselini yükle
               await new Promise((resolve) => {
@@ -1136,21 +1129,9 @@ const Siparisler = () => {
                   ctx.font = 'bold 24px Arial';
                   ctx.fillText('PAŞA HOME', canvas.width / 2, qrY + qrSize + 40);
 
-                  // Ürün bilgileri
-                  ctx.font = '16px Arial';
-                  let textY = qrY + qrSize + 70;
-                  
-                  ctx.fillText(`${item.width} x ${item.height}`, canvas.width / 2, textY);
-                  textY += 25;
-                  
-                  ctx.fillText(`Kesim: ${item.has_fringe ? 'Saçaklı' : 'Saçaksız'}`, canvas.width / 2, textY);
-                  textY += 25;
-                  
-                  ctx.fillText(`Saçak: ${item.has_fringe ? 'Saçaklı' : 'Saçaksız'}`, canvas.width / 2, textY);
-                  textY += 40;
-
-                  // Ürün adı (kalın)
+                  // Ürün adı (kalın) - en üstte
                   ctx.font = 'bold 18px Arial';
+                  let textY = qrY + qrSize + 70;
                   const productName = item.product.name.toUpperCase();
                   if (productName.length > 25) {
                     // Uzun ürün adlarını böl
@@ -1166,40 +1147,52 @@ const Siparisler = () => {
                     textY += 35;
                   }
 
-                  // Miktar ve sipariş bilgisi
+                  // Ürün bilgileri
+                  ctx.font = '16px Arial';
+                  
+                  ctx.fillText(`${item.width} x ${item.height}`, canvas.width / 2, textY);
+                  textY += 25;
+                  
+                  ctx.fillText(`Kesim: ${item.cut_type || 'Standart'}`, canvas.width / 2, textY);
+                  textY += 25;
+                  
+                  ctx.fillText(`Saçak: ${item.has_fringe ? 'Saçaklı' : 'Saçaksız'}`, canvas.width / 2, textY);
+                  textY += 25;
+
+                  // Ürün notu varsa ekle
+                  if (item.notes && item.notes.trim()) {
+                    ctx.font = '14px Arial';
+                    ctx.fillText(`Not: ${item.notes}`, canvas.width / 2, textY);
+                    textY += 20;
+                  }
+                  textY += 15;
+
+                  // QR kod ve sipariş bilgisi
                   ctx.font = '14px Arial';
-                  ctx.fillText(`Toplam ${item.quantity} Prç.`, canvas.width / 2, textY);
+                  ctx.fillText(`Gerekli Tarama: ${qrCodeData.required_scans}`, canvas.width / 2, textY);
                   textY += 20;
                   ctx.fillText(`Sp. No: ${order.id.slice(0, 8)}`, canvas.width / 2, textY);
-
-                  // Kargo ve teslimat ikonları (basit)
-                  ctx.strokeStyle = '#000000';
-                  ctx.lineWidth = 2;
-                  
-                  const iconY = 280;
-                  ctx.strokeRect(30, iconY, 30, 20);
-                  ctx.beginPath();
-                  ctx.arc(35, iconY + 25, 5, 0, 2 * Math.PI);
-                  ctx.stroke();
-                  ctx.beginPath();
-                  ctx.arc(55, iconY + 25, 5, 0, 2 * Math.PI);
-                  ctx.stroke();
-
-                  ctx.strokeRect(canvas.width - 60, iconY, 30, 20);
-                  ctx.beginPath();
-                  ctx.moveTo(canvas.width - 45, iconY + 5);
-                  ctx.lineTo(canvas.width - 45, iconY + 15);
-                  ctx.stroke();
+                  textY += 20;
+                  ctx.fillText(`QR ID: ${qrCodeData.id.slice(0, 8)}`, canvas.width / 2, textY);
+                  textY += 20;
+                  ctx.fillText(`Tarih: ${new Date(order.created_at).toLocaleDateString('tr-TR')}`, canvas.width / 2, textY);
 
                   allLabels.push(canvas.toDataURL('image/png'));
                   resolve(true);
                 };
+                qrImage.onerror = () => {
+                  console.error('QR kod görsel yükleme hatası');
+                  resolve(false);
+                };
                 qrImage.src = qrCodeDataURL;
               });
             } catch (error) {
-              console.error('QR kod oluşturma hatası:', error);
+              console.error('QR kod etiketi oluşturma hatası:', error);
             }
           }
+        } else {
+          // Fallback: QR kod yoksa eski yöntemi kullan
+          console.warn(`Sipariş ${order.id} için QR kod bulunamadı, fallback kullanılıyor`);
         }
       }
 
@@ -1312,247 +1305,8 @@ const Siparisler = () => {
       return;
     }
 
-    try {
-      // Siparişleri yükle
-      const ordersWithQR = [];
-      for (const orderId of orderIds) {
-        try {
-          const authToken = token;
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/admin/orders/${orderId}`, {
-            headers: {
-              'Authorization': `Bearer ${authToken}`,
-              'Content-Type': 'application/json'
-            }
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            if (data.success && data.data.items && data.data.items.length > 0) {
-              ordersWithQR.push(data.data);
-            }
-          }
-        } catch (error) {
-          console.error(`Sipariş yüklenemedi: ${orderId}`, error);
-        }
-      }
-
-      if (ordersWithQR.length === 0) {
-        alert('Sipariş bilgileri yüklenemedi!');
-        return;
-      }
-
-      // Tüm etiketleri oluştur
-      const allLabels: string[] = [];
-      
-      for (const order of ordersWithQR) {
-        for (const item of order.items) {
-          for (let i = 0; i < item.quantity; i++) {
-            const qrData = JSON.stringify({
-              urun: item.product.name,
-              ebat: `${item.width} x ${item.height}`,
-              kesim: item.has_fringe ? 'Saçaklı' : 'Saçaksız',
-              miktar: i + 1,
-              toplam: item.quantity,
-              siparis: order.id,
-              magaza: order.store_name,
-              tarih: new Date().toLocaleDateString('tr-TR')
-            });
-
-            try {
-              const qrCodeDataURL = await QRCode.toDataURL(qrData, {
-                width: 200,
-                margin: 1,
-                color: {
-                  dark: '#000000',
-                  light: '#FFFFFF'
-                }
-              });
-
-              // Her etiket için canvas oluştur
-              const canvas = document.createElement('canvas');
-              canvas.width = 378;
-              canvas.height = 567;
-              const ctx = canvas.getContext('2d');
-              if (!ctx) continue;
-
-              // Arka planı beyaz yap
-              ctx.fillStyle = '#FFFFFF';
-              ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-              // QR kod görselini yükle
-              await new Promise((resolve) => {
-                const qrImage = new Image();
-                qrImage.onload = () => {
-                  // QR kodu üst kısma yerleştir
-                  const qrSize = 200;
-                  const qrX = (canvas.width - qrSize) / 2;
-                  const qrY = 30;
-                  ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
-
-                  // Metin bilgilerini alt kısma ekle
-                  ctx.fillStyle = '#000000';
-                  ctx.textAlign = 'center';
-
-                  // Başlık
-                  ctx.font = 'bold 24px Arial';
-                  ctx.fillText('PAŞA HOME', canvas.width / 2, qrY + qrSize + 40);
-
-                  // Ürün bilgileri
-                  ctx.font = '16px Arial';
-                  let textY = qrY + qrSize + 70;
-                  
-                  ctx.fillText(`${item.width} x ${item.height}`, canvas.width / 2, textY);
-                  textY += 25;
-                  
-                  ctx.fillText(`Kesim: ${translateCutType(item.cut_type)}`, canvas.width / 2, textY);
-                  textY += 25;
-                  
-                  ctx.fillText(`Saçak: ${item.has_fringe ? 'Saçaklı' : 'Saçaksız'}`, canvas.width / 2, textY);
-                  textY += 25;
-
-                  // Ürün notu varsa ekle
-                  if (item.notes && item.notes.trim()) {
-                    ctx.font = '14px Arial';
-                    ctx.fillText(`Not: ${item.notes}`, canvas.width / 2, textY);
-                    textY += 20;
-                  }
-                  textY += 15;
-
-                  // Ürün adı (kalın)
-                  ctx.font = 'bold 18px Arial';
-                  const productName = item.product.name.toUpperCase();
-                  if (productName.length > 25) {
-                    // Uzun ürün adlarını böl
-                    const words = productName.split(' ');
-                    const line1 = words.slice(0, Math.ceil(words.length / 2)).join(' ');
-                    const line2 = words.slice(Math.ceil(words.length / 2)).join(' ');
-                    ctx.fillText(line1, canvas.width / 2, textY);
-                    textY += 25;
-                    ctx.fillText(line2, canvas.width / 2, textY);
-                    textY += 35;
-                  } else {
-                    ctx.fillText(productName, canvas.width / 2, textY);
-                    textY += 35;
-                  }
-
-                  // Miktar ve sipariş bilgisi
-                  ctx.font = '14px Arial';
-                  ctx.fillText(`Toplam ${item.quantity} Prç.`, canvas.width / 2, textY);
-                  textY += 20;
-                  ctx.fillText(`Sp. No: ${order.id.slice(0, 8)}`, canvas.width / 2, textY);
-
-                  allLabels.push(canvas.toDataURL('image/png'));
-                  resolve(true);
-                };
-                qrImage.src = qrCodeDataURL;
-              });
-            } catch (error) {
-              console.error('QR kod oluşturma hatası:', error);
-            }
-          }
-        }
-      }
-
-      // Tüm etiketleri yazdır
-      if (allLabels.length > 0) {
-        const printWindow = window.open('', '_blank', 'width=800,height=600');
-        if (printWindow) {
-          const labelsHtml = allLabels.map((labelDataURL, index) => `
-            <div class="label-page" ${index > 0 ? 'style="page-break-before: always;"' : ''}>
-              <img src="${labelDataURL}" alt="QR Kod Etiketi ${index + 1}" class="label-image">
-            </div>
-          `).join('');
-
-          const htmlContent = `
-            <!DOCTYPE html>
-            <html lang="tr">
-            <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>Toplu QR Kod Etiketleri</title>
-              <style>
-                @page {
-                  size: 10cm 15cm;
-                  margin: 0;
-                }
-                
-                * {
-                  margin: 0;
-                  padding: 0;
-                  box-sizing: border-box;
-                }
-                
-                body { 
-                  font-family: 'Arial', sans-serif;
-                  background: white;
-                  margin: 0;
-                  padding: 0; 
-                }
-                
-                .label-page {
-                  width: 10cm;
-                  height: 15cm;
-                  margin: 0;
-                  padding: 0;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  background: white;
-                  page-break-inside: avoid;
-                }
-                
-                .label-image {
-                  width: 10cm;
-                  height: 15cm;
-                  object-fit: contain;
-                  image-rendering: -webkit-optimize-contrast;
-                  image-rendering: crisp-edges;
-                }
-                
-                @media print {
-                  body {
-                    -webkit-print-color-adjust: exact;
-                    print-color-adjust: exact;
-                  }
-                  
-                  .label-page {
-                    page-break-inside: avoid;
-                }
-              }
-            </style>
-          </head>
-          <body>
-              ${labelsHtml}
-          </body>
-        </html>
-          `;
-
-          printWindow.document.write(htmlContent);
-          printWindow.document.close();
-          
-          printWindow.onload = () => {
-        setTimeout(() => {
-              try {
-                printWindow.focus();
-                printWindow.print();
-              } catch (error) {
-                console.error('Yazdırma hatası:', error);
-              }
-            setTimeout(() => {
-                try {
-                  printWindow.close();
-                } catch (error) {
-                  console.error('Pencere kapatma hatası:', error);
-              }
-            }, 3000);
-            }, 1500);
-      };
-        }
-      }
-    } catch (error) {
-      console.error('Toplu QR etiket yazdırma hatası:', error);
-      alert('QR etiketleri yazdırılırken bir hata oluştu.');
-    }
+    // printBulkQRLabels fonksiyonunu kullan
+    await printBulkQRLabels(orderIds);
   };
 
   // Toplu QR kod yazdırma fonksiyonu (seçilen siparişler için)
@@ -1562,194 +1316,8 @@ const Siparisler = () => {
       return;
     }
 
-    try {
-      // Seçilen siparişleri yükle ve QR kodlarını kontrol et
-      const ordersWithQR = [];
-      for (const orderId of selectedOrderIds) {
-        const order = filteredOrders?.orders.find(o => o.id === orderId);
-        if (order && order.qr_codes && order.qr_codes.length > 0) {
-          ordersWithQR.push(order);
-        }
-      }
-
-      if (ordersWithQR.length === 0) {
-        alert('Seçilen siparişlerde QR kod bulunamadı!');
-        return;
-      }
-
-      // Gizli iframe oluştur
-      const iframe = document.createElement('iframe');
-      iframe.setAttribute('data-printing', 'true');
-      iframe.style.position = 'fixed';
-      iframe.style.top = '-9999px';
-      iframe.style.left = '-9999px';
-      iframe.style.width = '0';
-      iframe.style.height = '0';
-      iframe.style.border = 'none';
-      document.body.appendChild(iframe);
-
-      // Tüm QR kodları topla
-      const allQrItems: string[] = [];
-      ordersWithQR.forEach(order => {
-        order.qr_codes?.forEach((qrCode: any) => {
-          const item = order.items.find(i => i.id === qrCode.order_item_id);
-          if (item && qrCode.qrCodeImageUrl) {
-            for (let i = 0; i < item.quantity; i++) {
-              allQrItems.push(`
-                <div class="qr-item">
-                  <div style="background-color: #00365a; padding: 2mm; margin: -2mm -2mm 1mm -2mm;">
-                    <div class="qr-header" style="color: white;">SİPARİŞ BİLGİLERİ</div>
-                  </div>
-                  <img class="qr-image" src="${qrCode.qrCodeImageUrl}" alt="QR Code"/>
-                  <div class="product-info">
-                    <p><strong>Ürün:</strong> ${item.product.name}</p>
-                    <p><strong>Koleksiyon:</strong> ${item.product.collection?.name || 'Belirtilmemiş'}</p>
-                    <p><strong>Boyut:</strong> ${item.width}×${item.height} cm</p>
-                    <p><strong>Saçak:</strong> ${item.has_fringe ? 'Saçaklı' : 'Saçaksız'}</p>
-                    <p><strong>Kesim:</strong> ${
-                      item.cut_type === 'STANDARD' ? 'Standart' :
-                      item.cut_type === 'SPECIAL' ? 'Özel' :
-                      item.cut_type === 'SURME' ? 'Sürme' : item.cut_type
-                    }</p>
-                  </div>
-                  <div class="store-info">
-                    <strong style="color: #00365a;">${order.store_name}</strong><br/>
-                    <span>Sipariş: ${order.id.slice(0, 8).toUpperCase()}</span>
-                  </div>
-                </div>
-              `);
-            }
-          }
-        });
-      });
-
-      // iframe içeriğini yaz
-      iframe.contentDocument?.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Toplu QR Kodları</title>
-            <meta charset="utf-8">
-            <style>
-              * { margin: 0; padding: 0; box-sizing: border-box; }
-              body { 
-                font-family: Arial, sans-serif; 
-                line-height: 1.2; 
-                color: #000; 
-                background: white;
-                padding: 5mm;
-                margin: 0;
-              }
-              .qr-grid {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                grid-template-rows: repeat(2, 1fr);
-                gap: 3mm;
-                width: 100%;
-                height: 100%;
-              }
-              .qr-item {
-                width: 60mm;
-                height: 85mm;
-                border: 1px solid #000;
-                padding: 2mm;
-                text-align: center;
-                page-break-inside: avoid;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-                box-sizing: border-box;
-                overflow: hidden;
-              }
-              .qr-header {
-                font-size: 6pt;
-                font-weight: bold;
-                margin-bottom: 1mm;
-                color: white;
-                text-align: center;
-                line-height: 1.1;
-              }
-              .qr-image {
-                width: 35mm;
-                height: 35mm;
-                margin: 0 auto;
-                border: 1px solid #000;
-              }
-              .product-info {
-                font-size: 6pt;
-                text-align: left;
-                margin-top: 1mm;
-              }
-              .product-info p {
-                margin: 0.5mm 0;
-                line-height: 1.1;
-              }
-              .product-info strong {
-                font-weight: bold;
-              }
-              .store-info {
-                font-size: 6pt;
-                text-align: center;
-                margin-top: 1mm;
-                padding-top: 1mm;
-                border-top: 1px solid #000;
-                line-height: 1.2;
-              }
-              @media print {
-                body { 
-                  padding: 0; 
-                  margin: 0;
-                }
-                .qr-grid {
-                  gap: 2mm;
-                }
-              }
-            </style>
-          </head>
-          <body>
-            ${(() => {
-              // 6'şar gruplara böl ve sayfalar oluştur
-              const pages = [];
-              for (let i = 0; i < allQrItems.length; i += 6) {
-                const pageItems = allQrItems.slice(i, i + 6);
-                pages.push(`
-                  <div class="qr-grid" ${i > 0 ? 'style="page-break-before: always;"' : ''}>
-                    ${pageItems.join('')}
-                  </div>
-                `);
-              }
-              return pages.join('');
-            })()}
-          </body>
-        </html>
-      `);
-      iframe.contentDocument?.close();
-
-      // iframe yüklendiğinde yazdırma dialogunu tetikle
-      iframe.onload = () => {
-        setTimeout(() => {
-          if (iframe.contentWindow) {
-            iframe.contentWindow.print();
-            setTimeout(() => {
-              if (document.body.contains(iframe)) {
-                document.body.removeChild(iframe);
-              }
-            }, 3000);
-          }
-        }, 1000);
-      };
-
-      // iframe yüklenemezse de temizle
-      setTimeout(() => {
-        if (document.body.contains(iframe)) {
-          document.body.removeChild(iframe);
-        }
-      }, 5000);
-
-    } catch (error) {
-      console.error('Toplu QR yazdırma hatası:', error);
-      alert('QR kodları yazdırılırken bir hata oluştu!');
-    }
+    // printBulkQRLabels fonksiyonunu kullan
+    await printBulkQRLabels(selectedOrderIds);
   };
 
 
@@ -4211,7 +3779,6 @@ const Siparisler = () => {
                 product: {
                   productId: item.product.productId,
                   name: item.product.name,
-                  description: item.product.description,
                   productImage: item.product.productImage
                 },
                 width: item.width,
