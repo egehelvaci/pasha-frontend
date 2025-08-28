@@ -2028,7 +2028,7 @@ export const getMuhasebeHareketleri = async (): Promise<MuhasebeHareketleriRespo
   }
 };
 
-// Sipariş iptal API
+// Sipariş iptal API (Kullanıcı için)
 export interface CancelOrderResponse {
   success: boolean;
   message: string;
@@ -2063,6 +2063,104 @@ export const cancelOrder = async (orderId: string, reason?: string): Promise<Can
     return data;
   } catch (error: any) {
     console.error('Sipariş iptal edilirken hata:', error);
+    throw error;
+  }
+};
+
+// Admin Sipariş İptal API (Sadece Admin)
+export interface AdminCancelOrderRequest {
+  orderId: string;
+  reason: string;
+}
+
+export interface AdminCancelOrderResponse {
+  success: boolean;
+  message: string;
+  order: {
+    id: string;
+    user_id: string;
+    total_price: number;
+    status: string;
+    created_at: string;
+    updated_at: string;
+  };
+}
+
+export const adminCancelOrder = async (orderId: string, reason: string): Promise<AdminCancelOrderResponse> => {
+  try {
+    const token = getAuthToken();
+    if (!token) throw new Error('Token bulunamadı');
+
+    const response = await fetch(`${API_URL}/api/admin/orders/cancel`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        orderId,
+        reason
+      })
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return data;
+  } catch (error: any) {
+    console.error('Admin sipariş iptal edilirken hata:', error);
+    throw error;
+  }
+};
+
+// Admin Sipariş İade API (Sadece Admin - Teslim edilmiş siparişler için)
+export interface AdminRefundOrderRequest {
+  orderId: string;
+  reason: string;
+}
+
+export interface AdminRefundOrderResponse {
+  success: boolean;
+  message: string;
+  order: {
+    id: string;
+    user_id: string;
+    total_price: number;
+    status: string;
+    created_at: string;
+    updated_at: string;
+  };
+}
+
+export const adminRefundOrder = async (orderId: string, reason: string): Promise<AdminRefundOrderResponse> => {
+  try {
+    const token = getAuthToken();
+    if (!token) throw new Error('Token bulunamadı');
+
+    const response = await fetch(`${API_URL}/api/admin/orders/refund`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        orderId,
+        reason
+      })
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return data;
+  } catch (error: any) {
+    console.error('Admin sipariş iade edilirken hata:', error);
     throw error;
   }
 };

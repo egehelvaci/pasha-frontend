@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -122,8 +122,8 @@ export default function Dashboard() {
     }
   }, [user, isLoading, router]);
 
-  // Fiyat listesini yenileme fonksiyonu
-  const refreshPriceList = useCallback(async () => {
+  // Manuel fiyat listesi yenileme fonksiyonu (buton için)
+  const refreshPriceList = async () => {
     if (!token) return;
 
     setIsLoadingPriceList(true);
@@ -143,68 +143,88 @@ export default function Dashboard() {
     } finally {
       setIsLoadingPriceList(false);
     }
-  }, [token]);
+  };
 
-  // Ana veri çekme fonksiyonları
-  const fetchCollections = useCallback(async () => {
-    if (!token) return;
-    
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/collections`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const data: CollectionsResponse = await response.json();
-        if (data.success) {
-          // Koleksiyonları alfabetik sıraya göre düzenle
-          const sortedCollections = data.data.sort((a, b) => a.name.localeCompare(b.name, 'tr'));
-          setCollections(sortedCollections);
-        }
-      }
-    } catch (error) {
-      console.error('Koleksiyonlar çekme hatası:', error);
-    } finally {
-      setIsLoadingCollections(false);
-    }
-  }, [token]);
-
-  const fetchRecentProducts = useCallback(async () => {
-    if (!token) return;
-    
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/products?limit=20&page=1`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const data: ProductsResponse = await response.json();
-        if (data.success) {
-          setRecentProducts(data.data);
-        }
-      }
-    } catch (error) {
-      console.error('Son ürünler çekme hatası:', error);
-    } finally {
-      setIsLoadingProducts(false);
-    }
-  }, [token]);
-
-  // İlk yükleme ve token/storeId değiştiğinde veri çekme
+  // İlk yükleme ve veri çekme - sadece bir kez çalışacak
   useEffect(() => {
     if (!token) return;
 
+    // Koleksiyonları getir
+    const fetchCollections = async () => {
+      setIsLoadingCollections(true);
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/collections`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data: CollectionsResponse = await response.json();
+          if (data.success) {
+            // Koleksiyonları alfabetik sıraya göre düzenle
+            const sortedCollections = data.data.sort((a, b) => a.name.localeCompare(b.name, 'tr'));
+            setCollections(sortedCollections);
+          }
+        }
+      } catch (error) {
+        console.error('Koleksiyonlar çekme hatası:', error);
+      } finally {
+        setIsLoadingCollections(false);
+      }
+    };
+
+    // Son ürünleri getir
+    const fetchRecentProducts = async () => {
+      setIsLoadingProducts(true);
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/products?limit=20&page=1`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data: ProductsResponse = await response.json();
+          if (data.success) {
+            setRecentProducts(data.data);
+          }
+        }
+      } catch (error) {
+        console.error('Son ürünler çekme hatası:', error);
+      } finally {
+        setIsLoadingProducts(false);
+      }
+    };
+
+    // Fiyat listesini getir (koşullu)
+    const fetchPriceList = async () => {
+      if (!storeId) return;
+      
+      setIsLoadingPriceList(true);
+      try {
+        const data = await getMyStorePriceList();
+        
+        // Fiyat listesi detaylarını alfabetik sıraya göre düzenle
+        const sortedPriceList = {
+          ...data,
+          PriceListDetail: data.PriceListDetail.sort((a: any, b: any) => 
+            a.Collection.name.localeCompare(b.Collection.name, 'tr')
+          )
+        };
+        setPriceList(sortedPriceList);
+      } catch (error) {
+        console.error('Fiyat listesi çekme hatası:', error);
+      } finally {
+        setIsLoadingPriceList(false);
+      }
+    };
+
+    // Paralel olarak veri çek
     fetchCollections();
     fetchRecentProducts();
-    
-    if (storeId) {
-      refreshPriceList();
-    }
-  }, [token, storeId, fetchCollections, fetchRecentProducts, refreshPriceList]);
+    fetchPriceList();
+  }, [token, storeId]); // Sadece token ve storeId değiştiğinde çalışsın
 
   if (isLoading || !user) {
     return <div className="min-h-screen flex items-center justify-center">Yükleniyor...</div>;

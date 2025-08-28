@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import { useToken } from '@/app/hooks/useToken';
 import { StoreType, storeTypeLabels } from '@/components/StoreTypeSelector';
-import { bulkConfirmOrders, BulkConfirmOrdersResponse, getStores, Store } from '@/services/api';
+import { bulkConfirmOrders, BulkConfirmOrdersResponse, getStores, Store, adminRefundOrder } from '@/services/api';
 import CargoReceipt from '@/app/components/CargoReceipt';
 import QRLabel from '@/app/components/QRLabel';
 import QRCode from 'qrcode';
@@ -199,6 +199,7 @@ interface CancelOrderModal {
   orderNumber?: string;
   reason: string;
   isLoading: boolean;
+  isRefund?: boolean; // İade işlemi mi, iptal işlemi mi
 }
 
 const statusLabels: { [key: string]: string } = {
@@ -271,7 +272,8 @@ const Siparisler = () => {
     isOpen: false,
     orderId: '',
     reason: '',
-    isLoading: false
+    isLoading: false,
+    isRefund: false
   });
 
   // Cargo receipt modal
@@ -1816,6 +1818,45 @@ const Siparisler = () => {
     }
   };
 
+  // Admin için sipariş iade etme
+  const handleRefundOrder = async (orderId: string, reason?: string) => {
+    if (!isAdmin) return;
+    
+    try {
+      setCancelOrderModal(prev => ({ ...prev, isLoading: true }));
+      
+      const response = await adminRefundOrder(orderId, reason || 'Admin iadesi');
+      
+      if (response.success) {
+        alert(response.message || 'Sipariş başarıyla iade edildi.');
+        
+        // Siparişleri yeniden yükle
+        await fetchOrders(currentPage, statusFilter, receiptFilter);
+        
+        // Modal'ı kapat
+        setCancelOrderModal({
+          isOpen: false,
+          orderId: '',
+          reason: '',
+          isLoading: false,
+          isRefund: false
+        });
+        
+        // Eğer açık olan sipariş detayı iade edilen siparişse, modal'ı kapat
+        if (selectedOrder && selectedOrder.id === orderId) {
+          setSelectedOrder(null);
+        }
+      } else {
+        throw new Error(response.message || 'Sipariş iade edilemedi');
+      }
+    } catch (error: any) {
+      console.error('Sipariş iade hatası:', error);
+      alert(error.message || 'Sipariş iade edilirken bir hata oluştu. Lütfen tekrar deneyiniz.');
+    } finally {
+      setCancelOrderModal(prev => ({ ...prev, isLoading: false }));
+    }
+  };
+
   // Admin/Editor için sipariş durumu güncelleme
   const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
     if (!isAdminOrEditor) return;
@@ -2874,6 +2915,28 @@ const Siparisler = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                         📦 Kargo Fişi
+                      </button>
+                    )}
+
+                    {/* İade Butonu - Sadece admin için ve DELIVERED durumunda */}
+                    {isAdmin && order.status === 'DELIVERED' && (
+                      <button
+                        onClick={() => {
+                          setCancelOrderModal({
+                            isOpen: true,
+                            orderId: order.id,
+                            orderNumber: order.id.slice(0, 8),
+                            isLoading: false,
+                            reason: '',
+                            isRefund: true
+                          });
+                        }}
+                        className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors text-sm flex items-center gap-1"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                        </svg>
+                        🔄 İade Et
                       </button>
                     )}
 
@@ -4043,15 +4106,20 @@ const Siparisler = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl max-w-md w-full mx-4 shadow-2xl">
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Siparişi İptal Et</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  {cancelOrderModal.isRefund ? 'Siparişi İade Et' : 'Siparişi İptal Et'}
+                </h3>
                 
                 <div className="mb-4">
                   <p className="text-sm text-gray-600 mb-4">
-                    Bu siparişi iptal etmek istediğinizden emin misiniz? Bu işlem geri alınamaz{user?.canSeePrice ? ' ve sipariş tutarı bakiyenize iade edilecektir' : ''}.
+                    {cancelOrderModal.isRefund 
+                      ? 'Bu siparişi iade etmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve sipariş tutarı müşteri bakiyesine iade edilecektir.'
+                      : `Bu siparişi iptal etmek istediğinizden emin misiniz? Bu işlem geri alınamaz${user?.canSeePrice ? ' ve sipariş tutarı bakiyenize iade edilecektir' : ''}.`
+                    }
                   </p>
                   
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    İptal Nedeni (İsteğe bağlı)
+                    {cancelOrderModal.isRefund ? 'İade Nedeni (İsteğe bağlı)' : 'İptal Nedeni (İsteğe bağlı)'}
                   </label>
                   <textarea
                     value={cancelOrderModal.reason}
@@ -4072,7 +4140,8 @@ const Siparisler = () => {
                       isOpen: false,
                       orderId: '',
                       reason: '',
-                      isLoading: false
+                      isLoading: false,
+                      isRefund: false
                     })}
                     disabled={cancelOrderModal.isLoading}
                     className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
@@ -4080,14 +4149,27 @@ const Siparisler = () => {
                     Vazgeç
                   </button>
                   <button
-                    onClick={() => handleCancelOrder(cancelOrderModal.orderId, cancelOrderModal.reason || undefined)}
+                    onClick={() => {
+                      if (cancelOrderModal.isRefund) {
+                        handleRefundOrder(cancelOrderModal.orderId, cancelOrderModal.reason || undefined);
+                      } else {
+                        handleCancelOrder(cancelOrderModal.orderId, cancelOrderModal.reason || undefined);
+                      }
+                    }}
                     disabled={cancelOrderModal.isLoading}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                    className={`px-4 py-2 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2 ${
+                      cancelOrderModal.isRefund 
+                        ? 'bg-orange-600 hover:bg-orange-700' 
+                        : 'bg-red-600 hover:bg-red-700'
+                    }`}
                   >
                     {cancelOrderModal.isLoading && (
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                     )}
-                    {cancelOrderModal.isLoading ? 'İptal Ediliyor...' : 'Siparişi İptal Et'}
+                    {cancelOrderModal.isLoading 
+                      ? (cancelOrderModal.isRefund ? 'İade Ediliyor...' : 'İptal Ediliyor...') 
+                      : (cancelOrderModal.isRefund ? 'Siparişi İade Et' : 'Siparişi İptal Et')
+                    }
                   </button>
                 </div>
               </div>
