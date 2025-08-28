@@ -6,7 +6,10 @@ import QRCode from 'qrcode';
 interface OrderItem {
   id: string;
   product: {
+    productId: string;
     name: string;
+    description?: string;
+    productImage?: string;
   };
   width: string;
   height: string;
@@ -14,14 +17,84 @@ interface OrderItem {
   cut_type: string;
   quantity: number;
   notes?: string;
+  unit_price: string;
+  total_price: string;
+}
+
+interface QRCodeData {
+  id: string;
+  order_id: string;
+  order_item_id: string;
+  product_id: string;
+  qr_code: string;
+  qrCodeImageUrl: string;
+  scan_count: number;
+  required_scans: number;
+  last_scan_at: string;
+  is_scanned: boolean;
+  scanned_at: string;
+  created_at: string;
+  first_scan_employee_id?: string;
+  first_scan_at?: string;
+  second_scan_at?: string;
+  order_item: {
+    id: string;
+    order_id: string;
+    product_id: string;
+    quantity: number;
+    unit_price: string;
+    total_price: string;
+    has_fringe: boolean;
+    width: string;
+    height: string;
+    cut_type: string;
+    notes?: string;
+    product: {
+      productId: string;
+      name: string;
+      productImage: string;
+      collectionId: string;
+      createdAt: string;
+      updatedAt: string;
+      rule_id: number;
+    };
+  };
+  product: {
+    productId: string;
+    name: string;
+    productImage: string;
+    collectionId: string;
+    createdAt: string;
+    updatedAt: string;
+    rule_id: number;
+  };
 }
 
 interface QRLabelProps {
   orderData: {
     id: string;
     store_name: string;
+    store_tax_number?: string;
+    store_tax_office?: string;
+    store_phone?: string;
+    store_email?: string;
+    total_price: string;
+    status: string;
     notes?: string;
+    created_at: string;
     items: OrderItem[];
+    qr_codes: QRCodeData[];
+    user?: {
+      name: string;
+      surname: string;
+      email: string;
+    };
+    address?: {
+      title: string;
+      address: string;
+      city?: string;
+      district?: string;
+    };
   };
   isVisible: boolean;
   onClose: () => void;
@@ -45,43 +118,20 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (isVisible && canvasRef.current) {
-      generatePreviewQRCode();
+    // Önizleme için backend'den gelen QR kodunu kullan
+    const generatePreviewQRCode = async () => {
+    if (!canvasRef.current || !orderData.qr_codes || !orderData.qr_codes.length) {
+      return;
     }
-  }, [isVisible, orderData]);
-
-  // Önizleme için ilk ürünün QR kodunu oluştur
-  const generatePreviewQRCode = async () => {
-    if (!canvasRef.current || !orderData.items.length) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const firstItem = orderData.items[0];
+    const firstQRCode = orderData.qr_codes[0];
+    const firstItem = firstQRCode.order_item;
     
-    // QR kod verisi - ürün bilgilerini JSON formatında
-    const qrData = JSON.stringify({
-      urun: firstItem.product.name,
-      ebat: `${firstItem.width} x ${firstItem.height}`,
-      kesim: firstItem.has_fringe ? 'Saçaklı' : 'Saçaksız',
-      miktar: 1, // Önizleme için 1 adet
-      siparis: orderData.id,
-      magaza: orderData.store_name,
-      tarih: new Date().toLocaleDateString('tr-TR')
-    });
-
     try {
-      // QR kod oluştur
-      const qrCodeDataURL = await QRCode.toDataURL(qrData, {
-        width: 200,
-        margin: 1,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        }
-      });
-
       // Canvas boyutlarını 10x15 cm (378x567 piksel @ 96 DPI) olarak ayarla
       canvas.width = 378;
       canvas.height = 567;
@@ -90,108 +140,132 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // QR kod görselini yükle
-      const qrImage = new Image();
-      qrImage.onload = () => {
-        // QR kodu üst kısma yerleştir (ortala)
-        const qrSize = 200;
-        const qrX = (canvas.width - qrSize) / 2;
-        const qrY = 30;
-        ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
+      // Canvas tainted hatası önlemek için doğrudan QR kod oluştur
+      try {
+        const qrCodeDataURL = await QRCode.toDataURL(firstQRCode.qr_code, {
+          width: 200,
+          margin: 1,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
+        });
 
-        // Metin bilgilerini alt kısma ekle
-        ctx.fillStyle = '#000000';
-        ctx.textAlign = 'center';
+        const qrImage = new Image();
+        qrImage.onload = () => {
+          // QR kodu üst kısma yerleştir (ortala)
+          const qrSize = 200;
+          const qrX = (canvas.width - qrSize) / 2;
+          const qrY = 30;
+          ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
 
-        // Başlık
-        ctx.font = 'bold 24px Arial';
-        ctx.fillText('PAŞA HOME', canvas.width / 2, qrY + qrSize + 40);
+          // Metin bilgilerini alt kısma ekle
+          ctx.fillStyle = '#000000';
+          ctx.textAlign = 'center';
 
-        // Ürün adı (kalın) - en üstte
-        ctx.font = 'bold 18px Arial';
-        let textY = qrY + qrSize + 70;
-        ctx.fillText(firstItem.product.name.toUpperCase(), canvas.width / 2, textY);
-        textY += 35;
+          // Başlık
+          ctx.font = 'bold 24px Arial';
+          ctx.fillText('PAŞA HOME', canvas.width / 2, qrY + qrSize + 40);
 
-        // Ürün bilgileri
-        ctx.font = '16px Arial';
-        
-        ctx.fillText(`${firstItem.width} x ${firstItem.height}`, canvas.width / 2, textY);
-        textY += 25;
-        
-        ctx.fillText(`Kesim: ${translateCutType(firstItem.cut_type)}`, canvas.width / 2, textY);
-        textY += 25;
-        
-        ctx.fillText(`Saçak: ${firstItem.has_fringe ? 'Saçaklı' : 'Saçaksız'}`, canvas.width / 2, textY);
-        textY += 25;
+          // Ürün adı (kalın) - en üstte
+          ctx.font = 'bold 18px Arial';
+          let textY = qrY + qrSize + 70;
+          const productName = firstItem.product.name.toUpperCase();
+          if (productName.length > 25) {
+            // Uzun ürün adlarını böl
+            const words = productName.split(' ');
+            const line1 = words.slice(0, Math.ceil(words.length / 2)).join(' ');
+            const line2 = words.slice(Math.ceil(words.length / 2)).join(' ');
+            ctx.fillText(line1, canvas.width / 2, textY);
+            textY += 25;
+            ctx.fillText(line2, canvas.width / 2, textY);
+            textY += 35;
+          } else {
+            ctx.fillText(productName, canvas.width / 2, textY);
+            textY += 35;
+          }
 
-        // Ürün notu varsa ekle
-        if (firstItem.notes && firstItem.notes.trim()) {
+          // Ürün bilgileri
+          ctx.font = '16px Arial';
+          
+          ctx.fillText(`${firstItem.width} x ${firstItem.height}`, canvas.width / 2, textY);
+          textY += 25;
+          
+          ctx.fillText(`Kesim: ${translateCutType(firstItem.cut_type)}`, canvas.width / 2, textY);
+          textY += 25;
+          
+          ctx.fillText(`Saçak: ${firstItem.has_fringe ? 'Saçaklı' : 'Saçaksız'}`, canvas.width / 2, textY);
+          textY += 25;
+
+          // Ürün notu varsa ekle
+          if (firstItem.notes && firstItem.notes.trim()) {
+            ctx.font = '14px Arial';
+            ctx.fillText(`Not: ${firstItem.notes}`, canvas.width / 2, textY);
+            textY += 20;
+          }
+          textY += 15;
+
+          // Miktar ve sipariş bilgisi
           ctx.font = '14px Arial';
-          ctx.fillText(`Not: ${firstItem.notes}`, canvas.width / 2, textY);
+          ctx.fillText(`Gerekli Tarama: ${firstQRCode.required_scans}`, canvas.width / 2, textY);
           textY += 20;
-        }
-        textY += 15;
-
-        // Miktar ve sipariş bilgisi
-        ctx.font = '14px Arial';
-        ctx.fillText(`Toplam 1 Prç.`, canvas.width / 2, textY);
-        textY += 20;
-        ctx.fillText(`Sp. No: ${orderData.id.slice(0, 8)}`, canvas.width / 2, textY);
-
-
-      };
-      
-      qrImage.src = qrCodeDataURL;
+          ctx.fillText(`Sp. No: ${orderData.id.slice(0, 8)}`, canvas.width / 2, textY);
+          textY += 20;
+          ctx.fillText(`Tarih: ${new Date(orderData.created_at).toLocaleDateString('tr-TR')}`, canvas.width / 2, textY);
+        };
+        
+        qrImage.src = qrCodeDataURL;
+      } catch (qrError) {
+        console.error('QR kod oluşturma hatası:', qrError);
+      }
     } catch (error) {
-      console.error('QR kod oluşturma hatası:', error);
+      console.error('QR kod önizleme hatası:', error);
     }
   };
+
+    if (isVisible && canvasRef.current) {
+      generatePreviewQRCode();
+    }
+  }, [isVisible, orderData]);
 
 
 
   const handlePrint = async () => {
-    if (!orderData.items.length) return;
+    if (!orderData.qr_codes || !orderData.qr_codes.length) {
+      alert('Bu sipariş için henüz QR kod oluşturulmamış.');
+      return;
+    }
 
-    // Tüm QR etiketlerini oluştur
+    // Backend'den gelen tüm QR kodları için etiket oluştur
     const allLabels: string[] = [];
     
-    for (const item of orderData.items) {
-      for (let i = 0; i < item.quantity; i++) {
-        const qrData = JSON.stringify({
-          urun: item.product.name,
-          ebat: `${item.width} x ${item.height}`,
-          kesim: item.has_fringe ? 'Saçaklı' : 'Saçaksız',
-          miktar: i + 1,
-          toplam: item.quantity,
-          siparis: orderData.id,
-          magaza: orderData.store_name,
-          tarih: new Date().toLocaleDateString('tr-TR')
-        });
+    for (const qrCodeData of orderData.qr_codes) {
+      const item = qrCodeData.order_item;
+      
+      try {
+        // Her etiket için canvas oluştur
+        const canvas = document.createElement('canvas');
+        canvas.width = 378;
+        canvas.height = 567;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) continue;
 
-        try {
-          const qrCodeDataURL = await QRCode.toDataURL(qrData, {
-            width: 200,
-            margin: 1,
-            color: {
-              dark: '#000000',
-              light: '#FFFFFF'
-            }
-          });
+        // Arka planı beyaz yap
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-          // Her etiket için canvas oluştur
-          const canvas = document.createElement('canvas');
-          canvas.width = 378;
-          canvas.height = 567;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) continue;
+        // Canvas tainted hatası önlemek için doğrudan QR kod oluştur
+        await new Promise(async (resolve) => {
+          try {
+            const qrCodeDataURL = await QRCode.toDataURL(qrCodeData.qr_code, {
+              width: 200,
+              margin: 1,
+              color: {
+                dark: '#000000',
+                light: '#FFFFFF'
+              }
+            });
 
-          // Arka planı beyaz yap
-          ctx.fillStyle = '#FFFFFF';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-          // QR kod görselini yükle
-          await new Promise((resolve) => {
             const qrImage = new Image();
             qrImage.onload = () => {
               // QR kodu üst kısma yerleştir
@@ -246,22 +320,33 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
               }
               textY += 15;
 
-              // Miktar ve sipariş bilgisi
+              // QR kod ve sipariş bilgisi
               ctx.font = '14px Arial';
-              ctx.fillText(`Toplam ${item.quantity} Prç.`, canvas.width / 2, textY);
+              ctx.fillText(`Gerekli Tarama: ${qrCodeData.required_scans}`, canvas.width / 2, textY);
               textY += 20;
               ctx.fillText(`Sp. No: ${orderData.id.slice(0, 8)}`, canvas.width / 2, textY);
-
-
+              textY += 20;
+              ctx.fillText(`QR ID: ${qrCodeData.id.slice(0, 8)}`, canvas.width / 2, textY);
+              textY += 20;
+              ctx.fillText(`Tarih: ${new Date(orderData.created_at).toLocaleDateString('tr-TR')}`, canvas.width / 2, textY);
 
               allLabels.push(canvas.toDataURL('image/png'));
               resolve(true);
             };
+            
+            qrImage.onerror = () => {
+              console.error('QR kod görsel yükleme hatası');
+              resolve(false);
+            };
+            
             qrImage.src = qrCodeDataURL;
-          });
-        } catch (error) {
-          console.error('QR kod oluşturma hatası:', error);
-        }
+          } catch (qrError) {
+            console.error('QR kod oluşturma hatası:', qrError);
+            resolve(false);
+          }
+        });
+      } catch (error) {
+        console.error('QR kod etiketi oluşturma hatası:', error);
       }
     }
 
@@ -411,34 +496,67 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 font-medium">Mağaza:</span>
-                <span className="text-gray-900">{orderData.store_name}</span>
+                <span className="text-gray-900 truncate">{orderData.store_name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 font-medium">Durum:</span>
+                <span className={`text-sm font-medium ${
+                  orderData.status === 'CONFIRMED' ? 'text-green-600' :
+                  orderData.status === 'PENDING' ? 'text-yellow-600' :
+                  orderData.status === 'DELIVERED' ? 'text-blue-600' :
+                  orderData.status === 'CANCELED' ? 'text-red-600' :
+                  'text-gray-600'
+                }`}>
+                  {orderData.status === 'CONFIRMED' ? 'Onaylandı' :
+                   orderData.status === 'PENDING' ? 'Bekliyor' :
+                   orderData.status === 'DELIVERED' ? 'Teslim Edildi' :
+                   orderData.status === 'CANCELED' ? 'İptal Edildi' :
+                   orderData.status}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 font-medium">Toplam Ürün:</span>
                 <span className="text-gray-900">{orderData.items.length} çeşit</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 font-medium">Toplam Etiket:</span>
-                <span className="text-gray-900 font-bold text-purple-600">
-                  {orderData.items.reduce((total, item) => total + item.quantity, 0)} adet
+                <span className="text-gray-600 font-medium">QR Kod:</span>
+                <span className="font-bold text-purple-600">
+                  {orderData.qr_codes ? orderData.qr_codes.length : 0} adet
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 font-medium">Tutar:</span>
+                <span className="text-gray-900 font-bold">
+                  ₺{Number(orderData.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
                 </span>
               </div>
             </div>
             
-            {/* Ürün Listesi */}
+            {/* QR Kod Listesi */}
             <div className="mt-4 bg-gray-100 rounded-lg p-3">
-              <div className="text-sm font-medium text-gray-700 mb-2">Yazdırılacak Etiketler:</div>
+              <div className="text-sm font-medium text-gray-700 mb-2">QR Kodları:</div>
               <div className="space-y-1 max-h-32 overflow-y-auto">
-                {orderData.items.map((item, index) => (
-                  <div key={index} className="flex justify-between text-xs">
-                    <span className="text-gray-600 truncate">
-                      {item.product.name} ({item.width}x{item.height})
-                    </span>
-                    <span className="text-gray-900 font-medium ml-2">
-                      {item.quantity} etiket
-                    </span>
+                {orderData.qr_codes && orderData.qr_codes.length > 0 ? (
+                  orderData.qr_codes.map((qrCode, index) => (
+                    <div key={qrCode?.id || index} className="flex justify-between text-xs">
+                      <span className="text-gray-600 truncate">
+                        {qrCode?.order_item?.product?.name || 'Ürün bilgisi yok'} 
+                        {qrCode?.order_item?.width && qrCode?.order_item?.height && 
+                          ` (${qrCode.order_item.width}x${qrCode.order_item.height})`
+                        }
+                      </span>
+                      <span className={`font-medium ml-2 ${
+                        qrCode?.is_scanned ? 'text-green-600' : 'text-gray-900'
+                      }`}>
+                        {qrCode?.is_scanned ? 'Tarandı' : `${qrCode?.required_scans || 0} tarama`}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-xs text-gray-500 italic">
+                    Bu sipariş için henüz QR kod oluşturulmamış
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
@@ -465,12 +583,17 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
           </button>
           <button
             onClick={handlePrint}
-            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+            disabled={!orderData.qr_codes || !orderData.qr_codes.length}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2 ${
+              orderData.qr_codes && orderData.qr_codes.length > 0
+                ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
             </svg>
-            QR Etiket Yazdır
+            {orderData.qr_codes && orderData.qr_codes.length > 0 ? 'QR Etiket Yazdır' : 'QR Kod Yok'}
           </button>
         </div>
       </div>

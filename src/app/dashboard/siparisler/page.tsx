@@ -4195,18 +4195,33 @@ const Siparisler = () => {
             orderData={{
               id: selectedOrderItemForQR.order.id,
               store_name: selectedOrderItemForQR.order.store_name,
+              store_tax_number: selectedOrderItemForQR.order.store_tax_number,
+              store_tax_office: selectedOrderItemForQR.order.store_tax_office,
+              store_phone: selectedOrderItemForQR.order.store_phone,
+              store_email: selectedOrderItemForQR.order.store_email,
+              total_price: selectedOrderItemForQR.order.total_price,
+              status: selectedOrderItemForQR.order.status,
               notes: selectedOrderItemForQR.order.notes,
+              created_at: selectedOrderItemForQR.order.created_at,
+              qr_codes: selectedOrderItemForQR.order.qr_codes || [],
+              user: selectedOrderItemForQR.order.user,
+              address: selectedOrderItemForQR.order.address,
               items: selectedOrderItemForQR.order.items.map(item => ({
                 id: item.id,
                 product: {
-                  name: item.product.name
+                  productId: item.product.productId,
+                  name: item.product.name,
+                  description: item.product.description,
+                  productImage: item.product.productImage
                 },
                 width: item.width,
                 height: item.height,
                 has_fringe: item.has_fringe,
                 cut_type: item.cut_type,
                 quantity: item.quantity,
-                notes: item.notes
+                notes: item.notes,
+                unit_price: item.unit_price,
+                total_price: item.total_price
               }))
             }}
             isVisible={qrLabelVisible}
