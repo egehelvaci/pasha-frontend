@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import { useToken } from '@/app/hooks/useToken';
 import { StoreType, storeTypeLabels } from '@/components/StoreTypeSelector';
-import { bulkConfirmOrders, BulkConfirmOrdersResponse, getStores, Store, adminRefundOrder } from '@/services/api';
+import { bulkConfirmOrders, BulkConfirmOrdersResponse, getStores, Store, adminCancelOrder, cancelOrder } from '@/services/api';
 import CargoReceipt from '@/app/components/CargoReceipt';
 import QRLabel from '@/app/components/QRLabel';
 import QRCode from 'qrcode';
@@ -1818,14 +1818,14 @@ const Siparisler = () => {
     }
   };
 
-  // Admin için sipariş iade etme
+  // Admin için sipariş iade etme (normal cancel endpoint'ini kullanır)
   const handleRefundOrder = async (orderId: string, reason?: string) => {
     if (!isAdmin) return;
     
     try {
       setCancelOrderModal(prev => ({ ...prev, isLoading: true }));
       
-      const response = await adminRefundOrder(orderId, reason || 'Admin iadesi');
+      const response = await cancelOrder(orderId, reason || 'Admin iadesi - Teslim edilmiş sipariş');
       
       if (response.success) {
         alert(response.message || 'Sipariş başarıyla iade edildi.');

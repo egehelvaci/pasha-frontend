@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { adminRefundOrder, AdminRefundOrderResponse } from '@/services/api';
+import { cancelOrder, CancelOrderResponse } from '@/services/api';
 import { useAuth } from '@/app/context/AuthContext';
 
 interface AdminOrderRefundProps {
   orderId: string;
   orderStatus: string;
-  onRefundSuccess?: (response: AdminRefundOrderResponse) => void;
+  onRefundSuccess?: (response: CancelOrderResponse) => void;
   onRefundError?: (error: string) => void;
 }
 
@@ -40,7 +40,7 @@ export default function AdminOrderRefund({
 
     setIsLoading(true);
     try {
-      const response = await adminRefundOrder(orderId, reason.trim());
+      const response = await cancelOrder(orderId, reason.trim());
       
       // Başarılı iade
       setShowModal(false);

@@ -2116,54 +2116,7 @@ export const adminCancelOrder = async (orderId: string, reason: string): Promise
   }
 };
 
-// Admin Sipariş İade API (Sadece Admin - Teslim edilmiş siparişler için)
-export interface AdminRefundOrderRequest {
-  orderId: string;
-  reason: string;
-}
 
-export interface AdminRefundOrderResponse {
-  success: boolean;
-  message: string;
-  order: {
-    id: string;
-    user_id: string;
-    total_price: number;
-    status: string;
-    created_at: string;
-    updated_at: string;
-  };
-}
-
-export const adminRefundOrder = async (orderId: string, reason: string): Promise<AdminRefundOrderResponse> => {
-  try {
-    const token = getAuthToken();
-    if (!token) throw new Error('Token bulunamadı');
-
-    const response = await fetch(`${API_URL}/api/admin/orders/refund`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        orderId,
-        reason
-      })
-    });
-
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.message || `HTTP error! status: ${response.status}`);
-    }
-
-    return data;
-  } catch (error: any) {
-    console.error('Admin sipariş iade edilirken hata:', error);
-    throw error;
-  }
-};
 
 // Sipariş fiş API
 export interface OrderReceiptData {
