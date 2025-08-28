@@ -910,7 +910,7 @@ export default function StokPage() {
             </div>
           </div>
 
-          <div className="p-6 overflow-x-auto">
+          <div className="p-4 overflow-x-auto">
             {isLoadingProducts ? (
               <LoadingSpinner />
             ) : products.length > 0 ? (
@@ -927,17 +927,17 @@ export default function StokPage() {
                 )}
 
                 {/* Desktop Tablo Görünümü */}
-                <div className="hidden md:block overflow-x-auto">
-                  <table className="w-full min-w-[800px] table-auto divide-y divide-gray-200">
+                <div className="hidden lg:block overflow-x-auto">
+                  <table className="w-full min-w-[700px] table-auto divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/2">
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                           Ürün
                         </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/4">
+                        <th className="px-2 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                           Koleksiyon
                         </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/4">
+                        <th className="px-2 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
                           İşlemler
                         </th>
                       </tr>
@@ -945,9 +945,9 @@ export default function StokPage() {
                     <tbody className="bg-white divide-y divide-gray-200">
                       {products.map((product) => (
                         <tr key={product.productId} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 py-3">
                             <div className="flex items-center">
-                              <div className="h-14 w-14 rounded-xl bg-gray-200 flex-shrink-0 overflow-hidden shadow-sm">
+                              <div className="h-10 w-10 rounded-lg bg-gray-200 flex-shrink-0 overflow-hidden shadow-sm">
                                 {product.productImage ? (
                                   <img
                                     src={product.productImage}
@@ -956,39 +956,43 @@ export default function StokPage() {
                                   />
                                 ) : (
                                   <div className="h-full w-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                                    <svg className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                   </div>
                                 )}
                               </div>
-                              <div className="ml-4">
-                                <div className="text-sm font-semibold text-gray-900">{product.name}</div>
-                                <div className="text-sm text-gray-500">{product.description}</div>
+                              <div className="ml-3 min-w-0 flex-1">
+                                <div className="text-sm font-semibold text-gray-900 truncate">{product.name}</div>
+                                <div className="text-xs text-gray-500 truncate">
+                                  {product.description && product.description.length > 50 
+                                    ? `${product.description.substring(0, 50)}...` 
+                                    : product.description}
+                                </div>
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-2 py-3">
                             <div className="text-sm font-medium text-gray-900">{product.collection?.name || 'Koleksiyon Yok'}</div>
-                            <div className="text-sm text-gray-500">{product.collection?.code || '-'}</div>
+                            <div className="text-xs text-gray-500">{product.collection?.code || '-'}</div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-2 py-3">
                             <button
                               onClick={() => openStockModal(product)}
                               disabled={isLoadingProductDetail}
-                              className="inline-flex items-center gap-2 px-4 py-2 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#00365a] hover:bg-[#004170] text-white rounded-md text-sm font-medium transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                             >
                               {isLoadingProductDetail ? (
                                 <>
-                                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                                  <span>Yükleniyor...</span>
+                                  <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></div>
+                                  <span>Yük...</span>
                                 </>
                               ) : (
                                 <>
-                                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                   </svg>
-                                  <span>{isAdmin ? 'Stok Yönetimi' : 'Stok Ekle'}</span>
+                                  <span>Yönet</span>
                                 </>
                               )}
                             </button>
@@ -997,6 +1001,64 @@ export default function StokPage() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Tablet Kart Görünümü */}
+                <div className="hidden md:block lg:hidden space-y-3">
+                  {products.map((product) => (
+                    <div key={product.productId} className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                          <div className="h-10 w-10 rounded-lg bg-gray-200 flex-shrink-0 overflow-hidden">
+                            {product.productImage ? (
+                              <img
+                                src={product.productImage}
+                                alt={product.name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="h-full w-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                                <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-semibold text-gray-900 truncate">{product.name}</div>
+                            <div className="text-xs text-gray-500 truncate">
+                              {product.description && product.description.length > 50 
+                                ? `${product.description.substring(0, 50)}...` 
+                                : product.description}
+                            </div>
+                            <div className="text-xs font-medium text-gray-700 mt-1">
+                              {product.collection?.name || 'Koleksiyon Yok'} 
+                              <span className="text-gray-500 ml-1">({product.collection?.code || '-'})</span>
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => openStockModal(product)}
+                          disabled={isLoadingProductDetail}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#00365a] hover:bg-[#004170] text-white rounded-md text-sm font-medium transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed ml-3 whitespace-nowrap"
+                        >
+                          {isLoadingProductDetail ? (
+                            <>
+                              <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></div>
+                              <span>Yük...</span>
+                            </>
+                          ) : (
+                            <>
+                              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                              </svg>
+                              <span>Yönet</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Mobil Kart Görünümü */}
@@ -1021,7 +1083,11 @@ export default function StokPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-semibold text-gray-900 truncate">{product.name}</div>
-                          <div className="text-sm text-gray-500 truncate">{product.description}</div>
+                          <div className="text-sm text-gray-500 truncate">
+                            {product.description && product.description.length > 50 
+                              ? `${product.description.substring(0, 50)}...` 
+                              : product.description}
+                          </div>
                           <div className="mt-1">
                             <span className="text-xs font-medium text-gray-900">{product.collection?.name || 'Koleksiyon Yok'}</span>
                             <span className="text-xs text-gray-500 ml-2">{product.collection?.code || '-'}</span>
@@ -1030,19 +1096,19 @@ export default function StokPage() {
                         <button
                           onClick={() => openStockModal(product)}
                           disabled={isLoadingProductDetail}
-                          className="inline-flex items-center gap-1 px-3 py-2 bg-[#00365a] hover:bg-[#004170] text-white rounded-md text-sm font-medium transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="inline-flex items-center gap-1 px-2 py-1.5 bg-[#00365a] hover:bg-[#004170] text-white rounded-md text-xs font-medium transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                         >
                           {isLoadingProductDetail ? (
                             <>
                               <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></div>
-                              <span>...</span>
+                              <span>Yük</span>
                             </>
                           ) : (
                             <>
                               <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                               </svg>
-                              <span>{isAdmin ? 'Yönet' : 'Ekle'}</span>
+                              <span>Yönet</span>
                             </>
                           )}
                         </button>
@@ -1103,7 +1169,7 @@ export default function StokPage() {
                         </div>
                         <div>
                           <h3 className="text-2xl font-bold">
-                            {isAdmin ? 'Stok Yönetimi' : 'Stok Ekle'}: {selectedProduct.name}
+                            Stok Yönetimi: {selectedProduct.name}
                           </h3>
                           <p className="text-blue-100 text-sm mt-1">
                             Koleksiyon: {selectedProduct.collection?.name || 'Koleksiyon Yok'}
