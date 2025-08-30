@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { FaTrash } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { useAuth } from '@/app/context/AuthContext';
+import { useToken } from '@/app/hooks/useToken';
 
 interface Product {
   productId: string;
@@ -20,6 +21,7 @@ interface Collection {
 }
 
 function AddCollectionModal({ open, onClose, onSuccess }: { open: boolean, onClose: () => void, onSuccess: () => void }) {
+  const token = useToken();
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -39,7 +41,10 @@ function AddCollectionModal({ open, onClose, onSuccess }: { open: boolean, onClo
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/collections`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify(form)
       });
       if (!res.ok) throw new Error("Koleksiyon eklenemedi");
@@ -256,6 +261,7 @@ function ConfirmModal({ open, onClose, onConfirm, text }: { open: boolean, onClo
 
 export default function CollectionList() {
   const router = useRouter();
+  const token = useToken();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -274,7 +280,11 @@ export default function CollectionList() {
 
   const fetchCollections = () => {
     setLoading(true);
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/collections/`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/collections/`, {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    })
       .then(res => res.json())
       .then(data => {
         setCollections(data.data || []);
@@ -333,7 +343,10 @@ export default function CollectionList() {
     setDeleteError("");
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/collections/${deleteId}`, {
-        method: "DELETE"
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
       });
       if (!res.ok) throw new Error("Koleksiyon silinemedi");
       setConfirmOpen(false);
