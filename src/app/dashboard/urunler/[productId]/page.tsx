@@ -483,7 +483,9 @@ export default function ProductDetail() {
           </div>
           
           <div className="w-full md:w-1/2">
-            <div className="grid grid-cols-1 gap-5">
+            <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Ürün Seçenekleri</h3>
+              <div className="grid grid-cols-1 gap-5">
               <div className="flex flex-col gap-2 dropdown-container">
                 <span className="text-sm font-medium text-gray-700">Boyut Seçimi</span>
                 <div className="relative">
@@ -539,8 +541,8 @@ export default function ProductDetail() {
                 </div>
                 
                 {selectedSize && selectedSize.is_optional_height && (
-                  <div className="mt-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <label className="text-sm font-medium text-gray-700 block mb-2">Özel Yükseklik (cm)</label>
+                  <div className="mt-3 p-4 bg-blue-100 rounded-lg border border-blue-200">
+                    <label className="text-sm font-medium text-gray-700 block mb-2">Özel Yükseklik (cm) - Elle Girilebilir</label>
                     <div className="flex items-center gap-3">
                       <input
                         type="number"
@@ -837,6 +839,7 @@ export default function ProductDetail() {
                   )}
                 </button>
               </div>
+            </div>
             </div>
           </div>
         </div>
