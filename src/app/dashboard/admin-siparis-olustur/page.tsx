@@ -41,7 +41,7 @@ interface CartItem {
 const AdminSiparisOlustur = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isAdmin, user, isLoading: authLoading } = useAuth();
+  const { isAdmin, isAdminOrEditor, user, isLoading: authLoading } = useAuth();
   
   const [orderData, setOrderData] = useState<AdminOrderCreateData | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -147,6 +147,12 @@ const AdminSiparisOlustur = () => {
   }, [showAddProductModal]);
 
   useEffect(() => {
+    // Kimlik doğrulama yüklemesi tamamlandığında admin/editör kontrolü
+    if (!authLoading && !isAdminOrEditor) {
+      router.push('/dashboard');
+      return;
+    }
+    
     // Kimlik doğrulama yüklemesi tamamlandığında veri çek
     if (!authLoading && user && storeId) {
       // Adres bazlı sipariş modu veya kullanıcı bazlı sipariş modu
@@ -158,7 +164,7 @@ const AdminSiparisOlustur = () => {
         fetchStoreAddresses();
       }
     }
-  }, [user, authLoading, router, storeId, userId, addressId]);
+  }, [user, authLoading, isAdminOrEditor, router, storeId, userId, addressId]);
 
   const fetchOrderCreateInfo = async () => {
     setLoading(true);

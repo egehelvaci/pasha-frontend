@@ -74,7 +74,7 @@ const statusColors = {
 };
 
 export default function PaymentsPage() {
-  const { user, token, isAdmin } = useAuth();
+  const { user, token, isAdmin, isAdminOrEditor } = useAuth();
   const router = useRouter();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
@@ -113,7 +113,7 @@ export default function PaymentsPage() {
     }
     fetchPayments();
     initializeStores();
-  }, [user, router, isAdmin, currentPage, statusFilter, selectedStoreFilter, startDate, endDate]);
+  }, [user, router, isAdminOrEditor, currentPage, statusFilter, selectedStoreFilter, startDate, endDate]);
 
   // Dropdown'ların dışına tıklandığında kapanması
   useEffect(() => {
@@ -135,8 +135,8 @@ export default function PaymentsPage() {
 
 
   const initializeStores = async () => {
-    if (isAdmin) {
-      // Admin için API'den mağazaları çek
+    if (isAdminOrEditor) {
+      // Admin ve Editör için API'den mağazaları çek
       await fetchStores();
     } else {
       try {
@@ -220,7 +220,7 @@ export default function PaymentsPage() {
               const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app';
       let apiUrl = '';
       
-      if (isAdmin) {
+      if (isAdminOrEditor) {
         apiUrl = `${baseUrl}/api/admin/payments`;
       } else {
         apiUrl = `${baseUrl}/api/payments/my-store-payments`;
@@ -238,7 +238,7 @@ export default function PaymentsPage() {
         params.append('status', statusFilter);
       }
 
-      if (selectedStoreFilter && isAdmin) {
+      if (selectedStoreFilter && isAdminOrEditor) {
         params.append('storeId', selectedStoreFilter);
       }
 
@@ -338,7 +338,7 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
         setPaymentForm(prev => ({
           amount: '',
           description: '',
-          storeId: isAdmin ? '' : prev.storeId // Admin değilse store_id'yi koru
+          storeId: isAdminOrEditor ? '' : prev.storeId // Admin veya Editor değilse store_id'yi koru
         }));
         
         // Ödemeleri yeniden yükle
@@ -757,7 +757,7 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
                 )}
               </div>
             </div>
-            {isAdmin && (
+            {isAdminOrEditor && (
               <div className="dropdown-container">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Mağaza</label>
                 <div className="relative">
@@ -937,7 +937,7 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{payment.store.kurum_adi}</div>
-                      {isAdmin && payment.store.vergi_numarasi && (
+                      {isAdminOrEditor && payment.store.vergi_numarasi && (
                         <div className="text-sm text-gray-500">{payment.store.vergi_numarasi}</div>
                       )}
                     </td>
@@ -1250,8 +1250,8 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
               {/* Form Content */}
               <div className="p-6">
                 <form onSubmit={handlePaymentSubmit} className="space-y-6">
-                  {/* Mağaza Seçimi - Sadece admin için göster */}
-                  {isAdmin && (
+                  {/* Mağaza Seçimi - Admin ve Editör için göster */}
+                  {isAdminOrEditor && (
                     <div className="dropdown-container">
                       <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center">
                         <svg className="w-4 h-4 mr-2 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1314,8 +1314,8 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
                     </div>
                   )}
 
-                  {/* Admin değilse mağaza bilgisini göster */}
-                  {!isAdmin && stores.length > 0 && (
+                  {/* Admin/Editör değilse mağaza bilgisini göster */}
+                  {!isAdminOrEditor && stores.length > 0 && (
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center">
                         <svg className="w-4 h-4 mr-2 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
