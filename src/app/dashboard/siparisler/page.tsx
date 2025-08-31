@@ -99,17 +99,66 @@ interface Order {
     order_id: string;
     order_item_id: string;
     product_id: string;
-    qr_code: string;
-    qrCodeImageUrl: string;
-    scan_count: number;
-    required_scans: number;
-    last_scan_at: string;
+    barcode: string;
+    barcode_type: string;
+    barcode_image_url: string;
     is_scanned: boolean;
-    scanned_at: string;
+    scanned_at?: string;
+    scanned_by?: string;
     created_at: string;
+    quantity: number;
+    qr_code?: string;
+    qrCodeImageUrl?: string;
+    scan_count?: number;
+    required_scans?: number;
+    last_scan_at?: string;
     first_scan_employee_id?: string;
     first_scan_at?: string;
     second_scan_at?: string;
+    order_item: {
+      id: string;
+      order_id: string;
+      product_id: string;
+      quantity: number;
+      unit_price: string;
+      total_price: string;
+      has_fringe: boolean;
+      width: string;
+      height: string;
+      cut_type: string;
+      product: {
+        productId: string;
+        name: string;
+        productImage: string;
+        collectionId: string;
+        createdAt: string;
+        updatedAt: string;
+        rule_id: number;
+      };
+    };
+    product: {
+      productId: string;
+      name: string;
+      productImage: string;
+      collectionId: string;
+      createdAt: string;
+      updatedAt: string;
+      rule_id: number;
+    };
+  }[];
+  barcodes?: {
+    id: string;
+    order_id: string;
+    order_item_id: string;
+    product_id: string;
+    barcode: string;
+    barcode_type: string;
+    barcode_image_url: string;
+    is_scanned: boolean;
+    scanned_at?: string;
+    scanned_by?: string;
+    created_at: string;
+    quantity: number;
     order_item: {
       id: string;
       order_id: string;
@@ -1080,13 +1129,35 @@ const Siparisler = () => {
         return;
       }
 
-      // Backend'den gelen QR kodları ile etiket oluştur
+      // QR codes ve barcodes'ları eşleştir ve yazdırılacak etiketleri oluştur
+      const allLabelsData = [];
       const allLabels: string[] = [];
       
       for (const order of ordersWithQR) {
-        // Backend'den gelen QR kodları varsa onları kullan
+        // Her QR code için ilgili barcode'u bul ve eşleştir
         if (order.qr_codes && order.qr_codes.length > 0) {
           for (const qrCodeData of order.qr_codes) {
+            // Bu QR'ın order_item_id'sine göre ilgili barcode'u bul
+            const relatedBarcode = order.barcodes?.find((bc: any) => bc.order_item_id === qrCodeData.order_item_id);
+            
+            // QR için required_scans kadar etiket oluştur
+            const qrCount = qrCodeData.required_scans || 1;
+            for (let i = 0; i < qrCount; i++) {
+              allLabelsData.push({
+                order: order,
+                qrCode: qrCodeData,
+                barcode: relatedBarcode,
+                _labelIndex: i + 1,
+                _totalLabels: qrCount
+              });
+            }
+          }
+        }
+      }
+      
+      // Canvas etiketlerini oluştur
+      for (const labelData of allLabelsData) {
+        const qrCodeData = labelData.qrCode;
             const item = qrCodeData.order_item;
             
             try {
@@ -1171,12 +1242,17 @@ const Siparisler = () => {
                   ctx.font = '14px Arial';
                   ctx.fillText(`Gerekli Tarama: ${qrCodeData.required_scans}`, canvas.width / 2, textY);
                   textY += 20;
-                  ctx.fillText(`Sp. No: ${order.id.slice(0, 8)}`, canvas.width / 2, textY);
+                  ctx.fillText(`Sp. No: ${labelData.order.id.slice(0, 8)}`, canvas.width / 2, textY);
                   textY += 20;
                   ctx.fillText(`QR ID: ${qrCodeData.id.slice(0, 8)}`, canvas.width / 2, textY);
                   textY += 20;
-                  ctx.fillText(`Tarih: ${new Date(order.created_at).toLocaleDateString('tr-TR')}`, canvas.width / 2, textY);
+                  if (labelData._labelIndex && labelData._totalLabels) {
+                    ctx.fillText(`Etiket: ${labelData._labelIndex}/${labelData._totalLabels}`, canvas.width / 2, textY);
+                    textY += 20;
+                  }
+                  ctx.fillText(`Tarih: ${new Date(labelData.order.created_at).toLocaleDateString('tr-TR')}`, canvas.width / 2, textY);
 
+                  // Canvas'ta sadece QR kodu ve ürün bilgileri, barcode HTML'de gösterilecek
                   allLabels.push(canvas.toDataURL('image/png'));
                   resolve(true);
                 };
@@ -1189,22 +1265,41 @@ const Siparisler = () => {
             } catch (error) {
               console.error('QR kod etiketi oluşturma hatası:', error);
             }
-          }
-        } else {
-          // Fallback: QR kod yoksa eski yöntemi kullan
-          console.warn(`Sipariş ${order.id} için QR kod bulunamadı, fallback kullanılıyor`);
-        }
       }
 
       // Tüm etiketleri yazdır
       if (allLabels.length > 0) {
         const printWindow = window.open('', '_blank', 'width=800,height=600');
         if (printWindow) {
-          const labelsHtml = allLabels.map((labelDataURL, index) => `
-            <div class="label-page" ${index > 0 ? 'style="page-break-before: always;"' : ''}>
-              <img src="${labelDataURL}" alt="QR Kod Etiketi ${index + 1}" class="label-image">
-            </div>
-          `).join('');
+          // Etiketleri HTML olarak oluştur
+          const labelsHtml = allLabelsData.map((labelData, index) => {
+            const labelDataURL = allLabels[index];
+            const barcodeImageUrl = labelData.barcode?.barcode_image_url;
+            const barcodeText = labelData.barcode?.barcode;
+            
+            // Barcode bilgisi var mı kontrolü
+            const hasBarcode = !!(labelData.barcode && barcodeImageUrl);
+            
+            // Template için değişkenleri hazırla
+            const safeImageUrl = barcodeImageUrl || '';
+            const safeBarcodeText = barcodeText || '';
+            
+            return `
+              <div class="label-page" ${index > 0 ? 'style="page-break-before: always;"' : ''}>
+                <div class="qr-section">
+                  <img src="${labelDataURL}" alt="QR Kod Etiketi ${index + 1}" class="label-image">
+                </div>
+                <div class="barcode-section">
+                  ${hasBarcode ? `
+                    <img src="${safeImageUrl}" alt="Barcode ${safeBarcodeText}" class="barcode-image">
+                    <div class="barcode-text">${safeBarcodeText}</div>
+                  ` : `
+                    <div class="barcode-text">${safeBarcodeText || 'Barcode yükleniyor...'}</div>
+                  `}
+                </div>
+              </div>
+            `;
+          }).join('');
 
           const htmlContent = `
         <!DOCTYPE html>
@@ -1238,18 +1333,58 @@ const Siparisler = () => {
                   margin: 0;
                   padding: 0;
                   display: flex;
+                  flex-direction: column;
                   align-items: center;
-                  justify-content: center;
+                  justify-content: space-between;
                   background: white;
                   page-break-inside: avoid;
+                  border: 1px solid #ccc;
+                }
+                
+                .qr-section {
+                  height: 12cm;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  width: 100%;
+                  padding: 0.5cm;
                 }
                 
                 .label-image {
-                  width: 10cm;
-                  height: 15cm;
+                  max-width: 9cm;
+                  max-height: 11cm;
                   object-fit: contain;
                   image-rendering: -webkit-optimize-contrast;
                   image-rendering: crisp-edges;
+                }
+
+                .barcode-section {
+                  height: 3cm;
+                  width: 100%;
+                  padding: 0.3cm;
+                  text-align: center;
+                  background: #f9f9f9;
+                  border-top: 1px solid #ddd;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                  align-items: center;
+                }
+
+                .barcode-image {
+                  max-width: 8cm;
+                  height: auto;
+                  max-height: 1.5cm;
+                  object-fit: contain;
+                  margin-bottom: 5px;
+                }
+                
+                .barcode-text {
+                  font-family: 'Courier New', monospace;
+                  font-size: 10px;
+                  font-weight: bold;
+                  color: #333;
+                  letter-spacing: 1px;
                 }
                 
                 @media print {
@@ -1259,7 +1394,17 @@ const Siparisler = () => {
                   }
                   
                   .label-page {
-                page-break-inside: avoid;
+                    page-break-inside: avoid;
+                    border: none;
+                  }
+                  
+                  .barcode-section {
+                    background: white !important;
+                    border-top: 1px solid #000 !important;
+                  }
+                  
+                  .barcode-text {
+                    color: #000 !important;
                   }
                 }
               </style>
@@ -2870,6 +3015,52 @@ const Siparisler = () => {
                                   </span>
                                 )}
                               </div>
+                              
+                              {/* Barcode bilgileri */}
+                              {((selectedOrder.qr_codes && selectedOrder.qr_codes.filter(qr => qr.order_item_id === item.id).length > 0) ||
+                                (selectedOrder.barcodes && selectedOrder.barcodes.filter(bc => bc.order_item_id === item.id).length > 0)) && (
+                                <div className="mt-3 pt-3 border-t border-gray-100">
+                                  <div className="text-xs text-gray-500 mb-2">Barkodlar:</div>
+                                  <div className="space-y-1">
+                                    {/* QR codes'daki barkodlar */}
+                                    {selectedOrder.qr_codes && selectedOrder.qr_codes
+                                      .filter(qr => qr.order_item_id === item.id && qr.barcode)
+                                      .map((qr, qrIndex) => (
+                                        <div key={qr.id} className="flex items-center justify-between bg-gray-50 rounded px-2 py-1">
+                                          <span className="text-xs font-mono text-gray-700">
+                                            {qr.barcode}
+                                          </span>
+                                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                            qr.is_scanned 
+                                              ? 'bg-green-100 text-green-800' 
+                                              : 'bg-yellow-100 text-yellow-800'
+                                          }`}>
+                                            {qr.is_scanned ? 'Tarandı' : 'Bekliyor'}
+                                          </span>
+                            </div>
+                                      ))
+                                    }
+                                    {/* Barcodes array'indeki barkodlar */}
+                                    {selectedOrder.barcodes && selectedOrder.barcodes
+                                      .filter(bc => bc.order_item_id === item.id)
+                                      .map((bc, bcIndex) => (
+                                        <div key={bc.id} className="flex items-center justify-between bg-gray-50 rounded px-2 py-1">
+                                          <span className="text-xs font-mono text-gray-700">
+                                            {bc.barcode}
+                                          </span>
+                                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                            bc.is_scanned 
+                                              ? 'bg-green-100 text-green-800' 
+                                              : 'bg-yellow-100 text-yellow-800'
+                                          }`}>
+                                            {bc.is_scanned ? 'Tarandı' : 'Bekliyor'}
+                                          </span>
+                                        </div>
+                                      ))
+                                    }
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -3772,6 +3963,7 @@ const Siparisler = () => {
               notes: selectedOrderItemForQR.order.notes,
               created_at: selectedOrderItemForQR.order.created_at,
               qr_codes: selectedOrderItemForQR.order.qr_codes || [],
+              barcodes: selectedOrderItemForQR.order.barcodes || [],
               user: selectedOrderItemForQR.order.user,
               address: selectedOrderItemForQR.order.address,
               items: selectedOrderItemForQR.order.items.map(item => ({

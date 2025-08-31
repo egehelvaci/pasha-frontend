@@ -391,6 +391,17 @@ const Header = ({ title, user, className }: HeaderProps) => {
       requiresCanSeePrice: true,
     },
     {
+      name: 'Teslimat',
+      href: '/dashboard/teslimat',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+          <path d="M3.375 4.5C2.339 4.5 1.5 5.34 1.5 6.375V13.5h12V6.375c0-1.036-.84-1.875-1.875-1.875h-8.25zM13.5 15h-12v2.625c0 1.035.84 1.875 1.875 1.875h.375a3 3 0 116 0h3a3 3 0 116 0h.375c1.035 0 1.875-.84 1.875-1.875V15zM8.25 19.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0zm7.5 0a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
+          <path d="M5.25 6.375a.75.75 0 01.75-.75h3.75a.75.75 0 01.75.75v4.5a.75.75 0 01-.75.75H6a.75.75 0 01-.75-.75v-4.5z" />
+        </svg>
+      ),
+      adminOnly: true,
+    },
+    {
       name: 'Muhasebe Hareketlerim',
       href: '/dashboard/muhasebe-hareketlerim',
       icon: (
@@ -413,19 +424,6 @@ const Header = ({ title, user, className }: HeaderProps) => {
         </svg>
       ),
       adminOnly: true,
-    },
-    {
-      name: 'Teslimat',
-      href: '/dashboard/teslimat',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-          <path d="M3.375 4.5C2.339 4.5 1.5 5.34 1.5 6.375V13.5h12V6.375c0-1.036-.84-1.875-1.875-1.875h-8.25zM13.5 15h-12v2.625c0 1.035.84 1.875 1.875 1.875h.375a3 3 0 116 0h3a3 3 0 116 0h.375c1.035 0 1.875-.84 1.875-1.875V15zM8.25 19.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0zm7.5 0a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
-          <path d="M5.25 6.375a.75.75 0 01.75-.75h3.75a.75.75 0 01.75.75v4.5a.75.75 0 01-.75.75H6a.75.75 0 01-.75-.75v-4.5z" />
-        </svg>
-      ),
-      adminOnly: false,
-      hideFromAdmin: false,
-      hideFromEditor: false,
     },
     {
       name: 'Sepetim',
@@ -478,17 +476,6 @@ const Header = ({ title, user, className }: HeaderProps) => {
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
           <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
-        </svg>
-      ),
-      editorOnly: true,
-    },
-    {
-      name: 'Teslimat',
-      href: '/dashboard/teslimat',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-          <path d="M3.375 4.5C2.339 4.5 1.5 5.34 1.5 6.375V13.5h12V6.375c0-1.036-.84-1.875-1.875-1.875h-8.25zM13.5 15h-12v2.625c0 1.035.84 1.875 1.875 1.875h.375a3 3 0 116 0h3a3 3 0 116 0h.375c1.035 0 1.875-.84 1.875-1.875V15zM8.25 19.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0zm7.5 0a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
-          <path d="M5.25 6.375a.75.75 0 01.75-.75h3.75a.75.75 0 01.75.75v4.5a.75.75 0 01-.75.75H6a.75.75 0 01-.75-.75v-4.5z" />
         </svg>
       ),
       editorOnly: true,

@@ -26,14 +26,19 @@ interface QRCodeData {
   order_id: string;
   order_item_id: string;
   product_id: string;
-  qr_code: string;
-  qrCodeImageUrl: string;
-  scan_count: number;
-  required_scans: number;
-  last_scan_at: string;
+  barcode: string;
+  barcode_type: string;
+  barcode_image_url: string;
   is_scanned: boolean;
-  scanned_at: string;
+  scanned_at?: string;
+  scanned_by?: string;
   created_at: string;
+  quantity: number;
+  qr_code?: string;
+  qrCodeImageUrl?: string;
+  scan_count?: number;
+  required_scans?: number;
+  last_scan_at?: string;
   first_scan_employee_id?: string;
   first_scan_at?: string;
   second_scan_at?: string;
@@ -83,7 +88,8 @@ interface QRLabelProps {
     notes?: string;
     created_at: string;
     items: OrderItem[];
-    qr_codes: QRCodeData[];
+    qr_codes?: QRCodeData[];
+    barcodes?: QRCodeData[];
     user?: {
       name: string;
       surname: string;
@@ -120,7 +126,7 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
   useEffect(() => {
     // Önizleme için backend'den gelen QR kodunu kullan
     const generatePreviewQRCode = async () => {
-    if (!canvasRef.current || !orderData.qr_codes || !orderData.qr_codes.length) {
+    if (!canvasRef.current || (!orderData.qr_codes?.length && !orderData.barcodes?.length)) {
       return;
     }
 
@@ -128,8 +134,10 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const firstQRCode = orderData.qr_codes[0];
-    const firstItem = firstQRCode.order_item;
+    // Hem QR codes hem de barcodes'ları birleştir
+    const allCodes = [...(orderData.qr_codes || []), ...(orderData.barcodes || [])];
+    const firstCode = allCodes[0];
+    const firstItem = firstCode.order_item;
     
     try {
       // Canvas boyutlarını 10x15 cm (378x567 piksel @ 96 DPI) olarak ayarla
@@ -142,7 +150,9 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
 
       // Canvas tainted hatası önlemek için doğrudan QR kod oluştur
       try {
-        const qrCodeDataURL = await QRCode.toDataURL(firstQRCode.qr_code, {
+        // QR kod için barcode veya id kullan
+        const qrData = firstCode.qr_code || firstCode.barcode || firstCode.id;
+        const qrCodeDataURL = await QRCode.toDataURL(qrData, {
           width: 200,
           margin: 1,
           color: {
@@ -205,13 +215,20 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
           }
           textY += 15;
 
-          // Miktar ve sipariş bilgisi
-          ctx.font = '14px Arial';
-          ctx.fillText(`Gerekli Tarama: ${firstQRCode.required_scans}`, canvas.width / 2, textY);
+                        // Miktar ve sipariş bilgisi
+              ctx.font = '14px Arial';
+              ctx.fillText(`Gerekli Tarama: ${firstCode.required_scans || firstCode.quantity || 2}`, canvas.width / 2, textY);
           textY += 20;
           ctx.fillText(`Sp. No: ${orderData.id.slice(0, 8)}`, canvas.width / 2, textY);
           textY += 20;
           ctx.fillText(`Tarih: ${new Date(orderData.created_at).toLocaleDateString('tr-TR')}`, canvas.width / 2, textY);
+
+          // Barcode bilgisini sadece text olarak göster (görsel yazdırma sayfasında olacak)
+          if (firstCode.barcode) {
+            textY += 25;
+            ctx.font = '12px Arial';
+            ctx.fillText(`Barcode: ${firstCode.barcode}`, canvas.width / 2, textY);
+          }
         };
         
         qrImage.src = qrCodeDataURL;
@@ -231,16 +248,56 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
 
 
   const handlePrint = async () => {
-    if (!orderData.qr_codes || !orderData.qr_codes.length) {
-      alert('Bu sipariş için henüz QR kod oluşturulmamış.');
+    // QR codes ve barcodes'ları eşleştir ve yazdırılacak etiketleri oluştur
+    const allLabels: any[] = [];
+    
+    // Her QR code için ilgili barcode'u bul ve eşleştir
+    if (orderData.qr_codes) {
+      orderData.qr_codes.forEach(qr => {
+        // Bu QR'ın order_item_id'sine göre ilgili barcode'u bul
+        const relatedBarcode = orderData.barcodes?.find(bc => bc.order_item_id === qr.order_item_id);
+        
+        // QR için required_scans kadar etiket oluştur
+        const qrCount = qr.required_scans || 1;
+        for (let i = 0; i < qrCount; i++) {
+          allLabels.push({
+            type: 'combined', // QR + Barcode
+            qrCode: qr,
+            barcode: relatedBarcode,
+            _labelIndex: i + 1,
+            _totalLabels: qrCount,
+            _source: 'qr_required_scans'
+          });
+        }
+      });
+    }
+    
+    // Sadece QR codes temel alınır, barcode quantity fazlası dikkate alınmaz
+    // Çünkü her QR için zaten ilgili barcode eşleştiriliyor
+    
+    // Debug: Toplam etiket sayısı ve detayları
+    console.log(`QR Label: ${allLabels.length} toplam etiket yazdırılacak`);
+    console.log('Etiket detayları:', allLabels.map((label, i) => ({
+      index: i,
+      source: label._source,
+      labelIndex: label._labelIndex,
+      totalLabels: label._totalLabels,
+      qrId: label.qrCode?.id?.slice(0, 8),
+      barcodeId: label.barcode?.id?.slice(0, 8)
+    })));
+    
+    if (!allLabels.length) {
+      alert('Bu sipariş için henüz QR kod veya barcode oluşturulmamış.');
       return;
     }
-
-    // Backend'den gelen tüm QR kodları için etiket oluştur
-    const allLabels: string[] = [];
     
-    for (const qrCodeData of orderData.qr_codes) {
-      const item = qrCodeData.order_item;
+    const allCodes = allLabels;
+
+    // Backend'den gelen tüm kodları için etiket oluştur
+    const labelImages: string[] = [];
+    
+    for (const codeData of allCodes) {
+      const item = codeData.qrCode?.order_item || codeData.barcode?.order_item;
       
       try {
         // Her etiket için canvas oluştur
@@ -257,7 +314,9 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
         // Canvas tainted hatası önlemek için doğrudan QR kod oluştur
         await new Promise(async (resolve) => {
           try {
-            const qrCodeDataURL = await QRCode.toDataURL(qrCodeData.qr_code, {
+            // QR kod için qrCode data kullan
+            const qrData = codeData.qrCode?.qr_code || codeData.qrCode?.id || 'NO-QR-DATA';
+            const qrCodeDataURL = await QRCode.toDataURL(qrData, {
               width: 200,
               margin: 1,
               color: {
@@ -322,15 +381,25 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
 
               // QR kod ve sipariş bilgisi
               ctx.font = '14px Arial';
-              ctx.fillText(`Gerekli Tarama: ${qrCodeData.required_scans}`, canvas.width / 2, textY);
+              const requiredScans = codeData.qrCode?.required_scans || 2;
+              const barcodeQuantity = codeData.barcode?.quantity || 1;
+              ctx.fillText(`Gerekli Tarama: ${requiredScans}`, canvas.width / 2, textY);
               textY += 20;
               ctx.fillText(`Sp. No: ${orderData.id.slice(0, 8)}`, canvas.width / 2, textY);
               textY += 20;
-              ctx.fillText(`QR ID: ${qrCodeData.id.slice(0, 8)}`, canvas.width / 2, textY);
-              textY += 20;
+              if (codeData.qrCode?.id) {
+                ctx.fillText(`QR ID: ${codeData.qrCode.id.slice(0, 8)}`, canvas.width / 2, textY);
+                textY += 20;
+              }
+              if (codeData._labelIndex && codeData._totalLabels) {
+                ctx.fillText(`Etiket: ${codeData._labelIndex}/${codeData._totalLabels}`, canvas.width / 2, textY);
+                textY += 20;
+              }
               ctx.fillText(`Tarih: ${new Date(orderData.created_at).toLocaleDateString('tr-TR')}`, canvas.width / 2, textY);
 
-              allLabels.push(canvas.toDataURL('image/png'));
+              // Barcode görseli HTML'de gösterilecek, burada text eklemeye gerek yok
+              
+              labelImages.push(canvas.toDataURL('image/png'));
               resolve(true);
             };
             
@@ -351,14 +420,38 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
     }
 
     // Tüm etiketleri yazdır
-    if (allLabels.length > 0) {
+    if (labelImages.length > 0) {
       const printWindow = window.open('', '_blank', 'width=800,height=600');
       if (printWindow) {
-        const labelsHtml = allLabels.map((labelDataURL, index) => `
-          <div class="label-page" ${index > 0 ? 'style="page-break-before: always;"' : ''}>
-            <img src="${labelDataURL}" alt="QR Kod Etiketi ${index + 1}" class="label-image">
-          </div>
-        `).join('');
+        const labelsHtml = allCodes.map((codeData, index) => {
+          const labelDataURL = labelImages[index];
+          const barcodeImageUrl = codeData.barcode?.barcode_image_url;
+          const barcodeText = codeData.barcode?.barcode;
+          
+          // Barcode bilgisi var mı kontrolü
+          const hasBarcode = !!(codeData.barcode && barcodeImageUrl);
+          
+          // Template için değişkenleri hazırla
+          const safeImageUrl = barcodeImageUrl || '';
+          const safeBarcodeText = barcodeText || '';
+          const hasValidUrl = hasBarcode;
+          
+          return `
+            <div class="label-page" ${index > 0 ? 'style="page-break-before: always;"' : ''}>
+              <div class="qr-section">
+                <img src="${labelDataURL}" alt="QR Kod Etiketi ${index + 1}" class="label-image">
+              </div>
+              <div class="barcode-section">
+                ${hasValidUrl ? `
+                  <img src="${safeImageUrl}" alt="Barcode ${safeBarcodeText}" class="barcode-image">
+                  <div class="barcode-text">${safeBarcodeText}</div>
+                ` : `
+                  <div class="barcode-text">${safeBarcodeText || 'Barcode yükleniyor...'}</div>
+                `}
+              </div>
+            </div>
+          `;
+        }).join('');
 
         const htmlContent = `
           <!DOCTYPE html>
@@ -392,18 +485,58 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
                 margin: 0;
                 padding: 0;
                 display: flex;
+                flex-direction: column;
                 align-items: center;
-                justify-content: center;
+                justify-content: space-between;
                 background: white;
                 page-break-inside: avoid;
+                border: 1px solid #ccc;
+              }
+              
+              .qr-section {
+                height: 12cm;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                padding: 0.5cm;
               }
               
               .label-image {
-                width: 10cm;
-                height: 15cm;
+                max-width: 9cm;
+                max-height: 11cm;
                 object-fit: contain;
                 image-rendering: -webkit-optimize-contrast;
                 image-rendering: crisp-edges;
+              }
+
+              .barcode-section {
+                height: 3cm;
+                width: 100%;
+                padding: 0.3cm;
+                text-align: center;
+                background: #f9f9f9;
+                border-top: 1px solid #ddd;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+              }
+
+              .barcode-image {
+                max-width: 8cm;
+                height: auto;
+                max-height: 1.5cm;
+                object-fit: contain;
+                margin-bottom: 5px;
+              }
+              
+              .barcode-text {
+                font-family: 'Courier New', monospace;
+                font-size: 10px;
+                font-weight: bold;
+                color: #333;
+                letter-spacing: 1px;
               }
               
               @media print {
@@ -414,6 +547,16 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
                 
                 .label-page {
                   page-break-inside: avoid;
+                  border: none;
+                }
+                
+                .barcode-section {
+                  background: white !important;
+                  border-top: 1px solid #000 !important;
+                }
+                
+                .barcode-text {
+                  color: #000 !important;
                 }
               }
             </style>
@@ -519,9 +662,9 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
                 <span className="text-gray-900">{orderData.items.length} çeşit</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 font-medium">QR Kod:</span>
+                <span className="text-gray-600 font-medium">QR Kod/Barcode:</span>
                 <span className="font-bold text-purple-600">
-                  {orderData.qr_codes ? orderData.qr_codes.length : 0} adet
+                  {(orderData.qr_codes?.length || 0) + (orderData.barcodes?.length || 0)} adet
                 </span>
               </div>
               <div className="flex justify-between">
@@ -532,29 +675,30 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
               </div>
             </div>
             
-            {/* QR Kod Listesi */}
+            {/* QR Kod/Barcode Listesi */}
             <div className="mt-4 bg-gray-100 rounded-lg p-3">
-              <div className="text-sm font-medium text-gray-700 mb-2">QR Kodları:</div>
+              <div className="text-sm font-medium text-gray-700 mb-2">QR Kodları & Barkodlar:</div>
               <div className="space-y-1 max-h-32 overflow-y-auto">
-                {orderData.qr_codes && orderData.qr_codes.length > 0 ? (
-                  orderData.qr_codes.map((qrCode, index) => (
-                    <div key={qrCode?.id || index} className="flex justify-between text-xs">
+                {[...(orderData.qr_codes || []), ...(orderData.barcodes || [])].length > 0 ? (
+                  [...(orderData.qr_codes || []), ...(orderData.barcodes || [])].map((code, index) => (
+                    <div key={code?.id || index} className="flex justify-between text-xs">
                       <span className="text-gray-600 truncate">
-                        {qrCode?.order_item?.product?.name || 'Ürün bilgisi yok'} 
-                        {qrCode?.order_item?.width && qrCode?.order_item?.height && 
-                          ` (${qrCode.order_item.width}x${qrCode.order_item.height})`
+                        {code?.order_item?.product?.name || 'Ürün bilgisi yok'} 
+                        {code?.order_item?.width && code?.order_item?.height && 
+                          ` (${code.order_item.width}x${code.order_item.height})`
                         }
+                        {code?.barcode && ` - ${code.barcode}`}
                       </span>
                       <span className={`font-medium ml-2 ${
-                        qrCode?.is_scanned ? 'text-green-600' : 'text-gray-900'
+                        code?.is_scanned ? 'text-green-600' : 'text-gray-900'
                       }`}>
-                        {qrCode?.is_scanned ? 'Tarandı' : `${qrCode?.required_scans || 0} tarama`}
+                        {code?.is_scanned ? 'Tarandı' : `${code?.required_scans || 2} tarama`}
                       </span>
                     </div>
                   ))
                 ) : (
                   <div className="text-xs text-gray-500 italic">
-                    Bu sipariş için henüz QR kod oluşturulmamış
+                    Bu sipariş için henüz QR kod veya barcode oluşturulmamış
                   </div>
                 )}
               </div>
@@ -583,9 +727,9 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
           </button>
           <button
             onClick={handlePrint}
-            disabled={!orderData.qr_codes || !orderData.qr_codes.length}
+            disabled={!((orderData.qr_codes?.length || 0) + (orderData.barcodes?.length || 0))}
             className={`px-6 py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2 ${
-              orderData.qr_codes && orderData.qr_codes.length > 0
+              ((orderData.qr_codes?.length || 0) + (orderData.barcodes?.length || 0)) > 0
                 ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
@@ -593,7 +737,7 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
             </svg>
-            {orderData.qr_codes && orderData.qr_codes.length > 0 ? 'QR Etiket Yazdır' : 'QR Kod Yok'}
+            {((orderData.qr_codes?.length || 0) + (orderData.barcodes?.length || 0)) > 0 ? 'QR Etiket Yazdır' : 'Kod Yok'}
           </button>
         </div>
       </div>

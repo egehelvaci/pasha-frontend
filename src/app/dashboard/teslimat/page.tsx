@@ -17,12 +17,78 @@ export default function TeslimatPage() {
   const [success, setSuccess] = useState('');
   const [lastScanResults, setLastScanResults] = useState<any>(null);
   const [showResults, setShowResults] = useState(false);
+  const [currentScanResult, setCurrentScanResult] = useState<any>(null);
+  const [scannedBarcodes, setScannedBarcodes] = useState<{[key: string]: any}>({});
+  const [activeOrders, setActiveOrders] = useState<{[orderId: string]: any}>({});
+  const [showAlreadyScannedPopup, setShowAlreadyScannedPopup] = useState(false);
+  const [alreadyScannedBarcodeInfo, setAlreadyScannedBarcodeInfo] = useState<any>(null);
+  
+  // Audio notification functions
+  const playSuccessSound = () => {
+    // Create success sound (higher pitch beep)
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.setValueAtTime(800, audioContext.currentTime); // Higher pitch for success
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.3);
+  };
+  
+  const playErrorSound = () => {
+    // Create error sound (lower pitch, longer beep)
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.setValueAtTime(300, audioContext.currentTime); // Lower pitch for error
+    oscillator.type = 'square';
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.6);
+  };
   
   // Sayfa yüklendiğinde input'a focus
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus();
     }
+  }, []);
+
+  // Tamamlanan siparişleri otomatik temizleme (5 dakika sonra)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+      setActiveOrders(prev => {
+        const filtered = Object.fromEntries(
+          Object.entries(prev).filter(([_, orderData]) => {
+            const lastUpdate = new Date(orderData.lastUpdateTime).getTime();
+            const isCompleted = orderData.lastScanResult?.scanInfo?.is_completed;
+            const timeDiff = now - lastUpdate;
+            
+            // Tamamlanan siparişleri 5 dakika sonra kaldır
+            return !(isCompleted && timeDiff > 5 * 60 * 1000);
+          })
+        );
+        return filtered;
+      });
+    }, 30000); // Her 30 saniyede kontrol et
+
+    return () => clearInterval(interval);
   }, []);
 
   // Kullanıcı yetkisi kontrolü
@@ -32,31 +98,154 @@ export default function TeslimatPage() {
     }
   }, [isAdminOrEditor, router]);
 
-  // Barkod ekleme fonksiyonu
-  const handleBarcodeSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!barcodeInput.trim()) {
-      setError('Lütfen barkod girin');
+  // Tek barkod tarama fonksiyonu
+  const scanSingleBarcode = async (barcode: string) => {
+    if (!token) {
+      setError('Token bulunamadı. Lütfen tekrar giriş yapın.');
       return;
     }
     
-    // Aynı barkod kontrolü
-    if (barcodeList.includes(barcodeInput.trim())) {
-      setError('Bu barkod zaten listede mevcut');
-      setBarcodeInput('');
+    setIsLoading(true);
+    setError('');
+    setSuccess('');
+    
+    try {
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app';
+      
+      const response = await fetch(`${API_BASE_URL}/api/admin/barcode/scan`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          barcode: barcode
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setCurrentScanResult(data);
+        setScannedBarcodes(prev => ({
+          ...prev,
+          [barcode]: data
+        }));
+        
+        // Sipariş bilgilerini activeOrders'a ekle/güncelle
+        if (data.order && data.order.id) {
+          // Debug için console log ekle
+          console.log('Scan Info:', data.scanInfo);
+          console.log('Current scan count:', data.scanInfo?.current_scan_count);
+          console.log('Required scans:', data.scanInfo?.required_scans);
+          console.log('Progress percentage:', data.scanInfo?.progress_percentage);
+          
+          setActiveOrders(prev => ({
+            ...prev,
+            [data.order.id]: {
+              ...data.order,
+              lastScanResult: data,
+              lastUpdateTime: new Date().toISOString()
+            }
+          }));
+        }
+        
+        setSuccess(data.message || 'Barkod başarıyla okutuldu');
+        
+        // Play success sound
+        try {
+          playSuccessSound();
+        } catch (audioError) {
+          console.log('Audio notification failed:', audioError);
+        }
+        
+        // Success mesajını temizle
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        throw new Error(data.message || 'Barkod okutma başarısız');
+      }
+    } catch (err: any) {
+      console.error('Barkod okutma hatası:', err);
+      
+      // Play error sound
+      try {
+        playErrorSound();
+      } catch (audioError) {
+        console.log('Audio notification failed:', audioError);
+      }
+      
+      // Eğer barkod zaten okutulmuşsa popup göster
+      if (err.message.includes('zaten okutuldu') || err.message.includes('already scanned')) {
+        setAlreadyScannedBarcodeInfo({ barcode, error: err.message });
+        setShowAlreadyScannedPopup(true);
+      } else {
+        setError(err.message || 'Barkod okutma sırasında hata oluştu');
+        setTimeout(() => setError(''), 3000);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Barkod formatını kontrol etme
+  const isBarcodeValid = (barcode: string) => {
+    const barcodePattern = /^BAR-\d+-[A-F0-9]+$/;
+    return barcodePattern.test(barcode);
+  };
+
+  // Barkod input değişikliğini dinle
+  const handleBarcodeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setBarcodeInput(value);
+    
+    // Eğer değer boşsa veya geçerli barkod formatında değilse return
+    if (!value.trim() || !isBarcodeValid(value.trim())) {
+      return;
+    }
+    
+    // Geçerli barkod formatında ise otomatik olarak API'ye gönder
+    const barcode = value.trim();
+    scanSingleBarcode(barcode);
+    
+    // Input'u temizle
+    setBarcodeInput('');
+  };
+
+  // Form submit fonksiyonu (Enter tuşu için)
+  const handleBarcodeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!barcodeInput.trim()) {
+      return;
+    }
+    
+    const barcode = barcodeInput.trim();
+    
+    // Barkod formatını kontrol et
+    if (!isBarcodeValid(barcode)) {
+      setError('Geçersiz barkod formatı. Format: BAR-XXXXXXXX-XXXX');
+      
+      // Play error sound for invalid format
+      try {
+        playErrorSound();
+      } catch (audioError) {
+        console.log('Audio notification failed:', audioError);
+      }
+      
       setTimeout(() => setError(''), 3000);
       return;
     }
     
-    // Listeye ekle
-    setBarcodeList([...barcodeList, barcodeInput.trim()]);
-    setBarcodeInput('');
-    setError('');
-    setSuccess('Barkod eklendi');
+    // Barkodu API'ye gönder
+    await scanSingleBarcode(barcode);
     
-    // Success mesajını temizle
-    setTimeout(() => setSuccess(''), 2000);
+    // Input'u temizle
+    setBarcodeInput('');
     
     // Input'a tekrar focus
     if (inputRef.current) {
@@ -163,7 +352,7 @@ export default function TeslimatPage() {
                 type="text"
                 id="barcode"
                 value={barcodeInput}
-                onChange={(e) => setBarcodeInput(e.target.value)}
+                onChange={handleBarcodeInputChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
                 placeholder="Barkodu okutun veya manuel girin..."
                 autoFocus
@@ -171,23 +360,8 @@ export default function TeslimatPage() {
               />
             </div>
             
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-              >
-                Ekle
-              </button>
-              
-              {barcodeList.length > 0 && (
-                <button
-                  type="button"
-                  onClick={clearList}
-                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                >
-                  Listeyi Temizle
-                </button>
-              )}
+            <div className="text-xs text-gray-500 mt-2">
+              Barkod formatı: BAR-XXXXXXXX-XXXX (örn: BAR-1756667558704-54F495864EE8)
             </div>
           </form>
 
@@ -199,8 +373,21 @@ export default function TeslimatPage() {
           )}
           
           {success && (
-            <div className="mt-4 p-3 bg-green-100 border border-green-300 rounded-lg text-green-700">
-              {success}
+            <div className="mt-4 p-4 bg-green-100 border border-green-300 rounded-lg">
+              <div className="text-green-700 font-medium">{success}</div>
+              {currentScanResult && currentScanResult.scanInfo && (
+                <div className="mt-2 text-sm text-green-600">
+                  İlerleme: {currentScanResult.scanInfo.current_scan_count || 0}/{currentScanResult.scanInfo.required_scans || 0} 
+                  ({
+                    currentScanResult.scanInfo.required_scans > 0 
+                      ? Math.round((currentScanResult.scanInfo.current_scan_count / currentScanResult.scanInfo.required_scans) * 100) 
+                      : 0
+                  }%)
+                  {currentScanResult.scanInfo.is_completed && (
+                    <span className="ml-2 text-green-700 font-medium">✓ Sipariş tamamlandı!</span>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -343,26 +530,172 @@ export default function TeslimatPage() {
           </div>
         )}
 
-        {/* İstatistikler */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            <div className="text-sm text-gray-600">Toplam Barkod</div>
-            <div className="text-2xl font-bold text-blue-600">{barcodeList.length}</div>
+
+
+        {/* Aktif Siparişler */}
+        {Object.keys(activeOrders).length > 0 && (
+          <div className="mt-6 space-y-4">
+            <h2 className="text-lg font-semibold text-gray-800">Aktif Siparişler ({Object.keys(activeOrders).length})</h2>
+            
+            {Object.entries(activeOrders)
+              .sort(([,a], [,b]) => new Date(b.lastUpdateTime).getTime() - new Date(a.lastUpdateTime).getTime())
+              .map(([orderId, orderData]) => {
+                const scanInfo = orderData.lastScanResult?.scanInfo;
+                const isCompleted = scanInfo?.is_completed;
+                
+                return (
+                  <div 
+                    key={orderId} 
+                    className={`bg-white rounded-lg shadow-sm border-l-4 ${
+                      isCompleted ? 'border-green-500' : 'border-blue-500'
+                    } p-6 transition-all duration-300`}
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="font-medium text-gray-800 flex items-center gap-2">
+                          Sipariş #{orderId.slice(-8)}
+                          {isCompleted && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              ✓ Tamamlandı
+                            </span>
+                          )}
+                        </h3>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Son güncelleme: {new Date(orderData.lastUpdateTime).toLocaleString('tr-TR')}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setActiveOrders(prev => {
+                            const newOrders = { ...prev };
+                            delete newOrders[orderId];
+                            return newOrders;
+                          });
+                        }}
+                        className="text-gray-400 hover:text-red-500 transition-colors"
+                        title="Siparişi kaldır"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* Müşteri Bilgileri */}
+                      <div>
+                        <h4 className="font-medium text-gray-700 mb-2">Müşteri Bilgileri</h4>
+                        <div className="space-y-1 text-sm">
+                          <div><span className="text-gray-600">Müşteri:</span> <span className="font-medium">{orderData.customer?.name}</span></div>
+                          <div><span className="text-gray-600">E-mail:</span> <span>{orderData.customer?.email}</span></div>
+                          <div><span className="text-gray-600">Mağaza:</span> <span>{orderData.customer?.store?.kurum_adi}</span></div>
+                        </div>
+                      </div>
+
+                      {/* Sipariş Detayları */}
+                      <div>
+                        <h4 className="font-medium text-gray-700 mb-2">Sipariş Detayları</h4>
+                        <div className="space-y-1 text-sm">
+                          <div><span className="text-gray-600">Durum:</span> <span className="font-medium">{orderData.status}</span></div>
+                          <div><span className="text-gray-600">Toplam:</span> <span className="font-medium">{orderData.total_price} TL</span></div>
+                          <div><span className="text-gray-600">Ürün Sayısı:</span> <span>{orderData.items?.length || 0}</span></div>
+                        </div>
+                      </div>
+
+                      {/* İlerleme Durumu */}
+                      {scanInfo && (
+                        <div>
+                          <h4 className="font-medium text-gray-700 mb-2">İlerleme Durumu</h4>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>İlerleme:</span>
+                              <span className="font-medium">{scanInfo.current_scan_count || 0}/{scanInfo.required_scans || 0}</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div 
+                                className={`h-2 rounded-full transition-all duration-300 ${
+                                  isCompleted ? 'bg-green-600' : 'bg-blue-600'
+                                }`}
+                                style={{ 
+                                  width: `${
+                                    scanInfo.required_scans > 0 
+                                      ? Math.round((scanInfo.current_scan_count / scanInfo.required_scans) * 100) 
+                                      : 0
+                                  }%` 
+                                }}
+                              ></div>
+                            </div>
+                            <div className="text-xs text-gray-600 text-center">
+                              %{
+                                scanInfo.required_scans > 0 
+                                  ? Math.round((scanInfo.current_scan_count / scanInfo.required_scans) * 100) 
+                                  : 0
+                              } tamamlandı
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Son Barkod Bilgisi */}
+                    {orderData.lastScanResult && (
+                      <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-700">Son Okutlan Barkod</h5>
+                            <p className="text-xs font-mono text-gray-600 mt-1">{orderData.lastScanResult.barcode?.barcode}</p>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {orderData.lastScanResult.message}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            <div className="text-sm text-gray-600">Son Eklenen</div>
-            <div className="text-lg font-mono text-gray-800 truncate">
-              {barcodeList[barcodeList.length - 1] || '-'}
+        )}
+      </div>
+
+      {/* Already Scanned Popup */}
+      {showAlreadyScannedPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center mb-4">
+              <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-medium text-red-800">Barkod Zaten Okutulmuş</h3>
+              </div>
             </div>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            <div className="text-sm text-gray-600">Durum</div>
-            <div className="text-lg font-medium text-green-600">
-              {isLoading ? 'Gönderiliyor...' : 'Hazır'}
+            
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-2">
+                <span className="font-mono bg-gray-100 px-2 py-1 rounded">{alreadyScannedBarcodeInfo?.barcode}</span>
+              </p>
+              <p className="text-sm text-red-600">
+                {alreadyScannedBarcodeInfo?.error}
+              </p>
+            </div>
+            
+            <div className="flex justify-end">
+              <button
+                onClick={() => {
+                  setShowAlreadyScannedPopup(false);
+                  setAlreadyScannedBarcodeInfo(null);
+                }}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Tamam
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
