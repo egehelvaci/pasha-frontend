@@ -189,61 +189,9 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
             </div>
 
             <div class="content">
-              <div class="section">
-                <h3>GÖNDERİCİ BİLGİLERİ</h3>
-                <div class="info-grid">
-                  <div class="info-item">
-                    <strong>Firma:</strong>
-                    <span>PAŞA HOME</span>
-                  </div>
-                                     <div class="info-item">
-                     <strong>Telefon:</strong>
-                     <span>+90 212 555 0123</span>
-                   </div>
-                   <div class="info-item">
-                     <strong>Adres:</strong>
-                     <span>Merkez Ofis, İstanbul</span>
-                   </div>
-                   <div class="info-item">
-                     <strong>Vergi No:</strong>
-                     <span>1234567890</span>
-                   </div>
-                </div>
-              </div>
-
-              <div class="section">
-                <h3>ALICI BİLGİLERİ</h3>
-                <div class="info-grid">
-                  <div class="info-item">
-                    <strong>Firma:</strong>
-                    <span>${order.store_name}</span>
-                  </div>
-                  <div class="info-item">
-                    <strong>Yetkili:</strong>
-                    <span>${order.user ? `${order.user.name} ${order.user.surname}` : 'Belirtilmemiş'}</span>
-                  </div>
-                  <div class="info-item">
-                    <strong>Telefon:</strong>
-                    <span>${order.store_phone || order.user?.phone || 'Belirtilmemiş'}</span>
-                  </div>
-                  <div class="info-item">
-                    <strong>E-posta:</strong>
-                    <span>${order.store_email || order.user?.email || 'Belirtilmemiş'}</span>
-                  </div>
-                  <div class="info-item">
-                    <strong>Vergi No:</strong>
-                    <span>${order.store_tax_number || 'Belirtilmemiş'}</span>
-                  </div>
-                  <div class="info-item">
-                    <strong>Vergi Dairesi:</strong>
-                    <span>${order.store_tax_office || 'Belirtilmemiş'}</span>
-                  </div>
-                </div>
-              </div>
-
               <div class="section address-section">
-                <h3>TESLİMAT ADRESİ</h3>
-                <div class="info-item">
+                <h3 style="font-size: 16px; font-weight: bold;">ALICI ADRESİ</h3>
+                <div class="info-item" style="font-size: 14px; font-weight: bold;">
                   <strong>Adres:</strong>
                   <span>${order.address ? 
                     `${(order.address as any).address}, ${(order.address as any).district} / ${(order.address as any).city}` : 
@@ -251,11 +199,63 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
                   }</span>
                 </div>
                 ${order.address && (order.address as any).postal_code ? 
-                  `<div class="info-item">
+                  `<div class="info-item" style="font-size: 14px; font-weight: bold;">
                     <strong>Posta Kodu:</strong>
                     <span>${(order.address as any).postal_code}</span>
                   </div>` : ''
                 }
+              </div>
+
+              <div class="section">
+                <h3 style="font-size: 14px; font-weight: bold;">ALICI BİLGİLERİ</h3>
+                <div class="info-grid">
+                  <div class="info-item" style="font-size: 13px; font-weight: bold;">
+                    <strong>Firma:</strong>
+                    <span>${order.store_name}</span>
+                  </div>
+                  <div class="info-item" style="font-size: 13px; font-weight: bold;">
+                    <strong>Yetkili:</strong>
+                    <span>${order.user ? `${order.user.name} ${order.user.surname}` : 'Belirtilmemiş'}</span>
+                  </div>
+                  <div class="info-item" style="font-size: 13px; font-weight: bold;">
+                    <strong>Telefon:</strong>
+                    <span>${order.store_phone || order.user?.phone || 'Belirtilmemiş'}</span>
+                  </div>
+                  <div class="info-item" style="font-size: 13px; font-weight: bold;">
+                    <strong>E-posta:</strong>
+                    <span>${order.store_email || order.user?.email || 'Belirtilmemiş'}</span>
+                  </div>
+                  <div class="info-item" style="font-size: 13px; font-weight: bold;">
+                    <strong>Vergi No:</strong>
+                    <span>${order.store_tax_number || 'Belirtilmemiş'}</span>
+                  </div>
+                  <div class="info-item" style="font-size: 13px; font-weight: bold;">
+                    <strong>Vergi Dairesi:</strong>
+                    <span>${order.store_tax_office || 'Belirtilmemiş'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="section sender-section" style="margin-top: 8mm; border-top: 1px solid #ccc; padding-top: 4mm;">
+              <h3 style="font-size: 10px; font-weight: bold;">GÖNDERİCİ BİLGİLERİ</h3>
+              <div class="info-grid">
+                <div class="info-item" style="font-size: 9px;">
+                  <strong>Firma:</strong>
+                  <span>PAŞA HOME</span>
+                </div>
+                <div class="info-item" style="font-size: 9px;">
+                  <strong>Telefon:</strong>
+                  <span>+90 212 555 0123</span>
+                </div>
+                <div class="info-item" style="font-size: 9px;">
+                  <strong>Adres:</strong>
+                  <span>Merkez Ofis, İstanbul</span>
+                </div>
+                <div class="info-item" style="font-size: 9px;">
+                  <strong>Vergi No:</strong>
+                  <span>1234567890</span>
+                </div>
               </div>
             </div>
           </div>
