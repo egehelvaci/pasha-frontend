@@ -42,11 +42,14 @@ interface Transaction {
 
 interface AccountingResponseData {
     hareketler: Transaction[];
-    magazaBakiyeleri: MagazaBakiye[];
-    adminKasaBakiyesi: string;
-    toplamAlacak: number;
-    adminVerecekMagazaSayisi: number;
-    adminAlacakliMagazaSayisi: number;
+    magazaBakiyeleri?: MagazaBakiye[];
+    adminKasaBakiyesi?: string;
+    toplamAlacak?: number;
+    adminVerecekMagazaSayisi?: number;
+    adminAlacakliMagazaSayisi?: number;
+    magazaBilgi?: any;
+    ozet?: any;
+    pagination?: any;
 }
 
 interface AccountingData {
@@ -1109,8 +1112,8 @@ const MuhasebePage = () => {
                             </div>
                                 <div className="min-w-0 flex-1">
                                     <p className="text-xs font-medium text-gray-600 truncate">Kasa Bakiyesi</p>
-                                    <p className="text-sm xl:text-base font-bold text-blue-600 truncate leading-tight" title={formatCurrency(parseFloat(responseData.adminKasaBakiyesi))}>
-                                {formatCurrency(parseFloat(responseData.adminKasaBakiyesi))}
+                                    <p className="text-sm xl:text-base font-bold text-blue-600 truncate leading-tight" title={formatCurrency(parseFloat(responseData.adminKasaBakiyesi || '0'))}>
+                                {formatCurrency(parseFloat(responseData.adminKasaBakiyesi || '0'))}
                                     </p>
                             </div>
                         </div>
