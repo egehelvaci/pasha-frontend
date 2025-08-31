@@ -2498,24 +2498,14 @@ export default function ProductList() {
                 const hasOptionalHeight = product.sizeOptions && product.sizeOptions.some((size: any) => size.is_optional_height === true);
                 const isCustomCut = hasOptionalHeight;
                 const statusText = isCustomCut ? 'KESİM' : 'HAZIR';
-                const isOutOfStock = !hasStock(product);
+                const isOutOfStock = false; // Stok kontrolü kaldırıldı
                 
                 return (
                   <div key={product.productId} 
-                       className={`border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow relative cursor-pointer ${
-                         isOutOfStock ? 'opacity-60 grayscale bg-gray-100' : 'bg-white'
-                       }`} 
+                       className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow relative cursor-pointer bg-white" 
                        style={{ width: '350px', height: '550px' }}
                        onClick={() => router.push(`/dashboard/urunler/${product.productId}`)}>
                     
-                    {/* Stok yoksa overlay - sadece ürün görseli alanını kapla */}
-                    {isOutOfStock && (
-                      <div className="absolute top-0 left-0 right-0 bg-gray-300 bg-opacity-30 z-20 flex items-center justify-center" style={{ height: '400px' }}>
-                        <div className="bg-gray-600 text-white px-3 py-1 rounded-md text-sm font-medium">
-                          Stokta Yok
-                        </div>
-                      </div>
-                    )}
                     
                     {/* Koleksiyon adı - sol üst */}
                     <div className="absolute top-3 left-3 z-10">
@@ -2598,12 +2588,12 @@ export default function ProductList() {
                             }
                           }}
                           title={isOutOfStock ? "Stokta olmayan ürün" : "Sepete Ekle"}
-                          disabled={isOutOfStock}
+                          disabled={false}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                           </svg>
-                          {isOutOfStock ? 'Stokta Yok' : 'Sepete Ekle'}
+                          Sepete Ekle
                         </button>
                         {isAdminOrEditor && (
                           <button 
