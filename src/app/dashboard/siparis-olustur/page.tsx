@@ -409,9 +409,17 @@ const SiparisOlustur: React.FC = () => {
                   </p>
                   {limitInfo.requiresPayment && (
                     <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
-                      <p className="text-xs text-yellow-800">
-                        💳 Sipariş verebilmek için önce ödeme yapmanız gerekmektedir.
-                      </p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-yellow-800">
+                          💳 Sipariş verebilmek için önce ödeme yapmanız gerekmektedir.
+                        </p>
+                        <button
+                          onClick={() => router.push('/dashboard/odemeler')}
+                          className="ml-3 px-4 py-2 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          Ödeme Yap
+                        </button>
+                      </div>
                     </div>
                   )}
                   {user?.canSeePrice && (
