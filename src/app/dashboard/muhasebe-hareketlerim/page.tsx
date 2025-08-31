@@ -265,7 +265,7 @@ export default function MuhasebeHareketlerimPage() {
                           <td className={`py-3 px-4 text-right font-medium ${
                             hareket.harcamaMi ? 'text-red-600' : 'text-green-600'
                           }`}>
-                            {hareket.harcamaMi ? '-' : '+'}{formatCurrency(hareket.tutar)}
+                            {hareket.harcamaMi ? '' : '+'}{formatCurrency(hareket.tutar)}
                           </td>
                         </tr>
                       ))}

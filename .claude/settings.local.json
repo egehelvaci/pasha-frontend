@@ -15,7 +15,8 @@
       "Read(/C:\\c\\Users\\ege_h/**)",
       "Bash(git commit:*)",
       "WebFetch(domain:)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Read(c:\\Users\\ege_h\\OneDrive\\Masaüstü\\ekran/**)"
     ],
     "deny": [],
     "ask": [],

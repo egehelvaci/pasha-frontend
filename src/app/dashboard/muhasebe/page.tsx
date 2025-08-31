@@ -136,6 +136,14 @@ const MuhasebePage = () => {
         }
     }, [isAdmin]);
 
+    // Filtre değişimlerinde verileri yeniden getir
+    useEffect(() => {
+        // İlk yükleme kontrolü - hasFetchedRef.current true ise ve admin ise
+        if (hasFetchedRef.current && isAdmin) {
+            fetchAccountingData(true);
+        }
+    }, [selectedStoreFilter, startDate, endDate]);
+
     // Dropdown'ların dışına tıklandığında kapanması
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -178,8 +186,34 @@ const MuhasebePage = () => {
                 throw new Error('Token bulunamadı');
             }
 
-            // Yeni API - tek endpoint'ten hem transactions hem bakiye bilgileri
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/admin/muhasebe-hareketleri`, {
+            // API URL'i oluştur - mağaza seçiliyse mağaza bazlı endpoint kullan
+            let apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}`;
+            
+            if (selectedStoreFilter) {
+                // Mağaza bazlı endpoint
+                apiUrl += `/api/admin/muhasebe/store/${selectedStoreFilter}`;
+            } else {
+                // Tüm mağazalar için endpoint
+                apiUrl += '/api/admin/muhasebe-hareketleri';
+            }
+
+            // Query parametrelerini oluştur
+            const queryParams = new URLSearchParams();
+            
+            if (startDate) {
+                queryParams.append('startDate', startDate);
+            }
+            
+            if (endDate) {
+                queryParams.append('endDate', endDate);
+            }
+
+            // Query parametreleri varsa URL'e ekle
+            if (queryParams.toString()) {
+                apiUrl += `?${queryParams.toString()}`;
+            }
+
+            const response = await fetch(apiUrl, {
                 headers: {
                     'Authorization': `Bearer ${authToken}`,
                     'Content-Type': 'application/json'
@@ -196,9 +230,23 @@ const MuhasebePage = () => {
                 throw new Error(result.message || 'Veriler alınamadı');
             }
 
-            setData({
-                responseData: result.data
-            });
+            // Mağaza bazlı veya genel veri yapısını handle et
+            if (selectedStoreFilter && result.data.magaza) {
+                // Mağaza bazlı response
+                setData({
+                    responseData: {
+                        hareketler: result.data.hareketler,
+                        magazaBilgi: result.data.magaza,
+                        ozet: result.data.ozet,
+                        pagination: result.data.pagination
+                    }
+                });
+            } else {
+                // Genel response (eski yapı)
+                setData({
+                    responseData: result.data
+                });
+            }
         } catch (error: any) {
             setError(error.message || 'Bir hata oluştu');
         } finally {
@@ -639,8 +687,8 @@ const MuhasebePage = () => {
 
         let filteredTransactions = responseData.hareketler;
 
-        // Mağaza filtrelemesi
-        if (selectedStoreFilter) {
+        // Mağaza filtrelemesi (sadece genel data için - mağaza bazlı data zaten filtrelenmiş)
+        if (selectedStoreFilter && !responseData.magazaBilgi) {
             filteredTransactions = filteredTransactions.filter(
                 transaction => transaction.storeId === selectedStoreFilter
             );
@@ -737,7 +785,7 @@ const MuhasebePage = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
                             </svg>
                         </div>
-                        <h2 className="text-lg font-semibold text-gray-900">🔍 Gelişmiş Filtreleme</h2>
+                        <h2 className="text-lg font-semibold text-gray-900">Gelişmiş Filtreleme</h2>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 items-end">
@@ -757,7 +805,7 @@ const MuhasebePage = () => {
                                 >
                                     <span className="text-gray-900">
                                         {selectedStoreFilter ? 
-                                            responseData?.magazaBakiyeleri?.find(m => m.store_id === selectedStoreFilter)?.kurum_adi || 'Seçili Mağaza' :
+                                            stores?.find(m => m.store_id === selectedStoreFilter)?.kurum_adi || 'Seçili Mağaza' :
                                             'Tüm Mağazalar'
                                         }
                                     </span>
@@ -773,6 +821,27 @@ const MuhasebePage = () => {
                                 
                                 {storeFilterDropdownOpen && (
                                     <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                                        {/* Arama Kutusu */}
+                                        <div className="sticky top-0 bg-white p-2 border-b">
+                                            <input
+                                                type="text"
+                                                placeholder="Mağaza ara..."
+                                                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                                onChange={(e) => {
+                                                    const searchValue = e.target.value.toLowerCase();
+                                                    if (searchValue === '') {
+                                                        setFilteredStores(stores);
+                                                    } else {
+                                                        const filtered = stores.filter(store => 
+                                                            store.kurum_adi.toLowerCase().includes(searchValue)
+                                                        );
+                                                        setFilteredStores(filtered);
+                                                    }
+                                                }}
+                                                onClick={(e) => e.stopPropagation()}
+                                            />
+                                        </div>
+                                        
                                         <div
                                             className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
                                                 !selectedStoreFilter ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
@@ -780,11 +849,12 @@ const MuhasebePage = () => {
                                             onClick={() => {
                                                 setSelectedStoreFilter('');
                                                 setStoreFilterDropdownOpen(false);
+                                                setFilteredStores(stores);
                                             }}
                                         >
                                             Tüm Mağazalar
                                         </div>
-                                {responseData?.magazaBakiyeleri?.map((magaza) => (
+                                        {filteredStores?.map((magaza) => (
                                             <div
                                                 key={magaza.store_id}
                                                 className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
@@ -793,11 +863,17 @@ const MuhasebePage = () => {
                                                 onClick={() => {
                                                     setSelectedStoreFilter(magaza.store_id);
                                                     setStoreFilterDropdownOpen(false);
+                                                    setFilteredStores(stores);
                                                 }}
                                             >
-                                        {magaza.kurum_adi}
+                                                {magaza.kurum_adi}
                                             </div>
-                                ))}
+                                        ))}
+                                        {filteredStores?.length === 0 && (
+                                            <div className="px-3 py-4 text-sm text-gray-500 text-center">
+                                                Mağaza bulunamadı
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -952,8 +1028,61 @@ const MuhasebePage = () => {
                     )}
             </div>
 
-                {/* Modern Özet Kartları - Responsive Grid */}
-            {responseData && (
+                {/* Mağaza Bazlı Özet Kartı - Filtreleme aktifken göster */}
+                {responseData && selectedStoreFilter && responseData.magazaBilgi && (
+                    <div className="bg-white rounded-xl shadow-sm border p-6 mb-8">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center space-x-4">
+                                <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-100">
+                                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold text-gray-900">{responseData.magazaBilgi.kurum_adi}</h2>
+                                    <p className="text-sm text-gray-600">Mağaza Detay Bilgileri</p>
+                                </div>
+                            </div>
+                            <div className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                                responseData.magazaBilgi.bakiyeDurumu.durum === 'BORCLU' 
+                                    ? 'bg-red-100 text-red-800' 
+                                    : responseData.magazaBilgi.bakiyeDurumu.durum === 'ALACAKLI'
+                                    ? 'bg-green-100 text-green-800'
+                                    : 'bg-gray-100 text-gray-800'
+                            }`}>
+                                {responseData.magazaBilgi.bakiyeDurumu.durum}
+                            </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Bakiye */}
+                            <div className="text-center p-6 bg-gray-50 rounded-lg">
+                                <div className={`text-3xl font-bold ${
+                                    responseData.magazaBilgi.bakiyeDurumu.bakiye >= 0 ? 'text-green-600' : 'text-red-600'
+                                }`}>
+                                    {formatCurrency(responseData.magazaBilgi.bakiyeDurumu.bakiye)}
+                                </div>
+                                <div className="text-sm text-gray-600 mt-2">
+                                    {responseData.magazaBilgi.bakiyeDurumu.bakiye >= 0 ? 'Alacaklı' : 'Borçlu'}
+                                </div>
+                            </div>
+                            
+                            {/* Açık Hesap Limiti */}
+                            <div className="text-center p-6 bg-blue-50 rounded-lg">
+                                <div className="text-3xl font-bold text-blue-600">
+                                    {responseData.magazaBilgi.bakiyeDurumu.limitsizAcikHesap 
+                                        ? 'Limitsiz' 
+                                        : formatCurrency(responseData.magazaBilgi.bakiyeDurumu.acikHesapLimiti)
+                                    }
+                                </div>
+                                <div className="text-sm text-gray-600 mt-2">Açık Hesap Limiti</div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Modern Özet Kartları - Responsive Grid - Sadece genel veriler için göster */}
+            {responseData && !selectedStoreFilter && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4 lg:gap-6 mb-8">
                     {/* Toplam Mağaza */}
                         <div className="bg-white rounded-xl shadow-sm border p-3 lg:p-4 hover:shadow-md transition-shadow min-w-0">
@@ -965,7 +1094,7 @@ const MuhasebePage = () => {
                             </div>
                                 <div className="min-w-0 flex-1">
                                     <p className="text-xs font-medium text-gray-600 truncate">Toplam Mağaza</p>
-                                    <p className="text-xl font-bold text-gray-900">{responseData.magazaBakiyeleri.length}</p>
+                                    <p className="text-xl font-bold text-gray-900">{responseData.magazaBakiyeleri?.length || 0}</p>
                             </div>
                         </div>
                     </div>
@@ -1069,11 +1198,11 @@ const MuhasebePage = () => {
                 </div>
             )}
 
-                {/* Mağaza Detayları - Modern Kartlar */}
-            {responseData && responseData.magazaBakiyeleri && responseData.magazaBakiyeleri.length > 0 && (
+                {/* Mağaza Detayları - Modern Kartlar - Sadece genel veriler için göster */}
+            {responseData && responseData.magazaBakiyeleri && responseData.magazaBakiyeleri.length > 0 && !selectedStoreFilter && (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
                     {/* Borçlu Mağazalar */}
-                    {responseData.magazaBakiyeleri.filter(m => m.durum === 'BORCLU').length > 0 && (
+                    {responseData.magazaBakiyeleri?.filter(m => m.durum === 'BORCLU').length > 0 && (
                             <div className="bg-white rounded-xl shadow-sm border p-6">
                                 <div className="flex items-center space-x-3 mb-6">
                                     <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-100">
@@ -1081,10 +1210,10 @@ const MuhasebePage = () => {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
                                         </svg>
                                     </div>
-                                    <h3 className="text-lg font-semibold text-gray-900">📉 Borçlu Mağazalar</h3>
+                                    <h3 className="text-lg font-semibold text-gray-900">Borçlu Mağazalar</h3>
                                 </div>
                             <div className="space-y-3">
-                                {responseData.magazaBakiyeleri.filter(m => m.durum === 'BORCLU').map((magaza: MagazaBakiye) => (
+                                {responseData.magazaBakiyeleri?.filter(m => m.durum === 'BORCLU').map((magaza: MagazaBakiye) => (
                                         <div key={magaza.store_id} className="flex justify-between items-center p-4 bg-red-50 rounded-xl border border-red-100 hover:bg-red-100 transition-colors">
                                         <span className="text-sm font-medium text-gray-900">{magaza.kurum_adi}</span>
                                         <span className="text-sm font-bold text-red-600">
@@ -1097,7 +1226,7 @@ const MuhasebePage = () => {
                     )}
 
                     {/* Alacaklı Mağazalar */}
-                    {responseData.magazaBakiyeleri.filter(m => m.durum === 'ALACAKLI').length > 0 && (
+                    {responseData.magazaBakiyeleri?.filter(m => m.durum === 'ALACAKLI').length > 0 && (
                             <div className="bg-white rounded-xl shadow-sm border p-6">
                                 <div className="flex items-center space-x-3 mb-6">
                                     <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-green-100">
@@ -1105,10 +1234,10 @@ const MuhasebePage = () => {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                                         </svg>
                                     </div>
-                                    <h3 className="text-lg font-semibold text-gray-900">📈 Alacaklı Mağazalar</h3>
+                                    <h3 className="text-lg font-semibold text-gray-900">Alacaklı Mağazalar</h3>
                                 </div>
                             <div className="space-y-3">
-                                {responseData.magazaBakiyeleri.filter(m => m.durum === 'ALACAKLI').map((magaza: MagazaBakiye) => (
+                                {responseData.magazaBakiyeleri?.filter(m => m.durum === 'ALACAKLI').map((magaza: MagazaBakiye) => (
                                         <div key={magaza.store_id} className="flex justify-between items-center p-4 bg-green-50 rounded-xl border border-green-100 hover:bg-green-100 transition-colors">
                                         <span className="text-sm font-medium text-gray-900">{magaza.kurum_adi}</span>
                                         <span className="text-sm font-bold text-green-600">
@@ -1121,7 +1250,7 @@ const MuhasebePage = () => {
                     )}
 
                     {/* Dengede Mağazalar */}
-                    {responseData.magazaBakiyeleri.filter(m => m.durum === 'DENGEDE').length > 0 && (
+                    {responseData.magazaBakiyeleri?.filter(m => m.durum === 'DENGEDE').length > 0 && (
                             <div className="bg-white rounded-xl shadow-sm border p-6">
                                 <div className="flex items-center space-x-3 mb-6">
                                     <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100">
@@ -1129,10 +1258,10 @@ const MuhasebePage = () => {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 002 2z" />
                                         </svg>
                                     </div>
-                                    <h3 className="text-lg font-semibold text-gray-900">⚖️ Dengede Mağazalar</h3>
+                                    <h3 className="text-lg font-semibold text-gray-900">Dengede Mağazalar</h3>
                                 </div>
                             <div className="space-y-3">
-                                {responseData.magazaBakiyeleri.filter(m => m.durum === 'DENGEDE').map((magaza: MagazaBakiye) => (
+                                {responseData.magazaBakiyeleri?.filter(m => m.durum === 'DENGEDE').map((magaza: MagazaBakiye) => (
                                         <div key={magaza.store_id} className="flex justify-between items-center p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
                                         <span className="text-sm font-medium text-gray-900">{magaza.kurum_adi}</span>
                                         <span className="text-sm font-medium text-gray-600">
@@ -1146,58 +1275,6 @@ const MuhasebePage = () => {
                 </div>
             )}
 
-            {/* Filtrelenmiş Veriler Özeti */}
-            {(selectedStoreFilter || startDate || endDate || transactionTypeFilter) && filteredData && (
-                    <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6 mb-8">
-                        <div className="flex items-center space-x-3 mb-4">
-                            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-200">
-                                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                </svg>
-                        </div>
-                            <h3 className="text-lg font-semibold text-blue-900">📊 Filtrelenmiş Veriler Özeti</h3>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            <div className="text-center bg-white rounded-lg p-4">
-                                <div className="text-2xl font-bold text-blue-900">{filteredData.hareketler.length}</div>
-                                <div className="text-sm text-blue-700">Toplam İşlem</div>
-                            </div>
-                            <div className="text-center bg-white rounded-lg p-4">
-                                <div className="text-2xl font-bold text-green-600">
-                                {formatCurrency(
-                                    filteredData.hareketler
-                                        .filter(t => !t.harcama)
-                                        .reduce((sum, t) => sum + parseFloat(t.tutar), 0)
-                                )}
-                            </div>
-                                <div className="text-sm text-green-700">Toplam Gelir</div>
-                        </div>
-                            <div className="text-center bg-white rounded-lg p-4">
-                                <div className="text-2xl font-bold text-red-600">
-                                {formatCurrency(
-                                    filteredData.hareketler
-                                        .filter(t => t.harcama)
-                                        .reduce((sum, t) => sum + parseFloat(t.tutar), 0)
-                                )}
-                            </div>
-                                <div className="text-sm text-red-700">Toplam Gider</div>
-                        </div>
-                            <div className="text-center bg-white rounded-lg p-4">
-                                <div className={`text-2xl font-bold ${
-                                (filteredData.hareketler.filter(t => !t.harcama).reduce((sum, t) => sum + parseFloat(t.tutar), 0) -
-                                 filteredData.hareketler.filter(t => t.harcama).reduce((sum, t) => sum + parseFloat(t.tutar), 0)) >= 0
-                                ? 'text-green-600' : 'text-red-600'
-                            }`}>
-                                {formatCurrency(
-                                    filteredData.hareketler.filter(t => !t.harcama).reduce((sum, t) => sum + parseFloat(t.tutar), 0) -
-                                    filteredData.hareketler.filter(t => t.harcama).reduce((sum, t) => sum + parseFloat(t.tutar), 0)
-                                )}
-                            </div>
-                                <div className="text-sm text-gray-700">Net Durum</div>
-                        </div>
-                    </div>
-                </div>
-            )}
 
                 {/* Modern İşlem Geçmişi Tablosu */}
                 <div className="bg-white rounded-xl shadow-sm border" id="son-islemler">
@@ -1210,7 +1287,7 @@ const MuhasebePage = () => {
                             </div>
                     <div>
                                 <h2 className="text-lg font-semibold text-gray-900">
-                                    📋 Son İşlemler
+                                    Son İşlemler
                             {filteredData && filteredData.hareketler.length !== responseData?.hareketler.length && (
                                 <span className="ml-2 text-sm text-gray-500">
                                     ({filteredData.hareketler.length} / {responseData?.hareketler.length} kayıt)
@@ -1231,7 +1308,48 @@ const MuhasebePage = () => {
                                 // Sayfaya yazdırma stilleri ekle
                                 const printStyles = `
                                     <style id="print-styles">
+                                        @page {
+                                            margin: 0.2in 0.3in;
+                                            size: A4;
+                                            orphans: 1;
+                                            widows: 1;
+                                        }
+                                        @page:last {
+                                            margin-bottom: 0;
+                                        }
                                         @media print {
+                                            html, body {
+                                                height: auto !important;
+                                                overflow: hidden !important;
+                                                margin: 0 !important;
+                                                padding: 0 !important;
+                                            }
+                                            * {
+                                                box-sizing: border-box;
+                                                margin: 0 !important;
+                                                padding: 0 !important;
+                                            }
+                                            .printable-content * {
+                                                margin: revert !important;
+                                                padding: revert !important;
+                                            }
+                                            .print-table {
+                                                page-break-after: avoid;
+                                                margin-bottom: 0 !important;
+                                            }
+                                            .print-table tr {
+                                                page-break-inside: avoid;
+                                                page-break-after: auto;
+                                            }
+                                            .print-table tr:last-child {
+                                                page-break-after: avoid;
+                                            }
+                                            body {
+                                                margin: 0;
+                                                padding: 0;
+                                                -webkit-print-color-adjust: exact;
+                                                print-color-adjust: exact;
+                                            }
                                             body * {
                                                 visibility: hidden;
                                             }
@@ -1243,12 +1361,26 @@ const MuhasebePage = () => {
                                                 left: 0;
                                                 top: 0;
                                                 width: 100%;
+                                                margin: 0 !important;
+                                                padding: 0 !important;
+                                                overflow: hidden;
+                                                height: auto !important;
+                                                max-height: none !important;
+                                                page-break-after: avoid !important;
+                                            }
+                                            .printable-content::after {
+                                                content: "";
+                                                display: block;
+                                                height: 0;
+                                                clear: both;
+                                                page-break-after: avoid;
                                             }
                                             .print-header {
                                                 text-align: center;
-                                                margin-bottom: 20px;
-                                                padding-bottom: 15px;
+                                                margin-bottom: 12px;
+                                                padding-bottom: 8px;
                                                 border-bottom: 2px solid #00365a;
+                                                page-break-after: avoid;
                                             }
                                             .print-header h1 {
                                                 color: #00365a;
@@ -1282,17 +1414,19 @@ const MuhasebePage = () => {
                                                 font-size: 11px;
                                             }
                                             .summary-section {
-                                                margin-bottom: 20px;
-                                                display: grid;
-                                                grid-template-columns: repeat(3, 1fr);
-                                                gap: 15px;
+                                                margin-bottom: 8px;
+                                                display: flex;
+                                                justify-content: center;
+                                                page-break-inside: avoid;
+                                                page-break-after: avoid;
                                             }
                                             .summary-card {
                                                 text-align: center;
-                                                padding: 10px;
+                                                padding: 8px 16px;
                                                 border: 1px solid #ddd;
                                                 border-radius: 5px;
                                                 background: #f9f9f9;
+                                                max-width: 200px;
                                             }
                                             .summary-card .value {
                                                 font-size: 16px;
@@ -1307,11 +1441,14 @@ const MuhasebePage = () => {
                                             .summary-card.income .value { color: #16a34a; }
                                             .summary-card.expense .value { color: #dc2626; }
                                             .summary-card.net .value { color: #00365a; }
+                                            .summary-card.balance .value { color: #00365a; }
                                             .print-table {
                                                 width: 100%;
                                                 border-collapse: collapse;
-                                                margin-top: 10px;
+                                                margin: 8px 0 0 0 !important;
                                                 font-size: 11px;
+                                                table-layout: fixed;
+                                                page-break-inside: auto;
                                             }
                                             .print-table th {
                                                 background-color: #00365a !important;
@@ -1322,11 +1459,20 @@ const MuhasebePage = () => {
                                                 font-size: 10px;
                                                 text-transform: uppercase;
                                                 -webkit-print-color-adjust: exact;
+                                                line-height: 1.4;
+                                                word-wrap: break-word;
+                                                height: 32px;
                                             }
                                             .print-table td {
-                                                padding: 6px;
+                                                padding: 6px 4px;
                                                 border-bottom: 1px solid #e5e5e5;
                                                 vertical-align: top;
+                                                font-size: 10px;
+                                                line-height: 1.4;
+                                                word-wrap: break-word;
+                                                overflow-wrap: break-word;
+                                                hyphens: auto;
+                                                min-height: 28px;
                                             }
                                             .print-table tr:nth-child(even) {
                                                 background-color: #f9f9f9 !important;
@@ -1381,17 +1527,28 @@ const MuhasebePage = () => {
                                                 -webkit-print-color-adjust: exact;
                                             }
                                             .print-footer {
-                                                margin-top: 30px;
-                                                padding-top: 15px;
+                                                margin-top: 8px;
+                                                margin-bottom: 0 !important;
+                                                padding-top: 4px;
+                                                padding-bottom: 0 !important;
                                                 border-top: 1px solid #ddd;
                                                 text-align: center;
-                                                font-size: 10px;
+                                                font-size: 9px;
                                                 color: #666;
+                                                page-break-inside: avoid;
+                                                page-break-before: avoid;
+                                                page-break-after: avoid;
+                                                height: auto;
+                                            }
+                                            .print-footer p {
+                                                margin: 2px 0 !important;
+                                                padding: 0 !important;
                                             }
                                             .text-truncate {
-                                                white-space: nowrap;
-                                                overflow: hidden;
-                                                text-overflow: ellipsis;
+                                                word-wrap: break-word;
+                                                overflow-wrap: break-word;
+                                                hyphens: auto;
+                                                white-space: normal;
                                             }
                                             .balance-info {
                                                 font-size: 10px;
@@ -1416,37 +1573,15 @@ const MuhasebePage = () => {
                                             })}</div>
                                         </div>
 
-                                        ${(selectedStoreFilter || startDate || endDate || transactionTypeFilter) ? `
-                                            <div class="filters-info">
-                                                <h3>🔍 Uygulanan Filtreler:</h3>
-                                                ${selectedStoreFilter ? `<span class="filter-item">Mağaza: ${responseData?.magazaBakiyeleri?.find(m => m.store_id === selectedStoreFilter)?.kurum_adi}</span>` : ''}
-                                                ${startDate ? `<span class="filter-item">Başlangıç: ${new Date(startDate).toLocaleDateString('tr-TR')}</span>` : ''}
-                                                ${endDate ? `<span class="filter-item">Bitiş: ${new Date(endDate).toLocaleDateString('tr-TR')}</span>` : ''}
-                                                ${transactionTypeFilter ? `<span class="filter-item">Tür: ${transactionTypeFilter === 'gelir' ? 'Gelir' : 'Gider'}</span>` : ''}
+
+                                        ${selectedStoreFilter && responseData?.magazaBilgi ? `
+                                            <div class="summary-section">
+                                                <div class="summary-card balance">
+                                                    <div class="value">${formatCurrency(responseData.magazaBilgi.bakiyeDurumu.bakiye)}</div>
+                                                    <div class="label">BAKİYE (${responseData.magazaBilgi.bakiyeDurumu.bakiye >= 0 ? 'ALACAKLI' : 'BORÇLU'})</div>
+                                                </div>
                                             </div>
                                         ` : ''}
-
-                                        <div class="summary-section">
-                                            <div class="summary-card income">
-                                                <div class="value">+${formatCurrency(
-                                                    transactions.filter(t => !t.harcama).reduce((sum, t) => sum + parseFloat(t.tutar), 0)
-                                                )}</div>
-                                                <div class="label">Toplam Gelir</div>
-                                            </div>
-                                            <div class="summary-card expense">
-                                                <div class="value">-${formatCurrency(
-                                                    transactions.filter(t => t.harcama).reduce((sum, t) => sum + parseFloat(t.tutar), 0)
-                                                )}</div>
-                                                <div class="label">Toplam Gider</div>
-                                            </div>
-                                            <div class="summary-card net">
-                                                <div class="value">${formatCurrency(
-                                                    transactions.filter(t => !t.harcama).reduce((sum, t) => sum + parseFloat(t.tutar), 0) -
-                                                    transactions.filter(t => t.harcama).reduce((sum, t) => sum + parseFloat(t.tutar), 0)
-                                                )}</div>
-                                                <div class="label">Net Durum</div>
-                                            </div>
-                                        </div>
 
                                         <table class="print-table">
                                             <thead>
@@ -1454,10 +1589,8 @@ const MuhasebePage = () => {
                                                     <th style="width: 12%;">Tarih</th>
                                                     <th style="width: 20%;">Mağaza</th>
                                                     <th style="width: 15%;">İşlem Türü</th>
-                                                    <th style="width: 15%;">Mağaza Durumu</th>
-                                                    <th style="width: 12%;">Tutar</th>
-                                                    <th style="width: 20%;">Açıklama</th>
-                                                    <th style="width: 6%;">Durum</th>
+                                                    <th style="width: 13%;">Tutar</th>
+                                                    <th style="width: 40%;">Açıklama</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -1473,29 +1606,15 @@ const MuhasebePage = () => {
                                                             <div class="text-truncate" title="${transaction.store?.kurum_adi || 'Bilinmeyen Mağaza'}">
                                                                 ${transaction.store?.kurum_adi || 'Bilinmeyen Mağaza'}
                                                             </div>
-                                                            <div style="font-size: 9px; color: #888;">${transaction.storeId}</div>
                                                         </td>
                                                         <td class="text-truncate" title="${transaction.islemTuru}">
                                                             ${transaction.islemTuru}
-                                                        </td>
-                                                        <td>
-                                                            <span class="status-badge status-${transaction.store.durum.toLowerCase()}">
-                                                                ${transaction.store.durum}
-                                                            </span>
-                                                            <div class="balance-info">
-                                                                Bakiye: ${formatCurrency(transaction.store.bakiye)}
-                                                            </div>
                                                         </td>
                                                         <td class="${transaction.harcama ? 'amount-expense' : 'amount-income'}">
                                                             ${transaction.harcama ? '-' : '+'}${formatCurrency(parseFloat(transaction.tutar))}
                                                         </td>
                                                         <td class="text-truncate" title="${transaction.aciklama}">
                                                             ${transaction.aciklama}
-                                                        </td>
-                                                        <td>
-                                                            <span class="transaction-type type-${transaction.harcama ? 'expense' : 'income'}">
-                                                                ${transaction.harcama ? 'GİDER' : 'GELİR'}
-                                                            </span>
                                                         </td>
                                                     </tr>
                                                 `).join('')}
@@ -1560,16 +1679,10 @@ const MuhasebePage = () => {
                                     İşlem Türü
                                 </th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Mağaza Durumu
-                                </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Tutar
                                 </th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Açıklama
-                                </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Durum
                                 </th>
                             </tr>
                         </thead>
@@ -1583,24 +1696,9 @@ const MuhasebePage = () => {
                                         <div className="text-sm font-medium text-gray-900 truncate max-w-32">
                                             {transaction.store?.kurum_adi || 'Bilinmeyen Mağaza'}
                                         </div>
-                                        <div className="text-xs text-gray-500 truncate">{transaction.storeId}</div>
                                     </td>
                                         <td className="px-4 py-4 text-sm text-gray-900">
                                         <span className="truncate block max-w-28">{transaction.islemTuru}</span>
-                                    </td>
-                                        <td className="px-4 py-4">
-                                        <div className="text-sm">
-                                                <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                                                    transaction.store.durum === 'ALACAKLI' ? 'text-green-600 bg-green-100' :
-                                                    transaction.store.durum === 'BORCLU' ? 'text-red-600 bg-red-100' :
-                                                    'text-gray-600 bg-gray-100'
-                                            }`}>
-                                                {transaction.store.durum}
-                                            </span>
-                                                                                         <div className="text-xs text-gray-500 mt-1">
-                                                 Bakiye: {formatCurrency(transaction.store.bakiye)}
-                                             </div>
-                                        </div>
                                     </td>
                                         <td className="px-4 py-4">
                                         <div className={`text-sm font-medium ${transaction.harcama ? 'text-red-600' : 'text-green-600'}`}>
@@ -1612,18 +1710,50 @@ const MuhasebePage = () => {
                                             {transaction.aciklama}
                                         </span>
                                     </td>
-                                        <td className="px-4 py-4">
-                                            <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                                                transaction.harcama ? 'text-red-600 bg-red-100' : 'text-green-600 bg-green-100'
-                                            }`}>
-                                            {transaction.harcama ? 'Gider' : 'Gelir'}
-                                        </span>
-                                    </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </div>
+                
+                {/* Pagination - Mağaza bazlı API'da varsa göster */}
+                {responseData?.pagination && (
+                    <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                        <div className="flex items-center text-sm text-gray-700">
+                            <span>
+                                Toplam {responseData.pagination.total} kayıt bulundu 
+                                ({responseData.pagination.totalPages} sayfa)
+                            </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            {responseData.pagination.page > 1 && (
+                                <button
+                                    onClick={() => {
+                                        // Sayfa değiştirme fonksiyonu - API'ye page parametresi ekle
+                                        console.log('Önceki sayfa:', responseData.pagination.page - 1);
+                                    }}
+                                    className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
+                                >
+                                    Önceki
+                                </button>
+                            )}
+                            <span className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded">
+                                Sayfa {responseData.pagination.page}
+                            </span>
+                            {responseData.pagination.page < responseData.pagination.totalPages && (
+                                <button
+                                    onClick={() => {
+                                        // Sayfa değiştirme fonksiyonu - API'ye page parametresi ekle
+                                        console.log('Sonraki sayfa:', responseData.pagination.page + 1);
+                                    }}
+                                    className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
+                                >
+                                    Sonraki
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
 
                 {/* Modern Mali Kayıt Ekleme Modal */}
