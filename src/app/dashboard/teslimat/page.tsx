@@ -2,10 +2,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/app/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { useToken } from '@/app/hooks/useToken';
 
 export default function TeslimatPage() {
   const { isAdmin, isAdminOrEditor } = useAuth();
   const router = useRouter();
+  const token = useToken();
   const inputRef = useRef<HTMLInputElement>(null);
   
   const [barcodeInput, setBarcodeInput] = useState('');
@@ -13,6 +15,8 @@ export default function TeslimatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [lastScanResults, setLastScanResults] = useState<any>(null);
+  const [showResults, setShowResults] = useState(false);
   
   // Sayfa yüklendiğinde input'a focus
   useEffect(() => {
@@ -75,26 +79,60 @@ export default function TeslimatPage() {
     }
   };
 
-  // API'ye gönderme fonksiyonu (API geldiğinde güncellenecek)
+  // API'ye gönderme fonksiyonu
   const sendToAPI = async () => {
     if (barcodeList.length === 0) {
       setError('Gönderilecek barkod yok');
       return;
     }
     
+    if (!token) {
+      setError('Token bulunamadı. Lütfen tekrar giriş yapın.');
+      return;
+    }
+    
     setIsLoading(true);
     setError('');
+    setShowResults(false);
     
     try {
-      // API endpoint geldiğinde burası güncellenecek
-      console.log('Gönderilecek barkodlar:', barcodeList);
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app';
       
-      // Başarılı gönderim sonrası
-      setSuccess(`${barcodeList.length} adet barkod başarıyla gönderildi`);
-      setBarcodeList([]);
-      setTimeout(() => setSuccess(''), 3000);
+      const response = await fetch(`${API_BASE_URL}/api/admin/barcode/scan-multiple`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          barcodes: barcodeList
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setLastScanResults(data);
+        setShowResults(true);
+        setBarcodeList([]); // Listeyi temizle
+        
+        const { summary } = data;
+        setSuccess(
+          `Teslimat tamamlandı! ` +
+          `${summary.total_scanned} başarılı, ${summary.total_failed} başarısız. ` +
+          `${summary.completed_orders_count} sipariş tamamlandı.`
+        );
+      } else {
+        throw new Error(data.message || 'Teslimat işlemi başarısız');
+      }
     } catch (err: any) {
-      setError(err.message || 'Gönderim sırasında hata oluştu');
+      console.error('Teslimat hatası:', err);
+      setError(err.message || 'Teslimat sırasında hata oluştu');
     } finally {
       setIsLoading(false);
     }
@@ -221,6 +259,86 @@ export default function TeslimatPage() {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Son Teslimat Sonuçları */}
+        {showResults && lastScanResults && (
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Son Teslimat Sonuçları</h2>
+            
+            {/* Özet Bilgileri */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <div className="bg-blue-50 rounded-lg p-3">
+                <div className="text-sm text-blue-600">Toplam İşlenen</div>
+                <div className="text-xl font-bold text-blue-700">{lastScanResults.summary.total_scanned + lastScanResults.summary.total_failed}</div>
+              </div>
+              <div className="bg-green-50 rounded-lg p-3">
+                <div className="text-sm text-green-600">Başarılı</div>
+                <div className="text-xl font-bold text-green-700">{lastScanResults.summary.total_scanned}</div>
+              </div>
+              <div className="bg-red-50 rounded-lg p-3">
+                <div className="text-sm text-red-600">Başarısız</div>
+                <div className="text-xl font-bold text-red-700">{lastScanResults.summary.total_failed}</div>
+              </div>
+              <div className="bg-purple-50 rounded-lg p-3">
+                <div className="text-sm text-purple-600">Tamamlanan Sipariş</div>
+                <div className="text-xl font-bold text-purple-700">{lastScanResults.summary.completed_orders_count}</div>
+              </div>
+            </div>
+            
+            {/* Detaylı Sonuçlar */}
+            <div className="max-h-64 overflow-y-auto">
+              <div className="space-y-2">
+                {lastScanResults.results.map((result: any, index: number) => (
+                  <div 
+                    key={index}
+                    className={`p-3 rounded-lg border ${
+                      result.success 
+                        ? 'bg-green-50 border-green-200' 
+                        : 'bg-red-50 border-red-200'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="font-mono text-sm font-medium">{result.barcode}</div>
+                        {result.success ? (
+                          <div className="text-xs text-green-600 mt-1">
+                            ✓ Başarıyla işlendi
+                            {result.scanInfo && (
+                              <span className="ml-2">
+                                - {new Date(result.scanInfo.scannedAt || Date.now()).toLocaleString('tr-TR')}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-xs text-red-600 mt-1">
+                            ✗ {result.error}
+                          </div>
+                        )}
+                      </div>
+                      <div className={`px-2 py-1 text-xs font-medium rounded ${
+                        result.success 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-red-100 text-red-700'
+                      }`}>
+                        {result.success ? 'Başarılı' : 'Başarısız'}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Sonuçları kapat butonu */}
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={() => setShowResults(false)}
+                className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Sonuçları Gizle
+              </button>
             </div>
           </div>
         )}
