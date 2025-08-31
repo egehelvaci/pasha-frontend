@@ -265,41 +265,9 @@ const AdminSiparisOlustur = () => {
     }
   };
 
-  // Stok kontrolü fonksiyonu
-  const hasStock = (product: AdminOrderProduct | Product) => {
-    if ('sizeOptions' in product) {
-      // AdminOrderProduct tipinde
-      let hasStockResult = false;
-      
-      // Önce sizeOptions içindeki stockAreaM2 ve stockQuantity'yi kontrol et
-      if (product.sizeOptions && product.sizeOptions.length > 0) {
-        hasStockResult = product.sizeOptions.some(option => {
-          const hasAreaStock = (option.stockAreaM2 || 0) > 0;
-          const hasQuantityStock = (option.stockQuantity || 0) > 0;
-          return hasAreaStock || hasQuantityStock;
-        });
-      }
-      
-      // Eğer sizeOptions'da stok yoksa, productvariations'ı kontrol et
-      if (!hasStockResult && product.productvariations && product.productvariations.length > 0) {
-        hasStockResult = product.productvariations.some((variation: any) => {
-          const hasAreaStock = parseFloat(variation.stock_area_m2 || 0) > 0;
-          const hasQuantityStock = (variation.stock_quantity || 0) > 0;
-          return hasAreaStock || hasQuantityStock;
-        });
-      }
-      
-      console.log(`Ürün ${product.name} stok kontrolü:`, hasStockResult, {
-        sizeOptions: product.sizeOptions,
-        productvariations: product.productvariations
-      });
-      return hasStockResult;
-    } else {
-      // Normal Product tipinde
-      const hasStockResult = (product.stock || 0) > 0;
-      console.log(`Ürün ${product.name} stok kontrolü:`, hasStockResult, `stok: ${product.stock}`);
-      return hasStockResult;
-    }
+  // Stok kontrolü kaldırıldı - artık tüm ürünler stokta varsayılıyor
+  const hasStock = () => {
+    return true; // Her zaman true döndür
   };
 
   // Filtreleme
@@ -315,8 +283,8 @@ const AdminSiparisOlustur = () => {
           product.collectionName === selectedCollection;
         
         const matchesStock = stockFilter === 'all' || 
-          (stockFilter === 'inStock' && hasStock(product)) ||
-          (stockFilter === 'outOfStock' && !hasStock(product));
+          (stockFilter === 'inStock' && hasStock()) ||
+          (stockFilter === 'outOfStock' && !hasStock());
         
         return matchesSearch && matchesCollection && matchesStock;
       })
@@ -331,8 +299,8 @@ const AdminSiparisOlustur = () => {
           product.collection?.name === selectedCollection;
         
         const matchesStock = stockFilter === 'all' || 
-          (stockFilter === 'inStock' && hasStock(product)) ||
-          (stockFilter === 'outOfStock' && !hasStock(product));
+          (stockFilter === 'inStock' && hasStock()) ||
+          (stockFilter === 'outOfStock' && !hasStock());
         
         return matchesSearch && matchesCollection && matchesStock;
       });
@@ -833,24 +801,12 @@ const AdminSiparisOlustur = () => {
                 {filteredProducts.length > 0 ? (
                   <div className="flex flex-wrap justify-center lg:justify-start gap-6">
                     {filteredProducts.map((product) => {
-                      const isOutOfStock = !hasStock(product);
-                      
                       return (
                         <div 
                           key={product.productId} 
-                          className={`bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow relative cursor-pointer ${
-                            isOutOfStock ? 'opacity-50 grayscale' : ''
-                          }`} 
+                          className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow relative cursor-pointer" 
                           style={{ width: '350px', height: '550px' }}
                         >
-                          {/* Stok yoksa overlay */}
-                          {isOutOfStock && (
-                            <div className="absolute inset-0 bg-gray-200 bg-opacity-30 z-20 flex items-center justify-center">
-                              <div className="bg-red-500 text-white px-3 py-1 rounded-md text-sm font-medium">
-                                Stok Yok
-                              </div>
-                            </div>
-                          )}
                           
                           {/* Koleksiyon adı - sol üst */}
                           <div className="absolute top-3 left-3 z-10">
@@ -896,17 +852,12 @@ const AdminSiparisOlustur = () => {
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() => openAddProductModal(product)}
-                                disabled={isOutOfStock}
-                                className={`flex-1 px-3 py-2 rounded-md flex items-center justify-center gap-2 text-sm shadow-sm transition-colors font-semibold ${
-                                  isOutOfStock 
-                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                                    : 'bg-[#00365a] hover:bg-[#004170] text-white hover:shadow-md'
-                                }`}
+                                className="flex-1 px-3 py-2 rounded-md flex items-center justify-center gap-2 text-sm shadow-sm transition-colors font-semibold bg-[#00365a] hover:bg-[#004170] text-white hover:shadow-md"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                 </svg>
-                                {isOutOfStock ? 'Stok Yok' : 'Ekle'}
+                                Ekle
                               </button>
                             </div>
                           </div>
