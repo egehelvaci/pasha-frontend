@@ -1217,7 +1217,14 @@ const MuhasebePage = () => {
                                 </div>
                             <div className="space-y-3">
                                 {responseData.magazaBakiyeleri?.filter(m => m.durum === 'BORCLU').map((magaza: MagazaBakiye) => (
-                                        <div key={magaza.store_id} className="flex justify-between items-center p-4 bg-red-50 rounded-xl border border-red-100 hover:bg-red-100 transition-colors">
+                                        <div 
+                                            key={magaza.store_id} 
+                                            className="flex justify-between items-center p-4 bg-red-50 rounded-xl border border-red-100 hover:bg-red-100 transition-colors cursor-pointer"
+                                            onClick={() => {
+                                                setSelectedStoreFilter(magaza.store_id);
+                                                fetchAccountingData();
+                                            }}
+                                        >
                                         <span className="text-sm font-medium text-gray-900">{magaza.kurum_adi}</span>
                                         <span className="text-sm font-bold text-red-600">
                                             {formatCurrency(magaza.tutar)}
@@ -1241,7 +1248,14 @@ const MuhasebePage = () => {
                                 </div>
                             <div className="space-y-3">
                                 {responseData.magazaBakiyeleri?.filter(m => m.durum === 'ALACAKLI').map((magaza: MagazaBakiye) => (
-                                        <div key={magaza.store_id} className="flex justify-between items-center p-4 bg-green-50 rounded-xl border border-green-100 hover:bg-green-100 transition-colors">
+                                        <div 
+                                            key={magaza.store_id} 
+                                            className="flex justify-between items-center p-4 bg-green-50 rounded-xl border border-green-100 hover:bg-green-100 transition-colors cursor-pointer"
+                                            onClick={() => {
+                                                setSelectedStoreFilter(magaza.store_id);
+                                                fetchAccountingData();
+                                            }}
+                                        >
                                         <span className="text-sm font-medium text-gray-900">{magaza.kurum_adi}</span>
                                         <span className="text-sm font-bold text-green-600">
                                             {formatCurrency(magaza.tutar)}
@@ -1265,7 +1279,14 @@ const MuhasebePage = () => {
                                 </div>
                             <div className="space-y-3">
                                 {responseData.magazaBakiyeleri?.filter(m => m.durum === 'DENGEDE').map((magaza: MagazaBakiye) => (
-                                        <div key={magaza.store_id} className="flex justify-between items-center p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
+                                        <div 
+                                            key={magaza.store_id} 
+                                            className="flex justify-between items-center p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors cursor-pointer"
+                                            onClick={() => {
+                                                setSelectedStoreFilter(magaza.store_id);
+                                                fetchAccountingData();
+                                            }}
+                                        >
                                         <span className="text-sm font-medium text-gray-900">{magaza.kurum_adi}</span>
                                         <span className="text-sm font-medium text-gray-600">
                                             Bakiye: {formatCurrency(magaza.bakiye)}
