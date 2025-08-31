@@ -223,11 +223,37 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
           textY += 20;
           ctx.fillText(`Tarih: ${new Date(orderData.created_at).toLocaleDateString('tr-TR')}`, canvas.width / 2, textY);
 
-          // Barcode bilgisini sadece text olarak göster (görsel yazdırma sayfasında olacak)
+          // Barcode alanını görsel olarak göster
           if (firstCode.barcode) {
             textY += 25;
-            ctx.font = '12px Arial';
-            ctx.fillText(`Barcode: ${firstCode.barcode}`, canvas.width / 2, textY);
+            
+            // Barcode görselini yükle (eğer varsa)
+            const barcodeImageUrl = firstCode.barcode_image_url;
+            if (barcodeImageUrl) {
+              const barcodeImage = new Image();
+              barcodeImage.crossOrigin = 'anonymous';
+              barcodeImage.onload = () => {
+                // Barcode görselini çiz
+                const barcodeWidth = 250;
+                const barcodeHeight = 50;
+                const barcodeX = (canvas.width - barcodeWidth) / 2;
+                ctx.drawImage(barcodeImage, barcodeX, textY, barcodeWidth, barcodeHeight);
+                
+                // Barcode metnini alt kısma ekle
+                ctx.font = 'bold 10px Arial';
+                ctx.fillText(firstCode.barcode, canvas.width / 2, textY + barcodeHeight + 15);
+              };
+              barcodeImage.onerror = () => {
+                // Görsel yüklenemezse sadece metni göster
+                ctx.font = '12px Arial';
+                ctx.fillText(`Barcode: ${firstCode.barcode}`, canvas.width / 2, textY);
+              };
+              barcodeImage.src = barcodeImageUrl;
+            } else {
+              // Barcode görseli yoksa sadece metni göster
+              ctx.font = '12px Arial';
+              ctx.fillText(`Barcode: ${firstCode.barcode}`, canvas.width / 2, textY);
+            }
           }
         };
         
@@ -595,7 +621,7 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl">
+      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] shadow-2xl flex flex-col">
         {/* Header */}
         <div className="bg-indigo-600 text-white rounded-t-2xl p-6">
           <div className="flex items-center justify-between">
@@ -622,16 +648,23 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
         </div>
 
         {/* Content */}
-        <div className="p-6">
-          <div className="bg-gray-50 rounded-lg p-4 mb-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-3">Etiket Önizleme</h4>
-            <div className="flex justify-center mb-4">
-              <canvas
-                ref={canvasRef}
-                className="border border-gray-300 rounded-lg shadow-sm"
-                style={{ maxWidth: '200px', maxHeight: '300px' }}
-              />
+        <div className="p-6 overflow-y-auto flex-1">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {/* Etiket Önizleme */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h4 className="text-lg font-semibold text-gray-900 mb-3">Etiket Önizleme</h4>
+              <div className="flex justify-center mb-4">
+                <canvas
+                  ref={canvasRef}
+                  className="border border-gray-300 rounded-lg shadow-sm"
+                  style={{ maxWidth: '200px', maxHeight: '300px' }}
+                />
+              </div>
             </div>
+
+            {/* Sipariş Detayları */}
+            <div className="bg-white border border-gray-200 rounded-lg p-4">
+              <h4 className="text-lg font-semibold text-gray-900 mb-3">Sipariş Detayları</h4>
             <div className="grid grid-cols-1 gap-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600 font-medium">Sipariş:</span>
@@ -678,7 +711,7 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
             {/* QR Kod/Barcode Listesi */}
             <div className="mt-4 bg-gray-100 rounded-lg p-3">
               <div className="text-sm font-medium text-gray-700 mb-2">QR Kodları & Barkodlar:</div>
-              <div className="space-y-1 max-h-32 overflow-y-auto">
+              <div className="space-y-1 max-h-48 overflow-y-auto">
                 {[...(orderData.qr_codes || []), ...(orderData.barcodes || [])].length > 0 ? (
                   [...(orderData.qr_codes || []), ...(orderData.barcodes || [])].map((code, index) => (
                     <div key={code?.id || index} className="flex justify-between text-xs">
@@ -703,6 +736,7 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
                 )}
               </div>
             </div>
+            </div>
           </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
@@ -718,7 +752,7 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
         </div>
 
         {/* Footer */}
-        <div className="bg-gray-50 px-6 py-4 rounded-b-2xl flex justify-end gap-3">
+        <div className="bg-gray-50 px-6 py-4 rounded-b-2xl flex justify-end gap-3 flex-shrink-0">
           <button
             onClick={onClose}
             className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition-all"
