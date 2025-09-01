@@ -8,8 +8,8 @@ import StoreTypeSelector, { StoreType } from '@/components/StoreTypeSelector';
 
 // Mevcut para birimleri
 const CURRENCIES = [
-  { value: 'TRY', label: 'Türk Lirası (₺)', symbol: '₺' },
-  { value: 'USD', label: 'Amerikan Doları ($)', symbol: '$' }
+  { value: 'TRY', label: 'TRY (₺)', symbol: '₺' },
+  { value: 'USD', label: 'USD ($)', symbol: '$' }
 ];
 
 export default function AddStorePage() {
@@ -184,9 +184,6 @@ export default function AddStorePage() {
             </button>
             <div>
               <h1 className="text-3xl font-bold text-[#00365a] flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 1h6v4H7V5zm8 8v2a1 1 0 01-1 1H6a1 1 0 01-1-1v-2h10z" clipRule="evenodd" />
-                </svg>
                 Yeni Mağaza Ekle
               </h1>
               <p className="text-gray-600 mt-2">Mağaza bilgilerini doldurun</p>

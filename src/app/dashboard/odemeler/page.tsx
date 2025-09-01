@@ -14,8 +14,8 @@ const CURRENCY_SYMBOLS = {
 
 // Available currencies for payment
 const AVAILABLE_CURRENCIES = [
-  { value: 'TRY', label: 'Türk Lirası (₺)', symbol: '₺' },
-  { value: 'USD', label: 'Amerikan Doları ($)', symbol: '$' }
+  { value: 'TRY', label: 'TRY (₺)', symbol: '₺' },
+  { value: 'USD', label: 'USD ($)', symbol: '$' }
 ];
 
 interface Payment {

@@ -532,13 +532,13 @@ export default function StoresPage() {
                             <div className="text-sm">
                               <span className="font-medium text-gray-700">Bakiye:</span>
                               <span className={`ml-1 font-semibold ${(store.bakiye || 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                {store.bakiye?.toLocaleString('tr-TR') || '0'} ₺
+                                {store.bakiye?.toLocaleString('tr-TR') || '0'} {store.currency === 'USD' ? '$' : '₺'}
                               </span>
                             </div>
                             <div className="text-sm">
                               <span className="font-medium text-gray-700">Açık Hesap:</span>
                               <span className="ml-1 text-[#00365a] font-semibold">
-                                {store.limitsiz_acik_hesap ? 'Limitsiz' : `${store.acik_hesap_tutari?.toLocaleString('tr-TR') || '0'} ₺`}
+                                {store.limitsiz_acik_hesap ? 'Limitsiz' : `${store.acik_hesap_tutari?.toLocaleString('tr-TR') || '0'} ${store.currency === 'USD' ? '$' : '₺'}`}
                               </span>
                             </div>
                             <div className="text-sm">
@@ -708,13 +708,13 @@ export default function StoresPage() {
           <div className="text-sm">
             <span className="font-medium">Bakiye:</span> 
                               <span className={`ml-1 font-semibold ${(store.bakiye || 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                {store.bakiye?.toLocaleString('tr-TR') || '0'} ₺
+                                {store.bakiye?.toLocaleString('tr-TR') || '0'} {store.currency === 'USD' ? '$' : '₺'}
             </span>
           </div>
           <div className="text-sm">
                               <span className="font-medium">Açık Hesap:</span>
                               <span className="ml-1 text-orange-600 font-semibold">
-                                {store.limitsiz_acik_hesap ? 'Limitsiz' : `${store.acik_hesap_tutari?.toLocaleString('tr-TR') || '0'} ₺`}
+                                {store.limitsiz_acik_hesap ? 'Limitsiz' : `${store.acik_hesap_tutari?.toLocaleString('tr-TR') || '0'} ${store.currency === 'USD' ? '$' : '₺'}`}
                               </span>
           </div>
           <div className="text-sm">

@@ -9,8 +9,8 @@ import StoreTypeSelector, { StoreType, storeTypeLabels, storeTypeColors, storeTy
 
 // Mevcut para birimleri
 const CURRENCIES = [
-  { value: 'TRY', label: 'Türk Lirası (₺)', symbol: '₺' },
-  { value: 'USD', label: 'Amerikan Doları ($)', symbol: '$' }
+  { value: 'TRY', label: 'TRY (₺)', symbol: '₺' },
+  { value: 'USD', label: 'USD ($)', symbol: '$' }
 ];
 
 export default function EditStorePage() {
