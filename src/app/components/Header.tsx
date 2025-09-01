@@ -10,6 +10,13 @@ import { FaUser, FaSignOutAlt, FaCog, FaShoppingCart } from 'react-icons/fa';
 import { getMyBalance, BalanceInfo } from '../../services/api';
 import NotificationDropdown from '../../components/NotificationDropdown';
 
+// Currency sembollerini tanımla
+const CURRENCY_SYMBOLS = {
+  'TRY': '₺',
+  'USD': '$',
+  'EUR': '€'
+};
+
 // Token'ı localStorage veya sessionStorage'dan al
 function getAuthToken(): string | null {
   if (typeof window === 'undefined') {
@@ -65,11 +72,42 @@ const Header = ({ title, user, className }: HeaderProps) => {
   const [lastBalanceUpdate, setLastBalanceUpdate] = useState<number>(0);
   const [isMobile, setIsMobile] = useState(false);
   
+  // Currency state
+  const [userCurrency, setUserCurrency] = useState<string>('TRY');
+  
   // Component mount kontrolü
   useEffect(() => {
     setIsMounted(true);
     return () => setIsMounted(false);
   }, []);
+
+  // Currency bilgisini localStorage'dan al
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        // Currency bilgisini al
+        const rememberMe = localStorage.getItem("rememberMe") === "true";
+        let storedCurrency;
+        
+        if (rememberMe) {
+          storedCurrency = localStorage.getItem("currency");
+        } else {
+          storedCurrency = sessionStorage.getItem("currency");
+        }
+        
+        if (storedCurrency) {
+          setUserCurrency(storedCurrency);
+        } else {
+          // User'ın store bilgisinden currency'yi al
+          if (authUser?.store?.currency) {
+            setUserCurrency(authUser.store.currency);
+          }
+        }
+      } catch (error) {
+        console.error('Currency okuma hatası:', error);
+      }
+    }
+  }, [authUser]);
 
   // Mobile detection logic
   useEffect(() => {
@@ -516,7 +554,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
                   <div className="text-center">
                     <span className="block font-semibold text-gray-700">Bakiye</span>
                     <span className={`font-medium ${financialInfo.bakiye < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                      {financialInfo.bakiye.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                      {financialInfo.bakiye.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}
                     </span>
                   </div>
                 )}
@@ -953,7 +991,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
                       <div className="text-center">
                         <p className="text-xs text-gray-600">Bakiye</p>
                         <p className={`text-sm font-bold ${financialInfo.bakiye < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                          {financialInfo.bakiye.toLocaleString('tr-TR', { minimumFractionDigits: 0 })} ₺
+                          {financialInfo.bakiye.toLocaleString('tr-TR', { minimumFractionDigits: 0 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}
                         </p>
                       </div>
                     )}
@@ -1082,7 +1120,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
                               <div className="flex justify-between items-center">
                                 <span className="text-sm font-medium text-gray-600">Bakiye</span>
                                 <span className={`font-bold ${financialInfo.bakiye < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                  {financialInfo.bakiye.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                                  {financialInfo.bakiye.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}
                                 </span>
                               </div>
                             </div>
@@ -1093,7 +1131,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
                                 <span className="text-[#00365a] font-bold">
                                   {financialInfo.limitsizAcikHesap 
                                     ? 'Limitsiz' 
-                                    : `${financialInfo.acikHesapLimiti.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`
+                                    : `${financialInfo.acikHesapLimiti.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}`
                                   }
                                 </span>
                               </div>
@@ -1105,7 +1143,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
                                 <span className="text-purple-600 font-bold text-lg">
                                   {financialInfo.limitsizAcikHesap 
                                     ? 'Limitsiz' 
-                                    : `${financialInfo.toplamKullanilabilir.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`
+                                    : `${financialInfo.toplamKullanilabilir.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}`
                                   }
                                 </span>
                               </div>

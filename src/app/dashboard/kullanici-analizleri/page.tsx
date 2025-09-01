@@ -8,6 +8,13 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Toolti
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 import { getMyUserStatistics, UserStatisticsResponse } from '../../../services/api';
 
+// Currency sembollerini tanımla
+const CURRENCY_SYMBOLS = {
+  'TRY': '₺',
+  'USD': '$',
+  'EUR': '€'
+};
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -30,6 +37,37 @@ export default function UserAnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedPeriod, setSelectedPeriod] = useState<'1_month' | '3_months' | '6_months' | '1_year'>('1_year');
+  
+  // Currency state
+  const [userCurrency, setUserCurrency] = useState<string>('TRY');
+
+  // Currency bilgisini localStorage'dan al
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        // Currency bilgisini al
+        const rememberMe = localStorage.getItem("rememberMe") === "true";
+        let storedCurrency;
+        
+        if (rememberMe) {
+          storedCurrency = localStorage.getItem("currency");
+        } else {
+          storedCurrency = sessionStorage.getItem("currency");
+        }
+        
+        if (storedCurrency) {
+          setUserCurrency(storedCurrency);
+        } else {
+          // User'ın store bilgisinden currency'yi al
+          if (user?.store?.currency) {
+            setUserCurrency(user.store.currency);
+          }
+        }
+      } catch (error) {
+        console.error('Currency okuma hatası:', error);
+      }
+    }
+  }, [user]);
 
   useEffect(() => {
     // Auth yüklemesi tamamlanmadıysa bekle
@@ -317,7 +355,7 @@ export default function UserAnalyticsPage() {
     labels: statisticsData.top_collections.map(collection => collection.collection_name),
     datasets: [
       {
-        label: 'Toplam Tutar (TL)',
+        label: `Toplam Tutar (${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency})`,
         data: statisticsData.top_collections.map(collection => collection.total_amount),
         backgroundColor: [
           'rgba(236, 72, 153, 0.8)',
@@ -355,7 +393,7 @@ export default function UserAnalyticsPage() {
         yAxisID: 'y'
       },
       {
-        label: 'Toplam Tutar (TL)',
+        label: `Toplam Tutar (${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency})`,
         data: statisticsData.monthly_orders.map(item => item.total_amount).reverse(),
         borderColor: 'rgba(239, 68, 68, 1)',
         backgroundColor: 'rgba(239, 68, 68, 0.1)',
@@ -424,7 +462,7 @@ export default function UserAnalyticsPage() {
         beginAtZero: true,
         title: {
           display: true,
-          text: 'Tutar (TL)'
+          text: `Tutar (${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency})`
         },
         grid: {
           drawOnChartArea: false,
@@ -560,10 +598,7 @@ export default function UserAnalyticsPage() {
               <div className="ml-4">
                 <h3 className="text-lg font-semibold text-gray-900">Toplam Harcama</h3>
                 <p className="text-3xl font-bold text-green-600">
-                  {statisticsData.order_statistics.total_amount.toLocaleString('tr-TR', {
-                    style: 'currency',
-                    currency: 'TRY'
-                  })}
+                  {statisticsData.order_statistics.total_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}
                 </p>
                 <p className="text-sm text-gray-500 mt-1">{getPeriodLabel(selectedPeriod)}</p>
               </div>
@@ -626,10 +661,7 @@ export default function UserAnalyticsPage() {
                   </div>
                   <div className="text-right">
                     <div className="text-gray-900">{product.total_quantity} adet</div>
-                    <div className="text-gray-500">{product.total_amount.toLocaleString('tr-TR', {
-                      style: 'currency',
-                      currency: 'TRY'
-                    })}</div>
+                    <div className="text-gray-500">{product.total_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}</div>
                     <div className="text-xs text-blue-600">{product.order_count} sipariş</div>
                   </div>
                 </div>
@@ -652,10 +684,7 @@ export default function UserAnalyticsPage() {
                   </div>
                   <div className="text-right">
                     <div className="text-gray-900">{collection.total_quantity} adet</div>
-                    <div className="text-gray-500">{collection.total_amount.toLocaleString('tr-TR', {
-                      style: 'currency',
-                      currency: 'TRY'
-                    })}</div>
+                    <div className="text-gray-500">{collection.total_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}</div>
                     <div className="text-xs text-blue-600">{collection.order_count} sipariş</div>
                   </div>
                 </div>
@@ -681,10 +710,7 @@ export default function UserAnalyticsPage() {
                     <div className="text-sm font-semibold text-gray-900">{monthName}</div>
                     <div className="text-xs text-gray-600 mt-1">
                       <div>{item.order_count} sipariş</div>
-                      <div>{item.total_amount.toLocaleString('tr-TR', {
-                        style: 'currency',
-                        currency: 'TRY'
-                      })}</div>
+                      <div>{item.total_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}</div>
                     </div>
                   </div>
                 );
@@ -741,10 +767,7 @@ export default function UserAnalyticsPage() {
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
               <div className="text-2xl font-bold text-green-600">
-                {(statisticsData.order_statistics.total_amount / statisticsData.order_statistics.total_orders || 0).toLocaleString('tr-TR', {
-                  style: 'currency',
-                  currency: 'TRY'
-                })}
+                {(statisticsData.order_statistics.total_amount / statisticsData.order_statistics.total_orders || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}
               </div>
               <div className="text-sm text-gray-600">Ortalama Sipariş Tutarı</div>
             </div>

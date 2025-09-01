@@ -194,6 +194,7 @@ export interface Store {
   limitsiz_acik_hesap: boolean;
   acik_hesap_tutari: number;
   bakiye: number;                     // 🆕 Mağaza bakiyesi
+  currency: string;                   // 🆕 Para birimi
   maksimum_taksit: number;            // 🆕 Maksimum taksit sayısı
   store_type?: 'KARGO' | 'SERVIS' | 'KENDI_ALAN' | 'AMBAR'; // 🆕 Mağaza türü
   is_active: boolean;
@@ -221,6 +222,7 @@ export interface CreateStoreData {
   limitsiz_acik_hesap: boolean;
   acik_hesap_tutari?: number;
   bakiye?: number;                    // 🆕 Mağaza bakiyesi
+  currency?: string;                  // 🆕 Para birimi
   maksimum_taksit?: number;           // 🆕 Maksimum taksit sayısı
   store_type?: 'KARGO' | 'SERVIS' | 'KENDI_ALAN' | 'AMBAR'; // 🆕 Mağaza türü
 }
@@ -244,6 +246,7 @@ export interface UpdateStoreData {
   limitsiz_acik_hesap?: boolean;
   acik_hesap_tutari?: number;
   bakiye?: number;                    // 🆕 Mağaza bakiyesi
+  currency?: string;                  // 🆕 Para birimi
   maksimum_taksit?: number;           // 🆕 Maksimum taksit sayısı
   store_type?: 'KARGO' | 'SERVIS' | 'KENDI_ALAN' | 'AMBAR'; // 🆕 Mağaza türü
   is_active?: boolean;
@@ -2540,6 +2543,7 @@ export interface PaymentRequest {
   storeId: string;
   amount: number;
   aciklama?: string;                  // 🔄 Artık opsiyonel
+  currencyCode?: string;              // 🆕 Para birimi (TRY veya USD, varsayılan: mağazanın para birimi)
 }
 
 export interface PaymentResponse {
@@ -2549,6 +2553,9 @@ export interface PaymentResponse {
     sellerReference: string;
     apiReferenceNumber: string;
     amount: number;
+    currencyCode?: string;              // 🆕 Para birimi
+    convertedAmount?: number;           // 🆕 Dönüştürülmüş tutar (farklı para birimi ise)
+    exchangeRate?: number;              // 🆕 Kullanılan döviz kuru (farklı para birimi ise)
   } | null;
   message?: string;
 }

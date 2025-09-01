@@ -19,6 +19,7 @@ type Store = {
   limitsiz_acik_hesap: boolean;
   acik_hesap_tutari: number;
   bakiye: number;                    // 🆕 Mağaza bakiyesi
+  currency: string;                  // 🆕 Para birimi
   maksimum_taksit: number;           // 🆕 Maksimum taksit sayısı
   toplam_kullanilabilir: number;     // 🆕 Bakiye + açık hesap toplamı
   is_active: boolean;
@@ -117,10 +118,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.removeItem("user");
           localStorage.removeItem("token");
           localStorage.removeItem("userType");
+          localStorage.removeItem("currency");
           localStorage.removeItem("rememberMe");
           sessionStorage.removeItem("user");
           sessionStorage.removeItem("token");
           sessionStorage.removeItem("userType");
+          sessionStorage.removeItem("currency");
         }
       } finally {
         setIsLoading(false);
@@ -169,17 +172,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsViewer(userType === "viewer");
         setIsAdminOrEditor(userType === "admin" || userType === "editor");
         
+        // Currency bilgisini storage'a kaydet
+        const currency = result.data.user.store?.currency || 'TRY';
+        
         // "Beni hatırla" seçeneğine göre localStorage'a kaydet
         if (rememberMe) {
           localStorage.setItem("user", JSON.stringify(userData));
           localStorage.setItem("token", result.data.token);
           localStorage.setItem("userType", result.data.user.userType);
+          localStorage.setItem("currency", currency);
           localStorage.setItem("rememberMe", "true");
         } else {
           // SessionStorage kullan (tarayıcı kapatıldığında silinir)
           sessionStorage.setItem("user", JSON.stringify(userData));
           sessionStorage.setItem("token", result.data.token);
           sessionStorage.setItem("userType", result.data.user.userType);
+          sessionStorage.setItem("currency", currency);
           localStorage.removeItem("rememberMe");
         }
         
@@ -218,10 +226,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("user");
         localStorage.removeItem("token");
         localStorage.removeItem("userType");
+        localStorage.removeItem("currency");
         localStorage.removeItem("rememberMe");
         sessionStorage.removeItem("user");
         sessionStorage.removeItem("token");
         sessionStorage.removeItem("userType");
+        sessionStorage.removeItem("currency");
         
         router.push("/");
         
@@ -236,10 +246,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("user");
         localStorage.removeItem("token");
         localStorage.removeItem("userType");
+        localStorage.removeItem("currency");
         localStorage.removeItem("rememberMe");
         sessionStorage.removeItem("user");
         sessionStorage.removeItem("token");
         sessionStorage.removeItem("userType");
+        sessionStorage.removeItem("currency");
         
         router.push("/");
         
@@ -255,10 +267,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem("user");
       localStorage.removeItem("token");
       localStorage.removeItem("userType");
+      localStorage.removeItem("currency");
       localStorage.removeItem("rememberMe");
       sessionStorage.removeItem("user");
       sessionStorage.removeItem("token");
       sessionStorage.removeItem("userType");
+      sessionStorage.removeItem("currency");
       
       router.push("/");
       

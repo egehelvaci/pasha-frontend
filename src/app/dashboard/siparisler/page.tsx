@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '../../context/AuthContext';
 import { useToken } from '@/app/hooks/useToken';
 import { StoreType, storeTypeLabels } from '@/components/StoreTypeSelector';
@@ -10,6 +11,31 @@ import { bulkConfirmOrders, BulkConfirmOrdersResponse, getStores, Store, adminCa
 import CargoReceipt from '@/app/components/CargoReceipt';
 import QRLabel from '@/app/components/QRLabel';
 import QRCode from 'qrcode';
+
+// Currency sembollerini tanımla
+const CURRENCY_SYMBOLS = {
+  'TRY': '₺',
+  'USD': '$',
+  'EUR': '€'
+};
+
+// Currency display helper function
+const getCurrencyDisplay = (order: Order, userCurrency: string) => {
+  // Sipariş kendi currency'sini belirtmişse onu kullan
+  if (order.order_currency) {
+    return CURRENCY_SYMBOLS[order.order_currency as keyof typeof CURRENCY_SYMBOLS] || order.order_currency;
+  }
+  // Yoksa user'ın currency'sini kullan
+  return CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency;
+};
+
+// Amount display helper function (converted amount varsa onu, yoksa original'i göster)
+const getDisplayAmount = (order: Order, amount: string) => {
+  if (order.converted_amount && parseFloat(order.converted_amount) > 0) {
+    return parseFloat(order.converted_amount);
+  }
+  return parseFloat(amount);
+};
 
 interface OrderItem {
   id: string;
@@ -74,6 +100,11 @@ interface Order {
   updated_at: string;
   receipt_printed?: boolean;
   receipt_printed_at?: string;
+  order_currency?: string;        // 🆕 Sipariş para birimi
+  payment_currency?: string;      // 🆕 Ödeme para birimi
+  exchange_rate?: string;         // 🆕 Döviz kuru
+  original_amount?: string;       // 🆕 Orijinal tutar
+  converted_amount?: string;      // 🆕 Dönüştürülmüş tutar
   address?: {
     id: string;
     store_id: string;
@@ -289,6 +320,9 @@ const Siparisler = () => {
   const [ordersData, setOrdersData] = useState<OrdersResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  // Currency state
+  const [userCurrency, setUserCurrency] = useState<string>('TRY');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [orderStats, setOrderStats] = useState<OrderStats | null>(null);
@@ -342,6 +376,34 @@ const Siparisler = () => {
   const [bulkConfirming, setBulkConfirming] = useState(false);
   const [bulkConfirmResult, setBulkConfirmResult] = useState<BulkConfirmOrdersResponse | null>(null);
   const [showBulkActions, setShowBulkActions] = useState(false);
+
+  // Currency bilgisini localStorage'dan al
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        // Currency bilgisini al
+        const rememberMe = localStorage.getItem("rememberMe") === "true";
+        let storedCurrency;
+        
+        if (rememberMe) {
+          storedCurrency = localStorage.getItem("currency");
+        } else {
+          storedCurrency = sessionStorage.getItem("currency");
+        }
+        
+        if (storedCurrency) {
+          setUserCurrency(storedCurrency);
+        } else {
+          // User'ın store bilgisinden currency'yi al
+          if (user?.store?.currency) {
+            setUserCurrency(user.store.currency);
+          }
+        }
+      } catch (error) {
+        console.error('Currency okuma hatası:', error);
+      }
+    }
+  }, [user]);
 
   // Modal açıkken body scroll'unu engelle
   useEffect(() => {
@@ -1184,7 +1246,7 @@ const Siparisler = () => {
 
               // QR kod görselini yükle
               await new Promise((resolve) => {
-                const qrImage = new Image();
+                const qrImage = new (window as any).Image();
                 qrImage.onload = () => {
                   // QR kodu üst kısma yerleştir
                   const qrSize = 200;
@@ -1492,15 +1554,23 @@ const Siparisler = () => {
       if (data.success) {
         let message = data.message || 'Sipariş başarıyla iptal edildi.';
         
-        // canSeePrice=false ise bakiye/iade ile ilgili kısımları mesajdan çıkar
+        // Currency kontrolü ve canSeePrice kontrolü
         if (!user?.canSeePrice) {
           message = message
             .replace(/bakiye.*?iade.*?\./gi, '')
             .replace(/iade.*?bakiye.*?\./gi, '')
-            .replace(/\d+([.,]\d+)?\s*(₺|TL|lira)/gi, '')
+            .replace(/\d+([.,]\d+)?\s*(₺|TL|USD|\$|EUR|€|lira)/gi, '')
             .replace(/tutarı.*?iade.*?\./gi, '')
             .replace(/\.\s*\./g, '.')
             .trim();
+        } else {
+          // Currency sembolünü dinamik olarak güncelle
+          const order = filteredOrders?.orders.find(o => o.id === orderId);
+          if (order) {
+            const correctCurrency = getCurrencyDisplay(order, userCurrency);
+            // TL sembollerini doğru currency ile değiştir
+            message = message.replace(/(₺|TL)/g, correctCurrency);
+          }
         }
         
         alert(message);
@@ -1541,7 +1611,17 @@ const Siparisler = () => {
       const response = await cancelOrder(orderId, reason || 'Admin iadesi - Teslim edilmiş sipariş');
       
       if (response.success) {
-        alert(response.message || 'Sipariş başarıyla iade edildi.');
+        let message = response.message || 'Sipariş başarıyla iade edildi.';
+        
+        // Currency sembolünü dinamik olarak güncelle
+        const order = filteredOrders?.orders.find(o => o.id === orderId);
+        if (order) {
+          const correctCurrency = getCurrencyDisplay(order, userCurrency);
+          // TL sembollerini doğru currency ile değiştir
+          message = message.replace(/(₺|TL)/g, correctCurrency);
+        }
+        
+        alert(message);
         
         // Siparişleri yeniden yükle
         await fetchOrders(currentPage, statusFilter, receiptFilter);
@@ -2234,7 +2314,7 @@ const Siparisler = () => {
                         <div>
                           <span className="text-gray-600">Toplam Tutar:</span>
                           <span className="ml-2 font-semibold text-[#00365a]">
-                            {parseFloat(order.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                            {getDisplayAmount(order, order.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {getCurrencyDisplay(order, userCurrency)}
                           </span>
                         </div>
                       )}
@@ -2521,13 +2601,13 @@ const Siparisler = () => {
                                               <td>${item.product.name}</td>
                                               <td>${item.width} × ${item.height}</td>
                                               <td>${item.quantity}</td>
-                                              <td>${parseFloat(item.unit_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</td>
-                                              <td>${parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</td>
+                                              <td>${parseFloat(item.unit_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${getCurrencyDisplay(order, userCurrency)}</td>
+                                              <td>${parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${getCurrencyDisplay(order, userCurrency)}</td>
                                             </tr>
                                           `).join('')}
                                           <tr class="total-row">
                                             <td colspan="4"><strong>GENEL TOPLAM</strong></td>
-                                            <td><strong>${(receiptData.siparis?.toplamTutar || parseFloat(order.total_price)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</strong></td>
+                                            <td><strong>${getDisplayAmount(order, order.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${getCurrencyDisplay(order, userCurrency)}</strong></td>
                                           </tr>
                                         </tbody>
                                       </table>
@@ -2805,10 +2885,6 @@ const Siparisler = () => {
                   <div className="space-y-6">
                     <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                       <h4 className="text-lg font-semibold text-[#00365a] mb-4 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                          <path fillRule="evenodd" d="M4 5a2 2 0 012-2v1a1 1 0 102 0V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm2.5 7a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" clipRule="evenodd" />
-                        </svg>
                         Sipariş Bilgileri
                       </h4>
                       <div className="space-y-4">
@@ -2863,7 +2939,7 @@ const Siparisler = () => {
                           <div className="flex justify-between items-center py-2">
                             <span className="text-gray-600 font-medium">Toplam Tutar:</span>
                             <span className="font-bold text-[#00365a] text-lg">
-                              {parseFloat(selectedOrder.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                              {getDisplayAmount(selectedOrder, selectedOrder.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {getCurrencyDisplay(selectedOrder, userCurrency)}
                             </span>
                           </div>
                         )}
@@ -2898,9 +2974,6 @@ const Siparisler = () => {
 
                     <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                       <h4 className="text-lg font-semibold text-[#00365a] mb-4 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm3 6a2 2 0 11-4 0 2 2 0 014 0zm7-1a1 1 0 10-2 0 1 1 0 002 0zm-1 3a1 1 0 10-2 0 1 1 0 002 0z" clipRule="evenodd" />
-                        </svg>
                         Mağaza Bilgileri
                       </h4>
                       <div className="space-y-4">
@@ -2972,10 +3045,7 @@ const Siparisler = () => {
                   <div>
                     <div className="mb-6">
                       <h4 className="text-lg font-semibold text-[#00365a] mb-2 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 2L3 7v11a2 2 0 002 2h10a2 2 0 002-2V7l-7-5zM6 12a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1z" clipRule="evenodd" />
-                        </svg>
-                        Sipariş Edilen Ürünler
+                        Ürünler
                       </h4>
                       <p className="text-gray-500 text-sm">{selectedOrder.items.reduce((total, item) => total + item.quantity, 0)} ürün</p>
                     </div>
@@ -2983,13 +3053,14 @@ const Siparisler = () => {
                       {selectedOrder.items.map((item) => (
                         <div key={item.id} className="border border-gray-200 rounded-lg p-4">
                           <div className="flex space-x-4">
-                            <img
+                            <Image
                               src={item.product.productImage || '/placeholder-product.jpg'}
                               alt={item.product.name}
+                              width={64}
+                              height={64}
                               className="w-16 h-16 object-cover rounded-lg"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
-                                target.onerror = null;
                                 target.src = '/placeholder-product.jpg';
                               }}
                             />
@@ -3007,11 +3078,11 @@ const Siparisler = () => {
                               </div>
                               <div className="mt-2 flex justify-between items-center">
                                 <span className="text-sm text-gray-600">
-                                  {item.quantity} adet{user?.canSeePrice ? ` × ${parseFloat(item.unit_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺` : ''}
+                                  {item.quantity} adet{user?.canSeePrice ? ` × ${parseFloat(item.unit_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${getCurrencyDisplay(selectedOrder, userCurrency)}` : ''}
                                 </span>
                                 {user?.canSeePrice && (
                                   <span className="font-semibold text-gray-900">
-                                    {parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                                    {parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {getCurrencyDisplay(selectedOrder, userCurrency)}
                                   </span>
                                 )}
                               </div>
@@ -3194,13 +3265,14 @@ const Siparisler = () => {
                               >
                                 <div className="flex items-center space-x-3">
                                   <div className="flex-shrink-0">
-                                    <img
+                                    <Image
                                       src={qrCode.product.productImage || '/placeholder-product.jpg'}
                                       alt={qrCode.product.name}
+                                      width={48}
+                                      height={48}
                                       className="w-12 h-12 object-cover rounded"
                                       onError={(e) => {
                                         const target = e.target as HTMLImageElement;
-                                        target.onerror = null;
                                         target.src = '/placeholder-product.jpg';
                                       }}
                                     />
@@ -3566,13 +3638,13 @@ const Siparisler = () => {
                                               <td>${item.product.name}</td>
                                               <td>${item.width} × ${item.height}</td>
                                               <td>${item.quantity}</td>
-                                              <td>${parseFloat(item.unit_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</td>
-                                              <td>${parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</td>
+                                              <td>${parseFloat(item.unit_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${getCurrencyDisplay(selectedOrder, userCurrency)}</td>
+                                              <td>${parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${getCurrencyDisplay(selectedOrder, userCurrency)}</td>
                                             </tr>
                                           `).join('')}
                                           <tr class="total-row">
                                             <td colspan="4"><strong>GENEL TOPLAM</strong></td>
-                                            <td><strong>${(receiptData.siparis?.toplamTutar || parseFloat(selectedOrder.total_price)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</strong></td>
+                                            <td><strong>${getDisplayAmount(selectedOrder, selectedOrder.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${getCurrencyDisplay(selectedOrder, userCurrency)}</strong></td>
                                           </tr>
                                         </tbody>
                                       </table>

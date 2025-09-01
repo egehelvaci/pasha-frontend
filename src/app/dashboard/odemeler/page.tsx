@@ -5,6 +5,19 @@ import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { processPayment, PaymentRequest, getMyStoreInfo } from '../../../services/api';
 
+// Currency sembollerini tanımla
+const CURRENCY_SYMBOLS = {
+  'TRY': '₺',
+  'USD': '$',
+  'EUR': '€'
+};
+
+// Available currencies for payment
+const AVAILABLE_CURRENCIES = [
+  { value: 'TRY', label: 'Türk Lirası (₺)', symbol: '₺' },
+  { value: 'USD', label: 'Amerikan Doları ($)', symbol: '$' }
+];
+
 interface Payment {
   id: string;
   sellerReference: string;
@@ -16,6 +29,11 @@ interface Payment {
   octetPaymentId: string;
   createdAt: string;
   updatedAt: string;
+  store_currency?: string;        // 🆕 Mağaza para birimi
+  payment_currency?: string;      // 🆕 Ödeme para birimi
+  exchange_rate?: number;         // 🆕 Döviz kuru
+  original_amount?: number;       // 🆕 Orijinal ödeme tutarı
+  converted_amount?: number;      // 🆕 Dönüştürülmüş tutar (mağaza currency'sine)
   store: {
     store_id: string;
     kurum_adi: string;
@@ -61,6 +79,14 @@ interface PaymentSummary {
   failedCount: number;
   totalAmount: number;
   successRate: number;
+  tryPayments?: {
+    count: number;
+    totalAmount: number;
+  };
+  usdPayments?: {
+    count: number;
+    totalAmount: number;
+  };
 }
 
 const statusLabels = {
@@ -92,19 +118,68 @@ export default function PaymentsPage() {
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [summary, setSummary] = useState<PaymentSummary | null>(null);
   const itemsPerPage = 20;
+  
+  // Currency state
+  const [userCurrency, setUserCurrency] = useState<string>('TRY');
 
   // Custom dropdown state'leri
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [storeDropdownOpen, setStoreDropdownOpen] = useState(false);
   const [paymentStoreDropdownOpen, setPaymentStoreDropdownOpen] = useState(false);
+  const [paymentCurrencyDropdownOpen, setPaymentCurrencyDropdownOpen] = useState(false);
 
   // Ödeme formu state'leri
   const [paymentForm, setPaymentForm] = useState({
     amount: '',
     description: '',
-    storeId: ''
+    storeId: '',
+    currency: 'TRY'
   });
 
+
+  // Currency bilgisini localStorage'dan al
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        // Currency bilgisini al
+        const rememberMe = localStorage.getItem("rememberMe") === "true";
+        let storedCurrency;
+        
+        if (rememberMe) {
+          storedCurrency = localStorage.getItem("currency");
+        } else {
+          storedCurrency = sessionStorage.getItem("currency");
+        }
+        
+        if (storedCurrency) {
+          setUserCurrency(storedCurrency);
+          setPaymentForm(prev => ({ ...prev, currency: storedCurrency }));
+        } else {
+          // User'ın store bilgisinden currency'yi al
+          if (user?.store?.currency) {
+            setUserCurrency(user.store.currency);
+            setPaymentForm(prev => ({ ...prev, currency: user.store?.currency || 'TRY' }));
+          }
+        }
+      } catch (error) {
+        console.error('Currency okuma hatası:', error);
+      }
+    }
+  }, [user]);
+
+  // Modal açık/kapalı durumunda body scroll kontrolü
+  useEffect(() => {
+    if (paymentModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup function - component unmount olduğunda veya modal kapandığında
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [paymentModalOpen]);
 
   useEffect(() => {
     if (!user) {
@@ -123,6 +198,7 @@ export default function PaymentsPage() {
         setStatusDropdownOpen(false);
         setStoreDropdownOpen(false);
         setPaymentStoreDropdownOpen(false);
+        setPaymentCurrencyDropdownOpen(false);
       }
     };
 
@@ -318,7 +394,8 @@ export default function PaymentsPage() {
       const paymentRequest: PaymentRequest = {
         storeId: paymentForm.storeId,
         amount: amount,
-        ...(paymentForm.description.trim() && { aciklama: paymentForm.description.trim() })
+        ...(paymentForm.description.trim() && { aciklama: paymentForm.description.trim() }),
+        currencyCode: paymentForm.currency
       };
 
       // API çağrısı yap
@@ -329,8 +406,20 @@ export default function PaymentsPage() {
         window.open(response.data.paymentUrl, '_blank');
         
         // Başarı mesajı göster
-        alert(`Ödeme sayfası açıldı! 
-Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`);
+        const displayCurrency = response.data.currencyCode || paymentForm.currency;
+        const displayAmount = response.data.convertedAmount || response.data.amount;
+        
+        let message = `Ödeme sayfası açıldı! 
+Tutar: ${displayAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${CURRENCY_SYMBOLS[displayCurrency as keyof typeof CURRENCY_SYMBOLS] || displayCurrency}`;
+        
+        // Döviz çevrimi varsa bilgi göster
+        if (response.data.convertedAmount && response.data.exchangeRate) {
+          message += `
+Orijinal Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${paymentForm.currency}
+Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFractionDigits: 4 })}`;
+        }
+        
+        alert(message);
         
         setPaymentModalOpen(false);
         
@@ -338,7 +427,8 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
         setPaymentForm(prev => ({
           amount: '',
           description: '',
-          storeId: isAdminOrEditor ? '' : prev.storeId // Admin veya Editor değilse store_id'yi koru
+          storeId: isAdminOrEditor ? '' : prev.storeId, // Admin veya Editor değilse store_id'yi koru
+          currency: prev.currency // Currency'yi koru
         }));
         
         // Ödemeleri yeniden yükle
@@ -471,7 +561,10 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
               </div>
               <div class="info-item">
                 <span><strong>Tutar:</strong></span>
-                <span class="amount">${payment.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
+                <span class="amount">${payment.original_amount && payment.payment_currency 
+                  ? `${payment.original_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${payment.payment_currency}` 
+                  : `${payment.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}`
+                }</span>
               </div>
               <div class="info-item">
                 <span><strong>Octet Ödeme ID:</strong></span>
@@ -586,10 +679,6 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-[#00365a] flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-                  <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
-                </svg>
                 Ödeme Geçmişi
               </h1>
               <p className="text-gray-600 mt-1">Geçmiş ödeme işlemlerini görüntüleyin ve takip edin</p>
@@ -637,33 +726,62 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-center">
-                <div className="p-3 bg-blue-100 rounded-xl">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                  </svg>
+{userCurrency === 'USD' && (summary.tryPayments || summary.usdPayments) ? (
+              <>
+                {/* TRY Ödemeler */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                  <div className="flex items-center">
+                    <div className="p-3 bg-green-100 rounded-xl">
+                      <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                      </svg>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600">TRY Ödemeler</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {summary.tryPayments?.totalAmount?.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) || '0,00'} ₺
+                      </p>
+                      <p className="text-xs text-gray-500">{summary.tryPayments?.count || 0} adet</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Toplam Tutar</p>
-                  <p className="text-2xl font-bold text-gray-900">{summary.totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</p>
-                </div>
-              </div>
-            </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-center">
-                <div className="p-3 bg-purple-100 rounded-xl">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                  </svg>
+                {/* USD Ödemeler */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                  <div className="flex items-center">
+                    <div className="p-3 bg-blue-100 rounded-xl">
+                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                      </svg>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600">USD Ödemeler</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        ${summary.usdPayments?.totalAmount?.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) || '0.00'}
+                      </p>
+                      <p className="text-xs text-gray-500">{summary.usdPayments?.count || 0} adet</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Başarı Oranı</p>
-                  <p className="text-2xl font-bold text-gray-900">%{summary.successRate}</p>
+              </>
+            ) : (
+              /* Tek Currency için Toplam Tutar */
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                <div className="flex items-center">
+                  <div className="p-3 bg-blue-100 rounded-xl">
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Toplam Tutar</p>
+                    <p className="text-2xl font-bold text-gray-900">{summary.totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+
+
           </div>
         )}
 
@@ -932,7 +1050,10 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-semibold text-gray-900">
-                        {payment.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                        {payment.original_amount && payment.payment_currency 
+                          ? `${payment.original_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${payment.payment_currency}`
+                          : `${payment.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}`
+                        }
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -1029,15 +1150,6 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Ödeme Bulunamadı</h3>
             <p className="text-gray-500 mb-4">Arama kriterlerinize uygun ödeme kaydı bulunmamaktadır.</p>
-            <button
-              onClick={() => setPaymentModalOpen(true)}
-              className="bg-[#00365a] hover:bg-[#004170] text-white px-6 py-3 rounded-lg font-medium transition-all shadow-md hover:shadow-lg inline-flex items-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              İlk Ödemeyi Yapın
-            </button>
           </div>
         )}
 
@@ -1097,7 +1209,10 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
                           <div className="flex justify-between items-center">
                             <span className="text-gray-600 font-medium">Tutar:</span>
                             <span className="text-2xl font-bold text-green-600">
-                              {selectedPayment.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                              {selectedPayment.original_amount && selectedPayment.payment_currency 
+                                ? `${selectedPayment.original_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${selectedPayment.payment_currency}`
+                                : `${selectedPayment.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}`
+                              }
                             </span>
                           </div>
                         </div>
@@ -1326,33 +1441,89 @@ Tutar: ${response.data.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2
                       <div className="w-full px-4 py-3 border border-gray-200 rounded-lg shadow-sm bg-gray-50 text-gray-700 font-medium">
                         {stores[0].kurum_adi}
                       </div>
-                      <div className="mt-2 text-sm text-gray-500 bg-blue-50 rounded-lg p-3">
-                        <span className="font-medium">Vergi No:</span> {stores[0].vergi_numarasi}<br/>
-                        <span className="font-medium">Yetkili:</span> {stores[0].yetkili_adi} {stores[0].yetkili_soyadi}
-                      </div>
                     </div>
                   )}
 
                   {/* Ödenecek tutar */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                      <svg className="w-4 h-4 mr-2 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                      </svg>
-                      <span className="text-red-500">*</span> Ödenecek Tutar (₺)
+                      <span className="text-red-500">*</span>Ödenecek Tutar
                     </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        placeholder="0.00"
-                        value={paymentForm.amount}
-                        onChange={(e) => setPaymentForm(prev => ({ ...prev, amount: e.target.value }))}
-                        required
-                        className="w-full pl-4 pr-12 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all"
-                      />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">₺</span>
+                    <div className="flex gap-3">
+                      {/* Tutar Input */}
+                      <div className="flex-1 relative">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="0.00"
+                          value={paymentForm.amount}
+                          onChange={(e) => setPaymentForm(prev => ({ ...prev, amount: e.target.value }))}
+                          onWheel={(e) => {
+                            e.preventDefault();
+                            e.currentTarget.blur();
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                              e.preventDefault();
+                            }
+                          }}
+                          required
+                          className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all"
+                        />
+                      </div>
+                      
+                      {/* Currency Dropdown - Sadece TL değilse göster */}
+                      {userCurrency !== 'TRY' && (
+                        <div className="relative dropdown-container" style={{minWidth: '120px'}}>
+                          <button
+                            type="button"
+                            onClick={() => setPaymentCurrencyDropdownOpen(!paymentCurrencyDropdownOpen)}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all bg-white flex items-center justify-between"
+                          >
+                            <span className="text-gray-900 font-medium">
+                              {paymentForm.currency}
+                            </span>
+                            <svg 
+                              className={`w-4 h-4 text-gray-400 transition-transform ${paymentCurrencyDropdownOpen ? 'rotate-180' : ''}`}
+                              fill="none" 
+                              stroke="currentColor" 
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+                          
+                          {paymentCurrencyDropdownOpen && (
+                            <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                              {AVAILABLE_CURRENCIES.map((currency) => (
+                                <button
+                                  key={currency.value}
+                                  type="button"
+                                  className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${
+                                    paymentForm.currency === currency.value ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                  }`}
+                                  onClick={() => {
+                                    setPaymentForm(prev => ({ ...prev, currency: currency.value }));
+                                    setPaymentCurrencyDropdownOpen(false);
+                                  }}
+                                >
+                                  <div className="flex items-center">
+                                    <span className="font-medium">{currency.value}</span>
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* TL kullanıcıları için sadece sembol göster */}
+                      {userCurrency === 'TRY' && (
+                        <div className="flex items-center px-4 py-3 border border-gray-200 rounded-lg bg-gray-50">
+                          <span className="text-gray-700 font-medium">₺</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 

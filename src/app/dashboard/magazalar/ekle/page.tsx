@@ -6,10 +6,17 @@ import { CreateStoreData, createStore } from '@/services/api';
 import { useAuth } from '@/app/context/AuthContext';
 import StoreTypeSelector, { StoreType } from '@/components/StoreTypeSelector';
 
+// Mevcut para birimleri
+const CURRENCIES = [
+  { value: 'TRY', label: 'Türk Lirası (₺)', symbol: '₺' },
+  { value: 'USD', label: 'Amerikan Doları ($)', symbol: '$' }
+];
+
 export default function AddStorePage() {
   const router = useRouter();
   const { isAdmin, isAdminOrEditor, token } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false);
   const [formData, setFormData] = useState<CreateStoreData>({
     kurum_adi: '',
     vergi_numarasi: '',
@@ -22,6 +29,7 @@ export default function AddStorePage() {
     faks_numarasi: '',
     aciklama: '',
     bakiye: 0,
+    currency: 'TRY', // Varsayılan para birimi
     maksimum_taksit: 1,
     limitsiz_acik_hesap: false,
     acik_hesap_tutari: 0,
@@ -34,6 +42,24 @@ export default function AddStorePage() {
       router.push('/dashboard');
     }
   }, [isAdminOrEditor, router]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.currency-dropdown')) {
+        setCurrencyDropdownOpen(false);
+      }
+    };
+
+    if (currencyDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [currencyDropdownOpen]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -329,7 +355,7 @@ export default function AddStorePage() {
                       value={formData.telefon}
                       onChange={(e) => handleInputChange('telefon', e.target.value)}
                       className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all ${errors.telefon ? 'border-red-300' : 'border-gray-300'}`}
-                      placeholder="0212 123 45 67"
+                      placeholder="05XX XXX XX XX"
                     />
                     {errors.telefon && <p className="mt-1 text-sm text-red-600">{errors.telefon}</p>}
                   </div>
@@ -357,7 +383,7 @@ export default function AddStorePage() {
                       value={formData.faks_numarasi}
                       onChange={(e) => handleInputChange('faks_numarasi', e.target.value)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all"
-                      placeholder="0212 123 45 68"
+                      placeholder="05XX XXX XX XX"
                     />
                   </div>
                 </div>
@@ -372,9 +398,102 @@ export default function AddStorePage() {
                   Finansal Bilgiler
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="relative">
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                      <span className="text-red-500">*</span> Para Birimi
+                    </label>
+                    
+                    {/* Custom Dropdown */}
+                    <div className="relative currency-dropdown">
+                      <button
+                        type="button"
+                        onClick={() => setCurrencyDropdownOpen(!currencyDropdownOpen)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all bg-white text-left flex items-center justify-between hover:border-gray-400"
+                      >
+                        <div className="flex items-center gap-3">
+                          {/* Currency Flag/Icon */}
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#00365a] to-[#004170] flex items-center justify-center text-white text-xs font-bold">
+                            {formData.currency === 'TRY' ? '₺' : '$'}
+                          </div>
+                          
+                          {/* Currency Info */}
+                          <div className="flex flex-col">
+                            <span className="text-sm font-semibold text-gray-900">
+                              {CURRENCIES.find(c => c.value === formData.currency)?.label || 'Para Birimi Seçin'}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {formData.currency || 'Seçim yapınız'}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {/* Dropdown Arrow */}
+                        <svg 
+                          className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${currencyDropdownOpen ? 'rotate-180' : ''}`}
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+
+                      {/* Dropdown Menu */}
+                      {currencyDropdownOpen && (
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden">
+                          {CURRENCIES.map((currency) => (
+                            <button
+                              key={currency.value}
+                              type="button"
+                              onClick={() => {
+                                handleInputChange('currency', currency.value);
+                                setCurrencyDropdownOpen(false);
+                              }}
+                              className={`w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 ${
+                                formData.currency === currency.value 
+                                  ? 'bg-blue-50 border-l-4 border-[#00365a]' 
+                                  : ''
+                              }`}
+                            >
+                              {/* Currency Icon */}
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${
+                                currency.value === 'TRY' 
+                                  ? 'bg-gradient-to-br from-red-500 to-red-600' 
+                                  : 'bg-gradient-to-br from-green-500 to-green-600'
+                              }`}>
+                                {currency.symbol}
+                              </div>
+                              
+                              {/* Currency Details */}
+                              <div className="flex-1">
+                                <div className="text-sm font-semibold text-gray-900">
+                                  {currency.label}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {currency.value} - {currency.symbol}
+                                </div>
+                              </div>
+                              
+                              {/* Selected Indicator */}
+                              {formData.currency === currency.value && (
+                                <div className="w-5 h-5 text-[#00365a]">
+                                  <svg fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                </div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <p className="mt-1 text-xs text-gray-500">Mağazanın kullanacağı para birimi</p>
+                  </div>
+
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      <span className="text-red-500">*</span> Mağaza Bakiyesi (₺)
+                      <span className="text-red-500">*</span> Mağaza Bakiyesi ({CURRENCIES.find(c => c.value === formData.currency)?.symbol || '₺'})
                     </label>
                     <input
                       type="number"
@@ -421,7 +540,7 @@ export default function AddStorePage() {
                     {!formData.limitsiz_acik_hesap && (
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-3">
-                          <span className="text-red-500">*</span> Açık Hesap Limiti (₺)
+                          <span className="text-red-500">*</span> Açık Hesap Limiti ({CURRENCIES.find(c => c.value === formData.currency)?.symbol || '₺'})
                         </label>
                         <input
                           type="number"
