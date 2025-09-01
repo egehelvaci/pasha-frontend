@@ -1244,7 +1244,7 @@ export default function ProductList() {
                 
                 <div className="w-full md:w-1/2">
                   <div className="grid grid-cols-1 gap-5">
-                    <div className="flex flex-col gap-2 dropdown-container">
+                    <div className="flex flex-col gap-2 dropdown-container bg-blue-50 rounded-lg p-6 border border-blue-200">
                       <span className="text-sm font-medium text-gray-700">Boyut Seçimi</span>
                       <div className="relative">
                         <button
@@ -1583,7 +1583,20 @@ export default function ProductList() {
                         
                         <button
                           type="button"
-                          className="mt-2 w-full py-3 bg-blue-900 text-white rounded-md font-semibold flex items-center justify-center disabled:opacity-70"
+                          className={`mt-2 w-full py-3 text-white rounded-md font-semibold flex items-center justify-center disabled:opacity-70 ${
+                            (() => {
+                              const isOutOfStock = (() => {
+                                if ('sizeOptions' in product && product.sizeOptions) {
+                                  return !product.sizeOptions.some((opt: any) => 
+                                    opt.is_optional_height ? (opt.stockAreaM2 || 0) > 0 : (opt.stockQuantity || 0) > 0
+                                  );
+                                } else {
+                                  return (product.stock || 0) <= 0;
+                                }
+                              })();
+                              return isOutOfStock ? 'bg-orange-500 hover:bg-orange-600' : 'bg-blue-900 hover:bg-blue-800';
+                            })()
+                          }`}
                           onClick={addToCart}
                           disabled={addToCartLoading}
                         >
@@ -2661,9 +2674,6 @@ export default function ProductList() {
                           title={isOutOfStock ? "Ön sipariş ver" : "Sepete Ekle"}
                           disabled={false}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                          </svg>
                           {isOutOfStock ? "Ön Sipariş Ver" : "Sepete Ekle"}
                         </button>
                         {isAdminOrEditor && (

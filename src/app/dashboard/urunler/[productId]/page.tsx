@@ -6,6 +6,7 @@ import { FaArrowLeft } from "react-icons/fa";
 import { useAuth } from '@/app/context/AuthContext';
 import { API_BASE_URL } from '@/services/api';
 import { useToken } from '@/app/hooks/useToken';
+import Image from 'next/image';
 
 export default function ProductDetail() {
   const params = useParams();
@@ -27,6 +28,11 @@ export default function ProductDetail() {
   const [addToCartLoading, setAddToCartLoading] = useState(false);
   const [addToCartSuccess, setAddToCartSuccess] = useState(false);
   const [addToCartError, setAddToCartError] = useState("");
+  
+  // Ön sipariş için state'ler
+  const [preorderLoading, setPreorderLoading] = useState(false);
+  const [preorderSuccess, setPreorderSuccess] = useState(false);
+  const [preorderError, setPreorderError] = useState("");
   const [notes, setNotes] = useState<string>("");
   
   // Ürün seçimleri için state'ler
@@ -42,10 +48,7 @@ export default function ProductDetail() {
   const [cutTypeDropdownOpen, setCutTypeDropdownOpen] = useState(false);
   const [fringeDropdownOpen, setFringeDropdownOpen] = useState(false);
 
-  // Stok kontrolü kaldırıldı - artık tüm ürünler stokta varsayılıyor
-  const hasStock = (): boolean => {
-    return true; // Her zaman true döndür
-  };
+
 
   useEffect(() => {
     if (!productFetchedRef.current) {
@@ -172,6 +175,101 @@ export default function ProductDetail() {
   // Saçak değişimi
   const handleFringeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedHasFringe(e.target.value === "true");
+  };
+
+  // Stok durumu kontrolü
+  const isOutOfStock = () => {
+    if (!product || !selectedSize) return false;
+    
+    if (selectedSize.is_optional_height) {
+      return (selectedSize.stockAreaM2 || 0) <= 0;
+    } else {
+      return (selectedSize.stockQuantity || 0) <= 0;
+    }
+  };
+
+  // Ön sipariş fonksiyonu
+  const addToPreorder = async () => {
+    // Validasyon kontrolleri
+    if (!product || !selectedSize || !selectedCutType) {
+      setPreorderError("Ürün detayları eksik");
+      return;
+    }
+    
+    const quantityNum = parseInt(quantity.toString()) || 0;
+    if (quantityNum <= 0) {
+      setPreorderError("Lütfen geçerli bir miktar girin");
+      return;
+    }
+    
+    // Kesim türünü API isteğine uygun formata dönüştür
+    let cutTypeValue = "rectangle"; // Varsayılan
+    if (selectedCutType.name === "oval") {
+      cutTypeValue = "oval";
+    } else if (selectedCutType.name === "daire") {
+      cutTypeValue = "round";
+    } else if (selectedCutType.name === "custom") {
+      cutTypeValue = "custom";
+    } else if (selectedCutType.name === "post kesim") {
+      cutTypeValue = "post kesim";
+    }
+    
+    setPreorderLoading(true);
+    setPreorderError("");
+    setPreorderSuccess(false);
+    
+    try {
+      const authToken = token;
+      
+      // Yükseklik değerini belirle
+      const heightValue = selectedSize.is_optional_height ? customHeight : selectedSize.height;
+      
+      const requestBody = {
+        productId: product.productId,
+        quantity: quantityNum,
+        width: selectedSize.width,
+        height: heightValue,
+        hasFringe: selectedHasFringe === true,
+        cutType: cutTypeValue,
+        notes: notes.trim() || undefined,
+        isPreorder: true // Ön sipariş işareti
+      };
+      
+      // Ön sipariş için aynı sepet API'sini kullanıyoruz, sadece isPreorder flag'i ekliyoruz
+      const res = await fetch(`${API_BASE_URL}/api/cart/add`, {
+        method: "POST",
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok || !data.success) {
+        // Veritabanı bağlantı hatası için özel mesaj
+        if (data.message && data.message.includes("too many clients")) {
+          throw new Error("Sunucu şu anda yoğun. Lütfen daha sonra tekrar deneyin.");
+        }
+        throw new Error(data.message || "Ön sipariş verilemedi");
+      }
+      
+      // Başarılı
+      setPreorderSuccess(true);
+      setQuantity(1); // Miktar sıfırla
+      setNotes(""); // Notları temizle
+      
+      // 3 saniye sonra başarı mesajını temizle
+      setTimeout(() => {
+        setPreorderSuccess(false);
+      }, 3000);
+      
+    } catch (err: any) {
+      setPreorderError(err.message || "Ön sipariş verirken bir hata oluştu");
+    } finally {
+      setPreorderLoading(false);
+    }
   };
 
   // Sepete ekleme fonksiyonu
@@ -429,18 +527,22 @@ export default function ProductDetail() {
         <div className="flex flex-col md:flex-row gap-8">
           <div className="w-full md:w-1/2">
             {product.productImage ? (
-              <img 
+              <Image 
                 src={product.productImage} 
                 alt={product.name} 
+                width={400}
+                height={624}
                 className="w-full rounded-lg shadow-md border border-gray-200 object-cover aspect-[250/390]" 
               />
             ) : (
               <div className="w-full rounded-lg shadow-md border border-gray-200 bg-gray-50 aspect-[250/390] flex flex-col items-center justify-center p-6">
                 <div className="w-32 h-32 bg-gray-700 rounded-lg flex items-center justify-center mb-4">
-                  <img 
+                  <Image 
                     src="/logo.svg" 
                     alt="Paşa Home Logo" 
-                    className="w-20 h-20 opacity-80"
+                    width={80}
+                    height={80}
+                    className="opacity-80"
                   />
                 </div>
                 <p className="text-gray-500 text-sm text-center font-medium">
@@ -451,10 +553,10 @@ export default function ProductDetail() {
           </div>
           
           <div className="w-full md:w-1/2">
-            <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
+            <div className="">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Ürün Seçenekleri</h3>
               <div className="grid grid-cols-1 gap-5">
-              <div className="flex flex-col gap-2 dropdown-container">
+              <div className="flex flex-col gap-2 dropdown-container bg-blue-50 rounded-lg p-6 border border-blue-200">
                 <span className="text-sm font-medium text-gray-700">Boyut Seçimi</span>
                 <div className="relative">
                   <button
@@ -509,7 +611,7 @@ export default function ProductDetail() {
                 </div>
                 
                 {selectedSize && selectedSize.is_optional_height && (
-                  <div className="mt-3 p-4 bg-blue-100 rounded-lg border border-blue-200">
+                  <div className="mt-3 p-4">
                     <label className="text-sm font-medium text-gray-700 block mb-2">Özel Yükseklik (cm) - Elle Girilebilir</label>
                     <div className="flex items-center gap-3">
                       <input
@@ -765,45 +867,92 @@ export default function ProductDetail() {
                 </div>
               )}
 
-              {/* Sepete Ekle Butonu */}
+              {/* Sepete Ekle / Ön Sipariş Butonu */}
               <div className="mt-4">
+                {/* Stok Uyarısı */}
+                {selectedSize && isOutOfStock() && (
+                  <div className="mb-3 p-3 bg-orange-100 border border-orange-300 rounded-md text-orange-700 text-sm">
+                    ⚠️ Bu ürün şu anda stokta bulunmamaktadır. Ön sipariş verebilirsiniz.
+                  </div>
+                )}
+                
+                {/* Başarı Mesajları */}
                 {addToCartSuccess && (
                   <div className="mb-3 p-3 bg-green-100 border border-green-300 rounded-md text-green-700 text-sm">
                     ✅ Ürün başarıyla sepete eklendi!
                   </div>
                 )}
                 
+                {preorderSuccess && (
+                  <div className="mb-3 p-3 bg-blue-100 border border-blue-300 rounded-md text-blue-700 text-sm">
+                    Sepetinize eklendi!
+                  </div>
+                )}
+                
+                {/* Hata Mesajları */}
                 {addToCartError && (
                   <div className="mb-3 p-3 bg-red-100 border border-red-300 rounded-md text-red-700 text-sm">
                     ❌ {addToCartError}
                   </div>
                 )}
                 
-                <button
-                  type="button"
-                  className={`w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-3 transition-all duration-200 disabled:opacity-70 shadow-lg hover:shadow-xl transform hover:scale-[1.02] ${
-                    'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800'
-                  }`}
-                  onClick={addToCart}
-                  disabled={addToCartLoading || !selectedSize || !selectedCutType}
-                >
-                  {addToCartLoading ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      İşleniyor...
-                    </>
-                  ) : (
-                    <>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                      </svg>
-                      Sepete Ekle
-                    </>
-                  )}
-                </button>
+                {preorderError && (
+                  <div className="mb-3 p-3 bg-red-100 border border-red-300 rounded-md text-red-700 text-sm">
+                    ❌ {preorderError}
+                  </div>
+                )}
+                
+                {selectedSize && isOutOfStock() ? (
+                  // Ön Sipariş Butonu
+                  <button
+                    type="button"
+                    className="w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-3 transition-all duration-200 disabled:opacity-70 shadow-lg hover:shadow-xl transform hover:scale-[1.02] bg-orange-500 hover:bg-orange-600 text-white"
+                    onClick={addToPreorder}
+                    disabled={preorderLoading || !selectedSize || !selectedCutType}
+                  >
+                    {preorderLoading ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        İşleniyor...
+                      </>
+                    ) : (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Ön Sipariş Ver
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  // Normal Sepete Ekle Butonu
+                  <button
+                    type="button"
+                    className="w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-3 transition-all duration-200 disabled:opacity-70 shadow-lg hover:shadow-xl transform hover:scale-[1.02] bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800"
+                    onClick={addToCart}
+                    disabled={addToCartLoading || !selectedSize || !selectedCutType}
+                  >
+                    {addToCartLoading ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        İşleniyor...
+                      </>
+                    ) : (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                        Sepete Ekle
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
             </div>
@@ -821,22 +970,27 @@ export default function ProductDetail() {
                 const stockValue = isOptionalHeight 
                   ? `${(size.stockAreaM2 || 0).toFixed(1)} m²`
                   : `${size.stockQuantity || 0} adet`;
-                const stockColor = (isOptionalHeight ? (size.stockAreaM2 || 0) : (size.stockQuantity || 0)) > 0 
-                  ? 'text-green-600' 
-                  : 'text-red-600';
+                const hasStock = (isOptionalHeight ? (size.stockAreaM2 || 0) : (size.stockQuantity || 0)) > 0;
+                const stockColor = hasStock ? 'text-green-600' : 'text-red-600';
+                const isSelected = selectedSize?.id === size.id;
                 
                 return (
                   <div 
                     key={size.id || index} 
-                    className={`p-3 rounded-lg border ${selectedSize?.id === size.id ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}`}
+                    className={`p-3 rounded-lg border ${
+                      'bg-white border-gray-200'
+                    }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-gray-800">
                         {size.width}x{isOptionalHeight ? 'İsteğe Bağlı' : size.height} cm
+                        
                       </span>
-                      <span className={`font-medium ${stockColor}`}>
-                        {stockValue}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`font-medium ${stockColor}`}>
+                          {stockValue}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 );
