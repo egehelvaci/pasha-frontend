@@ -359,10 +359,6 @@ export default function TeslimatPage() {
                 autoComplete="off"
               />
             </div>
-            
-            <div className="text-xs text-gray-500 mt-2">
-              Barkod formatı: BAR-XXXXXXXX-XXXX (örn: BAR-1756667558704-54F495864EE8)
-            </div>
           </form>
 
           {/* Bildirimler */}
