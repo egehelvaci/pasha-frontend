@@ -268,9 +268,9 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
               const barcodeImage = new Image();
               barcodeImage.crossOrigin = 'anonymous';
               barcodeImage.onload = () => {
-                // Barcode görselini banda sığdır
-                const maxBarcodeWidth = mmToPx(70); // 70mm max genişlik
-                const maxBarcodeHeight = mmToPx(12); // 12mm max yükseklik
+                // Barcode görselini banda sığdır - daha büyük boyut
+                const maxBarcodeWidth = mmToPx(75); // 75mm max genişlik (büyütüldü)
+                const maxBarcodeHeight = mmToPx(15); // 15mm max yükseklik (büyütüldü)
                 const barcodeX = (canvas.width - maxBarcodeWidth) / 2;
                 const barcodeY = bandStartY + mmToPx(2); // Bandın üstünden 2mm boşluk
                 
@@ -642,8 +642,8 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
               }
 
               .barcode-image { 
-                max-width: 70mm; 
-                max-height: 12mm;
+                max-width: 75mm; 
+                max-height: 15mm;
                 object-fit: contain;
                 margin-bottom: 1mm;
                 image-rendering: -webkit-optimize-contrast;

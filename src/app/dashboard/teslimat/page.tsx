@@ -197,20 +197,30 @@ export default function TeslimatPage() {
     // Barkod okuyucudan gelen veriyi temizle (Enter, Tab, boşluk karakterlerini kaldır)
     const cleanBarcode = barcode.trim().replace(/[\r\n\t]/g, '');
     
-    // Barkod formatını kontrol et: BAR-{sayılar}-{hex karakterler}
-    const barcodePattern = /^BAR-\d+-[A-F0-9]+$/;
-    return barcodePattern.test(cleanBarcode);
+    // Eski format: BAR-{sayılar}-{hex karakterler}
+    const oldBarcodePattern = /^BAR-\d+-[A-F0-9]+$/;
+    
+    // Yeni format: 13 haneli sayı (8699160537079 gibi)
+    const newBarcodePattern = /^[0-9]{13}$/;
+    
+    return oldBarcodePattern.test(cleanBarcode) || newBarcodePattern.test(cleanBarcode);
   };
 
   // Barkod temizleme fonksiyonu
   const cleanBarcode = (barcode: string) => {
     // Tüm kontrol karakterlerini ve fazla boşlukları kaldır
-    return barcode
+    let cleaned = barcode
       .trim()
       .replace(/[\r\n\t\f\v]/g, '') // Tüm kontrol karakterlerini kaldır
       .replace(/\s+/g, '') // Fazla boşlukları kaldır
-      .replace(/\*/g, '-') // Barkod okuyucudan gelen * karakterlerini - ile değiştir
-      .toUpperCase(); // Büyük harfe çevir (hex karakterler için)
+      .replace(/\*/g, '-'); // Barkod okuyucudan gelen * karakterlerini - ile değiştir
+    
+    // Eğer yeni format (13 haneli sayı) ise büyük harfe çevirme
+    if (/^[0-9]{13}$/.test(cleaned)) {
+      return cleaned; // Sayısal format için büyük harfe çevirme
+    }
+    
+    return cleaned.toUpperCase(); // Eski format için büyük harfe çevir (hex karakterler için)
   };
 
   // Barkod input değişikliğini dinle
@@ -264,7 +274,7 @@ export default function TeslimatPage() {
     
     // Barkod formatını kontrol et
     if (!isBarcodeValid(barcode)) {
-      setError(`Geçersiz barkod formatı. Format: BAR-XXXXXXXX-XXXX. Okunan: "${barcode}"`);
+      setError(`Geçersiz barkod formatı. Desteklenen formatlar: BAR-XXXXXXXX-XXXX veya 13 haneli sayı (8699160537079). Okunan: "${barcode}"`);
       
       // Play error sound for invalid format
       try {
