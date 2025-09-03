@@ -194,8 +194,22 @@ export default function TeslimatPage() {
 
   // Barkod formatını kontrol etme
   const isBarcodeValid = (barcode: string) => {
+    // Barkod okuyucudan gelen veriyi temizle (Enter, Tab, boşluk karakterlerini kaldır)
+    const cleanBarcode = barcode.trim().replace(/[\r\n\t]/g, '');
+    
+    // Barkod formatını kontrol et: BAR-{sayılar}-{hex karakterler}
     const barcodePattern = /^BAR-\d+-[A-F0-9]+$/;
-    return barcodePattern.test(barcode);
+    return barcodePattern.test(cleanBarcode);
+  };
+
+  // Barkod temizleme fonksiyonu
+  const cleanBarcode = (barcode: string) => {
+    // Tüm kontrol karakterlerini ve fazla boşlukları kaldır
+    return barcode
+      .trim()
+      .replace(/[\r\n\t\f\v]/g, '') // Tüm kontrol karakterlerini kaldır
+      .replace(/\s+/g, '') // Fazla boşlukları kaldır
+      .toUpperCase(); // Büyük harfe çevir (hex karakterler için)
   };
 
   // Barkod input değişikliğini dinle
@@ -203,14 +217,32 @@ export default function TeslimatPage() {
     const value = e.target.value;
     setBarcodeInput(value);
     
+    // Debug: Barkod okuyucudan gelen ham veriyi logla
+    console.log('🔍 Barkod okuyucu ham veri:', {
+      original: value,
+      length: value.length,
+      charCodes: value.split('').map(c => c.charCodeAt(0))
+    });
+    
+    // Barkodu temizle
+    const cleanValue = cleanBarcode(value);
+    
+    // Debug: Temizlenmiş veriyi logla
+    console.log('🧹 Temizlenmiş barkod:', {
+      cleaned: cleanValue,
+      length: cleanValue.length,
+      isValid: isBarcodeValid(cleanValue)
+    });
+    
     // Eğer değer boşsa veya geçerli barkod formatında değilse return
-    if (!value.trim() || !isBarcodeValid(value.trim())) {
+    if (!cleanValue || !isBarcodeValid(cleanValue)) {
+      console.log('❌ Geçersiz barkod formatı');
       return;
     }
     
     // Geçerli barkod formatında ise otomatik olarak API'ye gönder
-    const barcode = value.trim();
-    scanSingleBarcode(barcode);
+    console.log('✅ Geçerli barkod, API\'ye gönderiliyor:', cleanValue);
+    scanSingleBarcode(cleanValue);
     
     // Input'u temizle
     setBarcodeInput('');
@@ -224,11 +256,12 @@ export default function TeslimatPage() {
       return;
     }
     
-    const barcode = barcodeInput.trim();
+    // Barkodu temizle
+    const barcode = cleanBarcode(barcodeInput);
     
     // Barkod formatını kontrol et
     if (!isBarcodeValid(barcode)) {
-      setError('Geçersiz barkod formatı. Format: BAR-XXXXXXXX-XXXX');
+      setError(`Geçersiz barkod formatı. Format: BAR-XXXXXXXX-XXXX. Okunan: "${barcode}"`);
       
       // Play error sound for invalid format
       try {
@@ -237,7 +270,7 @@ export default function TeslimatPage() {
         console.log('Audio notification failed:', audioError);
       }
       
-      setTimeout(() => setError(''), 3000);
+      setTimeout(() => setError(''), 5000);
       return;
     }
     
