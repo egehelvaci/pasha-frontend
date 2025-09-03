@@ -1223,10 +1223,10 @@ const Siparisler = () => {
             const item = qrCodeData.order_item;
             
             try {
-              // Her etiket için canvas oluştur
+              // Her etiket için canvas oluştur - QRLabel ile aynı boyutlar
               const canvas = document.createElement('canvas');
-              canvas.width = 378;
-              canvas.height = 567;
+              canvas.width = 639; // LABEL_W_PX (80mm @ 203 DPI)
+              canvas.height = 799; // LABEL_H_PX (100mm @ 203 DPI)
               const ctx = canvas.getContext('2d');
               if (!ctx) continue;
 
@@ -1234,10 +1234,13 @@ const Siparisler = () => {
               ctx.fillStyle = '#FFFFFF';
               ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-              // Backend QR kod string'ini kullanarak QR kod oluştur
+              // Backend QR kod string'ini kullanarak QR kod oluştur - QRLabel ile aynı ayarlar
+              const qrSize = Math.round(639 * 0.5); // Yazıcı DPI'ında QR boyutu
               const qrCodeDataURL = await QRCode.toDataURL(qrCodeData.qr_code, {
-                width: 200,
-                margin: 1,
+                width: qrSize,
+                margin: 2,
+                errorCorrectionLevel: 'M',
+                type: 'image/png',
                 color: {
                   dark: '#000000',
                   light: '#FFFFFF'
@@ -1248,71 +1251,101 @@ const Siparisler = () => {
               await new Promise((resolve) => {
                 const qrImage = new (window as any).Image();
                 qrImage.onload = () => {
-                  // QR kodu üst kısma yerleştir
-                  const qrSize = 200;
-                  const qrX = (canvas.width - qrSize) / 2;
-                  const qrY = 30;
-                  ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
+                  // Netlik için image smoothing'i kapat
+                  ctx.imageSmoothingEnabled = false;
+                  
+                  // QR kodu üst kısma yerleştir - QRLabel ile aynı yerleşim
+                  const qrDisplaySize = Math.round(639 * 0.5);   // genişliğin %50'si
+                  const qrX = Math.round((639 - qrDisplaySize) / 2);
+                  const qrY = Math.round((5 / 25.4) * 203); // üstten 5 mm boşluk
+                  ctx.drawImage(qrImage, qrX, qrY, qrDisplaySize, qrDisplaySize);
 
                   // Metin bilgilerini alt kısma ekle
                   ctx.fillStyle = '#000000';
                   ctx.textAlign = 'center';
 
-                  // Başlık
-                  ctx.font = 'bold 24px Arial';
-                  ctx.fillText('PAŞA HOME', canvas.width / 2, qrY + qrSize + 40);
+                  // Yazı boyları da göreli olsun (yazıcı DPI'ında)
+                  const titleFont = Math.round(799 * 0.04);   // ~%4
+                  ctx.font = `bold ${titleFont}px Arial`;
+                  ctx.fillText('PAŞA HOME', canvas.width / 2, qrY + qrDisplaySize + Math.round((5 / 25.4) * 203));
 
-                  // Ürün adı (kalın) - en üstte
-                  ctx.font = 'bold 18px Arial';
-                  let textY = qrY + qrSize + 70;
+                  // Ürün adı (kalın)
+                  const productFont = Math.round(799 * 0.032);   // ~%3.2
+                  ctx.font = `bold ${productFont}px Arial`;
+                  let textY = qrY + qrDisplaySize + Math.round((10 / 25.4) * 203);
                   const productName = item.product.name.toUpperCase();
-                  if (productName.length > 25) {
+                  const lineHeight = Math.round((3 / 25.4) * 203);
+                  if (productName.length > 30) {
                     // Uzun ürün adlarını böl
                     const words = productName.split(' ');
                     const line1 = words.slice(0, Math.ceil(words.length / 2)).join(' ');
                     const line2 = words.slice(Math.ceil(words.length / 2)).join(' ');
                     ctx.fillText(line1, canvas.width / 2, textY);
-                    textY += 25;
+                    textY += lineHeight;
                     ctx.fillText(line2, canvas.width / 2, textY);
-                    textY += 35;
+                    textY += Math.round((4 / 25.4) * 203);
                   } else {
                     ctx.fillText(productName, canvas.width / 2, textY);
-                    textY += 35;
+                    textY += Math.round((4 / 25.4) * 203);
                   }
 
                   // Ürün bilgileri
-                  ctx.font = '16px Arial';
+                  const infoFont = Math.round(799 * 0.028);   // ~%2.8
+                  ctx.font = `${infoFont}px Arial`;
                   
                   ctx.fillText(`${item.width} x ${item.height}`, canvas.width / 2, textY);
-                  textY += 25;
+                  textY += lineHeight;
                   
                   ctx.fillText(`Kesim: ${item.cut_type || 'Standart'}`, canvas.width / 2, textY);
-                  textY += 25;
+                  textY += lineHeight;
                   
                   ctx.fillText(`Saçak: ${item.has_fringe ? 'Saçaklı' : 'Saçaksız'}`, canvas.width / 2, textY);
-                  textY += 25;
+                  textY += lineHeight;
 
                   // Ürün notu varsa ekle
                   if (item.notes && item.notes.trim()) {
-                    ctx.font = '14px Arial';
+                    const noteFont = Math.round(799 * 0.025);   // ~%2.5
+                    ctx.font = `${noteFont}px Arial`;
                     ctx.fillText(`Not: ${item.notes}`, canvas.width / 2, textY);
-                    textY += 20;
+                    textY += Math.round((2.5 / 25.4) * 203);
                   }
-                  textY += 15;
+                  textY += Math.round((2 / 25.4) * 203);
 
-                  // QR kod ve sipariş bilgisi
-                  ctx.font = '14px Arial';
-                  ctx.fillText(`Gerekli Tarama: ${qrCodeData.required_scans}`, canvas.width / 2, textY);
-                  textY += 20;
-                  ctx.fillText(`Sp. No: ${labelData.order.id.slice(0, 8)}`, canvas.width / 2, textY);
-                  textY += 20;
-                  ctx.fillText(`QR ID: ${qrCodeData.id.slice(0, 8)}`, canvas.width / 2, textY);
-                  textY += 20;
-                  if (labelData._labelIndex && labelData._totalLabels) {
-                    ctx.fillText(`Etiket: ${labelData._labelIndex}/${labelData._totalLabels}`, canvas.width / 2, textY);
-                    textY += 20;
+                  // QR kod ve sipariş bilgisi - CONTENT_BOTTOM_LIMIT'e kadar sığdır
+                  const smallFont = Math.round(799 * 0.025);   // ~%2.5
+                  ctx.font = `${smallFont}px Arial`;
+                  
+                  // Kalan alan kontrolü - barcode bandı için yer ayır
+                  const CONTENT_BOTTOM_LIMIT = 799 - Math.round((20 / 25.4) * 203); // 641px
+                  const remainingSpace = CONTENT_BOTTOM_LIMIT - textY;
+                  const lineSpacing = Math.round((2.5 / 25.4) * 203);
+                  const requiredScans = qrCodeData.required_scans || 2;
+                  
+                  // Öncelik sırasına göre bilgileri ekle
+                  let currentY = textY;
+                  
+                  // En önemli: Sipariş numarası (her zaman göster)
+                  if (remainingSpace >= lineSpacing) {
+                    ctx.fillText(`Sp. No: ${labelData.order.id.slice(0, 8)}`, canvas.width / 2, currentY);
+                    currentY += lineSpacing;
                   }
-                  ctx.fillText(`Tarih: ${new Date(labelData.order.created_at).toLocaleDateString('tr-TR')}`, canvas.width / 2, textY);
+                  
+                  // İkinci öncelik: Gerekli tarama
+                  if (CONTENT_BOTTOM_LIMIT - currentY >= lineSpacing) {
+                    ctx.fillText(`Gerekli Tarama: ${requiredScans}`, canvas.width / 2, currentY);
+                    currentY += lineSpacing;
+                  }
+                  
+                  // Üçüncü öncelik: Etiket numarası (varsa)
+                  if (labelData._labelIndex && labelData._totalLabels && CONTENT_BOTTOM_LIMIT - currentY >= lineSpacing) {
+                    ctx.fillText(`Etiket: ${labelData._labelIndex}/${labelData._totalLabels}`, canvas.width / 2, currentY);
+                    currentY += lineSpacing;
+                  }
+                  
+                  // Son öncelik: Tarih
+                  if (CONTENT_BOTTOM_LIMIT - currentY >= lineSpacing) {
+                    ctx.fillText(`${new Date(labelData.order.created_at).toLocaleDateString('tr-TR')}`, canvas.width / 2, currentY);
+                  }
 
                   // Canvas'ta sadece QR kodu ve ürün bilgileri, barcode HTML'de gösterilecek
                   allLabels.push(canvas.toDataURL('image/png'));
@@ -1347,17 +1380,18 @@ const Siparisler = () => {
             const safeBarcodeText = barcodeText || '';
             
             return `
-              <div class="label-page" ${index > 0 ? 'style="page-break-before: always;"' : ''}>
-                <div class="qr-section">
-                  <img src="${labelDataURL}" alt="QR Kod Etiketi ${index + 1}" class="label-image">
-                </div>
-                <div class="barcode-section">
-                  ${hasBarcode ? `
-                    <img src="${safeImageUrl}" alt="Barcode ${safeBarcodeText}" class="barcode-image">
-                    <div class="barcode-text">${safeBarcodeText}</div>
-                  ` : `
-                    <div class="barcode-text">${safeBarcodeText || 'Barcode yükleniyor...'}</div>
-                  `}
+              <div class="sheet">
+                <div class="label-page">
+                  <div class="qr-section">
+                    <img src="${labelDataURL}" alt="QR Kod Etiketi ${index + 1}" class="label-image">
+                  </div>
+                  <div class="barcode-section">
+                    ${hasBarcode ? `
+                      <img src="${safeImageUrl}" alt="Barcode ${safeBarcodeText}" class="barcode-image">
+                    ` : `
+                      <div class="barcode-text">${safeBarcodeText || ''}</div>
+                    `}
+                  </div>
                 </div>
               </div>
             `;
@@ -1371,9 +1405,11 @@ const Siparisler = () => {
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <title>Toplu QR Kod Etiketleri</title>
             <style>
-                @page {
-                  size: 10cm 15cm;
-                  margin: 0;
+                @page { 
+                  size: 80mm 100mm; 
+                  margin: 0; 
+                  -webkit-print-color-adjust: exact;
+                  print-color-adjust: exact;
                 }
                 
                 * {
@@ -1382,48 +1418,70 @@ const Siparisler = () => {
                   box-sizing: border-box;
                 }
                 
-              body { 
-                  font-family: 'Arial', sans-serif;
-                background: white;
+              /* ŞABLONU SAYFA MERKEZİNE KİLİTLE */
+              html, body { 
+                width: 80mm;
+                height: 100mm;
+                margin: 0; 
+                padding: 0; 
+                font-family: Arial, sans-serif;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              
+              .sheet {
+                width: 80mm;
+                height: 100mm;
+                display: flex;
+                align-items: center;     /* dikey merkez */
+                justify-content: center; /* yatay merkez */
+                page-break-after: always;
+              }
+              
+              /* Etiket kutusu - artık .sheet içinde ortalanmış */
+              .label-page {
+                width: 80mm; 
+                height: 100mm;
                 margin: 0;
-                  padding: 0;
-                }
-                
-                .label-page {
-                  width: 10cm;
-                  height: 15cm;
-                  margin: 0;
-                  padding: 0;
-                  display: flex;
-                  flex-direction: column;
-                  align-items: center;
+                padding: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
                   justify-content: space-between;
                   background: white;
                   page-break-inside: avoid;
                   border: 1px solid #ccc;
                 }
                 
-                .qr-section {
-                  height: 12cm;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
+                .qr-section { 
+                  height: 80mm; 
+                  display: flex; 
+                  align-items: center; 
+                  justify-content: center; 
                   width: 100%;
-                  padding: 0.5cm;
+                  padding: 2mm;
+                  overflow: hidden;
                 }
                 
-                .label-image {
-                  max-width: 9cm;
-                  max-height: 11cm;
+                /* Canvas'tan gelen PNG'nin tam oturması için - Barcode yazıcı optimizasyonu */
+                .label-image { 
+                  width: 80mm; 
+                  height: 80mm; 
                   object-fit: contain;
                   image-rendering: -webkit-optimize-contrast;
                   image-rendering: crisp-edges;
+                  image-rendering: pixelated;
+                  -ms-interpolation-mode: nearest-neighbor;
+                  page-break-inside: avoid !important;
+                  break-inside: avoid !important;
+                  max-width: 80mm !important;
+                  max-height: 80mm !important;
                 }
 
-                .barcode-section {
-                  height: 3cm;
+                .barcode-section { 
+                  height: 20mm; 
                   width: 100%;
-                  padding: 0.3cm;
+                  padding: 2mm;
                   text-align: center;
                   background: #f9f9f9;
                   border-top: 1px solid #ddd;
@@ -1431,42 +1489,98 @@ const Siparisler = () => {
                   flex-direction: column;
                   justify-content: center;
                   align-items: center;
+                  page-break-inside: avoid !important;
+                  break-inside: avoid !important;
+                  overflow: hidden;
                 }
 
-                .barcode-image {
-                  max-width: 8cm;
-                  height: auto;
-                  max-height: 1.5cm;
+                .barcode-image { 
+                  max-width: 78mm; 
+                  max-height: 18mm;
                   object-fit: contain;
+                  margin-bottom: 1mm;
+                  image-rendering: -webkit-optimize-contrast;
+                  image-rendering: crisp-edges;
+                  image-rendering: pixelated;
+                  -ms-interpolation-mode: nearest-neighbor;
                   margin-bottom: 5px;
                 }
                 
                 .barcode-text {
                   font-family: 'Courier New', monospace;
                   font-size: 10px;
-                  font-weight: bold;
-                  color: #333;
+                  font-weight: 900;
+                  color: #000000;
                   letter-spacing: 1px;
+                  text-shadow: 0.5px 0.5px 0px #ffffff;
+                  -webkit-text-stroke: 0.3px #000000;
                 }
                 
                 @media print {
+                  /* Barcode yazıcı optimizasyonları + Tek sayfa zorlaması */
                   body {
                     -webkit-print-color-adjust: exact;
                     print-color-adjust: exact;
+                    color-adjust: exact;
+                    margin: 0 !important;
+                    padding: 0 !important;
                   }
                   
-                  .label-page {
-                    page-break-inside: avoid;
-                    border: none;
+                  .label-page { 
+                    border: none !important;
+                    background: white !important;
+                    page-break-inside: avoid !important;
+                    page-break-before: always !important;
+                    page-break-after: always !important;
+                    break-inside: avoid !important;
+                    break-before: always !important;
+                    break-after: always !important;
+                    position: relative !important;
+                    overflow: hidden !important;
+                    box-sizing: border-box !important;
+                  }
+                  
+                  .qr-section {
+                    page-break-inside: avoid !important;
+                    break-inside: avoid !important;
+                    overflow: hidden !important;
                   }
                   
                   .barcode-section {
                     background: white !important;
                     border-top: 1px solid #000 !important;
+                    page-break-inside: avoid !important;
+                    break-inside: avoid !important;
+                    overflow: hidden !important;
                   }
                   
                   .barcode-text {
-                    color: #000 !important;
+                    color: #000000 !important;
+                    font-weight: 900 !important;
+                    font-size: 10px !important;
+                    text-shadow: none !important;
+                    -webkit-text-stroke: 0.5px #000000 !important;
+                    letter-spacing: 1.2px !important;
+                  }
+                  
+                  /* QR ve Barcode görsellerinin net çıkması için */
+                  .label-image, .barcode-image {
+                    -webkit-filter: contrast(1.3) brightness(1.0) saturate(1.2);
+                    filter: contrast(1.3) brightness(1.0) saturate(1.2);
+                    page-break-inside: avoid !important;
+                    break-inside: avoid !important;
+                  }
+                  
+                  /* Barcode metinlerinin daha net çıkması için ek filtreler */
+                  .barcode-section {
+                    -webkit-filter: contrast(1.2) brightness(0.95);
+                    filter: contrast(1.2) brightness(0.95);
+                  }
+                  
+                  /* Sayfa içeriğinin taşmasını engelle */
+                  * {
+                    page-break-inside: avoid !important;
+                    break-inside: avoid !important;
                   }
                 }
               </style>
@@ -1481,21 +1595,44 @@ const Siparisler = () => {
           printWindow.document.close();
           
           printWindow.onload = () => {
+            // Optimizasyonlar ve yazdırma debug bilgileri
+            console.log('🎯 Toplu QR Etiket Yazdırma Başlatılıyor');
+            console.log('📏 Etiket Boyutları: 80mm × 100mm');
+            console.log('🖨️ Barcode yazıcı için optimize edildi');
+            console.log('✅ Canvas boyutu: 639 × 799 piksel');
+            console.log('📄 Toplam etiket sayısı:', allLabelsData.length);
+            console.log('🔧 Yazıcı DPI: 203');
+            
+            // Yazdırma ayarları uyarısı
+            alert('🖨️ Yazdırma Ayarları:\n\n' +
+                  '📐 Paper Size: 80×100 mm (8×10 cm)\n' +
+                  '📏 Scale: 100% (Actual Size)\n' +
+                  '📄 Margins: None\n' +
+                  '📋 Headers/Footers: Off\n' +
+                  '⚙️ Fit to Page: OFF\n\n' +
+                  'Bu ayarları seçtikten sonra yazdırın.');
+            
+            // Yazdırma sayfasını başlat
             setTimeout(() => {
               try {
                 printWindow.focus();
                 printWindow.print();
+                console.log('✅ Yazdırma dialog açıldı');
               } catch (error) {
-                console.error('Yazdırma hatası:', error);
+                console.error('❌ Yazdırma hatası:', error);
+                alert('Yazdırma hatası: ' + (error instanceof Error ? error.message : 'Bilinmeyen hata'));
               }
+              
+              // Pencereyi 5 saniye sonra kapat (kullanıcı yazdırma dialog'unu görebilsin)
               setTimeout(() => {
                 try {
                   printWindow.close();
+                  console.log('✅ Yazdırma penceresi kapatıldı');
                 } catch (error) {
-                  console.error('Pencere kapatma hatası:', error);
+                  console.error('❌ Pencere kapatma hatası:', error);
                 }
-              }, 3000);
-            }, 1500);
+              }, 5000);
+            }, 1000);
           };
         }
       }
