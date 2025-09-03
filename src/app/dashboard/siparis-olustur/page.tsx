@@ -1,11 +1,18 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
 import { useToken } from '@/app/hooks/useToken';
 import { getMyProfile, UserProfileInfo, getStoreAddresses, StoreAddress, createStoreAddress, CreateStoreAddressRequest } from '@/services/api';
 import OptimizedImage from '@/app/components/OptimizedImage';
+
+// Currency sembollerini tanımla
+const CURRENCY_SYMBOLS = {
+  'TRY': '₺',
+  'USD': '$',
+  'EUR': '€'
+};
 
 // Kesim türlerini Türkçe'ye çeviren fonksiyon
 const translateCutType = (cutType: string): string => {
@@ -91,6 +98,13 @@ const SiparisOlustur: React.FC = () => {
   const [selectedStoreId, setSelectedStoreId] = useState<string>('');
   const [selectedStoreProfile, setSelectedStoreProfile] = useState<UserProfileInfo | null>(null);
   const [loadingStores, setLoadingStores] = useState(false);
+  
+  // Currency state
+  const [userCurrency, setUserCurrency] = useState<string>('TRY');
+  
+  // Custom dropdown states
+  const [addressDropdownOpen, setAddressDropdownOpen] = useState(false);
+  const addressDropdownRef = useRef<HTMLDivElement>(null);
 
   // Limit mesajını kullanıcı dostu hale getiren fonksiyon
   const formatLimitMessage = (message: string): string => {
@@ -99,7 +113,8 @@ const SiparisOlustur: React.FC = () => {
     
     if (minPaymentMatch) {
       const minPaymentAmount = minPaymentMatch[1];
-      return `Sipariş verebilmek için minimum ${minPaymentAmount} TL ödeme yapmanız gerekmektedir.`;
+      const currencySymbol = CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency;
+      return `Sipariş verebilmek için minimum ${minPaymentAmount} ${currencySymbol} ödeme yapmanız gerekmektedir.`;
     }
     
     // Eğer minimum ödeme tutarı bulunamadıysa genel mesaj
@@ -148,6 +163,48 @@ const SiparisOlustur: React.FC = () => {
 
     fetchCartData();
   }, [router]);
+
+  // Currency bilgisini localStorage'dan al
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        // Currency bilgisini al
+        const rememberMe = localStorage.getItem("rememberMe") === "true";
+        let storedCurrency;
+        
+        if (rememberMe) {
+          storedCurrency = localStorage.getItem("currency");
+        } else {
+          storedCurrency = sessionStorage.getItem("currency");
+        }
+        
+        if (storedCurrency) {
+          setUserCurrency(storedCurrency);
+        } else {
+          // User'ın store bilgisinden currency'yi al
+          if (user?.store?.currency) {
+            setUserCurrency(user.store.currency);
+          }
+        }
+      } catch (error) {
+        console.error('Currency okuma hatası:', error);
+      }
+    }
+  }, [user]);
+
+  // Click outside handler for address dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (addressDropdownRef.current && !addressDropdownRef.current.contains(event.target as Node)) {
+        setAddressDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Kullanıcı profil bilgilerini getir
   useEffect(() => {
@@ -415,7 +472,7 @@ const SiparisOlustur: React.FC = () => {
                         </p>
                         <button
                           onClick={() => router.push('/dashboard/odemeler')}
-                          className="ml-3 px-4 py-2 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                          className="ml-3 px-4 py-2 bg-[#1e3a8a] text-white text-xs font-medium rounded-lg hover:bg-[#1e40af] transition-colors"
                         >
                           Ödeme Yap
                         </button>
@@ -425,7 +482,7 @@ const SiparisOlustur: React.FC = () => {
                   {user?.canSeePrice && (
                     <div className="mt-3 pt-3 border-t border-gray-200">
                       <p className="text-xs text-gray-600">
-                        Sepet Tutarı: <strong>{parseFloat(limitInfo.cartTotal).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</strong>
+                        Sepet Tutarı: <strong>{parseFloat(limitInfo.cartTotal).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}</strong>
                       </p>
                     </div>
                   )}
@@ -439,7 +496,7 @@ const SiparisOlustur: React.FC = () => {
 
             {/* Teslimat Adresi Seçimi */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">📍 Teslimat Adresi</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Teslimat Adresi</h2>
               
               {addressesLoading ? (
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
@@ -452,7 +509,7 @@ const SiparisOlustur: React.FC = () => {
                 <div className="space-y-4">
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <label htmlFor="address-select" className="block text-sm font-medium text-gray-700">
+                      <label className="block text-sm font-medium text-gray-700">
                         Teslimat Adresi Seçin <span className="text-red-500">*</span>
                       </label>
                       <button
@@ -465,24 +522,111 @@ const SiparisOlustur: React.FC = () => {
                         Yeni Adres Ekle
                       </button>
                     </div>
-                    <select
-                      id="address-select"
-                      value={selectedAddressId}
-                      onChange={(e) => setSelectedAddressId(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      required
-                    >
-                      <option value="">Teslimat adresi seçin</option>
-                      {storeAddresses
-                        .filter(addr => addr.is_active)
-                        .map(addr => (
-                          <option key={addr.id} value={addr.id}>
-                            {addr.title} - {addr.address}
-                            {addr.is_default && ' (Varsayılan)'}
-                          </option>
-                        ))
-                      }
-                    </select>
+                    
+                    {/* Custom Dropdown */}
+                    <div className="relative" ref={addressDropdownRef}>
+                      <button
+                        type="button"
+                        onClick={() => setAddressDropdownOpen(!addressDropdownOpen)}
+                        className="w-full px-4 py-3 text-left bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-400"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                            <span className={`${selectedAddressId ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
+                              {selectedAddressId ? 
+                                (() => {
+                                  const selectedAddress = storeAddresses.find(addr => addr.id === selectedAddressId);
+                                  return selectedAddress ? `${selectedAddress.title} - ${selectedAddress.address.substring(0, 50)}${selectedAddress.address.length > 50 ? '...' : ''}` : 'Teslimat adresi seçin';
+                                })() 
+                                : 'Teslimat adresi seçin'
+                              }
+                            </span>
+                          </div>
+                          <svg
+                            className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${addressDropdownOpen ? 'rotate-180' : ''}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                      </button>
+
+                      {/* Dropdown Options */}
+                      {addressDropdownOpen && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                          {storeAddresses.filter(addr => addr.is_active).length > 0 ? (
+                            <>
+                              <div className="py-1">
+                                <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide bg-gray-50">
+                                  Kayıtlı Adresler
+                                </div>
+                              </div>
+                              {storeAddresses
+                                .filter(addr => addr.is_active)
+                                .map((addr) => (
+                                  <button
+                                    key={addr.id}
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedAddressId(addr.id);
+                                      setAddressDropdownOpen(false);
+                                    }}
+                                    className={`w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0 ${
+                                      selectedAddressId === addr.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                                    }`}
+                                  >
+                                    <div className="flex items-start gap-3">
+                                      <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                                        selectedAddressId === addr.id ? 'bg-blue-500' : 'bg-gray-300'
+                                      }`}></div>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-sm font-medium text-gray-900">{addr.title}</span>
+                                          {addr.is_default && (
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                              Varsayılan
+                                            </span>
+                                          )}
+                                        </div>
+                                        <p className="text-sm text-gray-600 mt-1">{addr.address}</p>
+                                        {(addr.city || addr.district) && (
+                                          <p className="text-xs text-gray-500 mt-1">
+                                            {addr.district && addr.district + ', '}
+                                            {addr.city}
+                                            {addr.postal_code && ' - ' + addr.postal_code}
+                                          </p>
+                                        )}
+                                      </div>
+                                      {selectedAddressId === addr.id && (
+                                        <div className="flex-shrink-0">
+                                          <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M9 16.17L5.53 12.7a.996.996 0 10-1.41 1.41L9 19l11-11a.996.996 0 10-1.41-1.41L9 16.17z"/>
+                                          </svg>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </button>
+                                ))
+                              }
+                            </>
+                          ) : (
+                            <div className="px-4 py-6 text-center">
+                              <div className="text-gray-400 mb-2">
+                                <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                              </div>
+                              <p className="text-sm text-gray-600 font-medium">Henüz adres bulunamadı</p>
+                              <p className="text-xs text-gray-500 mt-1">Yeni adres ekleyebilirsiniz</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   
                   {selectedAddressId && (
@@ -533,7 +677,7 @@ const SiparisOlustur: React.FC = () => {
 
             {/* Sipariş Notları */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">📝 Sipariş Notları</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Sipariş Notları</h2>
               <textarea
                 value={orderNotes}
                 onChange={(e) => setOrderNotes(e.target.value)}
@@ -551,7 +695,7 @@ const SiparisOlustur: React.FC = () => {
           <div className="space-y-6">
             {/* Sepet Özeti */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">🛒 Sepet Özeti</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Sepet Özeti</h2>
               
               <div className="space-y-4 max-h-96 overflow-y-auto">
                 {cartData.items.map((item) => {
@@ -604,7 +748,7 @@ const SiparisOlustur: React.FC = () => {
                         <span className="text-sm text-gray-600">Adet: {item.quantity}</span>
                         {user?.canSeePrice && (
                           <span className="text-sm font-medium text-gray-900">
-                            {parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                            {parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}
                           </span>
                         )}
                       </div>
@@ -619,7 +763,7 @@ const SiparisOlustur: React.FC = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-semibold text-gray-900">Toplam:</span>
                     <span className="text-xl font-bold text-blue-600">
-                      {parseFloat(cartData.totalPrice).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                      {parseFloat(cartData.totalPrice).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}
                     </span>
                   </div>
                 ) : (

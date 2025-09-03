@@ -6,12 +6,50 @@ import { useAuth } from '@/app/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { FaMoneyBillWave, FaWallet, FaChartLine, FaPrint } from 'react-icons/fa';
 
+// Currency sembollerini tanımla
+const CURRENCY_SYMBOLS = {
+  'TRY': '₺',
+  'USD': '$',
+  'EUR': '€'
+};
+
 export default function MuhasebeHareketlerimPage() {
   const { user, isAdmin } = useAuth();
   const router = useRouter();
   const [data, setData] = useState<MuhasebeHareketleriResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Currency state
+  const [userCurrency, setUserCurrency] = useState<string>('TRY');
+
+  // Currency bilgisini localStorage'dan al
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        // Currency bilgisini al
+        const rememberMe = localStorage.getItem("rememberMe") === "true";
+        let storedCurrency;
+        
+        if (rememberMe) {
+          storedCurrency = localStorage.getItem("currency");
+        } else {
+          storedCurrency = sessionStorage.getItem("currency");
+        }
+        
+        if (storedCurrency) {
+          setUserCurrency(storedCurrency);
+        } else {
+          // User'ın store bilgisinden currency'yi al
+          if (user?.store?.currency) {
+            setUserCurrency(user.store.currency);
+          }
+        }
+      } catch (error) {
+        console.error('Currency okuma hatası:', error);
+      }
+    }
+  }, [user]);
 
   useEffect(() => {
     // Admin kullanıcıları bu sayfaya erişemez
@@ -42,7 +80,7 @@ export default function MuhasebeHareketlerimPage() {
   };
 
   const formatCurrency = (amount: number) => {
-    return amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺';
+    return amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + (CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency);
   };
 
   const formatDate = (dateString: string) => {
@@ -277,8 +315,20 @@ export default function MuhasebeHareketlerimPage() {
                 <td class="text-truncate" title="${hareket.aciklama}">
                   ${hareket.aciklama.replace(' - Onay Kodu: N/A', '').replace('Onay Kodu: N/A', '')}
                 </td>
-                <td class="${hareket.harcamaMi ? 'amount-expense' : 'amount-income'}">
-                  ${hareket.harcamaMi ? '' : '+'}${formatCurrency(hareket.tutar)}
+                <td class="${
+                  hareket.islemTuru === 'Sanal POS Ödemesi' || hareket.islemTuru.includes('Sanal POS Ödemesi')
+                    ? 'amount-income'
+                    : hareket.harcamaMi 
+                      ? 'amount-expense' 
+                      : 'amount-income'
+                }">
+                  ${
+                    hareket.islemTuru === 'Sanal POS Ödemesi' || hareket.islemTuru.includes('Sanal POS Ödemesi')
+                      ? `+${formatCurrency(Math.abs(hareket.tutar))}`
+                      : hareket.harcamaMi 
+                        ? formatCurrency(hareket.tutar)
+                        : `+${formatCurrency(hareket.tutar)}`
+                  }
                 </td>
               </tr>
             `).join('')}
@@ -440,11 +490,15 @@ export default function MuhasebeHareketlerimPage() {
                       </td>
                       <td className="py-3 px-4">
                         <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                          hareket.harcamaMi
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-green-100 text-green-800'
+                          hareket.islemTuru === 'Sanal POS Ödemesi' || hareket.islemTuru.includes('Sanal POS Ödemesi')
+                            ? 'bg-green-100 text-green-800'
+                            : hareket.harcamaMi
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-green-100 text-green-800'
                         }`}>
-                          {hareket.harcamaMi ? (
+                          {hareket.islemTuru === 'Sanal POS Ödemesi' || hareket.islemTuru.includes('Sanal POS Ödemesi') ? (
+                            <FaWallet className="w-3 h-3" />
+                          ) : hareket.harcamaMi ? (
                             <FaMoneyBillWave className="w-3 h-3" />
                           ) : (
                             <FaWallet className="w-3 h-3" />
@@ -456,9 +510,18 @@ export default function MuhasebeHareketlerimPage() {
                         {hareket.aciklama.replace(' - Onay Kodu: N/A', '').replace('Onay Kodu: N/A', '')}
                       </td>
                       <td className={`py-3 px-4 text-right font-medium ${
-                        hareket.harcamaMi ? 'text-red-600' : 'text-green-600'
+                        hareket.islemTuru === 'Sanal POS Ödemesi' || hareket.islemTuru.includes('Sanal POS Ödemesi')
+                          ? 'text-green-600'
+                          : hareket.harcamaMi 
+                            ? 'text-red-600' 
+                            : 'text-green-600'
                       }`}>
-                        {hareket.harcamaMi ? '' : '+'}{formatCurrency(hareket.tutar)}
+                        {hareket.islemTuru === 'Sanal POS Ödemesi' || hareket.islemTuru.includes('Sanal POS Ödemesi')
+                          ? `+${formatCurrency(Math.abs(hareket.tutar))}`
+                          : hareket.harcamaMi 
+                            ? formatCurrency(hareket.tutar)
+                            : `+${formatCurrency(hareket.tutar)}`
+                        }
                       </td>
                     </tr>
                   ))}

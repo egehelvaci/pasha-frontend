@@ -80,6 +80,13 @@ interface PriceListResponse {
   message?: string;
 }
 
+// Currency sembollerini tanımla
+const CURRENCY_SYMBOLS = {
+  'TRY': '₺',
+  'USD': '$',
+  'EUR': '€'
+};
+
 export default function Dashboard() {
   const { user, isLoading, token } = useAuth();
   const router = useRouter();
@@ -91,8 +98,9 @@ export default function Dashboard() {
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isLoadingPriceList, setIsLoadingPriceList] = useState(true);
   const [storeId, setStoreId] = useState<string | null>(null);
+  const [userCurrency, setUserCurrency] = useState<string>('TRY');
 
-  // localStorage'dan store_id'yi al
+  // localStorage'dan store_id ve currency'yi al
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -108,12 +116,31 @@ export default function Dashboard() {
         } else {
           setStoreId("f6c2d719-2035-45c4-9dcd-0831dca50452");
         }
+
+        // Currency bilgisini al
+        const rememberMe = localStorage.getItem("rememberMe") === "true";
+        let storedCurrency;
+        
+        if (rememberMe) {
+          storedCurrency = localStorage.getItem("currency");
+        } else {
+          storedCurrency = sessionStorage.getItem("currency");
+        }
+        
+        if (storedCurrency) {
+          setUserCurrency(storedCurrency);
+        } else {
+          // User'ın store bilgisinden currency'yi al
+          if (user?.store?.currency) {
+            setUserCurrency(user.store.currency);
+          }
+        }
       } catch (error) {
         console.error('LocalStorage okuma hatası:', error);
         setStoreId("f6c2d719-2035-45c4-9dcd-0831dca50452");
       }
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     // Auth loading tamamlandığında user yoksa login'e yönlendir
@@ -297,7 +324,7 @@ export default function Dashboard() {
                             <span className="text-sm font-bold text-gray-900">
                               {typeof detail.price_per_square_meter === 'number' 
                                 ? detail.price_per_square_meter.toFixed(2) 
-                                : Number(detail.price_per_square_meter).toFixed(2)} ₺
+                                : Number(detail.price_per_square_meter).toFixed(2)} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}
                             </span>
                             <p className="text-xs text-gray-500">m²</p>
                           </div>

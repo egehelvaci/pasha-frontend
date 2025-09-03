@@ -202,23 +202,6 @@ export default function CartPage() {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#00365a] flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mr-3" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
-            </svg>
-            Sepetim
-            {cartData && cartData.totalItems > 0 && (
-              <span className="ml-3 text-sm bg-[#00365a] text-white px-3 py-1 rounded-full font-semibold">
-                {cartData.totalItems} ürün
-              </span>
-            )}
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Seçtiğiniz ürünleri buradan yönetebilirsiniz.
-          </p>
-        </div>
-        
         {loading ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12">
             <div className="flex flex-col items-center justify-center">

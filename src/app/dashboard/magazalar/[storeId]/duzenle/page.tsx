@@ -7,6 +7,12 @@ import { Button, Form, Input, InputNumber, Switch, message, Select } from 'antd'
 import { useAuth } from '@/app/context/AuthContext';
 import StoreTypeSelector, { StoreType, storeTypeLabels, storeTypeColors, storeTypeIcons } from '@/components/StoreTypeSelector';
 
+// Mevcut para birimleri
+const CURRENCIES = [
+  { value: 'TRY', label: 'TRY (₺)', symbol: '₺' },
+  { value: 'USD', label: 'USD ($)', symbol: '$' }
+];
+
 export default function EditStorePage() {
   const router = useRouter();
   const params = useParams();
@@ -61,6 +67,7 @@ export default function EditStorePage() {
           limitsiz_acik_hesap: currentStore.limitsiz_acik_hesap,
           acik_hesap_tutari: currentStore.acik_hesap_tutari,
           bakiye: currentStore.bakiye,                   // 🆕 Bakiye alanı
+          currency: currentStore.currency || 'TRY',      // 🆕 Para birimi alanı
           maksimum_taksit: currentStore.maksimum_taksit, // 🆕 Maksimum taksit alanı
           store_type: currentStore.store_type,           // 🆕 Mağaza türü alanı
           is_active: currentStore.is_active,
@@ -201,7 +208,7 @@ export default function EditStorePage() {
                 name="telefon"
                 rules={[{ required: true, message: 'Lütfen telefon numarasını giriniz' }]}
               >
-                <Input className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors" />
+                <Input placeholder="05XX XXX XX XX" className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors" />
               </Form.Item>
 
               <Form.Item
@@ -219,7 +226,7 @@ export default function EditStorePage() {
                 label={<span className="text-sm font-medium text-gray-700">Faks Numarası</span>}
                 name="faks_numarasi"
               >
-                <Input className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors" />
+                <Input placeholder="05XX XXX XX XX" className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors" />
               </Form.Item>
 
               <Form.Item
@@ -256,20 +263,50 @@ export default function EditStorePage() {
                 <Input.TextArea rows={3} className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors resize-none" />
               </Form.Item>
 
+              {/* 🆕 Para Birimi Alanı */}
+              <Form.Item
+                label={<span className="text-sm font-medium text-gray-700">Para Birimi <span className="text-red-500">*</span></span>}
+                name="currency"
+                rules={[{ required: true, message: 'Lütfen para birimi seçiniz' }]}
+                tooltip="Mağazanın kullanacağı para birimi"
+              >
+                <Select
+                  className="w-full"
+                  placeholder="Para birimi seçiniz..."
+                >
+                  {CURRENCIES.map((currency) => (
+                    <Select.Option key={currency.value} value={currency.value}>
+                      {currency.label}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+
               {/* 🆕 Bakiye Alanı */}
               <Form.Item
-                label={<span className="text-sm font-medium text-gray-700">Mağaza Bakiyesi (TL) <span className="text-red-500">*</span></span>}
-                name="bakiye"
-                rules={[{ required: true, message: 'Lütfen mağaza bakiyesini giriniz' }]}
-                tooltip="Mağazanın doğrudan kullanabileceği para miktarı"
+                noStyle
+                shouldUpdate={(prevValues, currentValues) => prevValues.currency !== currentValues.currency}
               >
-                <InputNumber
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors"
-                  formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  parser={(value: string | undefined) => value ? Number(value.replace(/[^\d.-]/g, '')) : 0}
-                  precision={2}
-                  placeholder="0.00"
-                />
+                {({ getFieldValue }) => {
+                  const selectedCurrency = getFieldValue('currency') || 'TRY';
+                  const currencySymbol = CURRENCIES.find(c => c.value === selectedCurrency)?.symbol || '₺';
+                  return (
+                    <Form.Item
+                      label={<span className="text-sm font-medium text-gray-700">Mağaza Bakiyesi ({currencySymbol}) <span className="text-red-500">*</span></span>}
+                      name="bakiye"
+                      rules={[{ required: true, message: 'Lütfen mağaza bakiyesini giriniz' }]}
+                      tooltip="Mağazanın doğrudan kullanabileceği para miktarı"
+                    >
+                      <InputNumber
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors"
+                        formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                        parser={(value: string | undefined) => value ? Number(value.replace(/[^\d.-]/g, '')) : 0}
+                        precision={2}
+                        placeholder="0.00"
+                      />
+                    </Form.Item>
+                  );
+                }}
               </Form.Item>
 
               {/* 🆕 Maksimum Taksit Sayısı */}
@@ -304,19 +341,30 @@ export default function EditStorePage() {
                   const isLimitsiz = getFieldValue('limitsiz_acik_hesap');
                   return !isLimitsiz ? (
                     <Form.Item
-                      label={<span className="text-sm font-medium text-gray-700">Açık Hesap Limiti (TL) <span className="text-red-500">*</span></span>}
-                      name="acik_hesap_tutari"
-                      rules={[{ required: true, message: 'Lütfen açık hesap limitini giriniz' }]}
-                      tooltip="Mağazanın bakiyesi bittiğinde kullanabileceği açık hesap limiti"
+                      noStyle
+                      shouldUpdate={(prevValues, currentValues) => prevValues.currency !== currentValues.currency}
                     >
-                      <InputNumber
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors"
-                        formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                        parser={(value: string | undefined) => value ? Number(value.replace(/[^\d.]/g, '')) : 0}
-                        min={0}
-                        precision={2}
-                        placeholder="0.00"
-                      />
+                      {({ getFieldValue }) => {
+                        const selectedCurrency = getFieldValue('currency') || 'TRY';
+                        const currencySymbol = CURRENCIES.find(c => c.value === selectedCurrency)?.symbol || '₺';
+                        return (
+                          <Form.Item
+                            label={<span className="text-sm font-medium text-gray-700">Açık Hesap Limiti ({currencySymbol}) <span className="text-red-500">*</span></span>}
+                            name="acik_hesap_tutari"
+                            rules={[{ required: true, message: 'Lütfen açık hesap limitini giriniz' }]}
+                            tooltip="Mağazanın bakiyesi bittiğinde kullanabileceği açık hesap limiti"
+                          >
+                            <InputNumber
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors"
+                              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                              parser={(value: string | undefined) => value ? Number(value.replace(/[^\d.]/g, '')) : 0}
+                              min={0}
+                              precision={2}
+                              placeholder="0.00"
+                            />
+                          </Form.Item>
+                        );
+                      }}
                     </Form.Item>
                   ) : null;
                 }}

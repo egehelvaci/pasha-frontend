@@ -1145,7 +1145,20 @@ export default function ProductList() {
       <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-xl w-full max-w-6xl shadow-lg relative overflow-hidden max-h-[90vh]">
           {/* Header */}
-          <div className="bg-[#00365a] rounded-t-xl px-6 py-4 relative">
+          <div className={`rounded-t-xl px-6 py-4 relative ${
+            product && (() => {
+              const isOutOfStock = (() => {
+                if ('sizeOptions' in product && product.sizeOptions) {
+                  return !product.sizeOptions.some((opt: any) => 
+                    opt.is_optional_height ? (opt.stockAreaM2 || 0) > 0 : (opt.stockQuantity || 0) > 0
+                  );
+                } else {
+                  return (product.stock || 0) <= 0;
+                }
+              })();
+              return isOutOfStock ? "bg-gray-500" : "bg-[#00365a]";
+            })() || "bg-[#00365a]"
+          }`}>
           <button 
               className="absolute top-3 right-3 text-white hover:text-gray-200 text-3xl font-bold" 
             onClick={onClose}
@@ -1154,7 +1167,20 @@ export default function ProductList() {
           </button>
           
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white">Sepete Ekle</h2>
+              <h2 className="text-xl font-bold text-white">
+                {product && (() => {
+                  const isOutOfStock = (() => {
+                    if ('sizeOptions' in product && product.sizeOptions) {
+                      return !product.sizeOptions.some((opt: any) => 
+                        opt.is_optional_height ? (opt.stockAreaM2 || 0) > 0 : (opt.stockQuantity || 0) > 0
+                      );
+                    } else {
+                      return (product.stock || 0) <= 0;
+                    }
+                  })();
+                  return isOutOfStock ? "Ön Sipariş Ver" : "Sepete Ekle";
+                })() || "Sepete Ekle"}
+              </h2>
             </div>
           </div>
           
@@ -1218,7 +1244,7 @@ export default function ProductList() {
                 
                 <div className="w-full md:w-1/2">
                   <div className="grid grid-cols-1 gap-5">
-                    <div className="flex flex-col gap-2 dropdown-container">
+                    <div className="flex flex-col gap-2 dropdown-container bg-blue-50 rounded-lg p-6 border border-blue-200">
                       <span className="text-sm font-medium text-gray-700">Boyut Seçimi</span>
                       <div className="relative">
                         <button
@@ -1532,9 +1558,45 @@ export default function ProductList() {
                           </div>
                         )}
                         
+                        {/* Ön sipariş bilgi notu */}
+                        {product && (() => {
+                          const isOutOfStock = (() => {
+                            if ('sizeOptions' in product && product.sizeOptions) {
+                              return !product.sizeOptions.some((opt: any) => 
+                                opt.is_optional_height ? (opt.stockAreaM2 || 0) > 0 : (opt.stockQuantity || 0) > 0
+                              );
+                            } else {
+                              return (product.stock || 0) <= 0;
+                            }
+                          })();
+                          return isOutOfStock;
+                        })() && (
+                          <div className="p-3 bg-orange-50 border border-orange-200 rounded-md text-orange-700 text-sm mb-2">
+                            <div className="flex items-start gap-2">
+                              <svg className="w-4 h-4 mt-0.5 text-orange-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                              <span>Ürün stoklara eklendiğinde gönderim sağlanacaktır.</span>
+                            </div>
+                          </div>
+                        )}
+                        
                         <button
                           type="button"
-                          className="mt-2 w-full py-3 bg-blue-900 text-white rounded-md font-semibold flex items-center justify-center disabled:opacity-70"
+                          className={`mt-2 w-full py-3 text-white rounded-md font-semibold flex items-center justify-center disabled:opacity-70 ${
+                            (() => {
+                              const isOutOfStock = (() => {
+                                if ('sizeOptions' in product && product.sizeOptions) {
+                                  return !product.sizeOptions.some((opt: any) => 
+                                    opt.is_optional_height ? (opt.stockAreaM2 || 0) > 0 : (opt.stockQuantity || 0) > 0
+                                  );
+                                } else {
+                                  return (product.stock || 0) <= 0;
+                                }
+                              })();
+                              return isOutOfStock ? 'bg-orange-500 hover:bg-orange-600' : 'bg-blue-900 hover:bg-blue-800';
+                            })()
+                          }`}
                           onClick={addToCart}
                           disabled={addToCartLoading}
                         >
@@ -1547,7 +1609,18 @@ export default function ProductList() {
                               İşleniyor...
                             </>
                           ) : (
-                            "Sepete Ekle"
+                            (() => {
+                              const isOutOfStock = (() => {
+                                if ('sizeOptions' in product && product.sizeOptions) {
+                                  return !product.sizeOptions.some((opt: any) => 
+                                    opt.is_optional_height ? (opt.stockAreaM2 || 0) > 0 : (opt.stockQuantity || 0) > 0
+                                  );
+                                } else {
+                                  return (product.stock || 0) <= 0;
+                                }
+                              })();
+                              return isOutOfStock ? "Ön Sipariş Ver" : "Sepete Ekle";
+                            })()
                           )}
                         </button>
                       </div>
@@ -2498,11 +2571,25 @@ export default function ProductList() {
                 const hasOptionalHeight = product.sizeOptions && product.sizeOptions.some((size: any) => size.is_optional_height === true);
                 const isCustomCut = hasOptionalHeight;
                 const statusText = isCustomCut ? 'KESİM' : 'HAZIR';
-                const isOutOfStock = false; // Stok kontrolü kaldırıldı
+                
+                // Stok durumu kontrolü
+                const isOutOfStock = (() => {
+                  if ('sizeOptions' in product && product.sizeOptions) {
+                    // Size options varsa, herhangi birinde stok var mı kontrol et
+                    return !product.sizeOptions.some((opt: any) => 
+                      opt.is_optional_height ? (opt.stockAreaM2 || 0) > 0 : (opt.stockQuantity || 0) > 0
+                    );
+                  } else {
+                    // Size options yoksa normal stok kontrolü
+                    return (product.stock || 0) <= 0;
+                  }
+                })();
                 
                 return (
                   <div key={product.productId} 
-                       className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow relative cursor-pointer bg-white" 
+                       className={`border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow relative cursor-pointer bg-white ${
+                         isOutOfStock ? 'opacity-60 grayscale-50' : ''
+                       }`} 
                        style={{ width: '350px', height: '550px' }}
                        onClick={() => router.push(`/dashboard/urunler/${product.productId}`)}>
                     
@@ -2534,9 +2621,11 @@ export default function ProductList() {
                       ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center p-3">
                           <div className="w-32 h-32 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
-                            <img 
+                            <Image 
                               src="/black-logo.svg" 
                               alt="Paşa Home Logo" 
+                              width={80}
+                              height={80}
                               className="w-20 h-20 opacity-80"
                               onError={(e) => {
                                 e.currentTarget.src = '/logo.svg';
@@ -2546,6 +2635,15 @@ export default function ProductList() {
                           <p className="text-gray-500 text-sm text-center font-medium">
                             Ürün görseli<br />hazırlanıyor
                           </p>
+                        </div>
+                      )}
+                      
+                      {/* Minimal Stok Yok Badge */}
+                      {isOutOfStock && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className="bg-gray-500 text-white px-3 py-1 rounded-full text-xs font-medium shadow-md">
+                            STOK YOK
+                          </div>
                         </div>
                       )}
                     </div>
@@ -2559,41 +2657,24 @@ export default function ProductList() {
                         <p className="text-sm text-gray-500 mb-2 line-clamp-1">
                           {product.description}
                         </p>
-                        {/* Stok bilgisi */}
-                        <div className="text-xs text-gray-400 mt-1">
-                          {('sizeOptions' in product) ? (
-                            <span>
-                              Stok: {product.sizeOptions?.some((opt: any) => 
-                                opt.is_optional_height ? (opt.stockAreaM2 || 0) > 0 : (opt.stockQuantity || 0) > 0
-                              ) ? 'Var' : 'Yok'}
-                            </span>
-                          ) : (
-                            <span>Stok: {product.stock || 0} adet</span>
-                          )}
-                        </div>
                       </div>
                       
                       <div className="flex items-center gap-2">
                         <button 
                           className={`flex-1 px-3 py-2 rounded-md flex items-center justify-center gap-2 text-sm shadow-sm transition-colors font-semibold ${
                             isOutOfStock 
-                              ? 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50' 
+                              ? 'bg-orange-500 hover:bg-orange-600 text-white hover:shadow-md' 
                               : 'bg-green-600 hover:bg-green-700 text-white hover:shadow-md'
                           }`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (!isOutOfStock) {
-                              setSelectedProductId(product.productId);
-                              setDetailModalOpen(true);
-                            }
+                            setSelectedProductId(product.productId);
+                            setDetailModalOpen(true);
                           }}
-                          title={isOutOfStock ? "Stokta olmayan ürün" : "Sepete Ekle"}
+                          title={isOutOfStock ? "Ön sipariş ver" : "Sepete Ekle"}
                           disabled={false}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                          </svg>
-                          Sepete Ekle
+                          {isOutOfStock ? "Ön Sipariş Ver" : "Sepete Ekle"}
                         </button>
                         {isAdminOrEditor && (
                           <button 
