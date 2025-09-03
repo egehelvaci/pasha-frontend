@@ -140,9 +140,9 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
     const firstItem = firstCode.order_item;
     
     try {
-      // Canvas boyutlarını 10x15 cm (378x567 piksel @ 96 DPI) olarak ayarla
-      canvas.width = 378;
-      canvas.height = 567;
+      // Canvas boyutlarını 8x10 cm (302x378 piksel @ 96 DPI) olarak ayarla
+      canvas.width = 302;
+      canvas.height = 378;
 
       // Arka planı beyaz yap
       ctx.fillStyle = '#FFFFFF';
@@ -164,9 +164,9 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
         const qrImage = new Image();
         qrImage.onload = () => {
           // QR kodu üst kısma yerleştir (ortala)
-          const qrSize = 200;
+          const qrSize = 150;
           const qrX = (canvas.width - qrSize) / 2;
-          const qrY = 30;
+          const qrY = 20;
           ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
 
           // Metin bilgilerini alt kısma ekle
@@ -174,12 +174,12 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
           ctx.textAlign = 'center';
 
           // Başlık
-          ctx.font = 'bold 24px Arial';
-          ctx.fillText('PAŞA HOME', canvas.width / 2, qrY + qrSize + 40);
+          ctx.font = 'bold 18px Arial';
+          ctx.fillText('PAŞA HOME', canvas.width / 2, qrY + qrSize + 25);
 
           // Ürün adı (kalın) - en üstte
-          ctx.font = 'bold 18px Arial';
-          let textY = qrY + qrSize + 70;
+          ctx.font = 'bold 14px Arial';
+          let textY = qrY + qrSize + 45;
           const productName = firstItem.product.name.toUpperCase();
           if (productName.length > 25) {
             // Uzun ürün adlarını böl
@@ -187,25 +187,25 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
             const line1 = words.slice(0, Math.ceil(words.length / 2)).join(' ');
             const line2 = words.slice(Math.ceil(words.length / 2)).join(' ');
             ctx.fillText(line1, canvas.width / 2, textY);
-            textY += 25;
+            textY += 20;
             ctx.fillText(line2, canvas.width / 2, textY);
-            textY += 35;
+            textY += 25;
           } else {
             ctx.fillText(productName, canvas.width / 2, textY);
-            textY += 35;
+            textY += 25;
           }
 
           // Ürün bilgileri
-          ctx.font = '16px Arial';
+          ctx.font = '12px Arial';
           
           ctx.fillText(`${firstItem.width} x ${firstItem.height}`, canvas.width / 2, textY);
-          textY += 25;
+          textY += 18;
           
           ctx.fillText(`Kesim: ${translateCutType(firstItem.cut_type)}`, canvas.width / 2, textY);
-          textY += 25;
+          textY += 18;
           
           ctx.fillText(`Saçak: ${firstItem.has_fringe ? 'Saçaklı' : 'Saçaksız'}`, canvas.width / 2, textY);
-          textY += 25;
+          textY += 18;
 
           // Ürün notu varsa ekle
           if (firstItem.notes && firstItem.notes.trim()) {
@@ -470,7 +470,6 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
               <div class="barcode-section">
                 ${hasValidUrl ? `
                   <img src="${safeImageUrl}" alt="Barcode ${safeBarcodeText}" class="barcode-image">
-                  <div class="barcode-text">${safeBarcodeText}</div>
                 ` : `
                   <div class="barcode-text">${safeBarcodeText || 'Barcode yükleniyor...'}</div>
                 `}
@@ -488,7 +487,7 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
             <title>QR Kod Etiketleri - ${orderData.id.slice(0, 8)}</title>
             <style>
               @page {
-                size: 10cm 15cm;
+                size: 8cm 10cm;
                 margin: 0;
               }
               
@@ -506,8 +505,8 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
               }
               
               .label-page {
-                width: 10cm;
-                height: 15cm;
+                width: 8cm;
+                height: 10cm;
                 margin: 0;
                 padding: 0;
                 display: flex;
@@ -520,26 +519,26 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
               }
               
               .qr-section {
-                height: 12cm;
+                height: 8cm;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 width: 100%;
-                padding: 0.5cm;
+                padding: 0.3cm;
               }
               
               .label-image {
-                max-width: 9cm;
-                max-height: 11cm;
+                max-width: 7cm;
+                max-height: 7.5cm;
                 object-fit: contain;
                 image-rendering: -webkit-optimize-contrast;
                 image-rendering: crisp-edges;
               }
 
               .barcode-section {
-                height: 3cm;
+                height: 2cm;
                 width: 100%;
-                padding: 0.3cm;
+                padding: 0.2cm;
                 text-align: center;
                 background: #f9f9f9;
                 border-top: 1px solid #ddd;
@@ -550,19 +549,19 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
               }
 
               .barcode-image {
-                max-width: 8cm;
+                max-width: 6cm;
                 height: auto;
-                max-height: 1.5cm;
+                max-height: 1.2cm;
                 object-fit: contain;
-                margin-bottom: 5px;
+                margin-bottom: 3px;
               }
               
               .barcode-text {
                 font-family: 'Courier New', monospace;
-                font-size: 10px;
+                font-size: 8px;
                 font-weight: bold;
                 color: #333;
-                letter-spacing: 1px;
+                letter-spacing: 0.5px;
               }
               
               @media print {
@@ -634,7 +633,7 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
               <div>
                 <h3 className="text-xl font-bold">QR Kod Etiketi</h3>
                 <p className="text-indigo-100 text-sm mt-1">
-                  10x15 cm Barkod Yazıcı Formatı
+                  8x10 cm Barkod Yazıcı Formatı
                 </p>
               </div>
             </div>
@@ -745,7 +744,7 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p className="text-blue-800 text-sm">
-                Bu etiket 10x15 cm boyutunda barkod yazıcı için optimize edilmiştir.
+                Bu etiket 8x10 cm boyutunda barkod yazıcı için optimize edilmiştir.
               </p>
             </div>
           </div>
