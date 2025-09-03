@@ -209,6 +209,7 @@ export default function TeslimatPage() {
       .trim()
       .replace(/[\r\n\t\f\v]/g, '') // Tüm kontrol karakterlerini kaldır
       .replace(/\s+/g, '') // Fazla boşlukları kaldır
+      .replace(/\*/g, '-') // Barkod okuyucudan gelen * karakterlerini - ile değiştir
       .toUpperCase(); // Büyük harfe çevir (hex karakterler için)
   };
 
@@ -229,9 +230,11 @@ export default function TeslimatPage() {
     
     // Debug: Temizlenmiş veriyi logla
     console.log('🧹 Temizlenmiş barkod:', {
+      original: value,
       cleaned: cleanValue,
       length: cleanValue.length,
-      isValid: isBarcodeValid(cleanValue)
+      isValid: isBarcodeValid(cleanValue),
+      transformation: value.includes('*') ? 'Yıldız (*) karakterleri tire (-) ile değiştirildi' : 'Dönüşüm gerekmedi'
     });
     
     // Eğer değer boşsa veya geçerli barkod formatında değilse return
