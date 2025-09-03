@@ -475,7 +475,8 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
 
     // Tüm etiketleri yazdır
     if (labelImages.length > 0) {
-      const printWindow = window.open('', '_blank', 'width=800,height=600');
+      // Popup blocker kontrolü
+      const printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
       if (printWindow) {
         const labelsHtml = allCodes.map((codeData, index) => {
           const labelDataURL = labelImages[index];
@@ -491,15 +492,15 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
           const hasValidUrl = hasBarcode;
           
           return `
-            <div class="label-page" ${index > 0 ? 'style="page-break-before: always;"' : ''}>
+            <div class="label-page" ${index > 0 ? 'style="page-break-before: always !important; break-before: always !important;"' : ''}>
               <div class="qr-section">
-                <img src="${labelDataURL}" alt="QR Kod Etiketi ${index + 1}" class="label-image">
+                <img src="${labelDataURL}" alt="QR Kod Etiketi ${index + 1}" class="label-image" style="page-break-inside: avoid !important; break-inside: avoid !important;">
               </div>
               <div class="barcode-section">
                 ${hasValidUrl ? `
-                  <img src="${safeImageUrl}" alt="Barcode ${safeBarcodeText}" class="barcode-image">
+                  <img src="${safeImageUrl}" alt="Barcode ${safeBarcodeText}" class="barcode-image" style="page-break-inside: avoid !important; break-inside: avoid !important;">
                 ` : `
-                  <div class="barcode-text">${safeBarcodeText || 'Barcode yükleniyor...'}</div>
+                  <div class="barcode-text" style="page-break-inside: avoid !important; break-inside: avoid !important;">${safeBarcodeText || 'Barcode yükleniyor...'}</div>
                 `}
               </div>
             </div>
@@ -545,8 +546,15 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
                 align-items: center;
                 justify-content: space-between;
                 background: white;
-                page-break-inside: avoid;
+                page-break-inside: avoid !important;
+                page-break-before: always;
+                page-break-after: always;
+                break-inside: avoid !important;
+                break-before: always;
+                break-after: always;
                 border: 1px solid #ccc;
+                position: relative;
+                overflow: hidden;
               }
               
               .qr-section { 
@@ -567,6 +575,10 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
                 image-rendering: crisp-edges;
                 image-rendering: pixelated;
                 -ms-interpolation-mode: nearest-neighbor;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                max-width: 80mm !important;
+                max-height: 80mm !important;
               }
 
               .barcode-section { 
@@ -580,6 +592,9 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                overflow: hidden;
               }
 
               .barcode-image { 
@@ -602,21 +617,41 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
               }
               
               @media print {
-                /* Barcode yazıcı optimizasyonları */
+                /* Barcode yazıcı optimizasyonları + Tek sayfa zorlaması */
                 body {
                   -webkit-print-color-adjust: exact;
                   print-color-adjust: exact;
                   color-adjust: exact;
+                  margin: 0 !important;
+                  padding: 0 !important;
                 }
                 
                 .label-page { 
                   border: none !important;
                   background: white !important;
+                  page-break-inside: avoid !important;
+                  page-break-before: always !important;
+                  page-break-after: always !important;
+                  break-inside: avoid !important;
+                  break-before: always !important;
+                  break-after: always !important;
+                  position: relative !important;
+                  overflow: hidden !important;
+                  box-sizing: border-box !important;
+                }
+                
+                .qr-section {
+                  page-break-inside: avoid !important;
+                  break-inside: avoid !important;
+                  overflow: hidden !important;
                 }
                 
                 .barcode-section {
                   background: white !important;
                   border-top: 1px solid #000 !important;
+                  page-break-inside: avoid !important;
+                  break-inside: avoid !important;
+                  overflow: hidden !important;
                 }
                 
                 .barcode-text {
@@ -627,6 +662,14 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
                 .label-image, .barcode-image {
                   -webkit-filter: contrast(1.2) brightness(1.1);
                   filter: contrast(1.2) brightness(1.1);
+                  page-break-inside: avoid !important;
+                  break-inside: avoid !important;
+                }
+                
+                /* Sayfa içeriğinin taşmasını engelle */
+                * {
+                  page-break-inside: avoid !important;
+                  break-inside: avoid !important;
                 }
               }
             </style>
@@ -641,33 +684,54 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
         printWindow.document.close();
         
         printWindow.onload = () => {
-          // Test modu - yazdırma önizleme penceresi açılır ama otomatik yazdırmaz
-          console.log('🎯 QR Etiket Test Modu Aktif');
+          // Optimizasyonlar ve yazdırma debug bilgileri
+          console.log('🎯 QR Etiket Yazdırma Başlatılıyor');
           console.log('📏 Etiket Boyutları: 80mm × 100mm');
           console.log('🖨️ Barcode yazıcı için optimize edildi');
           console.log('✅ Canvas boyutu:', LABEL_W_PX, '×', LABEL_H_PX, 'piksel');
+          console.log('📄 Toplam etiket sayısı:', allCodes.length);
           
-          // Manuel test için pencereyi açık bırak
-          // Otomatik yazdırma kapalı - manuel kontrol için
-          /*
+          // Yazdırma sayfasını otomatik başlat
           setTimeout(() => {
             try {
               printWindow.focus();
               printWindow.print();
+              console.log('✅ Yazdırma dialog açıldı');
             } catch (error) {
-              console.error('Yazdırma hatası:', error);
+              console.error('❌ Yazdırma hatası:', error);
+              alert('Yazdırma hatası: ' + error.message);
             }
+            
+            // Pencereyi 5 saniye sonra kapat (kullanıcı yazdırma dialog'unu görebilsin)
             setTimeout(() => {
               try {
                 printWindow.close();
+                console.log('✅ Yazdırma penceresi kapatıldı');
               } catch (error) {
-                console.error('Pencere kapatma hatası:', error);
+                console.error('❌ Pencere kapatma hatası:', error);
               }
-            }, 3000);
-          }, 1500);
-          */
+            }, 5000);
+          }, 1000);
         };
+      } else {
+        // Popup bloklandı - kullanıcıya bilgi ver ve alternatif çözüm sun
+        console.error('❌ Popup bloklandı! Popup blocker'ı devre dışı bırakın.');
+        
+        // Alternatif: Blob URL kullanarak dosya indirme
+        const htmlBlob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(htmlBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `QR-Etiketleri-${orderData.id.slice(0, 8)}.html`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        alert('🚫 Popup bloklandı!\n\n✅ Alternatif: HTML dosyası indirildi.\n\n📖 Nasıl yazdırılır:\n1. İndirilen HTML dosyasını açın\n2. Ctrl+P ile yazdırın\n3. Boyut: 80mm × 100mm seçin');
       }
+    } else {
+      alert('❌ Yazdırılacak etiket bulunamadı. QR kod veya barcode oluşturulduktan sonra tekrar deneyin.');
     }
   };
 
