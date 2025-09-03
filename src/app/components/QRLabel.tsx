@@ -527,16 +527,18 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
           const hasValidUrl = hasBarcode;
           
           return `
-            <div class="label-page" ${index > 0 ? 'style="page-break-before: always !important; break-before: always !important;"' : ''}>
-              <div class="qr-section">
-                <img src="${labelDataURL}" alt="QR Kod Etiketi ${index + 1}" class="label-image" style="page-break-inside: avoid !important; break-inside: avoid !important;">
-              </div>
-              <div class="barcode-section">
-                ${hasValidUrl ? `
-                  <img src="${safeImageUrl}" alt="Barcode ${safeBarcodeText}" class="barcode-image" style="page-break-inside: avoid !important; break-inside: avoid !important;">
-                ` : `
-                  <div class="barcode-text" style="page-break-inside: avoid !important; break-inside: avoid !important;">${safeBarcodeText || 'Barcode yükleniyor...'}</div>
-                `}
+            <div class="sheet">
+              <div class="label-page">
+                <div class="qr-section">
+                  <img src="${labelDataURL}" alt="QR Kod Etiketi ${index + 1}" class="label-image">
+                </div>
+                <div class="barcode-section">
+                  ${hasValidUrl ? `
+                    <img src="${safeImageUrl}" alt="Barcode ${safeBarcodeText}" class="barcode-image">
+                  ` : `
+                    <div class="barcode-text">${safeBarcodeText || ''}</div>
+                  `}
+                </div>
               </div>
             </div>
           `;
@@ -557,12 +559,24 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
                 print-color-adjust: exact;
               }
               
+              /* ŞABLONU SAYFA MERKEZİNE KİLİTLE */
               html, body { 
+                width: 80mm;
+                height: 100mm;
                 margin: 0; 
                 padding: 0; 
                 font-family: Arial, sans-serif;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
+              }
+              
+              .sheet {
+                width: 80mm;
+                height: 100mm;
+                display: flex;
+                align-items: center;     /* dikey merkez */
+                justify-content: center; /* yatay merkez */
+                page-break-after: always;
               }
               
               * {
@@ -571,6 +585,7 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
                 box-sizing: border-box;
               }
               
+              /* Etiket kutusu - artık .sheet içinde ortalanmış */
               .label-page {
                 width: 80mm; 
                 height: 100mm;
@@ -581,15 +596,8 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
                 align-items: center;
                 justify-content: space-between;
                 background: white;
-                page-break-inside: avoid !important;
-                page-break-before: always;
-                page-break-after: always;
-                break-inside: avoid !important;
-                break-before: always;
-                break-after: always;
-                border: 1px solid #ccc;
-                position: relative;
                 overflow: hidden;
+                break-inside: avoid;
               }
               
               .qr-section { 
