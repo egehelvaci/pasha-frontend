@@ -166,10 +166,6 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
           margin: 2,
           errorCorrectionLevel: 'M',
           type: 'image/png',
-          quality: 1,
-          rendererOpts: {
-            quality: 1
-          },
           color: {
             dark: '#000000',
             light: '#FFFFFF'
@@ -368,10 +364,6 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
               margin: 2,
               errorCorrectionLevel: 'M',
               type: 'image/png',
-              quality: 1,
-              rendererOpts: {
-                quality: 1
-              },
               color: {
                 dark: '#000000',
                 light: '#FFFFFF'
@@ -475,10 +467,7 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
 
     // Tüm etiketleri yazdır
     if (labelImages.length > 0) {
-      // Popup blocker kontrolü
-      const printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
-      if (printWindow) {
-        const labelsHtml = allCodes.map((codeData, index) => {
+      const labelsHtml = allCodes.map((codeData, index) => {
           const labelDataURL = labelImages[index];
           const barcodeImageUrl = codeData.barcode?.barcode_image_url;
           const barcodeText = codeData.barcode?.barcode;
@@ -507,7 +496,7 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
           `;
         }).join('');
 
-        const htmlContent = `
+      const htmlContent = `
           <!DOCTYPE html>
           <html lang="tr">
           <head>
@@ -680,6 +669,9 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
           </html>
         `;
 
+      // Popup blocker kontrolü
+      const printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+      if (printWindow) {
         printWindow.document.write(htmlContent);
         printWindow.document.close();
         
@@ -699,7 +691,7 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
               console.log('✅ Yazdırma dialog açıldı');
             } catch (error) {
               console.error('❌ Yazdırma hatası:', error);
-              alert('Yazdırma hatası: ' + error.message);
+              alert('Yazdırma hatası: ' + (error instanceof Error ? error.message : 'Bilinmeyen hata'));
             }
             
             // Pencereyi 5 saniye sonra kapat (kullanıcı yazdırma dialog'unu görebilsin)
@@ -715,7 +707,7 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
         };
       } else {
         // Popup bloklandı - kullanıcıya bilgi ver ve alternatif çözüm sun
-        console.error('❌ Popup bloklandı! Popup blocker'ı devre dışı bırakın.');
+        console.error('❌ Popup bloklandı! Popup blocker\'ı devre dışı bırakın.');
         
         // Alternatif: Blob URL kullanarak dosya indirme
         const htmlBlob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
