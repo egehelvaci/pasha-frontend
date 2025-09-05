@@ -1167,7 +1167,7 @@ const AdminSiparisOlustur = () => {
                         
                         {productForm.width && (('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions.find((s: any) => s.width === productForm.width && s.is_optional_height) : false) && (
                           <div className="mt-2">
-                            <label className="text-sm text-gray-500 block mb-1">Özel Yükseklik (cm)</label>
+                            <label className="text-sm text-gray-500 block mb-1">Özel Boy (cm)</label>
                             <div className="flex items-center gap-2">
                               <input
                                 type="number"
@@ -1318,7 +1318,7 @@ const AdminSiparisOlustur = () => {
                         </div>
                         {productForm.width && (productForm.height || (('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions.find((s: any) => s.width === productForm.width && s.is_optional_height) : false)) && (
                           <div className="text-xs mt-1 text-blue-700">
-                            {productForm.width} cm genişlik × {typeof productForm.height === 'string' ? (parseFloat(productForm.height) || 100) : (productForm.height || 100)} cm yükseklik × {productForm.quantity} adet için hesaplandı
+                            {productForm.width} cm genişlik × {typeof productForm.height === 'string' ? (parseFloat(productForm.height) || 100) : (productForm.height || 100)} cm Boy × {productForm.quantity} adet için hesaplandı
                           </div>
                         )}
                       </div>

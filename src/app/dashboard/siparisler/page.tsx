@@ -1155,6 +1155,103 @@ const Siparisler = () => {
     setQrLabelVisible(true);
   };
 
+  // Kesim türü çeviri fonksiyonu
+  const translateCutType = (cutType: string) => {
+    const translations: { [key: string]: string } = {
+      'oval': 'Oval Kesim',
+      'daire': 'Daire Kesim', 
+      'round': 'Daire Kesim',
+      'post kesim': 'Post Kesim',
+      'standart': 'Normal Kesim',
+      'normal': 'Normal Kesim',
+      'custom': 'Özel Kesim',
+      'rectangle': 'Dikdörtgen Kesim'
+    };
+    
+    return translations[cutType?.toLowerCase()] || cutType || 'Normal Kesim';
+  };
+
+  // Kesim türüne göre işaret çizme fonksiyonu
+  const drawCutTypeIcon = (ctx: CanvasRenderingContext2D, cutType: string, x: number, y: number, size: number) => {
+    const normalizedCutType = cutType?.toLowerCase() || 'standart';
+    
+    ctx.save();
+    ctx.strokeStyle = '#000000';
+    ctx.fillStyle = '#000000';
+    ctx.lineWidth = 2;
+    
+    switch (normalizedCutType) {
+      case 'oval':
+        // Oval işaret
+        ctx.beginPath();
+        ctx.ellipse(x, y, size * 0.6, size * 0.3, 0, 0, 2 * Math.PI);
+        ctx.stroke();
+        break;
+        
+      case 'daire':
+      case 'round':
+        // Daire işaret
+        ctx.beginPath();
+        ctx.arc(x, y, size * 0.4, 0, 2 * Math.PI);
+        ctx.stroke();
+        break;
+        
+      case 'post kesim':
+        // Post kesim işareti (dikdörtgen)
+        ctx.beginPath();
+        ctx.rect(x - size * 0.4, y - size * 0.3, size * 0.8, size * 0.6);
+        ctx.stroke();
+        break;
+        
+      case 'standart':
+      case 'normal':
+      case 'custom':
+      case 'rectangle':
+      default:
+        // Standart kesim işareti (kare)
+        ctx.beginPath();
+        ctx.rect(x - size * 0.3, y - size * 0.3, size * 0.6, size * 0.6);
+        ctx.stroke();
+        break;
+    }
+    
+    ctx.restore();
+  };
+
+  // Saçak durumuna göre işaret çizme fonksiyonu
+  const drawFringeIcon = (ctx: CanvasRenderingContext2D, hasFringe: boolean, x: number, y: number, size: number) => {
+    ctx.save();
+    ctx.strokeStyle = '#000000';
+    ctx.fillStyle = '#000000';
+    ctx.lineWidth = 2;
+    
+    if (hasFringe) {
+      // Saçaklı - tırtıklı işaret (zigzag çizgi)
+      ctx.beginPath();
+      const zigzagWidth = size * 0.8;
+      const zigzagHeight = size * 0.3;
+      const startX = x - zigzagWidth / 2;
+      const startY = y - zigzagHeight / 2;
+      
+      ctx.moveTo(startX, startY);
+      for (let i = 0; i < 5; i++) {
+        const xPos = startX + (zigzagWidth / 4) * i;
+        const yPos = startY + (i % 2 === 0 ? zigzagHeight : 0);
+        ctx.lineTo(xPos, yPos);
+      }
+      ctx.stroke();
+    } else {
+      // Saçaksız - düz çizgi
+      ctx.beginPath();
+      const lineWidth = size * 0.8;
+      const lineHeight = size * 0.1;
+      ctx.rect(x - lineWidth / 2, y - lineHeight / 2, lineWidth, lineHeight);
+      ctx.fill();
+    }
+    
+    ctx.restore();
+  };
+
   // Toplu QR etiket yazdırma fonksiyonu
   const printBulkQRLabels = async (orderIds: string[]) => {
     if (orderIds.length === 0) {
@@ -1260,21 +1357,22 @@ const Siparisler = () => {
                   const qrY = Math.round((5 / 25.4) * 203); // üstten 5 mm boşluk
                   ctx.drawImage(qrImage, qrX, qrY, qrDisplaySize, qrDisplaySize);
 
-                  // Metin bilgilerini alt kısma ekle
+                  // Metin bilgilerini alt kısma ekle - QRLabel ile aynı format
                   ctx.fillStyle = '#000000';
                   ctx.textAlign = 'center';
 
-                  // Yazı boyları da göreli olsun (yazıcı DPI'ında)
-                  const titleFont = Math.round(799 * 0.04);   // ~%4
+                  // Yazı boyları QRLabel ile aynı (büyütülmüş)
+                  const titleFont = Math.round(799 * 0.08);   // ~%8 (büyütüldü)
                   ctx.font = `bold ${titleFont}px Arial`;
-                  ctx.fillText('PAŞA HOME', canvas.width / 2, qrY + qrDisplaySize + Math.round((5 / 25.4) * 203));
+                  ctx.fillText('PAŞA HOME', canvas.width / 2, qrY + qrDisplaySize + Math.round((6 / 25.4) * 203));
 
-                  // Ürün adı (kalın)
-                  const productFont = Math.round(799 * 0.032);   // ~%3.2
+                  // Ürün adı (kalın) - QRLabel ile aynı
+                  const productFont = Math.round(799 * 0.07);   // ~%7 (büyütüldü)
                   ctx.font = `bold ${productFont}px Arial`;
-                  let textY = qrY + qrDisplaySize + Math.round((10 / 25.4) * 203);
+                  let textY = qrY + qrDisplaySize + Math.round((14 / 25.4) * 203); // 14mm boşluk
                   const productName = item.product.name.toUpperCase();
-                  const lineHeight = Math.round((3 / 25.4) * 203);
+                  const lineHeight = Math.round((6 / 25.4) * 203); // 6mm satır aralığı
+                  
                   if (productName.length > 30) {
                     // Uzun ürün adlarını böl
                     const words = productName.split(' ');
@@ -1283,69 +1381,90 @@ const Siparisler = () => {
                     ctx.fillText(line1, canvas.width / 2, textY);
                     textY += lineHeight;
                     ctx.fillText(line2, canvas.width / 2, textY);
-                    textY += Math.round((4 / 25.4) * 203);
+                    textY += Math.round((6 / 25.4) * 203); // 6mm boşluk
                   } else {
                     ctx.fillText(productName, canvas.width / 2, textY);
-                    textY += Math.round((4 / 25.4) * 203);
+                    textY += Math.round((6 / 25.4) * 203); // 6mm boşluk
                   }
 
-                  // Ürün bilgileri
-                  const infoFont = Math.round(799 * 0.028);   // ~%2.8
+                  // Ürün bilgileri - QRLabel ile aynı (büyütülmüş)
+                  const infoFont = Math.round(799 * 0.06);   // ~%6 (büyütüldü)
                   ctx.font = `${infoFont}px Arial`;
                   
                   ctx.fillText(`${item.width} x ${item.height}`, canvas.width / 2, textY);
                   textY += lineHeight;
                   
-                  ctx.fillText(`Kesim: ${item.cut_type || 'Standart'}`, canvas.width / 2, textY);
+                  // Kesim türü satırı - işaret ile birlikte
+                  const cutTypeText = `Kesim: ${translateCutType(item.cut_type)}`;
+                  const textWidth = ctx.measureText(cutTypeText).width;
+                  const iconSize = Math.round((4 / 25.4) * 203); // 4mm işaret boyutu
+                  const iconX = (canvas.width / 2) - (textWidth / 2) - iconSize - Math.round((1.5 / 25.4) * 203); // Metinden 1.5mm önce
+                  const iconY = textY;
+                  
+                  // İşareti çiz
+                  drawCutTypeIcon(ctx, item.cut_type, iconX, iconY, iconSize);
+                  
+                  // Metni çiz
+                  ctx.fillText(cutTypeText, canvas.width / 2, textY);
                   textY += lineHeight;
                   
-                  ctx.fillText(`Saçak: ${item.has_fringe ? 'Saçaklı' : 'Saçaksız'}`, canvas.width / 2, textY);
+                  // Saçak satırı - işaret ile birlikte
+                  const fringeText = `Saçak: ${item.has_fringe ? 'Saçaklı' : 'Saçaksız'}`;
+                  const fringeTextWidth = ctx.measureText(fringeText).width;
+                  const fringeIconSize = Math.round((4 / 25.4) * 203); // 4mm işaret boyutu
+                  const fringeIconX = (canvas.width / 2) - (fringeTextWidth / 2) - fringeIconSize - Math.round((1.5 / 25.4) * 203); // Metinden 1.5mm önce
+                  const fringeIconY = textY;
+                  
+                  // Saçak işaretini çiz
+                  drawFringeIcon(ctx, item.has_fringe, fringeIconX, fringeIconY, fringeIconSize);
+                  
+                  // Metni çiz
+                  ctx.fillText(fringeText, canvas.width / 2, textY);
                   textY += lineHeight;
 
-                  // Ürün notu varsa ekle
+                  // Ürün notu varsa ekle - QRLabel ile aynı
                   if (item.notes && item.notes.trim()) {
-                    const noteFont = Math.round(799 * 0.025);   // ~%2.5
+                    const noteFont = Math.round(799 * 0.045);   // ~%4.5 (büyütüldü)
                     ctx.font = `${noteFont}px Arial`;
                     ctx.fillText(`Not: ${item.notes}`, canvas.width / 2, textY);
-                    textY += Math.round((2.5 / 25.4) * 203);
+                    textY += Math.round((4 / 25.4) * 203); // 4mm boşluk
                   }
-                  textY += Math.round((2 / 25.4) * 203);
+                  textY += Math.round((4 / 25.4) * 203); // 4mm boşluk
 
-                  // QR kod ve sipariş bilgisi - CONTENT_BOTTOM_LIMIT'e kadar sığdır
-                  const smallFont = Math.round(799 * 0.025);   // ~%2.5
+                  // QR kod ve sipariş bilgisi - QRLabel ile aynı format
+                  const smallFont = Math.round(799 * 0.045);   // ~%4.5 (büyütüldü)
                   ctx.font = `${smallFont}px Arial`;
                   
                   // Kalan alan kontrolü - barcode bandı için yer ayır
                   const CONTENT_BOTTOM_LIMIT = 799 - Math.round((20 / 25.4) * 203); // 641px
                   const remainingSpace = CONTENT_BOTTOM_LIMIT - textY;
-                  const lineSpacing = Math.round((2.5 / 25.4) * 203);
+                  const lineSpacing = Math.round((3.5 / 25.4) * 203); // 3.5mm satır aralığı
                   const requiredScans = qrCodeData.required_scans || 2;
                   
-                  // Öncelik sırasına göre bilgileri ekle
+                  // Öncelik sırasına göre bilgileri ekle - QRLabel ile aynı
                   let currentY = textY;
                   
-                  // En önemli: Sipariş numarası (her zaman göster)
+                  // En önemli: Gerekli tarama
                   if (remainingSpace >= lineSpacing) {
-                    ctx.fillText(`Sp. No: ${labelData.order.id.slice(0, 8)}`, canvas.width / 2, currentY);
-                    currentY += lineSpacing;
-                  }
-                  
-                  // İkinci öncelik: Gerekli tarama
-                  if (CONTENT_BOTTOM_LIMIT - currentY >= lineSpacing) {
                     ctx.fillText(`Gerekli Tarama: ${requiredScans}`, canvas.width / 2, currentY);
                     currentY += lineSpacing;
                   }
                   
-                  // Üçüncü öncelik: Etiket numarası (varsa)
+                  // İkinci öncelik: Etiket numarası (varsa)
                   if (labelData._labelIndex && labelData._totalLabels && CONTENT_BOTTOM_LIMIT - currentY >= lineSpacing) {
                     ctx.fillText(`Etiket: ${labelData._labelIndex}/${labelData._totalLabels}`, canvas.width / 2, currentY);
                     currentY += lineSpacing;
                   }
                   
-                  // Son öncelik: Tarih
+                  // Üçüncü öncelik: Sipariş tarihi
                   if (CONTENT_BOTTOM_LIMIT - currentY >= lineSpacing) {
-                    ctx.fillText(`${new Date(labelData.order.created_at).toLocaleDateString('tr-TR')}`, canvas.width / 2, currentY);
+                    ctx.fillText(`Sipariş Tarihi: ${new Date(labelData.order.created_at).toLocaleDateString('tr-TR')}`, canvas.width / 2, currentY);
+                    currentY += lineSpacing;
                   }
+                  
+                  // Son öncelik: Firma adı (her zaman göster)
+                  currentY += Math.round((1 / 25.4) * 203); // 1mm ek boşluk
+                  ctx.fillText(`Firma: ${labelData.order.store_name}`, canvas.width / 2, currentY);
 
                   // Canvas'ta sadece QR kodu ve ürün bilgileri, barcode HTML'de gösterilecek
                   allLabels.push(canvas.toDataURL('image/png'));

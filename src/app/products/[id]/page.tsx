@@ -134,7 +134,7 @@ export default function ProductDetail() {
                     <p className="font-semibold">{product.width} cm</p>
                   </div>
                   <div>
-                    <span className="text-gray-500">Yükseklik</span>
+                    <span className="text-gray-500">Boy</span>
                     <p className="font-semibold">{product.height} cm</p>
                   </div>
                 </div>
