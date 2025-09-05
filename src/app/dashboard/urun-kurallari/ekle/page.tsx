@@ -82,7 +82,7 @@ export default function AddProductRulePage() {
           errors[`sizeOption_width_${index}`] = 'Genişlik 0\'dan büyük olmalı';
         }
         if (option.height <= 0) {
-          errors[`sizeOption_height_${index}`] = 'Yükseklik 0\'dan büyük olmalı';
+          errors[`sizeOption_height_${index}`] = 'Boy 0\'dan büyük olmalı';
         }
       }
     });
@@ -421,7 +421,7 @@ export default function AddProductRulePage() {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Yükseklik (cm) *
+                          Boy (cm) *
                         </label>
                         <div className="relative">
                           <input
@@ -452,7 +452,7 @@ export default function AddProductRulePage() {
                               onChange={(e) => updateSizeOption(index, 'isOptionalHeight', e.target.checked)}
                               className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                             />
-                            <span className="text-sm text-blue-800 font-medium">Yükseklik İsteğe Bağlı</span>
+                            <span className="text-sm text-blue-800 font-medium">Boy İsteğe Bağlı</span>
                           </label>
                         </div>
                       </div>

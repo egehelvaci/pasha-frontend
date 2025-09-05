@@ -209,7 +209,7 @@ export default function StokPage() {
   // Debounce timer için ref
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
 
-  // Opsiyonel yükseklik ürünlerde boy değiştiğinde m² hesaplama
+  // Opsiyonel boy ürünlerde boy değiştiğinde m² hesaplama
   useEffect(() => {
     if (selectedProduct && selectedSizeOption) {
       const productType = getProductType(selectedProduct.sizeOptions || []);
@@ -501,7 +501,7 @@ export default function StokPage() {
     const productType = getProductType(selectedProduct?.sizeOptions || []);
 
     if (productType === 'optional_height') {
-      // Opsiyonel yükseklik: m² bazlı
+      // Opsiyonel boy: m² bazlı
       setStockForm(prev => ({
         ...prev,
         width: sizeOption.width,
@@ -555,7 +555,7 @@ export default function StokPage() {
     let requestBody: any;
 
     if (productType === 'optional_height') {
-      // Opsiyonel yükseklik: m² bazlı stok işlemi
+      // Opsiyonel boy: m² bazlı stok işlemi
       apiUrl = `${API_BASE_URL}/api/products/${selectedProduct.productId}/stock-area`;
 
       if (stockForm.width <= 0 || stockForm.height <= 0 || (stockForm.areaM2 || 0) < 0) {
@@ -1257,14 +1257,14 @@ export default function StokPage() {
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Yükseklik (cm)
+                            Boy (cm)
                           </label>
                           <input
                             type="number"
                             value={stockForm.height}
                             onChange={(e) => setStockForm(prev => ({ ...prev, height: e.target.value === '' ? 0 : Number(e.target.value) }))}
                             className="w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Yükseklik"
+                            placeholder="Boy"
                             min="1"
                           />
                         </div>
@@ -1338,7 +1338,7 @@ export default function StokPage() {
                                     Boy (cm):
                                   </label>
                                   <p className="text-xs text-gray-500 mb-2">
-                                    Opsiyonel yükseklik ürünlerde boy değeri girin. m² otomatik hesaplanacaktır.
+                                    Opsiyonel boy ürünlerde boy değeri girin. m² otomatik hesaplanacaktır.
                                   </p>
                                   <input
                                     type="number"
@@ -1490,7 +1490,7 @@ export default function StokPage() {
                           <div>
                             <span className="font-medium text-gray-700">Ürün tipi:</span>
                             <span className="ml-1 text-gray-900">
-                              {selectedSizeOption.is_optional_height ? 'Opsiyonel Yükseklik' : 'Hazır Kesim'}
+                              {selectedSizeOption.is_optional_height ? 'Opsiyonel Boy' : 'Hazır Kesim'}
                             </span>
                           </div>
                           <div>

@@ -483,7 +483,7 @@ export default function Settings() {
       setStores(storesData.map(store => ({
         store_id: store.store_id,
         kurum_adi: store.kurum_adi
-      })));
+      })).sort((a, b) => a.kurum_adi.localeCompare(b.kurum_adi, 'tr-TR')));
     } catch (err: any) {
       setError(err.message || "Mağazalar yüklenirken bir hata oluştu");
     }

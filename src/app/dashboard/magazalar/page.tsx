@@ -236,7 +236,7 @@ export default function StoresPage() {
     }
   };
 
-  // Filtreleme
+  // Filtreleme ve alfabetik sıralama
   const filteredStores = stores.filter(store => {
     const matchesSearch = searchTerm === "" || 
       store.kurum_adi.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -250,7 +250,7 @@ export default function StoresPage() {
       (statusFilter === 'inactive' && !store.is_active);
     
     return matchesSearch && matchesStatus;
-  });
+  }).sort((a, b) => a.kurum_adi.localeCompare(b.kurum_adi, 'tr-TR'));
 
   // Loading state
   if (authLoading) {

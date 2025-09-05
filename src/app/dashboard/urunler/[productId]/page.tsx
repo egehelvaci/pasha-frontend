@@ -40,7 +40,7 @@ export default function ProductDetail() {
   const [selectedCutType, setSelectedCutType] = useState<any>(null);
   const [selectedHasFringe, setSelectedHasFringe] = useState<boolean | null>(null);
   const [totalPrice, setTotalPrice] = useState<number>(0);
-  const [customHeight, setCustomHeight] = useState<number | string>(100);  // Varsayılan 100 cm yükseklik
+  const [customHeight, setCustomHeight] = useState<number | string>(100);  // Varsayılan 100 cm boy
   const [quantity, setQuantity] = useState<number>(1);  // Ürün adedi
 
   // Custom dropdown state'leri
@@ -87,7 +87,7 @@ export default function ProductDetail() {
       // Metrekare fiyatı
       const pricePerSquareMeter = parseFloat(product.pricing?.price) || 0;
       
-      // Yükseklik değerini belirle (özel yükseklik varsa onu kullan)
+      // Boy değerini belirle (özel boy varsa onu kullan)
       const heightValue = selectedSize.is_optional_height ? parseFloat(customHeight.toString()) || 100 : parseFloat(selectedSize.height);
       const widthValue = parseFloat(selectedSize.width);
       
@@ -159,7 +159,7 @@ export default function ProductDetail() {
     const size = product.sizeOptions.find((s: any) => s.id === sizeId);
     setSelectedSize(size);
     
-    // İsteğe bağlı yükseklik seçilince varsayılan değeri 100cm olarak ayarla
+    // İsteğe bağlı boy seçilince varsayılan değeri 100cm olarak ayarla
     if (size && size.is_optional_height) {
       setCustomHeight(100);
     }
@@ -221,7 +221,7 @@ export default function ProductDetail() {
     try {
       const authToken = token;
       
-      // Yükseklik değerini belirle
+      // Boy değerini belirle
       const heightValue = selectedSize.is_optional_height ? customHeight : selectedSize.height;
       
       const requestBody = {
@@ -305,7 +305,7 @@ export default function ProductDetail() {
     try {
       const authToken = token;
       
-      // Yükseklik değerini belirle
+      // Boy değerini belirle
       const heightValue = selectedSize.is_optional_height ? customHeight : selectedSize.height;
       
       const requestBody = {
@@ -612,7 +612,7 @@ export default function ProductDetail() {
                 
                 {selectedSize && selectedSize.is_optional_height && (
                   <div className="mt-3 p-4">
-                    <label className="text-sm font-medium text-gray-700 block mb-2">Özel Yükseklik (cm) - Elle Girilebilir</label>
+                    <label className="text-sm font-medium text-gray-700 block mb-2">Özel Boy (cm) - Elle Girilebilir</label>
                     <div className="flex items-center gap-3">
                       <input
                         type="number"
@@ -857,8 +857,8 @@ export default function ProductDetail() {
                         <span>
                           {selectedSize.width} cm genişlik × 
                           {selectedSize.is_optional_height 
-                            ? ` ${customHeight} cm yükseklik (özel)` 
-                            : ` ${selectedSize.height} cm yükseklik`} 
+                            ? ` ${customHeight} cm boy (özel)` 
+                            : ` ${selectedSize.height} cm boy`} 
                           × {quantity} adet
                         </span>
                       </div>

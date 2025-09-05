@@ -787,7 +787,7 @@ export default function ProductList() {
     const [selectedCutType, setSelectedCutType] = useState<any>(null);
     const [selectedHasFringe, setSelectedHasFringe] = useState<boolean | null>(null);
     const [totalPrice, setTotalPrice] = useState<number>(0);
-    const [customHeight, setCustomHeight] = useState<number | string>(100);  // Varsayılan 100 cm yükseklik
+    const [customHeight, setCustomHeight] = useState<number | string>(100);  // Varsayılan 100 cm boy
     const [quantity, setQuantity] = useState<number>(1);
     const [notes, setNotes] = useState<string>("");
     const [addToCartLoading, setAddToCartLoading] = useState(false);
@@ -881,11 +881,11 @@ export default function ProductList() {
         // Metrekare hesapla
         let squareMeters;
         if (selectedSize.is_optional_height) {
-          // İsteğe bağlı yükseklik için kullanıcının girdiği değeri kullan
+          // İsteğe bağlı boy için kullanıcının girdiği değeri kullan
           const heightValue = parseFloat(customHeight.toString()) || 100;
           squareMeters = (selectedSize.width * heightValue) / 10000; // cm² -> m²
         } else {
-          // Sabit yükseklik için metrekare hesapla
+          // Sabit boy için metrekare hesapla
           squareMeters = (selectedSize.width * selectedSize.height) / 10000; // cm² -> m²
         }
         
@@ -925,7 +925,7 @@ export default function ProductList() {
       const size = product.sizeOptions.find((s: any) => s.id === sizeId);
       setSelectedSize(size);
       
-      // İsteğe bağlı yükseklik seçilince varsayılan değeri 100cm olarak ayarla
+      // İsteğe bağlı boy seçilince varsayılan değeri 100cm olarak ayarla
       if (size && size.is_optional_height) {
         setCustomHeight(100);
       }
@@ -975,7 +975,7 @@ export default function ProductList() {
       try {
         const authToken = token;
         
-        // Yükseklik değerini belirle
+        // Boy değerini belirle
         const heightValue = selectedSize.is_optional_height ? parseFloat(customHeight.toString()) || 100 : selectedSize.height;
         
         const requestBody = {

@@ -225,7 +225,7 @@ export default function EditProduct() {
 
             <div>
               <label className="block text-gray-700 text-sm font-bold mb-2">
-                Yükseklik (cm)
+                Boy (cm)
               </label>
               <input
                 type="number"
@@ -235,7 +235,7 @@ export default function EditProduct() {
                 step="0.1"
                 min="0"
                 className="w-full px-3 py-2 border rounded-md"
-                placeholder="Yükseklik"
+                placeholder="Boy"
               />
             </div>
           </div>

@@ -1722,14 +1722,7 @@ const Siparisler = () => {
             console.log('📄 Toplam etiket sayısı:', allLabelsData.length);
             console.log('🔧 Yazıcı DPI: 203');
             
-            // Yazdırma ayarları uyarısı
-            alert('🖨️ Yazdırma Ayarları:\n\n' +
-                  '📐 Paper Size: 80×100 mm (8×10 cm)\n' +
-                  '📏 Scale: 100% (Actual Size)\n' +
-                  '📄 Margins: None\n' +
-                  '📋 Headers/Footers: Off\n' +
-                  '⚙️ Fit to Page: OFF\n\n' +
-                  'Bu ayarları seçtikten sonra yazdırın.');
+            // Yazdırma ayarları uyarısı kaldırıldı
             
             // Yazdırma sayfasını başlat
             setTimeout(() => {

@@ -83,7 +83,7 @@ export default function ProductRuleDetailPage() {
   // Add size option
   const handleAddSizeOption = async () => {
     if (newSizeOption.width <= 0 || newSizeOption.height <= 0) {
-      setAddSizeError('Genişlik ve yükseklik 0\'dan büyük olmalı');
+      setAddSizeError('Genişlik ve boy 0\'dan büyük olmalı');
       return;
     }
 
@@ -106,7 +106,7 @@ export default function ProductRuleDetailPage() {
     if (!editingSizeOption) return;
     
     if (editingSizeOption.data.width <= 0 || editingSizeOption.data.height <= 0) {
-      setEditSizeError('Genişlik ve yükseklik 0\'dan büyük olmalı');
+      setEditSizeError('Genişlik ve boy 0\'dan büyük olmalı');
       return;
     }
 
@@ -469,7 +469,7 @@ export default function ProductRuleDetailPage() {
                           </div>
                           {option.isOptionalHeight && (
                             <span className="inline-flex px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                              Yükseklik İsteğe Bağlı
+                              Boy İsteğe Bağlı
                             </span>
                           )}
                         </div>
@@ -622,7 +622,7 @@ export default function ProductRuleDetailPage() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Yükseklik (cm) *</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Boy (cm) *</label>
                     <div className="relative">
                       <input
                         type="number"
@@ -646,7 +646,7 @@ export default function ProductRuleDetailPage() {
                         onChange={(e) => setNewSizeOption({...newSizeOption, isOptionalHeight: e.target.checked})}
                         className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
-                      <span className="text-sm font-semibold text-blue-800">Yükseklik İsteğe Bağlı</span>
+                      <span className="text-sm font-semibold text-blue-800">Boy İsteğe Bağlı</span>
                     </label>
                   </div>
                 </div>
@@ -732,7 +732,7 @@ export default function ProductRuleDetailPage() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Yükseklik (cm) *</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Boy (cm) *</label>
                     <div className="relative">
                       <input
                         type="number"
@@ -761,7 +761,7 @@ export default function ProductRuleDetailPage() {
                         })}
                         className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
-                      <span className="text-sm font-semibold text-blue-800">Yükseklik İsteğe Bağlı</span>
+                      <span className="text-sm font-semibold text-blue-800">Boy İsteğe Bağlı</span>
                     </label>
                   </div>
                 </div>
