@@ -650,14 +650,6 @@ const Header = ({ title, user, className }: HeaderProps) => {
                     </div>
                   </button>
                 )}
-                {isAdmin && (
-                <Link href="/dashboard/ayarlar" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center space-x-2">
-                    <FaCog size={16} />
-                    <span>Kullanıcı Yönetimi</span>
-                  </div>
-                </Link>
-                )}
                 <hr className="my-1 border-gray-200" />
                 <button
                   onClick={handleLogout}
