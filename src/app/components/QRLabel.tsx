@@ -108,6 +108,13 @@ interface QRLabelProps {
       surname: string;
       email: string;
       phone?: string;
+      Store?: {
+        store_type?: string;
+      };
+    };
+    store_info?: {
+      store_type?: string;
+      store_type_display?: string;
     };
     address?: {
       title: string;
@@ -435,14 +442,18 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
            textY += infoLineHeight;
            
            // Store type bilgisi - işaret ile
-           if (orderData.store_type) {
-             drawStoreTypeIcon(ctx, orderData.store_type, mmToPx(3), textY - mmToPx(1.5), mmToPx(3));
-             const storeTypeText = `    ${translateStoreType(orderData.store_type)}`;
-             ctx.fillText(storeTypeText, mmToPx(3), textY);
-             textY += mmToPx(6); // Daha fazla boşluk
-           } else {
-             textY += mmToPx(6); // Store type yoksa da boşluk ekle
-           }
+           const storeType = orderData.store_info?.store_type || orderData.user?.Store?.store_type || orderData.store_type || 'KARGO';
+           console.log('OrderData store_type sources:', {
+             store_info: orderData.store_info?.store_type,
+             user_store: orderData.user?.Store?.store_type,
+             direct: orderData.store_type,
+             final: storeType
+           }); // Debug
+           
+           drawStoreTypeIcon(ctx, storeType, mmToPx(3), textY - mmToPx(1.5), mmToPx(3));
+           const storeTypeText = `    ${translateStoreType(storeType)}`;
+           ctx.fillText(storeTypeText, mmToPx(3), textY);
+           textY += mmToPx(6);
 
           // Ürün notu varsa ekle (kompakt)
           if (firstItem.notes && firstItem.notes.trim()) {
@@ -763,14 +774,18 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
               textY += infoLineHeight;
               
               // Store type bilgisi - işaret ile (yazdırma)
-              if (orderData.store_type) {
-                drawStoreTypeIcon(ctx, orderData.store_type, mmToPx(3), textY - mmToPx(1.5), mmToPx(3));
-                const storeTypeText = `    ${translateStoreType(orderData.store_type)}`;
-                ctx.fillText(storeTypeText, mmToPx(3), textY);
-                textY += mmToPx(6); // Daha fazla boşluk
-              } else {
-                textY += mmToPx(6); // Store type yoksa da boşluk ekle
-              }
+              const storeType = orderData.store_info?.store_type || orderData.user?.Store?.store_type || orderData.store_type || 'KARGO';
+              console.log('OrderData store_type sources (print):', {
+                store_info: orderData.store_info?.store_type,
+                user_store: orderData.user?.Store?.store_type,
+                direct: orderData.store_type,
+                final: storeType
+              }); // Debug
+              
+              drawStoreTypeIcon(ctx, storeType, mmToPx(3), textY - mmToPx(1.5), mmToPx(3));
+              const storeTypeText = `    ${translateStoreType(storeType)}`;
+              ctx.fillText(storeTypeText, mmToPx(3), textY);
+              textY += mmToPx(6);
 
               // Ürün notu varsa ekle (kompakt)
               if (item.notes && item.notes.trim()) {

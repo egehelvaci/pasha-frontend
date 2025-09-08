@@ -1252,6 +1252,93 @@ const Siparisler = () => {
     ctx.restore();
   };
 
+  // Store type çevirme fonksiyonu (toplu yazdırma)
+  const translateStoreType = (storeType: string): string => {
+    const translations: { [key: string]: string } = {
+      'kargo': 'Kargo',
+      'servis': 'Servis',
+      'kendi alan': 'Kendi Alan', 
+      'ambar': 'Ambar'
+    };
+    
+    return translations[storeType?.toLowerCase()] || storeType || 'Kargo';
+  };
+
+  // Store type'a göre işaret çizme fonksiyonu (toplu yazdırma)
+  const drawStoreTypeIcon = (ctx: CanvasRenderingContext2D, storeType: string, x: number, y: number, size: number) => {
+    const normalizedStoreType = storeType?.toLowerCase() || 'kargo';
+    
+    ctx.save();
+    ctx.strokeStyle = '#000000';
+    ctx.fillStyle = '#000000';
+    ctx.lineWidth = 2;
+    
+    switch (normalizedStoreType) {
+      case 'kargo':
+        // Kargo işareti (kutu)
+        ctx.beginPath();
+        ctx.rect(x - size * 0.4, y - size * 0.3, size * 0.8, size * 0.6);
+        ctx.stroke();
+        // Kutu üstünde çizgi (kapalı kutu)
+        ctx.beginPath();
+        ctx.moveTo(x - size * 0.2, y - size * 0.3);
+        ctx.lineTo(x + size * 0.2, y - size * 0.3);
+        ctx.stroke();
+        break;
+        
+      case 'servis':
+        // Servis işareti (araç/kamyon)
+        ctx.beginPath();
+        ctx.rect(x - size * 0.4, y - size * 0.2, size * 0.6, size * 0.4);
+        ctx.stroke();
+        // Araç kabini
+        ctx.beginPath();
+        ctx.rect(x + size * 0.2, y - size * 0.1, size * 0.2, size * 0.2);
+        ctx.stroke();
+        break;
+        
+      case 'kendi alan':
+        // Kendi alan işareti (ev)
+        ctx.beginPath();
+        // Ev tabanı
+        ctx.rect(x - size * 0.3, y - size * 0.1, size * 0.6, size * 0.4);
+        ctx.stroke();
+        // Ev çatısı (üçgen)
+        ctx.beginPath();
+        ctx.moveTo(x - size * 0.3, y - size * 0.1);
+        ctx.lineTo(x, y - size * 0.4);
+        ctx.lineTo(x + size * 0.3, y - size * 0.1);
+        ctx.stroke();
+        break;
+        
+      case 'ambar':
+        // Ambar işareti (büyük depo)
+        ctx.beginPath();
+        ctx.rect(x - size * 0.4, y - size * 0.3, size * 0.8, size * 0.6);
+        ctx.stroke();
+        // Ambar kapısı
+        ctx.beginPath();
+        ctx.rect(x - size * 0.1, y + size * 0.1, size * 0.2, size * 0.2);
+        ctx.stroke();
+        // Ambar çatısı
+        ctx.beginPath();
+        ctx.moveTo(x - size * 0.4, y - size * 0.3);
+        ctx.lineTo(x, y - size * 0.5);
+        ctx.lineTo(x + size * 0.4, y - size * 0.3);
+        ctx.stroke();
+        break;
+        
+      default:
+        // Varsayılan işaret (kargo)
+        ctx.beginPath();
+        ctx.rect(x - size * 0.4, y - size * 0.3, size * 0.8, size * 0.6);
+        ctx.stroke();
+        break;
+    }
+    
+    ctx.restore();
+  };
+
   // Toplu QR etiket yazdırma fonksiyonu
   const printBulkQRLabels = async (orderIds: string[]) => {
     if (orderIds.length === 0) {
@@ -1431,7 +1518,21 @@ const Siparisler = () => {
                    drawFringeIcon(ctx, item.has_fringe, Math.round((3 / 25.4) * 203), textY - Math.round((1.5 / 25.4) * 203), Math.round((3 / 25.4) * 203));
                    const fringeText = `    ${item.has_fringe ? 'Saçaklı' : 'Saçaksız'}`;
                    ctx.fillText(fringeText, Math.round((3 / 25.4) * 203), textY);
-                   textY += Math.round((6 / 25.4) * 203); // Daha fazla boşluk
+                   textY += infoLineHeight;
+                   
+                   // Store type bilgisi - işaret ile (toplu yazdırma)
+                   const storeType = labelData.order.store_info?.store_type || labelData.order.user?.Store?.store_type || labelData.order.store_type || 'KARGO';
+                   console.log('Bulk print store_type sources:', {
+                     store_info: labelData.order.store_info?.store_type,
+                     user_store: labelData.order.user?.Store?.store_type,
+                     direct: labelData.order.store_type,
+                     final: storeType
+                   }); // Debug
+                   
+                   drawStoreTypeIcon(ctx, storeType, Math.round((3 / 25.4) * 203), textY - Math.round((1.5 / 25.4) * 203), Math.round((3 / 25.4) * 203));
+                   const storeTypeText = `    ${translateStoreType(storeType)}`;
+                   ctx.fillText(storeTypeText, Math.round((3 / 25.4) * 203), textY);
+                   textY += Math.round((6 / 25.4) * 203);
 
                   // Ürün notu varsa ekle (kompakt)
                   if (item.notes && item.notes.trim()) {
