@@ -283,19 +283,50 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
           let textY = qrY + qrDisplaySize + mmToPx(14); // Daha fazla boşluk
           const productName = firstItem.product.name.toUpperCase();
           const lineHeight = mmToPx(6); // Daha da geniş satır aralığı
-          if (productName.length > 30) {
-            // Uzun ürün adlarını böl
-            const words = productName.split(' ');
-            const line1 = words.slice(0, Math.ceil(words.length / 2)).join(' ');
-            const line2 = words.slice(Math.ceil(words.length / 2)).join(' ');
-            ctx.fillText(line1, canvas.width / 2, textY);
-            textY += lineHeight;
-            ctx.fillText(line2, canvas.width / 2, textY);
-            textY += mmToPx(6); // Daha fazla boşluk
-          } else {
-            ctx.fillText(productName, canvas.width / 2, textY);
-            textY += mmToPx(6); // Daha fazla boşluk
+          
+          // Ürün adını canvas genişliğine göre akıllıca böl
+          const maxWidth = canvas.width - mmToPx(4); // Yanlardan 2mm margin
+          const words = productName.split(' ');
+          const lines: string[] = [];
+          let currentLine = '';
+          
+          for (const word of words) {
+            const testLine = currentLine ? `${currentLine} ${word}` : word;
+            const testWidth = ctx.measureText(testLine).width;
+            
+            if (testWidth <= maxWidth) {
+              currentLine = testLine;
+            } else {
+              if (currentLine) {
+                lines.push(currentLine);
+                currentLine = word;
+              } else {
+                // Tek kelime çok uzunsa zorla böl
+                lines.push(word);
+              }
+            }
           }
+          
+          if (currentLine) {
+            lines.push(currentLine);
+          }
+          
+          // Maksimum 3 satır göster
+          const maxLines = 3;
+          const displayLines = lines.slice(0, maxLines);
+          
+          // Eğer 3 satırdan fazla varsa son satırı "..." ile bitir
+          if (lines.length > maxLines) {
+            displayLines[maxLines - 1] = displayLines[maxLines - 1].slice(0, -3) + '...';
+          }
+          
+          // Satırları çiz
+          for (const line of displayLines) {
+            ctx.fillText(line, canvas.width / 2, textY);
+            textY += lineHeight;
+          }
+          
+          textY += mmToPx(2); // Ekstra boşluk
 
           // Ürün bilgileri - DAHA DA BÜYÜTÜLDÜ
           const infoFont = Math.round(LABEL_H_PX * 0.06);   // ~%6 (daha da büyütüldü)
@@ -355,19 +386,22 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
             textY += lineSpacing;
           }
           
-          // Sipariş tarihi
-          if (remainingSpace >= lineSpacing * 2) {
-            ctx.fillText(`Sipariş Tarihi: ${new Date(orderData.created_at).toLocaleDateString('tr-TR')}`, canvas.width / 2, textY);
-            textY += lineSpacing;
-          }
-          
-          // Firma adı (her zaman göster) - ekstra boşluk
-          textY += mmToPx(1); // Ekstra boşluk
-          if (CONTENT_BOTTOM_LIMIT - textY >= lineSpacing) {
-            ctx.fillText(`Firma: ${orderData.store_name}`, canvas.width / 2, textY);
+          // Firma adı (HER ZAMAN GÖSTER - alan kontrolü yok)
+          // Alan sıkışırsa daha küçük font kullan
+          const firmTextY = textY;
+          const remainingSpaceForFirm = CONTENT_BOTTOM_LIMIT - firmTextY;
+          if (remainingSpaceForFirm < lineSpacing) {
+            // Alan çok az ise daha küçük font
+            const smallerFont = Math.round(LABEL_H_PX * 0.035);
+            ctx.font = `${smallerFont}px Arial`;
+            const smallerSpacing = mmToPx(2.5);
+            ctx.fillText(`Firma: ${orderData.store_name}`, canvas.width / 2, firmTextY);
+            textY += smallerSpacing;
+            // Font'u geri döndür
+            ctx.font = `${smallFont}px Arial`;
           } else {
-            // Alan yoksa en önemli bilgileri birleştir
             ctx.fillText(`Firma: ${orderData.store_name}`, canvas.width / 2, textY);
+            textY += lineSpacing;
           }
 
           // Barcode bandını sabit konumda çiz (alt 20mm)
@@ -530,19 +564,50 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
               let textY = qrY + qrDisplaySize + mmToPx(14); // Daha fazla boşluk
               const productName = item.product.name.toUpperCase();
               const lineHeight = mmToPx(6); // Daha da geniş satır aralığı
-              if (productName.length > 30) {
-                // Uzun ürün adlarını böl
-                const words = productName.split(' ');
-                const line1 = words.slice(0, Math.ceil(words.length / 2)).join(' ');
-                const line2 = words.slice(Math.ceil(words.length / 2)).join(' ');
-                ctx.fillText(line1, canvas.width / 2, textY);
-                textY += lineHeight;
-                ctx.fillText(line2, canvas.width / 2, textY);
-                textY += mmToPx(6); // Daha fazla boşluk
-              } else {
-                ctx.fillText(productName, canvas.width / 2, textY);
-                textY += mmToPx(6); // Daha fazla boşluk
+              
+              // Ürün adını canvas genişliğine göre akıllıca böl
+              const maxWidth = canvas.width - mmToPx(4); // Yanlardan 2mm margin
+              const words = productName.split(' ');
+              const lines: string[] = [];
+              let currentLine = '';
+              
+              for (const word of words) {
+                const testLine = currentLine ? `${currentLine} ${word}` : word;
+                const testWidth = ctx.measureText(testLine).width;
+                
+                if (testWidth <= maxWidth) {
+                  currentLine = testLine;
+                } else {
+                  if (currentLine) {
+                    lines.push(currentLine);
+                    currentLine = word;
+                  } else {
+                    // Tek kelime çok uzunsa zorla böl
+                    lines.push(word);
+                  }
+                }
               }
+              
+              if (currentLine) {
+                lines.push(currentLine);
+              }
+              
+              // Maksimum 3 satır göster
+              const maxLines = 3;
+              const displayLines = lines.slice(0, maxLines);
+              
+              // Eğer 3 satırdan fazla varsa son satırı "..." ile bitir
+              if (lines.length > maxLines) {
+                displayLines[maxLines - 1] = displayLines[maxLines - 1].slice(0, -3) + '...';
+              }
+              
+              // Satırları çiz
+              for (const line of displayLines) {
+                ctx.fillText(line, canvas.width / 2, textY);
+                textY += lineHeight;
+              }
+              
+              textY += mmToPx(2); // Ekstra boşluk
 
               // Ürün bilgileri - DAHA DA BÜYÜTÜLDÜ
               const infoFont = Math.round(LABEL_H_PX * 0.06);   // ~%6 (daha da büyütüldü)
@@ -606,25 +671,28 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
                 currentY += lineSpacing;
               }
               
+              // Firma adı (HER ZAMAN GÖSTER - alan kontrolü yok)
+              // Alan sıkışırsa daha küçük font kullan
+              const firmTextY = currentY;
+              const remainingSpaceForFirm = CONTENT_BOTTOM_LIMIT - firmTextY;
+              if (remainingSpaceForFirm < lineSpacing) {
+                // Alan çok az ise daha küçük font
+                const smallerFont = Math.round(LABEL_H_PX * 0.035);
+                ctx.font = `${smallerFont}px Arial`;
+                const smallerSpacing = mmToPx(2.5);
+                ctx.fillText(`Firma: ${orderData.store_name}`, canvas.width / 2, firmTextY);
+                currentY += smallerSpacing;
+                // Font'u geri döndür
+                ctx.font = `${smallFont}px Arial`;
+              } else {
+                ctx.fillText(`Firma: ${orderData.store_name}`, canvas.width / 2, currentY);
+                currentY += lineSpacing;
+              }
+              
               // Etiket numarası (varsa)
               if (codeData._labelIndex && codeData._totalLabels && CONTENT_BOTTOM_LIMIT - currentY >= lineSpacing) {
                 ctx.fillText(`Etiket: ${codeData._labelIndex}/${codeData._totalLabels}`, canvas.width / 2, currentY);
                 currentY += lineSpacing;
-              }
-              
-              // Sipariş tarihi
-              if (CONTENT_BOTTOM_LIMIT - currentY >= lineSpacing) {
-                ctx.fillText(`Sipariş Tarihi: ${new Date(orderData.created_at).toLocaleDateString('tr-TR')}`, canvas.width / 2, currentY);
-                currentY += lineSpacing;
-              }
-              
-              // Firma adı (her zaman göster) - ekstra boşluk
-              currentY += mmToPx(1); // Ekstra boşluk
-              if (CONTENT_BOTTOM_LIMIT - currentY >= lineSpacing) {
-                ctx.fillText(`Firma: ${orderData.store_name}`, canvas.width / 2, currentY);
-              } else {
-                // Alan yoksa en önemli bilgileri birleştir
-                ctx.fillText(`Firma: ${orderData.store_name}`, canvas.width / 2, currentY);
               }
 
               // Barcode görseli HTML'de gösterilecek, burada text eklemeye gerek yok
