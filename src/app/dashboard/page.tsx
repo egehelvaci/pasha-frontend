@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getMyStorePriceList } from '@/services/api';
+import { useToken } from '../hooks/useToken';
 
 interface Collection {
   collectionId: string;
@@ -90,6 +91,11 @@ const CURRENCY_SYMBOLS = {
 export default function Dashboard() {
   const { user, isLoading, token } = useAuth();
   const router = useRouter();
+  const authToken = useToken();
+  
+  // Ürün detay modalı için state'ler
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
 
   const [collections, setCollections] = useState<Collection[]>([]);
   const [recentProducts, setRecentProducts] = useState<Product[]>([]);
@@ -450,7 +456,11 @@ export default function Dashboard() {
                       {recentProducts.map((product) => (
                         <div
                           key={product.productId}
-                          className="flex items-center p-3 border border-gray-200 rounded-lg transition-all duration-200"
+                          className="flex items-center p-3 border border-gray-200 rounded-lg transition-all duration-200 cursor-pointer hover:border-green-300 hover:bg-green-50 group"
+                          onClick={() => {
+                            setSelectedProductId(product.productId);
+                            setDetailModalOpen(true);
+                          }}
                         >
                           <div className="h-10 w-10 rounded-lg bg-gray-200 flex-shrink-0 overflow-hidden">
                             {product.productImage ? (
@@ -468,9 +478,14 @@ export default function Dashboard() {
                             )}
                           </div>
                           <div className="ml-3 flex-1 min-w-0">
-                            <h3 className="font-semibold text-gray-900 truncate text-sm">
+                            <h3 className="font-semibold text-gray-900 truncate text-sm group-hover:text-green-700">
                               {product.name}
                             </h3>
+                          </div>
+                          <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                            </svg>
                           </div>
                         </div>
                       ))}
@@ -490,6 +505,141 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+      
+      {/* Ürün Detay Modalı */}
+      <ProductDetailModal 
+        open={detailModalOpen} 
+        onClose={() => setDetailModalOpen(false)} 
+        productId={selectedProductId} 
+      />
+    </div>
+  );
+}
+
+// Basit Ürün Detay Modal Componenti
+function ProductDetailModal({ open, onClose, productId }: { open: boolean, onClose: () => void, productId: string | null }) {
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const { user, token } = useAuth();
+  
+  // Modal açıkken body scroll'unu engelle
+  React.useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [open]);
+
+  React.useEffect(() => {
+    if (open && productId) {
+      fetchProductDetail(productId);
+    } else {
+      setProduct(null);
+      setLoading(false);
+    }
+  }, [open, productId]);
+
+  const fetchProductDetail = async (id: string) => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/products/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!res.ok) throw new Error("Ürün bulunamadı");
+      const data = await res.json();
+      setProduct(data.data || data);
+    } catch (err: any) {
+      setError(err.message || "Bir hata oluştu");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!open) return null;
+  
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl w-full max-w-2xl shadow-lg relative overflow-hidden max-h-[90vh]">
+        {/* Header */}
+        <div className="bg-[#00365a] rounded-t-xl px-6 py-4 relative">
+          <button 
+            className="absolute top-3 right-3 text-white hover:text-gray-200 text-2xl font-bold" 
+            onClick={onClose}
+          >
+            &times;
+          </button>
+          <h2 className="text-xl font-bold text-white">Ürün Detayı</h2>
+        </div>
+        
+        {/* Content */}
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+          {loading ? (
+            <div className="p-16 flex flex-col items-center justify-center">
+              <div className="w-12 h-12 border-4 border-blue-900 border-t-transparent rounded-full animate-spin"></div>
+              <p className="mt-4 text-gray-600">Ürün detayları yükleniyor...</p>
+            </div>
+          ) : error ? (
+            <div className="p-8 text-center">
+              <div className="text-red-500">{error}</div>
+            </div>
+          ) : product ? (
+            <div className="space-y-6">
+              {/* Ürün Görseli */}
+              <div className="aspect-[4/3] relative overflow-hidden bg-gray-50 rounded-lg border border-gray-200">
+                <img 
+                  src={product.productImage || "https://tebi.io/pashahome/products/ornek-urun.jpg"} 
+                  alt={product.name} 
+                  className="w-full h-full object-contain p-4" 
+                />
+              </div>
+              
+              {/* Ürün Bilgileri */}
+              <div className="space-y-4">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">
+                    {product.collection?.name} - {product.name}
+                  </h1>
+                  <p className="text-gray-600 mt-2">{product.description}</p>
+                </div>
+                
+                
+                {/* Aksiyon Butonları */}
+                <div className="flex gap-3 pt-4">
+                  <Link
+                    href={`/dashboard/urunler/${product.productId}`}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-semibold text-center transition-colors flex items-center justify-center gap-2"
+                    onClick={onClose}
+                  >
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    Sepete Ekle
+                  </Link>
+                  <button
+                    onClick={onClose}
+                    className="px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Kapat
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="p-8 text-center">
+              <div className="text-gray-500">Ürün bulunamadı</div>
+            </div>
+          )}
         </div>
       </div>
     </div>

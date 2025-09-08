@@ -1389,13 +1389,15 @@ export default function Settings() {
                       >
                         <FaStore className="w-4 h-4" />
                       </button>
-                      <button
-                        onClick={() => { setDeleteUserId(user.userId); setDeleteModalOpen(true); }}
-                        className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Sil"
-                      >
-                        <FaTrash className="w-4 h-4" />
-                      </button>
+                      {isAdmin && (
+                        <button
+                          onClick={() => { setDeleteUserId(user.userId); setDeleteModalOpen(true); }}
+                          className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Sil"
+                        >
+                          <FaTrash className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
