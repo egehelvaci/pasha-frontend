@@ -1275,56 +1275,89 @@ const Siparisler = () => {
     
     switch (normalizedStoreType) {
       case 'kargo':
-        // Kargo işareti (kutu)
+        // Kargo işareti (kamyon - FontAwesome benzeri)
         ctx.beginPath();
-        ctx.rect(x - size * 0.4, y - size * 0.3, size * 0.8, size * 0.6);
+        // Kamyon kasası
+        ctx.rect(x - size * 0.4, y - size * 0.2, size * 0.5, size * 0.4);
         ctx.stroke();
-        // Kutu üstünde çizgi (kapalı kutu)
+        // Kamyon kabini
         ctx.beginPath();
-        ctx.moveTo(x - size * 0.2, y - size * 0.3);
-        ctx.lineTo(x + size * 0.2, y - size * 0.3);
+        ctx.rect(x + size * 0.1, y - size * 0.2, size * 0.3, size * 0.3);
+        ctx.stroke();
+        // Tekerlekler
+        ctx.beginPath();
+        ctx.arc(x - size * 0.2, y + size * 0.3, size * 0.1, 0, 2 * Math.PI);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(x + size * 0.25, y + size * 0.3, size * 0.1, 0, 2 * Math.PI);
         ctx.stroke();
         break;
         
       case 'servis':
-        // Servis işareti (araç/kamyon)
+        // Servis işareti (kamyon - FontAwesome benzeri)
         ctx.beginPath();
-        ctx.rect(x - size * 0.4, y - size * 0.2, size * 0.6, size * 0.4);
+        // Kamyon kasası
+        ctx.rect(x - size * 0.4, y - size * 0.2, size * 0.5, size * 0.4);
         ctx.stroke();
-        // Araç kabini
+        // Kamyon kabini
         ctx.beginPath();
-        ctx.rect(x + size * 0.2, y - size * 0.1, size * 0.2, size * 0.2);
+        ctx.rect(x + size * 0.1, y - size * 0.2, size * 0.3, size * 0.3);
+        ctx.stroke();
+        // Tekerlekler
+        ctx.beginPath();
+        ctx.arc(x - size * 0.2, y + size * 0.3, size * 0.1, 0, 2 * Math.PI);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(x + size * 0.25, y + size * 0.3, size * 0.1, 0, 2 * Math.PI);
         ctx.stroke();
         break;
         
       case 'kendi alan':
-        // Kendi alan işareti (ev)
+        // Kendi alan işareti (warehouse - FontAwesome benzeri)
         ctx.beginPath();
-        // Ev tabanı
-        ctx.rect(x - size * 0.3, y - size * 0.1, size * 0.6, size * 0.4);
+        // Ana bina gövdesi
+        ctx.rect(x - size * 0.4, y - size * 0.2, size * 0.8, size * 0.4);
         ctx.stroke();
-        // Ev çatısı (üçgen)
+        // Üçgen çatı
         ctx.beginPath();
-        ctx.moveTo(x - size * 0.3, y - size * 0.1);
+        ctx.moveTo(x - size * 0.4, y - size * 0.2);
         ctx.lineTo(x, y - size * 0.4);
-        ctx.lineTo(x + size * 0.3, y - size * 0.1);
+        ctx.lineTo(x + size * 0.4, y - size * 0.2);
+        ctx.closePath();
+        ctx.stroke();
+        // Kapı
+        ctx.beginPath();
+        ctx.rect(x - size * 0.1, y, size * 0.2, size * 0.2);
+        ctx.stroke();
+        // Pencereler
+        ctx.beginPath();
+        ctx.rect(x - size * 0.25, y - size * 0.1, size * 0.1, size * 0.1);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.rect(x + size * 0.15, y - size * 0.1, size * 0.1, size * 0.1);
         ctx.stroke();
         break;
         
       case 'ambar':
-        // Ambar işareti (büyük depo)
+        // Ambar işareti (warehouse - FontAwesome benzeri)
         ctx.beginPath();
-        ctx.rect(x - size * 0.4, y - size * 0.3, size * 0.8, size * 0.6);
+        // Ana bina gövdesi
+        ctx.rect(x - size * 0.4, y - size * 0.2, size * 0.8, size * 0.4);
         ctx.stroke();
-        // Ambar kapısı
+        // Üçgen çatı
         ctx.beginPath();
-        ctx.rect(x - size * 0.1, y + size * 0.1, size * 0.2, size * 0.2);
+        ctx.moveTo(x - size * 0.4, y - size * 0.2);
+        ctx.lineTo(x, y - size * 0.4);
+        ctx.lineTo(x + size * 0.4, y - size * 0.2);
+        ctx.closePath();
         ctx.stroke();
-        // Ambar çatısı
+        // Büyük yükleme kapısı
         ctx.beginPath();
-        ctx.moveTo(x - size * 0.4, y - size * 0.3);
-        ctx.lineTo(x, y - size * 0.5);
-        ctx.lineTo(x + size * 0.4, y - size * 0.3);
+        ctx.rect(x - size * 0.2, y - size * 0.05, size * 0.4, size * 0.25);
+        ctx.stroke();
+        // Küçük kapı
+        ctx.beginPath();
+        ctx.rect(x + size * 0.25, y, size * 0.1, size * 0.2);
         ctx.stroke();
         break;
         
