@@ -57,7 +57,7 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
           <title>Kargo Fişi</title>
           <style>
             @page {
-              size: A5 portrait;
+              size: A5 landscape;
               margin: 0;
             }
             
@@ -73,10 +73,10 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
               line-height: 1.3;
               color: #000;
               background: white;
-              width: 148mm;
-              height: 210mm;
+              width: 210mm;
+              height: 148mm;
               margin: 0;
-              padding: 15mm;
+              padding: 10mm;
               overflow: hidden;
             }
             
@@ -85,43 +85,53 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
               height: 100%;
               display: flex;
               flex-direction: column;
-              justify-content: space-between;
             }
             
             .header {
               text-align: center;
               border-bottom: 2px solid #000;
-              padding-bottom: 8mm;
-              margin-bottom: 8mm;
+              padding-bottom: 5mm;
+              margin-bottom: 5mm;
             }
             
             .header h1 {
               font-size: 18px;
               font-weight: bold;
-              margin-bottom: 3mm;
+              margin-bottom: 2mm;
+              color: #000;
             }
             
             .header h2 {
               font-size: 14px;
               font-weight: bold;
               margin-bottom: 2mm;
+              color: #000;
             }
             
             .header p {
-              font-size: 10px;
+              font-size: 11px;
               margin: 1mm 0;
+              color: #000;
             }
             
             .content {
               flex: 1;
               display: flex;
               flex-direction: column;
-              gap: 6mm;
+              gap: 3mm;
+            }
+            
+            .content-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 5mm;
+              flex: 1;
             }
             
             .section {
               border: 1.5px solid #000;
-              padding: 4mm;
+              padding: 3mm;
+              height: fit-content;
             }
             
             .section h3 {
@@ -130,33 +140,44 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
               border-bottom: 1px solid #000;
               padding-bottom: 2mm;
               margin-bottom: 3mm;
-            }
-            
-            .info-grid {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 2mm;
+              color: #000;
             }
             
             .info-item {
               display: flex;
               justify-content: space-between;
               margin-bottom: 2mm;
+              font-size: 11px;
+              align-items: flex-start;
             }
             
             .info-item strong {
               font-weight: bold;
               min-width: 25mm;
+              color: #000;
             }
             
             .info-item span {
-              text-align: right;
+              text-align: left;
               flex: 1;
-              margin-left: 2mm;
+              margin-left: 3mm;
+              word-wrap: break-word;
+              color: #000;
             }
             
-            .address-section .info-item {
+            .address-section {
+              width: 100%;
+              margin-bottom: 3mm;
+            }
+            
+            .sender-info {
               grid-column: 1 / -1;
+              margin-top: auto;
+              border-top: 1px solid #000;
+              padding-top: 3mm;
+              text-align: center;
+              font-size: 10px;
+              color: #666;
             }
             
             @media print {
@@ -190,8 +211,8 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
 
             <div class="content">
               <div class="section address-section">
-                <h3 style="font-size: 16px; font-weight: bold;">ALICI ADRESİ</h3>
-                <div class="info-item" style="font-size: 14px; font-weight: bold;">
+                <h3>ALICI ADRESİ</h3>
+                <div class="info-item">
                   <strong>Adres:</strong>
                   <span>${order.address ? 
                     `${(order.address as any).address}, ${(order.address as any).district} / ${(order.address as any).city}` : 
@@ -199,64 +220,63 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
                   }</span>
                 </div>
                 ${order.address && (order.address as any).postal_code ? 
-                  `<div class="info-item" style="font-size: 14px; font-weight: bold;">
+                  `<div class="info-item">
                     <strong>Posta Kodu:</strong>
                     <span>${(order.address as any).postal_code}</span>
                   </div>` : ''
                 }
               </div>
 
-              <div class="section">
-                <h3 style="font-size: 14px; font-weight: bold;">ALICI BİLGİLERİ</h3>
-                <div class="info-grid">
-                  <div class="info-item" style="font-size: 13px; font-weight: bold;">
+              <div class="content-grid">
+                <div class="section">
+                  <h3>ALICI BİLGİLERİ</h3>
+                  <div class="info-item">
                     <strong>Firma:</strong>
                     <span>${order.store_name}</span>
                   </div>
-                  <div class="info-item" style="font-size: 13px; font-weight: bold;">
+                  <div class="info-item">
                     <strong>Yetkili:</strong>
                     <span>${order.user ? `${order.user.name} ${order.user.surname}` : 'Belirtilmemiş'}</span>
                   </div>
-                  <div class="info-item" style="font-size: 13px; font-weight: bold;">
+                  <div class="info-item">
                     <strong>Telefon:</strong>
                     <span>${order.store_phone || order.user?.phone || 'Belirtilmemiş'}</span>
                   </div>
-                  <div class="info-item" style="font-size: 13px; font-weight: bold;">
+                  <div class="info-item">
                     <strong>E-posta:</strong>
-                    <span>${order.store_email || order.user?.email || 'Belirtilmemiş'}</span>
-                  </div>
-                  <div class="info-item" style="font-size: 13px; font-weight: bold;">
+                      <span>${order.store_email || order.user?.email || 'Belirtilmemiş'}</span>
+                    </div>
+                  <div class="info-item">
                     <strong>Vergi No:</strong>
                     <span>${order.store_tax_number || 'Belirtilmemiş'}</span>
                   </div>
-                  <div class="info-item" style="font-size: 13px; font-weight: bold;">
+                  <div class="info-item">
                     <strong>Vergi Dairesi:</strong>
                     <span>${order.store_tax_office || 'Belirtilmemiş'}</span>
+                  </div>
+                </div>
+
+                <div class="section">
+                  <h3>GÖNDERİCİ BİLGİLERİ</h3>
+                  <div class="info-item">
+                    <strong>Firma:</strong>
+                    <span>PAŞA HOME Tekstil San. ve Tic. Ltd. Şti.</span>
+                  </div>
+                  <div class="info-item">
+                    <strong>Telefon:</strong>
+                    <span>+90 555 234 58 91</span>
+                  </div>
+                  <div class="info-item">
+                    <strong>Adres:</strong>
+                    <span>Güneşli Mah. Mahmutbey Cad. 1296. Sok. No:3 Daire:1 Bağcılar/İstanbul</span>
                   </div>
                 </div>
               </div>
             </div>
             
-            <div class="section sender-section" style="margin-top: 8mm; border-top: 1px solid #ccc; padding-top: 4mm;">
-              <h3 style="font-size: 10px; font-weight: bold;">GÖNDERİCİ BİLGİLERİ</h3>
-              <div class="info-grid">
-                <div class="info-item" style="font-size: 9px;">
-                  <strong>Firma:</strong>
-                  <span>PAŞA HOME</span>
-                </div>
-                <div class="info-item" style="font-size: 9px;">
-                  <strong>Telefon:</strong>
-                  <span>+90 212 555 0123</span>
-                </div>
-                <div class="info-item" style="font-size: 9px;">
-                  <strong>Adres:</strong>
-                  <span>Merkez Ofis, İstanbul</span>
-                </div>
-                <div class="info-item" style="font-size: 9px;">
-                  <strong>Vergi No:</strong>
-                  <span>1234567890</span>
-                </div>
-              </div>
+            <div class="sender-info">
+              <p><strong>PAŞA HOME</strong> - Halı ve Ev Tekstili Ürünleri</p>
+              <p>www.pasahome.com.tr | info@pasahome.com.tr</p>
             </div>
           </div>
         </body>
