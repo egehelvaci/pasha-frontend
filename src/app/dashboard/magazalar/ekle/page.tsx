@@ -131,8 +131,16 @@ export default function AddStorePage() {
 
       const result = await response.json();
       if (result.success) {
-        alert('Mağaza başarıyla oluşturuldu');
-        router.push('/dashboard/magazalar');
+        const storeId = result.data?.store_id;
+        alert('Mağaza başarıyla oluşturuldu. Şimdi adres bilgilerini ekleyebilirsiniz.');
+        
+        // Yeni oluşturulan mağazanın adres yönetimi sayfasına yönlendir
+        if (storeId) {
+          router.push(`/dashboard/magazalar/${storeId}/adresler`);
+        } else {
+          // Store ID bulunamazsa mağazalar listesine git
+          router.push('/dashboard/magazalar');
+        }
       } else {
         throw new Error(result.message || 'Mağaza oluşturulamadı');
       }
