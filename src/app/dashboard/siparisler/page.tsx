@@ -1474,7 +1474,7 @@ const Siparisler = () => {
                   // YENİ LAYOUT: QR kodu küçük ve sağ köşede (toplu yazdırma)
                   const qrDisplaySize = Math.round(639 * 0.25);   // genişliğin %25'i (küçültüldü)
                   const qrX = canvas.width - qrDisplaySize - Math.round((3 / 25.4) * 203);   // sağdan 3mm boşluk
-                  const qrY = Math.round((3 / 25.4) * 203);                                  // üstten 3mm boşluk
+                  const qrY = 10 + Math.round((3 / 25.4) * 203);                             // üstten 10px + 3mm boşluk
                   ctx.drawImage(qrImage, qrX, qrY, qrDisplaySize, qrDisplaySize);
 
                   // Metin bilgilerini sol tarafta ekle
@@ -1534,7 +1534,7 @@ const Siparisler = () => {
 
                   // Ürün bilgileri - Kompakt tasarım (toplu yazdırma)
                   const infoFont = Math.round(799 * 0.045);   // Küçük font
-                  ctx.font = `${infoFont}px Arial`;
+                  ctx.font = `bold ${infoFont}px Arial`;
                   const infoLineHeight = Math.round((5 / 25.4) * 203); // Ürün bilgileri için ayrı satır aralığı
                   
                   // Boyut bilgisi
@@ -1584,8 +1584,47 @@ const Siparisler = () => {
                   const CONTENT_BOTTOM_LIMIT = 799 - Math.round((20 / 25.4) * 203); // 641px
                   let firmY = CONTENT_BOTTOM_LIMIT - Math.round((25 / 25.4) * 203); // Barcode'dan 25mm yukarı
                   
-                  ctx.fillText(labelData.order.store_name, canvas.width / 2, firmY);
-                  firmY += Math.round((4 / 25.4) * 203);
+                  // Firma adını satır satır böl eğer çok uzunsa (toplu yazdırma)
+                  const firmMaxWidth = canvas.width - Math.round((6 / 25.4) * 203); // 3mm margin her yandan
+                  const firmWords = labelData.order.store_name.split(' ');
+                  const firmLines: string[] = [];
+                  let currentFirmLine = '';
+                  
+                  for (const word of firmWords) {
+                    const testLine = currentFirmLine ? `${currentFirmLine} ${word}` : word;
+                    const testWidth = ctx.measureText(testLine).width;
+                    
+                    if (testWidth <= firmMaxWidth) {
+                      currentFirmLine = testLine;
+                    } else {
+                      if (currentFirmLine) {
+                        firmLines.push(currentFirmLine);
+                        currentFirmLine = word;
+                      } else {
+                        // Tek kelime çok uzunsa zorla böl
+                        firmLines.push(word);
+                      }
+                    }
+                  }
+                  
+                  if (currentFirmLine) {
+                    firmLines.push(currentFirmLine);
+                  }
+                  
+                  // Maksimum 2 satır firma adı göster
+                  const maxFirmLines = 2;
+                  const displayFirmLines = firmLines.slice(0, maxFirmLines);
+                  
+                  if (firmLines.length > maxFirmLines) {
+                    displayFirmLines[maxFirmLines - 1] = displayFirmLines[maxFirmLines - 1].slice(0, -3) + '...';
+                  }
+                  
+                  // Firma adı satırlarını çiz (toplu yazdırma)
+                  for (const line of displayFirmLines) {
+                    ctx.fillText(line, canvas.width / 2, firmY);
+                    firmY += Math.round((4 / 25.4) * 203); // Firma adı satır aralığı (toplu yazdırma)
+                  }
+                  firmY += Math.round((2 / 25.4) * 203); // Firma adı ile adres arası boşluk (toplu yazdırma)
                   
                   // Adres bilgisi - boyut artırıldı ve kalın yapıldı
                   const addressFont = Math.round(799 * 0.042);
@@ -1653,13 +1692,7 @@ const Siparisler = () => {
                     }
                   }
                   
-                  // PAŞA HOME yazısını etikette orta alana ekle (QR koduna binmeyecek şekilde) (toplu yazdırma)
-                  const pasaHomeFont = Math.round(799 * 0.06);
-                  ctx.font = `bold ${pasaHomeFont}px Arial`;
-                  ctx.textAlign = 'center';
-                  // Ürün bilgileri ile firma adı arasına yerleştir
-                  const middleY = (textY + (CONTENT_BOTTOM_LIMIT - Math.round((25 / 25.4) * 203))) / 2;
-                  ctx.fillText('PAŞA HOME', canvas.width / 2, middleY);
+                  // PAŞA HOME yazısı kaldırıldı (toplu yazdırma)
                   
                   // QR kodunun üstündeki yazılar kaldırıldı
 

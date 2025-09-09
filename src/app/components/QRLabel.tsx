@@ -395,7 +395,7 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
           // YENİ LAYOUT: QR kodu küçük ve sağ köşede
           const qrDisplaySize = Math.round(LABEL_W_PX * 0.25);   // genişliğin %25'i (küçültüldü)
           const qrX = canvas.width - qrDisplaySize - mmToPx(3);   // sağdan 3mm boşluk
-          const qrY = mmToPx(3);                                  // üstten 3mm boşluk
+          const qrY = 10 + mmToPx(3);                             // üstten 10px + 3mm boşluk
           ctx.drawImage(qrImage, qrX, qrY, qrDisplaySize, qrDisplaySize);
 
           // Metin bilgilerini sol tarafta ekle
@@ -506,8 +506,47 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
           const CONTENT_BOTTOM_LIMIT = LABEL_H_PX - mmToPx(20); // 20mm barcode alanı
           let firmY = CONTENT_BOTTOM_LIMIT - mmToPx(25); // Barcode'dan 25mm yukarı
           
-          ctx.fillText(orderData.store_name, canvas.width / 2, firmY);
-          firmY += mmToPx(4);
+          // Firma adını satır satır böl eğer çok uzunsa
+          const firmMaxWidth = canvas.width - mmToPx(6); // 3mm margin her yandan
+          const firmWords = orderData.store_name.split(' ');
+          const firmLines: string[] = [];
+          let currentFirmLine = '';
+          
+          for (const word of firmWords) {
+            const testLine = currentFirmLine ? `${currentFirmLine} ${word}` : word;
+            const testWidth = ctx.measureText(testLine).width;
+            
+            if (testWidth <= firmMaxWidth) {
+              currentFirmLine = testLine;
+            } else {
+              if (currentFirmLine) {
+                firmLines.push(currentFirmLine);
+                currentFirmLine = word;
+              } else {
+                // Tek kelime çok uzunsa zorla böl
+                firmLines.push(word);
+              }
+            }
+          }
+          
+          if (currentFirmLine) {
+            firmLines.push(currentFirmLine);
+          }
+          
+          // Maksimum 2 satır firma adı göster
+          const maxFirmLines = 2;
+          const displayFirmLines = firmLines.slice(0, maxFirmLines);
+          
+          if (firmLines.length > maxFirmLines) {
+            displayFirmLines[maxFirmLines - 1] = displayFirmLines[maxFirmLines - 1].slice(0, -3) + '...';
+          }
+          
+          // Firma adı satırlarını çiz
+          for (const line of displayFirmLines) {
+            ctx.fillText(line, canvas.width / 2, firmY);
+            firmY += mmToPx(4); // Firma adı satır aralığı
+          }
+          firmY += mmToPx(2); // Firma adı ile adres arası boşluk
           
           // Adres bilgisi - boyut artırıldı ve kalın yapıldı
           const addressFont = Math.round(LABEL_H_PX * 0.042);
@@ -575,13 +614,7 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
             }
           }
           
-          // PAŞA HOME yazısını etikette orta alana ekle (QR koduna binmeyecek şekilde)
-          const pasaHomeFont = Math.round(LABEL_H_PX * 0.06);
-          ctx.font = `bold ${pasaHomeFont}px Arial`;
-          ctx.textAlign = 'center';
-          // Ürün bilgileri ile firma adı arasına yerleştir
-          const middleY = (textY + (CONTENT_BOTTOM_LIMIT - mmToPx(25))) / 2;
-          ctx.fillText('PAŞA HOME', canvas.width / 2, middleY);
+          // PAŞA HOME yazısı kaldırıldı
           
               // QR kodunun üstündeki yazılar kaldırıldı
 
@@ -727,7 +760,7 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
               // YENİ LAYOUT: QR kodu küçük ve sağ köşede (yazdırma)
               const qrDisplaySize = Math.round(LABEL_W_PX * 0.25);   // genişliğin %25'i (küçültüldü)
               const qrX = canvas.width - qrDisplaySize - mmToPx(3);   // sağdan 3mm boşluk
-              const qrY = mmToPx(3);                                  // üstten 3mm boşluk
+              const qrY = 10 + mmToPx(3);                             // üstten 10px + 3mm boşluk
               ctx.drawImage(qrImage, qrX, qrY, qrDisplaySize, qrDisplaySize);
 
               // Metin bilgilerini sol tarafta ekle
@@ -837,8 +870,47 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
               const CONTENT_BOTTOM_LIMIT = LABEL_H_PX - mmToPx(20); // 20mm barcode alanı
               let firmY = CONTENT_BOTTOM_LIMIT - mmToPx(25); // Barcode'dan 25mm yukarı
               
-              ctx.fillText(orderData.store_name, canvas.width / 2, firmY);
-              firmY += mmToPx(4);
+              // Firma adını satır satır böl eğer çok uzunsa (yazdırma)
+              const firmMaxWidth = canvas.width - mmToPx(6); // 3mm margin her yandan
+              const firmWords = orderData.store_name.split(' ');
+              const firmLines: string[] = [];
+              let currentFirmLine = '';
+              
+              for (const word of firmWords) {
+                const testLine = currentFirmLine ? `${currentFirmLine} ${word}` : word;
+                const testWidth = ctx.measureText(testLine).width;
+                
+                if (testWidth <= firmMaxWidth) {
+                  currentFirmLine = testLine;
+                } else {
+                  if (currentFirmLine) {
+                    firmLines.push(currentFirmLine);
+                    currentFirmLine = word;
+                  } else {
+                    // Tek kelime çok uzunsa zorla böl
+                    firmLines.push(word);
+                  }
+                }
+              }
+              
+              if (currentFirmLine) {
+                firmLines.push(currentFirmLine);
+              }
+              
+              // Maksimum 2 satır firma adı göster
+              const maxFirmLines = 2;
+              const displayFirmLines = firmLines.slice(0, maxFirmLines);
+              
+              if (firmLines.length > maxFirmLines) {
+                displayFirmLines[maxFirmLines - 1] = displayFirmLines[maxFirmLines - 1].slice(0, -3) + '...';
+              }
+              
+              // Firma adı satırlarını çiz (yazdırma)
+              for (const line of displayFirmLines) {
+                ctx.fillText(line, canvas.width / 2, firmY);
+                firmY += mmToPx(4); // Firma adı satır aralığı (yazdırma)
+              }
+              firmY += mmToPx(2); // Firma adı ile adres arası boşluk (yazdırma)
               
               // Adres bilgisi - boyut artırıldı ve kalın yapıldı
               const addressFont = Math.round(LABEL_H_PX * 0.042);
@@ -904,15 +976,10 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
                   ctx.fillText(`Tel: ${phoneText}`, canvas.width / 2, firmY);
                   firmY += mmToPx(4); // Alt boşluk aynı
                 }
+
               }
               
-              // PAŞA HOME yazısını etikette orta alana ekle (QR koduna binmeyecek şekilde) (yazdırma)
-              const pasaHomeFont = Math.round(LABEL_H_PX * 0.06);
-              ctx.font = `bold ${pasaHomeFont}px Arial`;
-              ctx.textAlign = 'center';
-              // Ürün bilgileri ile firma adı arasına yerleştir
-              const middleY = (textY + (CONTENT_BOTTOM_LIMIT - mmToPx(25))) / 2;
-              ctx.fillText('PAŞA HOME', canvas.width / 2, middleY);
+              // PAŞA HOME yazısı kaldırıldı (yazdırma)
               
               // QR kodunun üstündeki yazılar kaldırıldı
 
@@ -1375,3 +1442,4 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
     </div>
   );
 }
+
