@@ -488,10 +488,48 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
            ctx.fillText(storeTypeText, mmToPx(3), textY);
            textY += mmToPx(6);
 
-          // Ürün notu varsa ekle (kompakt)
+          // Ürün notu varsa ekle (kompakt) - satır bölme ile
           if (firstItem.notes && firstItem.notes.trim()) {
-            ctx.fillText(`Not: ${firstItem.notes}`, mmToPx(3), textY);
-            textY += mmToPx(3);
+            const noteText = `Not: ${firstItem.notes}`;
+            const noteMaxWidth = leftAreaWidth; // QR kodunun yanındaki alanı kullan
+            const noteWords = noteText.split(' ');
+            const noteLines: string[] = [];
+            let currentNoteLine = '';
+            
+            for (const word of noteWords) {
+              const testLine = currentNoteLine ? `${currentNoteLine} ${word}` : word;
+              const testWidth = ctx.measureText(testLine).width;
+              
+              if (testWidth <= noteMaxWidth) {
+                currentNoteLine = testLine;
+              } else {
+                if (currentNoteLine) {
+                  noteLines.push(currentNoteLine);
+                  currentNoteLine = word;
+                } else {
+                  // Tek kelime çok uzunsa zorla böl
+                  noteLines.push(word);
+                }
+              }
+            }
+            
+            if (currentNoteLine) {
+              noteLines.push(currentNoteLine);
+            }
+            
+            // Maksimum 2 satır not göster
+            const maxNoteLines = 2;
+            const displayNoteLines = noteLines.slice(0, maxNoteLines);
+            
+            if (noteLines.length > maxNoteLines) {
+              displayNoteLines[maxNoteLines - 1] = displayNoteLines[maxNoteLines - 1].slice(0, -3) + '...';
+            }
+            
+            // Not satırlarını çiz
+            for (const line of displayNoteLines) {
+              ctx.fillText(line, mmToPx(3), textY);
+              textY += mmToPx(4); // Not satır aralığı
+            }
           }
 
           // FIRMA BİLGİLERİ VE ADRES - En alt kısımda, tam genişlik kullanılarak
@@ -853,10 +891,48 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
               ctx.fillText(storeTypeText, mmToPx(3), textY);
               textY += mmToPx(6);
 
-              // Ürün notu varsa ekle (kompakt)
+              // Ürün notu varsa ekle (kompakt) - satır bölme ile (yazdırma)
               if (item.notes && item.notes.trim()) {
-                ctx.fillText(`Not: ${item.notes}`, mmToPx(3), textY);
-                textY += mmToPx(3);
+                const noteText = `Not: ${item.notes}`;
+                const noteMaxWidth = leftAreaWidth; // QR kodunun yanındaki alanı kullan
+                const noteWords = noteText.split(' ');
+                const noteLines: string[] = [];
+                let currentNoteLine = '';
+                
+                for (const word of noteWords) {
+                  const testLine = currentNoteLine ? `${currentNoteLine} ${word}` : word;
+                  const testWidth = ctx.measureText(testLine).width;
+                  
+                  if (testWidth <= noteMaxWidth) {
+                    currentNoteLine = testLine;
+                  } else {
+                    if (currentNoteLine) {
+                      noteLines.push(currentNoteLine);
+                      currentNoteLine = word;
+                    } else {
+                      // Tek kelime çok uzunsa zorla böl
+                      noteLines.push(word);
+                    }
+                  }
+                }
+                
+                if (currentNoteLine) {
+                  noteLines.push(currentNoteLine);
+                }
+                
+                // Maksimum 2 satır not göster
+                const maxNoteLines = 2;
+                const displayNoteLines = noteLines.slice(0, maxNoteLines);
+                
+                if (noteLines.length > maxNoteLines) {
+                  displayNoteLines[maxNoteLines - 1] = displayNoteLines[maxNoteLines - 1].slice(0, -3) + '...';
+                }
+                
+                // Not satırlarını çiz (yazdırma)
+                for (const line of displayNoteLines) {
+                  ctx.fillText(line, mmToPx(3), textY);
+                  textY += mmToPx(4); // Not satır aralığı (yazdırma)
+                }
               }
 
               // FIRMA BİLGİLERİ VE ADRES - En alt kısımda (yazdırma)
