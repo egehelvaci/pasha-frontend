@@ -69,12 +69,7 @@ const EKatalogPage = () => {
       setLoading(true);
       const authToken = token;
       
-      const params = new URLSearchParams({
-        limit: '1000', // Load all products
-        page: '1'
-      });
-      
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/products?${params}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/products/all`, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json'
