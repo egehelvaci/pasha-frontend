@@ -136,6 +136,35 @@ export default function PaymentsPage() {
     currency: 'TRY'
   });
 
+  // Mağaza arama state'i
+  const [storeSearchTerm, setStoreSearchTerm] = useState('');
+
+  // Mağazaları alfabetik sırala ve filtrele
+  const getFilteredAndSortedStores = () => {
+    let filteredStores = stores;
+    
+    // Arama terimi varsa filtrele
+    if (storeSearchTerm.trim()) {
+      const searchLower = storeSearchTerm.toLowerCase();
+      filteredStores = stores.filter(store => 
+        store.kurum_adi.toLowerCase().includes(searchLower) ||
+        store.vergi_numarasi.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Alfabetik sırala (kurum_adi'na göre)
+    return filteredStores.sort((a, b) => 
+      a.kurum_adi.localeCompare(b.kurum_adi, 'tr', { sensitivity: 'base' })
+    );
+  };
+
+  // Dropdown kapandığında arama terimini sıfırla
+  useEffect(() => {
+    if (!paymentStoreDropdownOpen) {
+      setStoreSearchTerm('');
+    }
+  }, [paymentStoreDropdownOpen]);
+
 
   // Currency bilgisini localStorage'dan al
   useEffect(() => {
@@ -1397,32 +1426,66 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
                         </button>
                         
                         {paymentStoreDropdownOpen && (
-                          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                            <div
-                              className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                !paymentForm.storeId ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                              }`}
-                              onClick={() => {
-                                setPaymentForm(prev => ({ ...prev, storeId: "" }));
-                                setPaymentStoreDropdownOpen(false);
-                              }}
-                            >
-                              Mağaza Seçiniz
+                          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-80 overflow-hidden">
+                            {/* Arama Input */}
+                            <div className="p-3 border-b border-gray-200 bg-gray-50">
+                              <div className="relative">
+                                <input
+                                  type="text"
+                                  placeholder="Mağaza ara..."
+                                  value={storeSearchTerm}
+                                  onChange={(e) => setStoreSearchTerm(e.target.value)}
+                                  className="w-full px-3 py-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent text-sm"
+                                  autoFocus
+                                />
+                                <svg 
+                                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                              </div>
                             </div>
-                            {stores.map((store) => (
+                            
+                            {/* Mağaza Listesi */}
+                            <div className="max-h-60 overflow-y-auto">
                               <div
-                                key={store.store_id}
                                 className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                  paymentForm.storeId === store.store_id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                  !paymentForm.storeId ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
                                 }`}
                                 onClick={() => {
-                                  setPaymentForm(prev => ({ ...prev, storeId: store.store_id }));
+                                  setPaymentForm(prev => ({ ...prev, storeId: "" }));
+                                  setStoreSearchTerm('');
                                   setPaymentStoreDropdownOpen(false);
                                 }}
                               >
-                                {store.kurum_adi} - {store.vergi_numarasi}
+                                Mağaza Seçiniz
                               </div>
-                            ))}
+                              {getFilteredAndSortedStores().length === 0 ? (
+                                <div className="px-4 py-3 text-gray-500 text-sm text-center">
+                                  Arama kriterine uygun mağaza bulunamadı
+                                </div>
+                              ) : (
+                                getFilteredAndSortedStores().map((store) => (
+                                  <div
+                                    key={store.store_id}
+                                    className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                      paymentForm.storeId === store.store_id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                    }`}
+                                    onClick={() => {
+                                      setPaymentForm(prev => ({ ...prev, storeId: store.store_id }));
+                                      setStoreSearchTerm('');
+                                      setPaymentStoreDropdownOpen(false);
+                                    }}
+                                  >
+                                    <div className="font-medium">{store.kurum_adi}</div>
+                                    <div className="text-sm text-gray-500">{store.vergi_numarasi}</div>
+                                  </div>
+                                ))
+                              )}
+                            </div>
                           </div>
                         )}
                       </div>
