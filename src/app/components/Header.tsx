@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { FaUser, FaSignOutAlt, FaCog, FaShoppingCart } from 'react-icons/fa';
 import { getMyBalance, BalanceInfo } from '../../services/api';
 import NotificationDropdown from '../../components/NotificationDropdown';
@@ -62,8 +63,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
   const pathname = usePathname();
   const router = useRouter();
   const { logout, isAdmin, isEditor, isAdminOrEditor, user: authUser } = useAuth(); // AuthContext'teki user'ı al
-
-  const [cartItems, setCartItems] = useState<number>(0);
+  const { cartItems } = useCart(); // CartContext'ten sepet verilerini al
   const [isMounted, setIsMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -213,56 +213,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
     refreshBalance();
   }, [isMounted, authUser?.userId]); // Sadece user ID'ye bağlı
 
-  // Sepet verilerini getir
-  useEffect(() => {
-    // Sadece client-side'da ve component mount olduktan sonra çalıştır
-    if (!isMounted || typeof window === 'undefined') {
-      return;
-    }
-
-    const fetchCartData = async () => {
-      try {
-        // Token kontrolü
-        const token = getAuthToken();
-        if (!token) {
-          return;
-        }
-        
-        // AbortController ile timeout kontrolü
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 saniye timeout
-        
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/cart`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          signal: controller.signal,
-          cache: 'no-cache'
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        
-        const data = await res.json();
-        
-        if (data.success && data.data) {
-          // Ürün çeşidi sayısını göster (toplam adet değil)
-          setCartItems(data.data.items?.length || 0);
-        } else {
-          setCartItems(0);
-        }
-      } catch (error: any) {
-        setCartItems(0);
-      }
-    };
-
-    // Sadece ilk yükleme - otomatik yenileme yok
-    fetchCartData();
-  }, [isMounted]); // isMounted dependency'si eklendi
+  // Sepet verileri artık CartContext'ten geliyor
 
   const handleLogout = async () => {
     const result = await logout();

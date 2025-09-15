@@ -1,9 +1,11 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import { FaTrash } from "react-icons/fa";
 import { useAuth } from '@/app/context/AuthContext';
+import { useCart } from '@/app/context/CartContext';
 import { getProductRules, ProductRule } from '@/services/api';
 import { useToken } from '@/app/hooks/useToken';
 
@@ -132,6 +134,7 @@ export default function ProductList() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
+  const { refreshCart } = useCart();
   
   // URL'den parametreleri al
   const urlPage = parseInt(searchParams.get('page') || '1');
@@ -161,6 +164,7 @@ export default function ProductList() {
   const [hoverProductId, setHoverProductId] = useState<string | null>(null);
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [selectedProductForUpdate, setSelectedProductForUpdate] = useState<any>(null);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [productRules, setProductRules] = useState<ProductRule[]>([]);
   const { isAdmin, isAdminOrEditor } = useAuth();
   
@@ -900,7 +904,7 @@ export default function ProductList() {
     );
   }
 
-  function ProductDetailModal({ open, onClose, productId }: { open: boolean, onClose: () => void, productId: string | null }) {
+  function ProductDetailModal({ open, onClose, productId, showSuccessPopup, setShowSuccessPopup }: { open: boolean, onClose: () => void, productId: string | null, showSuccessPopup: boolean, setShowSuccessPopup: (show: boolean) => void }) {
     const [product, setProduct] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -1130,8 +1134,12 @@ export default function ProductList() {
         
         // Başarılı
         setAddToCartSuccess(true);
+        setShowSuccessPopup(true);
         setQuantity(1); // Miktar sıfırla
         setNotes(""); // Notları temizle
+        
+        // Sepeti yenile
+        await refreshCart();
       } catch (err: any) {
         setAddToCartError(err.message || "Sepete eklerken bir hata oluştu");
       } finally {
@@ -2727,7 +2735,7 @@ export default function ProductList() {
         />
       )}
       {selectedProductId && (
-        <ProductDetailModal open={detailModalOpen} onClose={() => setDetailModalOpen(false)} productId={selectedProductId} />
+        <ProductDetailModal open={detailModalOpen} onClose={() => setDetailModalOpen(false)} productId={selectedProductId} showSuccessPopup={showSuccessPopup} setShowSuccessPopup={setShowSuccessPopup} />
       )}
       {selectedProductForUpdate && (
         <UpdateProductModal 
@@ -2751,6 +2759,45 @@ export default function ProductList() {
           searchTerm={searchTerm} 
           collectionId={selectedCollection}
         />
+      )}
+      
+      {/* Başarı Pop-up */}
+      {showSuccessPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all">
+            <div className="p-6 text-center">
+              {/* Başarı İkonu */}
+              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
+                <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              
+              {/* Başlık */}
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Ürün sepete eklendi
+              </h3>
+              
+              {/* Butonlar */}
+              <div className="flex flex-col gap-3 mt-6">
+                <Link
+                  href="/dashboard/sepetim"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-semibold transition-colors"
+                  onClick={() => setShowSuccessPopup(false)}
+                >
+                  Sepete Git
+                </Link>
+                
+                <button
+                  onClick={() => setShowSuccessPopup(false)}
+                  className="w-full bg-red-100 hover:bg-red-200 text-red-700 px-4 py-3 rounded-lg font-semibold transition-colors"
+                >
+                  Kapat
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

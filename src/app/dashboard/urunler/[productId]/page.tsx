@@ -1,9 +1,11 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { FaTrash } from "react-icons/fa";
 import { FaArrowLeft } from "react-icons/fa";
 import { useAuth } from '@/app/context/AuthContext';
+import { useCart } from '@/app/context/CartContext';
 import { API_BASE_URL } from '@/services/api';
 import { useToken } from '@/app/hooks/useToken';
 import Image from 'next/image';
@@ -12,6 +14,7 @@ export default function ProductDetail() {
   const params = useParams();
   const router = useRouter();
   const token = useToken();
+  const { refreshCart } = useCart();
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -27,6 +30,7 @@ export default function ProductDetail() {
   // Sepete ekleme için state'ler
   const [addToCartLoading, setAddToCartLoading] = useState(false);
   const [addToCartSuccess, setAddToCartSuccess] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [addToCartError, setAddToCartError] = useState("");
   
   // Ön sipariş için state'ler
@@ -339,8 +343,12 @@ export default function ProductDetail() {
       
       // Başarılı
       setAddToCartSuccess(true);
+      setShowSuccessPopup(true);
       setQuantity(1); // Miktar sıfırla
       setNotes(""); // Notları temizle
+      
+      // Sepeti yenile
+      await refreshCart();
       
       // 3 saniye sonra başarı mesajını temizle
       setTimeout(() => {
@@ -1031,6 +1039,53 @@ export default function ProductDetail() {
       
       {modalOpen && isAdmin && (
         <UpdateProductModal open={modalOpen} onClose={() => setModalOpen(false)} product={product} collections={collections} onSuccess={setProduct} />
+      )}
+      
+      {/* Başarı Pop-up */}
+      {showSuccessPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all">
+            <div className="p-6 text-center">
+              {/* Başarı İkonu */}
+              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
+                <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              
+              {/* Başlık */}
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Ürün sepete eklendi
+              </h3>
+              
+              {/* Butonlar */}
+              <div className="flex flex-col gap-3 mt-6">
+                <Link
+                  href="/dashboard/sepetim"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-semibold transition-colors"
+                  onClick={() => setShowSuccessPopup(false)}
+                >
+                  Sepete Git
+                </Link>
+                
+                <Link
+                  href="/dashboard/urunler/liste"
+                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-lg font-semibold transition-colors"
+                  onClick={() => setShowSuccessPopup(false)}
+                >
+                  Alışverişe Devam Et
+                </Link>
+                
+                <button
+                  onClick={() => setShowSuccessPopup(false)}
+                  className="w-full bg-red-100 hover:bg-red-200 text-red-700 px-4 py-3 rounded-lg font-semibold transition-colors"
+                >
+                  Kapat
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

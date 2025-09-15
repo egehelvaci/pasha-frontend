@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/app/context/AuthContext';
+import { useCart } from '@/app/context/CartContext';
 import { 
   getAdminOrderCreateInfo, 
   AdminOrderCreateData, 
@@ -42,6 +44,7 @@ const AdminSiparisOlustur = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAdmin, isAdminOrEditor, user, isLoading: authLoading } = useAuth();
+  const { refreshCart } = useCart();
   
   const [orderData, setOrderData] = useState<AdminOrderCreateData | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -82,6 +85,7 @@ const AdminSiparisOlustur = () => {
     is_default: false
   });
   const [addingAddress, setAddingAddress] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   
 
 
@@ -345,6 +349,12 @@ const AdminSiparisOlustur = () => {
 
       // Sepeti yenile
       await fetchAdminCart();
+      
+      // Header'daki sepeti de yenile
+      await refreshCart();
+      
+      // Başarı pop-up'ını göster
+      setShowSuccessPopup(true);
       
       // Popup'ı kapat ve form'u sıfırla
       setShowAddProductModal(false);
@@ -1392,6 +1402,58 @@ const AdminSiparisOlustur = () => {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Başarı Pop-up */}
+      {showSuccessPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all">
+            <div className="p-6 text-center">
+              {/* Başarı İkonu */}
+              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
+                <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              
+              {/* Başlık */}
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Ürün sepete eklendi
+              </h3>
+              
+              {/* Butonlar */}
+              <div className="flex flex-col gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowSuccessPopup(false);
+                    // Sepet bölümüne scroll yap
+                    const cartSection = document.getElementById('admin-cart-section');
+                    if (cartSection) {
+                      cartSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-semibold transition-colors"
+                >
+                  Sepete Git
+                </button>
+                
+                <button
+                  onClick={() => setShowSuccessPopup(false)}
+                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-lg font-semibold transition-colors"
+                >
+                  Alışverişe Devam Et
+                </button>
+                
+                <button
+                  onClick={() => setShowSuccessPopup(false)}
+                  className="w-full bg-red-100 hover:bg-red-200 text-red-700 px-4 py-3 rounded-lg font-semibold transition-colors"
+                >
+                  Kapat
+                </button>
               </div>
             </div>
           </div>

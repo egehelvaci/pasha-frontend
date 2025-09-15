@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/app/context/AuthContext';
+import { useCart } from '@/app/context/CartContext';
 
 // API Base URL
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://pashahomeapps.up.railway.app";
@@ -42,6 +43,7 @@ const translateCutType = (cutType: string): string => {
 
 export default function CartPage() {
   const { token, user } = useAuth();
+  const { refreshCart } = useCart();
   const [loading, setLoading] = useState(true);
   const [cartData, setCartData] = useState<any>(null);
   const [error, setError] = useState("");
@@ -106,6 +108,8 @@ export default function CartPage() {
       if (res.ok && data.success) {
         // Sepeti yenile
         await fetchCartData();
+        // Header'daki sepeti de yenile
+        await refreshCart();
       } else {
         setError(data.message || "Ürün sepetten çıkarılamadı");
       }
@@ -153,6 +157,8 @@ export default function CartPage() {
       if (res.ok && data.success) {
         // Sepeti yenile
         await fetchCartData();
+        // Header'daki sepeti de yenile
+        await refreshCart();
       } else {
         setError(data.message || "Ürün miktarı güncellenemedi");
       }
@@ -188,7 +194,9 @@ export default function CartPage() {
       
       if (res.ok) {
         // Sepeti yenile
-        fetchCartData();
+        await fetchCartData();
+        // Header'daki sepeti de yenile
+        await refreshCart();
       } else {
         const data = await res.json();
         setError(data.message || "Sepet temizlenemedi");
