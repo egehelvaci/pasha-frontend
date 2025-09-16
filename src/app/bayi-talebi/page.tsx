@@ -12,6 +12,7 @@ export default function BayiTalebi() {
     email: "",
     phone: "",
     address: "",
+    notes: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,6 +40,7 @@ export default function BayiTalebi() {
         email: formData.email,
         phone: formData.phone,
         address: formData.address,
+        notes: formData.notes,
       };
 
       await submitContactForm(contactData);
@@ -86,7 +88,7 @@ export default function BayiTalebi() {
             Bayi Talebi Oluştur
           </h1>
           <p className="text-lg text-gray-600">
-            Paşa Home bayisi olmak için aşağıdaki formu doldurun. En kısa sürede sizinle iletişime geçeceğiz.
+            Bayi talebi oluşturmak için aşağıdaki formu doldurun. En kısa sürede sizinle iletişime geçeceğiz.
           </p>
         </div>
 
@@ -204,6 +206,24 @@ export default function BayiTalebi() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               placeholder="Detaylı firma adresi"
             />
+          </div>
+
+          <div>
+            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+              Notlar
+            </label>
+            <textarea
+              name="notes"
+              id="notes"
+              rows={4}
+              value={formData.notes}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Bayi olmak istediğiniz konuda ek bilgiler, sorularınız veya özel taleplerinizi buraya yazabilirsiniz..."
+            />
+            <p className="mt-1 text-sm text-gray-500">
+              Bu alan isteğe bağlıdır. Bayi olmak istediğiniz konuda ek bilgiler paylaşabilirsiniz.
+            </p>
           </div>
 
           <div>

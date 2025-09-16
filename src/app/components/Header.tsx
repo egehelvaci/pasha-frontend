@@ -415,6 +415,16 @@ const Header = ({ title, user, className }: HeaderProps) => {
       adminOnly: true,
     },
     {
+      name: 'Bayi Talepleri',
+      href: '/dashboard/bayi-talepleri',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+          <path fillRule="evenodd" d="M4.125 3C3.089 3 2.25 3.84 2.25 4.875V18a3 3 0 003 3h15.75a.75.75 0 000-1.5H5.25a1.5 1.5 0 01-1.5-1.5v-.75c0-.621.504-1.125 1.125-1.125h15.375c.621 0 1.125-.504 1.125-1.125V4.875c0-1.036-.84-1.875-1.875-1.875H4.125zM12 7.5a.75.75 0 01.75.75v2.25h2.25a.75.75 0 010 1.5h-2.25v2.25a.75.75 0 01-1.5 0v-2.25H9a.75.75 0 010-1.5h2.25V8.25A.75.75 0 0112 7.5z" clipRule="evenodd" />
+        </svg>
+      ),
+      adminOnly: true,
+    },
+    {
       name: 'Kullanıcı Yönetimi',
       href: '/dashboard/ayarlar',
       icon: (

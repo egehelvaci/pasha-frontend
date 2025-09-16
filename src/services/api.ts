@@ -3585,6 +3585,7 @@ export interface ContactFormData {
   email: string;
   phone: string;
   address: string;
+  notes?: string;
 }
 
 export interface ContactResponse {
@@ -3616,6 +3617,167 @@ export async function submitContactForm(formData: ContactFormData): Promise<Cont
     return result;
   } catch (error) {
     console.error('İletişim formu gönderirken hata:', error);
+    throw error;
+  }
+}
+
+// =============================================================================
+// ADMIN CONTACT FORMS API - Token gerektirir
+// =============================================================================
+
+// Admin iletişim formu interface'leri
+export interface ContactForm {
+  id: number;
+  companyName: string;
+  authorityName: string;
+  authoritySurname: string;
+  authorityFullName: string;
+  email: string;
+  phone: string;
+  address: string;
+  isRead: boolean;
+  isContacted: boolean;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ContactFormsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    contactForms: ContactForm[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalItems: number;
+      itemsPerPage: number;
+      hasNextPage: boolean;
+      hasPrevPage: boolean;
+    };
+  };
+}
+
+export interface ContactFormUpdateData {
+  isRead?: boolean;
+  isContacted?: boolean;
+  notes?: string;
+}
+
+// Admin: İletişim formlarını getir
+export async function getContactForms(
+  page: number = 1,
+  limit: number = 20,
+  filters: {
+    isRead?: boolean;
+    isContacted?: boolean;
+    search?: string;
+  } = {}
+): Promise<ContactFormsResponse['data']> {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Token bulunamadı');
+    }
+
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+
+    // Sadece tanımlı filtreleri ekle
+    if (filters.isRead !== undefined) {
+      params.append('isRead', filters.isRead.toString());
+    }
+    if (filters.isContacted !== undefined) {
+      params.append('isContacted', filters.isContacted.toString());
+    }
+    if (filters.search && filters.search.trim() !== '') {
+      params.append('search', filters.search);
+    }
+
+    const url = `${API_BASE_URL}/api/admin/contact-forms?${params}`;
+    console.log('API URL:', url);
+    console.log('Token:', token ? 'Mevcut' : 'Yok');
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log('Response status:', response.status);
+    console.log('Response ok:', response.ok);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API Error Response:', errorText);
+      throw new Error(`İletişim formları getirilemedi: ${response.status} - ${errorText}`);
+    }
+
+    const result: ContactFormsResponse = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('İletişim formları getirirken hata:', error);
+    throw error;
+  }
+}
+
+// Admin: İletişim formu durumunu güncelle
+export async function updateContactForm(
+  id: number,
+  updates: ContactFormUpdateData
+): Promise<ContactForm> {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Token bulunamadı');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/contact-forms/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updates),
+    });
+
+    if (!response.ok) {
+      throw new Error('İletişim formu güncellenemedi');
+    }
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('İletişim formu güncellenirken hata:', error);
+    throw error;
+  }
+}
+
+// Admin: İletişim formunu sil
+export async function deleteContactForm(id: number): Promise<void> {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Token bulunamadı');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/contact-forms/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('İletişim formu silinemedi');
+    }
+  } catch (error) {
+    console.error('İletişim formu silinirken hata:', error);
     throw error;
   }
 } 
