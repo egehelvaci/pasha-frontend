@@ -1893,7 +1893,7 @@ const MuhasebePage = () => {
 
                                         <div class="print-footer">
                                             <p><strong>Toplam ${transactions.length} hareket listelendi</strong></p>
-                                            <p>Bu rapor Paşa Bayii Sipariş Sistemi tarafından ${new Date().toLocaleDateString('tr-TR')} tarihinde otomatik olarak oluşturulmuştur.</p>
+                                            <p>Bu rapor Paşa Bayi Sipariş Sistemi tarafından ${new Date().toLocaleDateString('tr-TR')} tarihinde otomatik olarak oluşturulmuştur.</p>
                                         </div>
                                     </div>
                                 `;

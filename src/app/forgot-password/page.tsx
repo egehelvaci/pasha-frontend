@@ -40,7 +40,7 @@ export default function ForgotPassword() {
         <div className="flex-1 relative hidden lg:block">
           <div className="absolute inset-0 bg-cover bg-center flex flex-col p-12 z-10">
             <h1 className="text-white text-3xl font-bold">
-              Paşa Home Bayii Sipariş Sistemi
+              Paşa Home Bayi Sipariş Sistemi
             </h1>
             <p className="text-white text-sm mt-2">© 2025 Paşa Home</p>
           </div>
@@ -110,7 +110,7 @@ export default function ForgotPassword() {
       <div className="flex-1 relative hidden lg:block">
         <div className="absolute inset-0 bg-cover bg-center flex flex-col p-12 z-10">
           <h1 className="text-white text-3xl font-bold">
-            Paşa Home Bayii Sipariş Sistemi
+            Paşa Home Bayi Sipariş Sistemi
           </h1>
           <p className="text-white text-sm mt-2">© 2025 Paşa Home</p>
         </div>

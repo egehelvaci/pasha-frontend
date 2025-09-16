@@ -3518,4 +3518,104 @@ export async function deleteUserAddress(addressId: string): Promise<{ success: b
     console.error('Adres silme hatası:', error);
     throw error;
   }
+}
+
+// =============================================================================
+// PUBLIC CATALOG API - Token gerektirmez
+// =============================================================================
+
+// Public koleksiyon ve ürün interface'leri
+export interface PublicProduct {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+}
+
+export interface PublicCollection {
+  id: string;
+  name: string;
+  description: string;
+  code: string;
+  productCount: number;
+  products: PublicProduct[];
+}
+
+export interface PublicCatalogResponse {
+  success: boolean;
+  message: string;
+  data: {
+    collections: PublicCollection[];
+    totalCollections: number;
+    totalProducts: number;
+  };
+}
+
+// Public koleksiyonları getir (token gerektirmez)
+export async function getPublicCollections(): Promise<PublicCatalogResponse['data']> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/public/catalog/collections`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Koleksiyonlar getirilemedi');
+    }
+
+    const result: PublicCatalogResponse = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Public koleksiyonları getirirken hata:', error);
+    throw error;
+  }
+}
+
+// =============================================================================
+// CONTACT API - Token gerektirmez
+// =============================================================================
+
+// İletişim formu interface'leri
+export interface ContactFormData {
+  companyName: string;
+  authorityName: string;
+  authoritySurname: string;
+  email: string;
+  phone: string;
+  address: string;
+}
+
+export interface ContactResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    id: number;
+    submittedAt: string;
+  };
+}
+
+// İletişim formu gönder (token gerektirmez)
+export async function submitContactForm(formData: ContactFormData): Promise<ContactResponse> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/contact/submit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+    });
+
+    const result: ContactResponse = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(result.message || 'İletişim formu gönderilirken bir hata oluştu');
+    }
+
+    return result;
+  } catch (error) {
+    console.error('İletişim formu gönderirken hata:', error);
+    throw error;
+  }
 } 

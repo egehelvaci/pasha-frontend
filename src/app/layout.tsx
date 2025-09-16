@@ -5,9 +5,9 @@ import { CartProvider } from "./context/CartContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Paşa Home - Bayii Sipariş Sistemi",
+  title: "Paşa Home - Bayi Sipariş Sistemi",
   description: "Paşa Home bayileri için sipariş yönetim platformu",
-  keywords: "paşa home, bayii, sipariş, yönetim, platform",
+  keywords: "paşa home, bayi, sipariş, yönetim, platform",
   authors: [{ name: "Paşa Home" }],
   creator: "Paşa Home",
   publisher: "Paşa Home",
