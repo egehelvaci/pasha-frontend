@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { setTokenExpiryHandler } from "../../services/api";
 
 type Store = {
   store_id: string;
@@ -47,6 +48,7 @@ type AuthContextType = {
   user: User;
   login: (username: string, password: string, rememberMe?: boolean) => Promise<{ success: boolean; message: string }>;
   logout: () => Promise<{ success: boolean; message: string }>;
+  handleTokenExpiry: () => void;
   isLoading: boolean;
   token: string | null;
   isAdmin: boolean;
@@ -68,6 +70,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isViewer, setIsViewer] = useState<boolean>(false);
   const [isAdminOrEditor, setIsAdminOrEditor] = useState<boolean>(false);
   const router = useRouter();
+
+  // Token süresi dolduğunda çağrılacak fonksiyon
+  const handleTokenExpiry = () => {
+    // Kullanıcı bilgilerini temizle
+    setUser(null);
+    setToken(null);
+    setIsAdmin(false);
+    setIsEditor(false);
+    setIsViewer(false);
+    setIsAdminOrEditor(false);
+    
+    // Storage'ları temizle
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    localStorage.removeItem("userType");
+    localStorage.removeItem("currency");
+    localStorage.removeItem("rememberMe");
+    sessionStorage.removeItem("user");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("userType");
+    sessionStorage.removeItem("currency");
+    
+    // Kullanıcıya uyarı göster
+    alert("Oturum süreniz dolmuştur. Lütfen tekrar giriş yapınız.");
+    
+    // Login sayfasına yönlendir
+    router.push("/login");
+  };
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -131,6 +161,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     checkAuth();
+    
+    // Global API error handler'ı ayarla
+    setTokenExpiryHandler(handleTokenExpiry);
   }, []);
 
   const login = async (username: string, password: string, rememberMe: boolean = false) => {
@@ -283,7 +316,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isLoading, isAdmin, isEditor, isViewer, isAdminOrEditor }}>
+    <AuthContext.Provider value={{ user, token, login, logout, handleTokenExpiry, isLoading, isAdmin, isEditor, isViewer, isAdminOrEditor }}>
       {children}
     </AuthContext.Provider>
   );

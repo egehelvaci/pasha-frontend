@@ -3780,4 +3780,36 @@ export async function deleteContactForm(id: number): Promise<void> {
     console.error('İletişim formu silinirken hata:', error);
     throw error;
   }
+}
+
+// Global API error handler - 403 hatalarını yakalar
+let tokenExpiryHandler: (() => void) | null = null;
+
+export function setTokenExpiryHandler(handler: () => void) {
+  tokenExpiryHandler = handler;
+}
+
+// Fetch wrapper - tüm API çağrıları için 403 kontrolü
+export async function apiRequest(url: string, options: RequestInit = {}): Promise<Response> {
+  const token = getAuthToken();
+  
+  // Default headers ekle
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` }),
+    ...options.headers,
+  };
+
+  const response = await fetch(url, {
+    ...options,
+    headers,
+  });
+
+  // 403 Unauthorized hatası kontrolü
+  if (response.status === 403 && tokenExpiryHandler) {
+    tokenExpiryHandler();
+    return response;
+  }
+
+  return response;
 } 
