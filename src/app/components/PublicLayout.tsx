@@ -56,6 +56,9 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
             <p className="text-gray-400 text-sm">
               © 2025 Helken Teknoloji Yazılım Limited Şirketi
             </p>
+            <p className="text-gray-400 text-sm mt-2">
+              Helken Teknoloji İletişim: +90 538 294 77 27
+            </p>
           </div>
         </div>
       </footer>
