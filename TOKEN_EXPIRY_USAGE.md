@@ -1,13 +1,20 @@
-# Token Süresi Dolma Yönetimi
+# Token Süresi Dolma Yönetimi ✅
 
-Bu sistem, token süresi dolduğunda (403 hatası) kullanıcıyı otomatik olarak logout yapıp login sayfasına yönlendirir.
+Bu sistem **GLOBAL OLARAK** çalışır ve token süresi dolduğunda (403 hatası) kullanıcıyı otomatik olarak logout yapıp login sayfasına yönlendirir.
 
-## Nasıl Çalışır
+## 🎯 Otomatik Çalışma - Ek İşlem Gerektirmez
 
-1. **AuthContext**: `handleTokenExpiry` fonksiyonu token süresi dolduğunda çağrılır
-2. **API Service**: Global error handler tüm 403 hatalarını yakalar
-3. **Otomatik Logout**: Kullanıcı bilgileri temizlenir ve login sayfasına yönlendirilir
-4. **Uyarı Mesajı**: "Oturum süreniz dolmuştur. Lütfen tekrar giriş yapınız."
+1. **Global Fetch Interceptor**: Tüm `fetch()` çağrılarını otomatik yakalar
+2. **AuthContext**: `handleTokenExpiry` fonksiyonu token süresi dolduğunda çağrılır  
+3. **403 Hatası Kontrolü**: Tüm API çağrılarında otomatik kontrol edilir
+4. **Otomatik Logout**: Kullanıcı bilgileri temizlenir ve login sayfasına yönlendirilir
+5. **Uyarı Mesajı**: "Oturum süreniz dolmuştur. Lütfen tekrar giriş yapınız."
+
+## ✅ Mevcut Durum
+
+- **192 adet** mevcut `fetch` çağrısı **otomatik olarak** korunuyor
+- **Hiçbir sayfada ek kod yazmaya gerek yok**
+- **Tüm API çağrıları** otomatik olarak 403 kontrolü yapıyor
 
 ## Yeni API Çağrıları İçin
 

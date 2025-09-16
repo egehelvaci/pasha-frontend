@@ -3789,6 +3789,28 @@ export function setTokenExpiryHandler(handler: () => void) {
   tokenExpiryHandler = handler;
 }
 
+// Global fetch interceptor - tüm fetch çağrılarını yakalar
+export function setupGlobalFetchInterceptor() {
+  if (typeof window === 'undefined') return;
+  
+  const originalFetch = window.fetch;
+  
+  window.fetch = async function(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+    const response = await originalFetch(input, init);
+    
+    // API çağrısı mı kontrol et
+    const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+    const isApiCall = url.includes('/api/');
+    
+    // 403 hatası ve API çağrısı ise token expiry handler'ı çağır
+    if (response.status === 403 && isApiCall && tokenExpiryHandler) {
+      tokenExpiryHandler();
+    }
+    
+    return response;
+  };
+}
+
 // Fetch wrapper - tüm API çağrıları için 403 kontrolü
 export async function apiRequest(url: string, options: RequestInit = {}): Promise<Response> {
   const token = getAuthToken();

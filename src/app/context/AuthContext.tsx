@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { setTokenExpiryHandler } from "../../services/api";
+import { setTokenExpiryHandler, setupGlobalFetchInterceptor } from "../../services/api";
 
 type Store = {
   store_id: string;
@@ -164,6 +164,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     // Global API error handler'ı ayarla
     setTokenExpiryHandler(handleTokenExpiry);
+    
+    // Global fetch interceptor'ı başlat
+    setupGlobalFetchInterceptor();
   }, []);
 
   const login = async (username: string, password: string, rememberMe: boolean = false) => {
