@@ -54,7 +54,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
           {/* Copyright */}
           <div className="border-t border-gray-800 mt-6 sm:mt-8 pt-6 sm:pt-8 text-center">
             <p className="text-gray-400 text-sm">
-              © 2025 Paşa Home. Tüm hakları saklıdır.
+              © 2025 Helken Teknoloji Yazılım Limited Şirketi
             </p>
           </div>
         </div>
