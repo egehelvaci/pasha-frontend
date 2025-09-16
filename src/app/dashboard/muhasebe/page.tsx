@@ -6,6 +6,66 @@ import { useRouter } from 'next/navigation';
 import { getStores, getStorePriceLists, Store, PriceListProduct } from '../../../services/api';
 import { useToken } from '@/app/hooks/useToken';
 
+// Açıklama formatını güncelleyen fonksiyon
+const formatAciklama = (transaction: any) => {
+  // Admin Siparişi, Sipariş veya Sipariş İptali işlem türleri için özel format
+  if ((transaction.islemTuru === 'Parekende Satış' || transaction.islemTuru === 'Satış' || transaction.islemTuru === 'Sipariş İptali')) {
+    // orderDetails veya order alanından items'ı al
+    let items = [];
+    if (transaction.orderDetails && transaction.orderDetails.items) {
+      items = transaction.orderDetails.items;
+    } else if (transaction.order && transaction.order.items) {
+      items = transaction.order.items;
+    }
+    
+    if (items.length > 0) {
+      let orderType = 'Sipariş';
+      if (transaction.aciklama.includes('Admin Siparişi')) {
+        orderType = 'Admin Siparişi';
+      } else if (transaction.aciklama.includes('Sipariş İptali')) {
+        orderType = 'Sipariş İptali';
+      }
+      
+      // Currency bilgisini al
+      const currency = transaction.currency || transaction.store?.currency || 'TRY';
+      const currencySymbol = currency === 'USD' ? '$' : currency === 'EUR' ? '€' : '₺';
+      
+      const formattedItems = items.map((item: any) => {
+        // Farklı veri yapıları için esnek alan adları
+        const productName = item.productName || item.product?.name || 'Bilinmeyen Ürün';
+        const width = item.width || item.product?.width || 0;
+        const height = item.height || item.product?.height || 0;
+        const quantity = item.quantity || 1;
+        const unitPrice = item.unitPrice || item.unit_price || 0;
+        const totalPrice = item.totalPrice || item.total_price || 0;
+        
+        const ebat = `${width}x${height}`;
+        const m2 = item.areaM2 || (width * height / 10000);
+        const fiyat = `${unitPrice} ${currencySymbol}`;
+        const tutar = `${totalPrice} ${currencySymbol}`;
+        
+        // Sabit genişliklerle hizalama
+        const productNameStr = productName.padEnd(20);
+        const ebatStr = ebat.padEnd(10);
+        const m2Str = `${m2}m²`.padEnd(8);
+        const fiyatStr = fiyat.padEnd(12);
+        const adetStr = `x ${quantity}`.padEnd(8);
+        const tutarStr = tutar;
+        
+        return `${productNameStr} ${ebatStr} ${m2Str} ${fiyatStr} ${adetStr} ${tutarStr}`;
+      }).join('\n');
+      
+      // Başlık satırını da aynı hizalama ile
+      const header = `${'Ürün Adı'.padEnd(20)} ${'Ebat'.padEnd(10)} ${'m²'.padEnd(8)} ${'Fiyat'.padEnd(12)} ${'Adet'.padEnd(8)} ${'Tutar'}`;
+      
+      return `${orderType}\n${header}\n${formattedItems}`;
+    }
+  }
+  
+  // Diğer işlemler için mevcut açıklamayı döndür
+  return transaction.aciklama;
+};
+
 // PriceListProduct'ı genişletiyoruz
 interface ExtendedPriceListProduct extends PriceListProduct {
   displayName?: string;
@@ -48,6 +108,7 @@ interface AccountingResponseData {
   adminVerecekMagazaSayisi?: number;
   adminAlacakliMagazaSayisi?: number;
   magazaBilgi?: any;
+  magaza?: any;
   ozet?: any;
   pagination?: any;
 }
@@ -1844,11 +1905,11 @@ const MuhasebePage = () => {
                                         </div>
 
 
-                                        ${selectedStoreFilter && responseData?.magazaBilgi ? `
+                                        ${selectedStoreFilter && (responseData?.magazaBilgi || responseData?.magaza) ? `
                                             <div class="summary-section">
                                                 <div class="summary-card balance">
-                                                    <div class="value">${formatCurrency(responseData.magazaBilgi.bakiyeDurumu?.bakiye || responseData.magazaBilgi.bakiye || 0)}</div>
-                                                    <div class="label">BAKİYE (${(responseData.magazaBilgi.bakiyeDurumu?.bakiye || responseData.magazaBilgi.bakiye || 0) >= 0 ? 'ALACAKLI' : 'BORÇLU'})</div>
+                                                    <div class="value">${formatCurrency(responseData.magazaBilgi?.bakiyeDurumu?.bakiye || responseData.magazaBilgi?.bakiye || responseData.magaza?.bakiyeDurumu?.bakiye || responseData.magaza?.bakiye || 0)}</div>
+                                                    <div class="label">BAKİYE (${(responseData.magazaBilgi?.bakiyeDurumu?.bakiye || responseData.magazaBilgi?.bakiye || responseData.magaza?.bakiyeDurumu?.bakiye || responseData.magaza?.bakiye || 0) >= 0 ? 'ALACAKLI' : 'BORÇLU'})</div>
                                                 </div>
                                             </div>
                                         ` : ''}
@@ -1873,8 +1934,8 @@ const MuhasebePage = () => {
                                                             </div>
                                                         </td>
                                                         <td>
-                                                            <div class="text-truncate" title="${selectedStoreFilter ? (responseData?.magazaBilgi?.kurum_adi || 'Bilinmeyen Mağaza') : (transaction.store?.kurum_adi || 'Bilinmeyen Mağaza')}">
-                                                                ${selectedStoreFilter ? (responseData?.magazaBilgi?.kurum_adi || 'Bilinmeyen Mağaza') : (transaction.store?.kurum_adi || 'Bilinmeyen Mağaza')}
+                                                            <div class="text-truncate" title="${selectedStoreFilter ? (responseData?.magazaBilgi?.kurum_adi || responseData?.magaza?.kurum_adi || 'Bilinmeyen Mağaza') : (transaction.store?.kurum_adi || 'Bilinmeyen Mağaza')}">
+                                                                ${selectedStoreFilter ? (responseData?.magazaBilgi?.kurum_adi || responseData?.magaza?.kurum_adi || 'Bilinmeyen Mağaza') : (transaction.store?.kurum_adi || 'Bilinmeyen Mağaza')}
                                                             </div>
                                                         </td>
                                                         <td class="text-truncate" title="${transaction.islemTuru}">
@@ -1883,8 +1944,8 @@ const MuhasebePage = () => {
                                                         <td class="${transaction.harcama ? 'amount-expense' : 'amount-income'}">
                                                             ${transaction.harcama ? '-' : '+'}${formatCurrency(parseFloat(transaction.tutar))}
                                                         </td>
-                                                        <td class="text-truncate" title="${transaction.aciklama}">
-                                                            ${transaction.aciklama}
+                                                        <td class="whitespace-pre-line max-w-xs font-mono">
+                                                            ${formatAciklama(transaction)}
                                                         </td>
                                                     </tr>
                                                 `).join('')}
@@ -1976,9 +2037,9 @@ const MuhasebePage = () => {
                       </div>
                     </td>
                     <td className="px-4 py-4 text-sm text-gray-900">
-                      <span className="truncate block max-w-48" title={transaction.aciklama}>
-                        {transaction.aciklama}
-                      </span>
+                      <div className="whitespace-pre-line max-w-xs font-mono">
+                        {formatAciklama(transaction)}
+                      </div>
                     </td>
                   </tr>
                 ))}
