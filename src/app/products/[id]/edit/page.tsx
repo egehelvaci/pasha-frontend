@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { useToken } from '../../hooks/useToken';
+import { useToken } from '../../../hooks/useToken';
 
 interface Product {
   id: string;
