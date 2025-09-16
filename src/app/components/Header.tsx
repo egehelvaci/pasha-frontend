@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useToken } from '../hooks/useToken';
 import { FaUser, FaSignOutAlt, FaCog, FaShoppingCart } from 'react-icons/fa';
 import { getMyBalance, BalanceInfo } from '../../services/api';
 import NotificationDropdown from '../../components/NotificationDropdown';
@@ -18,23 +19,6 @@ const CURRENCY_SYMBOLS = {
   'EUR': '€'
 };
 
-// Token'ı localStorage veya sessionStorage'dan al
-function getAuthToken(): string | null {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-  
-  // Önce localStorage'dan "beni hatırla" durumunu kontrol et
-  const rememberMe = localStorage.getItem("rememberMe") === "true";
-  
-  if (rememberMe) {
-    // "Beni hatırla" aktifse localStorage'dan al
-    return localStorage.getItem('token');
-  } else {
-    // "Beni hatırla" aktif değilse sessionStorage'dan al
-    return sessionStorage.getItem('token');
-  }
-}
 
 type HeaderProps = {
   title: string;
@@ -64,6 +48,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
   const router = useRouter();
   const { logout, isAdmin, isEditor, isAdminOrEditor, user: authUser } = useAuth(); // AuthContext'teki user'ı al
   const { cartItems } = useCart(); // CartContext'ten sepet verilerini al
+  const token = useToken(); // Token hook'unu kullan
   const [isMounted, setIsMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -179,7 +164,6 @@ const Header = ({ title, user, className }: HeaderProps) => {
 
     setIsLoadingBalance(true);
     try {
-      const token = getAuthToken();
       if (!token) {
         return;
       }
@@ -211,7 +195,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
 
     // Sadece ilk yükleme - otomatik yenileme yok
     refreshBalance();
-  }, [isMounted, authUser?.userId]); // Sadece user ID'ye bağlı
+  }, [isMounted, authUser?.userId, token]); // Token dependency'si eklendi
 
   // Sepet verileri artık CartContext'ten geliyor
 

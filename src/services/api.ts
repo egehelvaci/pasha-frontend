@@ -3675,7 +3675,7 @@ export async function getContactForms(
   } = {}
 ): Promise<ContactFormsResponse['data']> {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     if (!token) {
       throw new Error('Token bulunamadı');
     }
@@ -3731,7 +3731,7 @@ export async function updateContactForm(
   updates: ContactFormUpdateData
 ): Promise<ContactForm> {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     if (!token) {
       throw new Error('Token bulunamadı');
     }
@@ -3760,7 +3760,7 @@ export async function updateContactForm(
 // Admin: İletişim formunu sil
 export async function deleteContactForm(id: number): Promise<void> {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     if (!token) {
       throw new Error('Token bulunamadı');
     }

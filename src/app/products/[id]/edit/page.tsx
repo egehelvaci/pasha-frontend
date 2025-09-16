@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { useToken } from '../../hooks/useToken';
 
 interface Product {
   id: string;
@@ -18,6 +19,7 @@ interface Product {
 export default function EditProduct() {
   const router = useRouter();
   const params = useParams();
+  const token = useToken();
   const [product, setProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState<Partial<Product>>({});
   const [loading, setLoading] = useState(true);
@@ -28,7 +30,12 @@ export default function EditProduct() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const token = localStorage.getItem('token');
+        if (!token) {
+          setError('Giriş yapmanız gerekiyor. Lütfen önce giriş yapın.');
+          setLoading(false);
+          return;
+        }
+        
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/products/${params.id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -56,10 +63,10 @@ export default function EditProduct() {
       }
     };
 
-    if (params.id) {
+    if (params.id && token) {
       fetchProduct();
     }
-  }, [params.id]);
+  }, [params.id, token]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -67,7 +74,12 @@ export default function EditProduct() {
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Giriş yapmanız gerekiyor. Lütfen önce giriş yapın.');
+        setSaving(false);
+        return;
+      }
+      
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/products/${params.id}`, {
         method: 'PUT',
         headers: {

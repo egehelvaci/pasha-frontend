@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { getContactForms, updateContactForm, deleteContactForm, ContactForm } from "../../../services/api";
+import { useToken } from "../../hooks/useToken";
 
 export default function BayiTalepleri() {
+  const token = useToken();
   const [contactForms, setContactForms] = useState<ContactForm[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +25,6 @@ export default function BayiTalepleri() {
 
   useEffect(() => {
     // Token kontrolü
-    const token = localStorage.getItem('token');
     if (!token) {
       setError('Giriş yapmanız gerekiyor. Lütfen önce giriş yapın.');
       setLoading(false);
@@ -31,7 +32,7 @@ export default function BayiTalepleri() {
     }
     
     fetchContactForms();
-  }, [currentPage, filters]);
+  }, [currentPage, filters, token]);
 
   // Dropdown'ları dışarı tıklandığında kapat
   useEffect(() => {
