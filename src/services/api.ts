@@ -3782,7 +3782,7 @@ export async function deleteContactForm(id: number): Promise<void> {
   }
 }
 
-// Global API error handler - 403 hatalarını yakalar
+// Global API error handler - 401 hatalarını yakalar
 let tokenExpiryHandler: (() => void) | null = null;
 
 export function setTokenExpiryHandler(handler: () => void) {
@@ -3802,8 +3802,8 @@ export function setupGlobalFetchInterceptor() {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
     const isApiCall = url.includes('/api/');
     
-    // 403 hatası ve API çağrısı ise token expiry handler'ı çağır
-    if (response.status === 403 && isApiCall && tokenExpiryHandler) {
+    // 401 hatası ve API çağrısı ise token expiry handler'ı çağır
+    if (response.status === 401 && isApiCall && tokenExpiryHandler) {
       tokenExpiryHandler();
     }
     
@@ -3811,7 +3811,7 @@ export function setupGlobalFetchInterceptor() {
   };
 }
 
-// Fetch wrapper - tüm API çağrıları için 403 kontrolü
+// Fetch wrapper - tüm API çağrıları için 401 kontrolü
 export async function apiRequest(url: string, options: RequestInit = {}): Promise<Response> {
   const token = getAuthToken();
   
@@ -3827,8 +3827,8 @@ export async function apiRequest(url: string, options: RequestInit = {}): Promis
     headers,
   });
 
-  // 403 Unauthorized hatası kontrolü
-  if (response.status === 403 && tokenExpiryHandler) {
+  // 401 Unauthorized hatası kontrolü
+  if (response.status === 401 && tokenExpiryHandler) {
     tokenExpiryHandler();
     return response;
   }
