@@ -47,6 +47,13 @@ export default function StoreAddressesPage() {
       router.push('/dashboard');
       return;
     }
+    
+    // Sipariş modunda ise doğrudan kullanıcı seçim sayfasına yönlendir
+    if (isOrderMode) {
+      router.push(`/dashboard/magazalar/${storeId}/kullanicilar`);
+      return;
+    }
+    
     fetchAddresses();
   }, [isAdminOrEditor, isOrderMode, router, storeId]);
 
@@ -182,12 +189,12 @@ export default function StoreAddressesPage() {
               </svg>
             </button>
             <h1 className="text-3xl font-bold text-gray-900">
-              {isOrderMode ? 'Sipariş Adresi Seçin' : 'Mağaza Adres Yönetimi'}
+              Mağaza Adres Yönetimi
             </h1>
           </div>
           <div className="flex justify-between items-center">
             <p className="text-gray-600">
-              {isOrderMode ? 'Sipariş vermek istediğiniz adresi seçin' : 'Mağaza adreslerini yönetin'}
+              Mağaza adreslerini yönetin
             </p>
             {!isOrderMode && (
               <button
@@ -272,21 +279,7 @@ export default function StoreAddressesPage() {
                       </div>
                       
                       <div className="flex gap-2">
-                        {isOrderMode ? (
-                          // Sipariş modu - Bu adrese sipariş ver butonu
-                          <button
-                            onClick={() => {
-                              // Adres seçildikten sonra kullanıcı seçim sayfasına yönlendir
-                              router.push(`/dashboard/magazalar/${storeId}/kullanicilar?selectedAddressId=${address.id}&selectedAddressTitle=${encodeURIComponent(address.title)}`);
-                            }}
-                            className="flex-1 px-4 py-3 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors flex items-center justify-center gap-2 font-medium"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5-5M17 13v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
-                            </svg>
-                            Bu Adrese Sipariş Ver
-                          </button>
-                        ) : (
+                        {!isOrderMode && (
                           // Normal yönetim modu
                           <>
                             {!address.is_default && (

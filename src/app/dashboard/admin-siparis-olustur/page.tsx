@@ -86,37 +86,24 @@ const AdminSiparisOlustur = () => {
   });
   const [addingAddress, setAddingAddress] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [showAddressWarningPopup, setShowAddressWarningPopup] = useState(false);
+  const [addressDropdownOpen, setAddressDropdownOpen] = useState(false);
   
 
 
   const storeId = searchParams.get('storeId');
   const userId = searchParams.get('userId');
   const userName = searchParams.get('userName');
-  const addressId = searchParams.get('addressId');
-  const addressTitle = searchParams.get('addressTitle');
-  const selectedAddressId_fromUrl = searchParams.get('selectedAddressId');
 
   // URL parametrelerini kontrol et
   useEffect(() => {
-    // Eğer selectedAddressId_fromUrl varsa, seçilen adresi ayarla
-    if (selectedAddressId_fromUrl) {
-      setSelectedAddressId(selectedAddressId_fromUrl);
-    }
-    
-    // Eğer addressId varsa, kullanıcı seçimi olmadan sipariş verme modu
-    if (addressId && storeId) {
-      // Adres ID'si ile gelen sipariş modu
-      setSelectedAddressId(addressId);
-      return;
-    }
-    
     // Normal kullanıcı seçimi modu
     if (!storeId || !userId || userId === 'undefined') {
       alert('Geçersiz URL parametreleri. Lütfen tekrar deneyiniz.');
       router.push('/dashboard/magazalar');
       return;
     }
-  }, [storeId, userId, userName, addressId, selectedAddressId_fromUrl, router]);
+  }, [storeId, userId, userName, router]);
 
   // Dropdown'ların dışına tıklandığında kapanması
   useEffect(() => {
@@ -127,6 +114,7 @@ const AdminSiparisOlustur = () => {
         setStockFilterDropdownOpen(false);
         setSizeDropdownOpen(false);
         setCutTypeDropdownOpen(false);
+        setAddressDropdownOpen(false);
       }
     };
 
@@ -158,17 +146,12 @@ const AdminSiparisOlustur = () => {
     }
     
     // Kimlik doğrulama yüklemesi tamamlandığında veri çek
-    if (!authLoading && user && storeId) {
-      // Adres bazlı sipariş modu veya kullanıcı bazlı sipariş modu
-      if (addressId || userId) {
-        if (userId) {
-          fetchOrderCreateInfo();
-          fetchAdminCart();
-        }
-        fetchStoreAddresses();
-      }
+    if (!authLoading && user && storeId && userId) {
+      fetchOrderCreateInfo();
+      fetchAdminCart();
+      fetchStoreAddresses();
     }
-  }, [user, authLoading, isAdminOrEditor, router, storeId, userId, addressId]);
+  }, [user, authLoading, isAdminOrEditor, router, storeId, userId]);
 
   const fetchOrderCreateInfo = async () => {
     setLoading(true);
@@ -241,11 +224,8 @@ const AdminSiparisOlustur = () => {
       const response = await getStoreAddresses(storeId);
       if (response.success) {
         setStoreAddresses(response.data);
-        // Varsayılan adresi otomatik seç
-        const defaultAddress = response.data.find(addr => addr.is_default);
-        if (defaultAddress) {
-          setSelectedAddressId(defaultAddress.id);
-        }
+        
+        // Varsayılan adres seçimi kaldırıldı - kullanıcı manuel seçmeli
       }
     } catch (error) {
       console.error('Adres listesi getirme hatası:', error);
@@ -462,9 +442,9 @@ const AdminSiparisOlustur = () => {
   const handleCreateOrderFromAdminCart = async () => {
     if (!storeId) return;
     
-    // Adres bazlı modda userId olmayabilir, o zaman boş sipariş veremeyiz
-    if (!userId && !addressId) {
-      alert('Sipariş vermek için kullanıcı seçimi veya adres seçimi gerekli.');
+    // Kullanıcı seçimi gerekli
+    if (!userId) {
+      alert('Sipariş vermek için kullanıcı seçimi gerekli.');
       return;
     }
     
@@ -476,17 +456,21 @@ const AdminSiparisOlustur = () => {
 
     // Adres seçim kontrolü
     if (!selectedAddressId) {
-      alert('Lütfen bir teslimat adresi seçin!');
+      setShowAddressWarningPopup(true);
       return;
     }
     
     try {
       setOrderLoading(true);
-      if (!userId) {
-        alert('Kullanıcı seçimi gerekli. Lütfen bir kullanıcı seçin.');
-        return;
-      }
       
+      // Debug: Seçilen adres bilgilerini log'la
+      const selectedAddress = storeAddresses.find(addr => addr.id === selectedAddressId);
+      console.log('Admin sipariş oluşturma - Adres bilgileri:', {
+        selectedAddressId: selectedAddressId,
+        selectedAddress: selectedAddress,
+        allAddresses: storeAddresses
+      });
+
       const result = await createOrderFromAdminCart({
         targetUserId: userId,
         storeId: storeId,
@@ -498,7 +482,9 @@ const AdminSiparisOlustur = () => {
       console.log('Admin sipariş oluşturuldu:', {
         orderId: result.order?.id,
         selectedAddressId: selectedAddressId,
-        orderData: result.order
+        orderData: result.order,
+        orderDeliveryAddress: result.order?.delivery_address,
+        orderAddress: result.order?.address
       });
       
       alert('Sipariş başarıyla oluşturuldu!');
@@ -892,15 +878,15 @@ const AdminSiparisOlustur = () => {
 
           {/* Sağ Panel - Sepet */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden sticky top-6">
-              <div className="px-6 py-4 border-b border-gray-200 bg-orange-600">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden sticky top-6 max-h-[calc(100vh-2rem)] overflow-y-auto">
+              <div className="px-6 py-4 border-b border-gray-200 bg-orange-600 sticky top-0 z-10">
                 <div className="flex items-center">
                   <h3 className="text-lg font-semibold text-white">Sepet</h3>
                   <span className="ml-auto text-orange-100 text-sm">({adminCart?.totalItems || 0} ürün)</span>
                 </div>
               </div>
 
-              <div className="p-6">
+              <div className="p-6 flex flex-col h-full">
                 {cartLoading ? (
                   <div className="text-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-4 border-gray-200 border-t-[#00365a] mx-auto mb-4"></div>
@@ -908,7 +894,7 @@ const AdminSiparisOlustur = () => {
                   </div>
                 ) : adminCart && adminCart.items.length > 0 ? (
                   <>
-                    <div className="space-y-4 mb-6">
+                    <div className="space-y-4 mb-6 flex-1 overflow-y-auto">
                       {adminCart.items.map((item) => (
                         <div key={item.id} className="bg-gray-50 rounded-lg p-4">
                           <div className="flex justify-between items-start mb-2">
@@ -965,7 +951,147 @@ const AdminSiparisOlustur = () => {
                       ))}
                     </div>
 
-                    <div className="border-t border-gray-200 pt-4">
+                    <div className="border-t border-gray-200 pt-4 flex-shrink-0">
+                      {/* Teslimat Adresi Seçimi */}
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <span className="text-red-500">*</span> Teslimat Adresi
+                        </label>
+                        
+                        {/* Custom Dropdown */}
+                        <div className="relative dropdown-container">
+                          <button
+                            type="button"
+                            onClick={() => setAddressDropdownOpen(!addressDropdownOpen)}
+                            disabled={addressesLoading}
+                            className="w-full px-4 py-3 text-left bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-all duration-200 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                                <span className={`${selectedAddressId ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
+                                  {selectedAddressId ? 
+                                    (() => {
+                                      const selectedAddress = storeAddresses.find(addr => addr.id === selectedAddressId);
+                                      return selectedAddress ? `${selectedAddress.title} - ${selectedAddress.address.substring(0, 50)}${selectedAddress.address.length > 50 ? '...' : ''}` : 'Teslimat adresi seçin';
+                                    })() 
+                                    : 'Teslimat adresi seçin'
+                                  }
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {addressesLoading && (
+                                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#00365a] border-t-transparent"></div>
+                                )}
+                                <svg
+                                  className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${addressDropdownOpen ? 'rotate-180' : ''}`}
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </div>
+                            </div>
+                          </button>
+
+                          {/* Dropdown Options */}
+                          {addressDropdownOpen && (
+                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                              {storeAddresses.length > 0 ? (
+                                <>
+                                  <div className="py-1">
+                                    <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide bg-gray-50">
+                                      Kayıtlı Adresler
+                                    </div>
+                                  </div>
+                                  {storeAddresses
+                                    .filter(addr => addr.is_active)
+                                    .map((address) => (
+                                      <button
+                                        key={address.id}
+                                        type="button"
+                                        onClick={() => {
+                                          setSelectedAddressId(address.id);
+                                          setAddressDropdownOpen(false);
+                                        }}
+                                        className={`w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0 ${
+                                          selectedAddressId === address.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                                        }`}
+                                      >
+                                        <div className="flex items-start gap-3">
+                                          <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                                            selectedAddressId === address.id ? 'bg-blue-500' : 'bg-gray-300'
+                                          }`}></div>
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-sm font-medium text-gray-900">{address.title}</span>
+                                              {address.is_default && (
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                  Varsayılan
+                                                </span>
+                                              )}
+                                            </div>
+                                            <p className="text-sm text-gray-600 mt-1">{address.address}</p>
+                                            {(address.city || address.district) && (
+                                              <p className="text-xs text-gray-500 mt-1">
+                                                {address.district && address.district + ', '}
+                                                {address.city}
+                                                {address.postal_code && ' - ' + address.postal_code}
+                                              </p>
+                                            )}
+                                          </div>
+                                          {selectedAddressId === address.id && (
+                                            <div className="flex-shrink-0">
+                                              <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M9 16.17L5.53 12.7a.996.996 0 10-1.41 1.41L9 19l11-11a.996.996 0 10-1.41-1.41L9 16.17z"/>
+                                              </svg>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </button>
+                                    ))
+                                  }
+                                </>
+                              ) : (
+                                <div className="px-4 py-6 text-center">
+                                  <div className="text-gray-400 mb-2">
+                                    <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                  </div>
+                                  <p className="text-sm text-gray-600 font-medium">Henüz adres bulunamadı</p>
+                                  <p className="text-xs text-gray-500 mt-1">Yeni adres ekleyebilirsiniz</p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {!selectedAddressId && (
+                          <p className="text-red-500 text-sm mt-1">Lütfen bir teslimat adresi seçin</p>
+                        )}
+                        
+                        {/* Seçilen adres bilgilerini göster */}
+                        {selectedAddressId && (() => {
+                          const selectedAddress = storeAddresses.find(addr => addr.id === selectedAddressId);
+                          return selectedAddress ? (
+                            <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                              <div className="text-sm">
+                                <div className="font-medium text-blue-900 mb-1">{selectedAddress.title}</div>
+                                <div className="text-blue-800">{selectedAddress.address}</div>
+                                <div className="text-blue-700">
+                                  {selectedAddress.district && selectedAddress.district + ', '}
+                                  {selectedAddress.city}
+                                  {selectedAddress.postal_code && ' - ' + selectedAddress.postal_code}
+                                </div>
+                              </div>
+                            </div>
+                          ) : null;
+                        })()}
+                      </div>
+
                       <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-2">Sipariş Notları</label>
                         <textarea
@@ -977,36 +1103,6 @@ const AdminSiparisOlustur = () => {
                         />
                       </div>
 
-                      {/* Teslimat Adresi Seçimi */}
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          <span className="text-red-500">*</span> Teslimat Adresi
-                        </label>
-                        <div className="relative">
-                          <select
-                            value={selectedAddressId}
-                            onChange={(e) => setSelectedAddressId(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent bg-white"
-                            disabled={addressesLoading}
-                          >
-                            <option value="">Teslimat adresi seçiniz</option>
-                            {storeAddresses.map((address) => (
-                              <option key={address.id} value={address.id}>
-                                {address.title} - {address.address}, {address.district}/{address.city}
-                              </option>
-                            ))}
-                          </select>
-                          {addressesLoading && (
-                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                              <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#00365a] border-t-transparent"></div>
-                            </div>
-                          )}
-                        </div>
-                        {!selectedAddressId && (
-                          <p className="text-red-500 text-sm mt-1">Lütfen bir teslimat adresi seçin</p>
-                        )}
-                      </div>
-                      
                       <div className="flex justify-between items-center mb-4">
                         <span className="text-lg font-semibold text-gray-900">Toplam:</span>
                         <span className="text-2xl font-bold text-[#00365a]">{getTotalPrice().toLocaleString('tr-TR')} ₺</span>
@@ -1455,32 +1551,47 @@ const AdminSiparisOlustur = () => {
                 Ürün sepete eklendi
               </h3>
               
-              {/* Butonlar */}
-              <div className="flex flex-col gap-3 mt-6">
-                <button
-                  onClick={() => {
-                    setShowSuccessPopup(false);
-                    // Sepet bölümüne scroll yap
-                    const cartSection = document.getElementById('admin-cart-section');
-                    if (cartSection) {
-                      cartSection.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-semibold transition-colors"
-                >
-                  Sepete Git
-                </button>
-                
+              {/* Kapat Butonu */}
+              <div className="flex justify-center mt-6">
                 <button
                   onClick={() => setShowSuccessPopup(false)}
-                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-lg font-semibold transition-colors"
+                  className="bg-[#00365a] hover:bg-[#004170] text-white px-6 py-3 rounded-lg font-semibold transition-colors"
                 >
-                  Alışverişe Devam Et
+                  Kapat
                 </button>
-                
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Adres Uyarı Pop-up */}
+      {showAddressWarningPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all">
+            <div className="p-6 text-center">
+              {/* Uyarı İkonu */}
+              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+                <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              
+              {/* Başlık */}
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Lütfen teslimat adresi seçiniz
+              </h3>
+              
+              {/* Açıklama */}
+              <p className="text-gray-600 mb-6">
+                Sipariş verebilmek için önce bir teslimat adresi seçmeniz gerekmektedir.
+              </p>
+              
+              {/* Kapat Butonu */}
+              <div className="flex justify-center">
                 <button
-                  onClick={() => setShowSuccessPopup(false)}
-                  className="w-full bg-red-100 hover:bg-red-200 text-red-700 px-4 py-3 rounded-lg font-semibold transition-colors"
+                  onClick={() => setShowAddressWarningPopup(false)}
+                  className="bg-[#00365a] hover:bg-[#004170] text-white px-6 py-3 rounded-lg font-semibold transition-colors"
                 >
                   Kapat
                 </button>
