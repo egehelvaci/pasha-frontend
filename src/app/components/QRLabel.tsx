@@ -375,7 +375,7 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
       try {
         // QR kod için barcode veya id kullan - YAZICI DPI'ında üret
         const qrData = firstCode.qr_code || firstCode.barcode || firstCode.id;
-        const qrSize = Math.round(LABEL_W_PX * 0.5); // Yazıcı DPI'ında QR boyutu
+        const qrSize = Math.round(LABEL_W_PX * 0.7); // Yazıcı DPI'ında QR boyutu (0.5'ten 0.7'ye büyütüldü)
         const qrCodeDataURL = await QRCode.toDataURL(qrData, {
           width: qrSize,
           margin: 2,
@@ -392,8 +392,8 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
           // Netlik için image smoothing'i kapat
           ctx.imageSmoothingEnabled = false;
           
-          // YENİ LAYOUT: QR kodu küçük ve sağ köşede
-          const qrDisplaySize = Math.round(LABEL_W_PX * 0.25);   // genişliğin %25'i (küçültüldü)
+          // YENİ LAYOUT: QR kodu büyütülmüş ve sağ köşede
+          const qrDisplaySize = Math.round(LABEL_W_PX * 0.35);   // genişliğin %35'i (0.25'ten 0.35'e büyütüldü)
           const qrX = canvas.width - qrDisplaySize - mmToPx(3);   // sağdan 3mm boşluk
           const qrY = 10 + mmToPx(3);                             // üstten 10px + 3mm boşluk
           ctx.drawImage(qrImage, qrX, qrY, qrDisplaySize, qrDisplaySize);
@@ -778,7 +778,7 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
           try {
             // QR kod için qrCode data kullan - YAZICI DPI'ında üret
             const qrData = codeData.qrCode?.qr_code || codeData.qrCode?.id || 'NO-QR-DATA';
-            const qrSize = Math.round(LABEL_W_PX * 0.5); // Yazıcı DPI'ında QR boyutu
+            const qrSize = Math.round(LABEL_W_PX * 0.7); // Yazıcı DPI'ında QR boyutu (0.5'ten 0.7'ye büyütüldü)
             const qrCodeDataURL = await QRCode.toDataURL(qrData, {
               width: qrSize,
               margin: 2,
@@ -795,8 +795,8 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
               // Netlik için image smoothing'i kapat
               ctx.imageSmoothingEnabled = false;
               
-              // YENİ LAYOUT: QR kodu küçük ve sağ köşede (yazdırma)
-              const qrDisplaySize = Math.round(LABEL_W_PX * 0.25);   // genişliğin %25'i (küçültüldü)
+              // YENİ LAYOUT: QR kodu büyütülmüş ve sağ köşede (yazdırma)
+              const qrDisplaySize = Math.round(LABEL_W_PX * 0.35);   // genişliğin %35'i (0.25'ten 0.35'e büyütüldü)
               const qrX = canvas.width - qrDisplaySize - mmToPx(3);   // sağdan 3mm boşluk
               const qrY = 10 + mmToPx(3);                             // üstten 10px + 3mm boşluk
               ctx.drawImage(qrImage, qrX, qrY, qrDisplaySize, qrDisplaySize);

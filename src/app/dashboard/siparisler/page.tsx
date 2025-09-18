@@ -1452,7 +1452,7 @@ const Siparisler = () => {
               ctx.fillRect(0, 0, canvas.width, canvas.height);
 
               // Backend QR kod string'ini kullanarak QR kod oluştur - QRLabel ile aynı ayarlar
-              const qrSize = Math.round(639 * 0.5); // Yazıcı DPI'ında QR boyutu
+              const qrSize = Math.round(639 * 0.7); // Yazıcı DPI'ında QR boyutu (0.65'ten 0.7'ye ayarlandı)
               const qrCodeDataURL = await QRCode.toDataURL(qrCodeData.qr_code, {
                 width: qrSize,
                 margin: 2,
@@ -1471,8 +1471,8 @@ const Siparisler = () => {
                   // Netlik için image smoothing'i kapat
                   ctx.imageSmoothingEnabled = false;
                   
-                  // YENİ LAYOUT: QR kodu küçük ve sağ köşede (toplu yazdırma)
-                  const qrDisplaySize = Math.round(639 * 0.25);   // genişliğin %25'i (küçültüldü)
+                  // YENİ LAYOUT: QR kodu büyütülmüş ve sağ köşede (toplu yazdırma)
+                  const qrDisplaySize = Math.round(639 * 0.35);   // genişliğin %35'i (0.32'den 0.35'e ayarlandı)
                   const qrX = canvas.width - qrDisplaySize - Math.round((3 / 25.4) * 203);   // sağdan 3mm boşluk
                   const qrY = 10 + Math.round((3 / 25.4) * 203);                             // üstten 10px + 3mm boşluk
                   ctx.drawImage(qrImage, qrX, qrY, qrDisplaySize, qrDisplaySize);
@@ -3866,7 +3866,7 @@ const Siparisler = () => {
                                                 <div style="text-align: center; background: white; padding: 30px; max-width: 600px; margin: 20px;">
                                                   
                                                   <div style="margin: 20px 0;">
-                                                    <img src="${qrCode.qrCodeImageUrl}" alt="QR Kod" style="max-width: 250px; max-height: 250px; border: 1px solid black;" onerror="this.innerHTML='<p>QR kod görseli yüklenemedi</p>'" />
+                                                    <img src="${qrCode.qrCodeImageUrl}" alt="QR Kod" style="max-width: 350px; max-height: 350px; border: 1px solid black;" onerror="this.innerHTML='<p>QR kod görseli yüklenemedi</p>'" />
                                                   </div>
                                                   
                                                   <!-- Adres Bilgileri -->
