@@ -1569,7 +1569,9 @@ const Siparisler = () => {
 
                   // Ürün notu varsa ekle (kompakt) - satır bölme ile (toplu yazdırma)
                   if (item.notes && item.notes.trim()) {
-                    const noteText = `Not: ${item.notes}`;
+                    // \n karakterlerini boşlukla değiştir ve fazla boşlukları temizle
+                    const cleanedNotes = item.notes.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+                    const noteText = `Not: ${cleanedNotes}`;
                     const noteMaxWidth = leftAreaWidth; // QR kodunun yanındaki alanı kullan
                     const noteWords = noteText.split(' ');
                     const noteLines: string[] = [];
@@ -1596,8 +1598,8 @@ const Siparisler = () => {
                       noteLines.push(currentNoteLine);
                     }
                     
-                    // Maksimum 2 satır not göster
-                    const maxNoteLines = 2;
+                    // Maksimum 3 satır not göster (2'den 3'e çıkarıldı)
+                    const maxNoteLines = 3;
                     const displayNoteLines = noteLines.slice(0, maxNoteLines);
                     
                     if (noteLines.length > maxNoteLines) {
@@ -1662,7 +1664,17 @@ const Siparisler = () => {
                     ctx.fillText(line, canvas.width / 2, firmY);
                     firmY += Math.round((4 / 25.4) * 203); // Firma adı satır aralığı (toplu yazdırma)
                   }
-                  firmY += Math.round((2 / 25.4) * 203); // Firma adı ile adres arası boşluk (toplu yazdırma)
+                  
+                  // Firma adı ile title arası boşluk (toplu yazdırma)
+                  firmY += Math.round((4 / 25.4) * 203);
+                  
+                  // Title alanını ekle (firma adının altında) (toplu yazdırma)
+                  if (labelData.order.address?.title) {
+                    const titleFont = Math.round(799 * 0.038);
+                    ctx.font = `bold ${titleFont}px Arial`;
+                    ctx.fillText(labelData.order.address.title.toUpperCase(), canvas.width / 2, firmY);
+                    firmY += Math.round((4 / 25.4) * 203); // Title ile adres arası boşluk
+                  }
                   
                   // Adres bilgisi - boyut artırıldı ve kalın yapıldı
                   const addressFont = Math.round(799 * 0.042);
@@ -1670,6 +1682,10 @@ const Siparisler = () => {
                   
                   // Adres bilgisini şehir ve ilçe ile birlikte hazırla
                   let addressText = labelData.order.address?.address || 'ANTARES AVM.AYVALI MAH.AFRA CAD.NO:1-238 ETLİK';
+                  
+                  // \n karakterlerini boşlukla değiştir ve fazla boşlukları temizle
+                  addressText = addressText.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+                  
                   if (labelData.order.address?.district || labelData.order.address?.city) {
                     const locationParts = [];
                     if (labelData.order.address?.district) locationParts.push(labelData.order.address.district);
@@ -1706,8 +1722,8 @@ const Siparisler = () => {
                     addressLines.push(currentAddressLine);
                   }
                   
-                  // Maksimum 2 satır adres göster
-                  const maxAddressLines = 2;
+                  // Maksimum 3 satır adres göster (2'den 3'e çıkarıldı)
+                  const maxAddressLines = 3;
                   const displayAddressLines = addressLines.slice(0, maxAddressLines);
                   
                   if (addressLines.length > maxAddressLines) {

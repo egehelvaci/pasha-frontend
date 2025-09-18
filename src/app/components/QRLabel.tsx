@@ -490,7 +490,9 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
 
           // Ürün notu varsa ekle (kompakt) - satır bölme ile
           if (firstItem.notes && firstItem.notes.trim()) {
-            const noteText = `Not: ${firstItem.notes}`;
+            // \n karakterlerini boşlukla değiştir ve fazla boşlukları temizle
+            const cleanedNotes = firstItem.notes.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+            const noteText = `Not: ${cleanedNotes}`;
             const noteMaxWidth = leftAreaWidth; // QR kodunun yanındaki alanı kullan
             const noteWords = noteText.split(' ');
             const noteLines: string[] = [];
@@ -517,8 +519,8 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
               noteLines.push(currentNoteLine);
             }
             
-            // Maksimum 2 satır not göster
-            const maxNoteLines = 2;
+            // Maksimum 3 satır not göster (2'den 3'e çıkarıldı)
+            const maxNoteLines = 3;
             const displayNoteLines = noteLines.slice(0, maxNoteLines);
             
             if (noteLines.length > maxNoteLines) {
@@ -584,7 +586,17 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
             ctx.fillText(line, canvas.width / 2, firmY);
             firmY += mmToPx(4); // Firma adı satır aralığı
           }
-          firmY += mmToPx(2); // Firma adı ile adres arası boşluk
+          
+          // Firma adı ile title arası boşluk
+          firmY += mmToPx(4);
+          
+          // Title alanını ekle (firma adının altında)
+          if (orderData.address?.title) {
+            const titleFont = Math.round(LABEL_H_PX * 0.038);
+            ctx.font = `bold ${titleFont}px Arial`;
+            ctx.fillText(orderData.address.title.toUpperCase(), canvas.width / 2, firmY);
+            firmY += mmToPx(4); // Title ile adres arası boşluk
+          }
           
           // Adres bilgisi - boyut artırıldı ve kalın yapıldı
           const addressFont = Math.round(LABEL_H_PX * 0.042);
@@ -592,6 +604,10 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
           
           // Adres bilgisini şehir ve ilçe ile birlikte hazırla
           let addressText = orderData.address?.address || 'ANTARES AVM.AYVALI MAH.AFRA CAD.NO:1-238 ETLİK';
+          
+          // \n karakterlerini boşlukla değiştir ve fazla boşlukları temizle
+          addressText = addressText.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+          
           if (orderData.address?.district || orderData.address?.city) {
             const locationParts = [];
             if (orderData.address?.district) locationParts.push(orderData.address.district);
@@ -628,8 +644,8 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
             addressLines.push(currentAddressLine);
           }
           
-          // Maksimum 2 satır adres göster
-          const maxAddressLines = 2;
+          // Maksimum 3 satır adres göster (2'den 3'e çıkarıldı)
+          const maxAddressLines = 3;
           const displayAddressLines = addressLines.slice(0, maxAddressLines);
           
           if (addressLines.length > maxAddressLines) {
@@ -893,7 +909,9 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
 
               // Ürün notu varsa ekle (kompakt) - satır bölme ile (yazdırma)
               if (item.notes && item.notes.trim()) {
-                const noteText = `Not: ${item.notes}`;
+                // \n karakterlerini boşlukla değiştir ve fazla boşlukları temizle
+                const cleanedNotes = item.notes.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+                const noteText = `Not: ${cleanedNotes}`;
                 const noteMaxWidth = leftAreaWidth; // QR kodunun yanındaki alanı kullan
                 const noteWords = noteText.split(' ');
                 const noteLines: string[] = [];
@@ -920,8 +938,8 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
                   noteLines.push(currentNoteLine);
                 }
                 
-                // Maksimum 2 satır not göster
-                const maxNoteLines = 2;
+                // Maksimum 3 satır not göster (2'den 3'e çıkarıldı)
+                const maxNoteLines = 3;
                 const displayNoteLines = noteLines.slice(0, maxNoteLines);
                 
                 if (noteLines.length > maxNoteLines) {
@@ -986,7 +1004,17 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
                 ctx.fillText(line, canvas.width / 2, firmY);
                 firmY += mmToPx(4); // Firma adı satır aralığı (yazdırma)
               }
-              firmY += mmToPx(2); // Firma adı ile adres arası boşluk (yazdırma)
+              
+              // Firma adı ile title arası boşluk (yazdırma)
+              firmY += mmToPx(4);
+              
+              // Title alanını ekle (firma adının altında) (yazdırma)
+              if (orderData.address?.title) {
+                const titleFont = Math.round(LABEL_H_PX * 0.038);
+                ctx.font = `bold ${titleFont}px Arial`;
+                ctx.fillText(orderData.address.title.toUpperCase(), canvas.width / 2, firmY);
+                firmY += mmToPx(4); // Title ile adres arası boşluk
+              }
               
               // Adres bilgisi - boyut artırıldı ve kalın yapıldı
               const addressFont = Math.round(LABEL_H_PX * 0.042);
@@ -994,6 +1022,10 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
               
               // Adres bilgisini şehir ve ilçe ile birlikte hazırla
               let addressText = orderData.address?.address || 'ANTARES AVM.AYVALI MAH.AFRA CAD.NO:1-238 ETLİK';
+              
+              // \n karakterlerini boşlukla değiştir ve fazla boşlukları temizle
+              addressText = addressText.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+              
               if (orderData.address?.district || orderData.address?.city) {
                 const locationParts = [];
                 if (orderData.address?.district) locationParts.push(orderData.address.district);
@@ -1030,8 +1062,8 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
                 addressLines.push(currentAddressLine);
               }
               
-              // Maksimum 2 satır adres göster
-              const maxAddressLines = 2;
+              // Maksimum 3 satır adres göster (2'den 3'e çıkarıldı)
+              const maxAddressLines = 3;
               const displayAddressLines = addressLines.slice(0, maxAddressLines);
               
               if (addressLines.length > maxAddressLines) {
