@@ -573,8 +573,8 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
             firmLines.push(currentFirmLine);
           }
           
-          // Maksimum 2 satır firma adı göster
-          const maxFirmLines = 2;
+          // Maksimum 3 satır firma adı göster (2'den 3'e çıkarıldı)
+          const maxFirmLines = 3;
           const displayFirmLines = firmLines.slice(0, maxFirmLines);
           
           if (firmLines.length > maxFirmLines) {
@@ -644,8 +644,8 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
             addressLines.push(currentAddressLine);
           }
           
-          // Maksimum 3 satır adres göster (2'den 3'e çıkarıldı)
-          const maxAddressLines = 3;
+          // Maksimum 4 satır adres göster (3'ten 4'e çıkarıldı)
+          const maxAddressLines = 4;
           const displayAddressLines = addressLines.slice(0, maxAddressLines);
           
           if (addressLines.length > maxAddressLines) {
@@ -991,8 +991,8 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
                 firmLines.push(currentFirmLine);
               }
               
-              // Maksimum 2 satır firma adı göster
-              const maxFirmLines = 2;
+              // Maksimum 3 satır firma adı göster (2'den 3'e çıkarıldı)
+              const maxFirmLines = 3;
               const displayFirmLines = firmLines.slice(0, maxFirmLines);
               
               if (firmLines.length > maxFirmLines) {
@@ -1062,8 +1062,8 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
                 addressLines.push(currentAddressLine);
               }
               
-              // Maksimum 3 satır adres göster (2'den 3'e çıkarıldı)
-              const maxAddressLines = 3;
+              // Maksimum 4 satır adres göster (3'ten 4'e çıkarıldı)
+              const maxAddressLines = 4;
               const displayAddressLines = addressLines.slice(0, maxAddressLines);
               
               if (addressLines.length > maxAddressLines) {
