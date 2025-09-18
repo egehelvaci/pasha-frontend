@@ -658,13 +658,18 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
             firmY += mmToPx(5); // Satır aralığı 3'ten 5'e çıkarıldı
           }
           
-          // Telefon numarası adresin altına ekle - daha da aşağıya
+          // Telefon numarası adresin altına ekle - boşluk azaltıldı
           if (orderData.user?.phone || orderData.store_phone) {
             const phoneText = orderData.user?.phone || orderData.store_phone || '';
             if (phoneText) {
-              firmY += mmToPx(6); // Daha fazla boşluk (2'den 6'ya)
+              firmY += mmToPx(3); // Boşluk azaltıldı (6'dan 3'e)
+              
+              // Telefon için daha küçük font
+              const phoneFont = Math.round(LABEL_H_PX * 0.035);
+              ctx.font = `bold ${phoneFont}px Arial`;
+              
               ctx.fillText(`Tel: ${phoneText}`, canvas.width / 2, firmY);
-              firmY += mmToPx(4); // Alt boşluk aynı
+              firmY += mmToPx(3); // Alt boşluk azaltıldı
             }
           }
           
@@ -1076,15 +1081,19 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
                 firmY += mmToPx(5); // Satır aralığı 3'ten 5'e çıkarıldı
               }
               
-              // Telefon numarası adresin altına ekle - daha da aşağıya
+              // Telefon numarası adresin altına ekle - boşluk azaltıldı (yazdırma)
               if (orderData.user?.phone || orderData.store_phone) {
                 const phoneText = orderData.user?.phone || orderData.store_phone || '';
                 if (phoneText) {
-                  firmY += mmToPx(6); // Daha fazla boşluk (2'den 6'ya)
+                  firmY += mmToPx(3); // Boşluk azaltıldı (6'dan 3'e)
+                  
+                  // Telefon için daha küçük font (yazdırma)
+                  const phoneFont = Math.round(LABEL_H_PX * 0.035);
+                  ctx.font = `bold ${phoneFont}px Arial`;
+                  
                   ctx.fillText(`Tel: ${phoneText}`, canvas.width / 2, firmY);
-                  firmY += mmToPx(4); // Alt boşluk aynı
+                  firmY += mmToPx(3); // Alt boşluk azaltıldı
                 }
-
               }
               
               // PAŞA HOME yazısı kaldırıldı (yazdırma)

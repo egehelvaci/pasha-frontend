@@ -1736,13 +1736,18 @@ const Siparisler = () => {
                     firmY += Math.round((5 / 25.4) * 203); // Satır aralığı 3'ten 5'e çıkarıldı
                   }
                   
-                  // Telefon numarası adresin altına ekle - daha da aşağıya (toplu yazdırma)
+                  // Telefon numarası adresin altına ekle - boşluk azaltıldı (toplu yazdırma)
                   if (labelData.order.user?.phone || labelData.order.store_phone) {
                     const phoneText = labelData.order.user?.phone || labelData.order.store_phone || '';
                     if (phoneText) {
-                      firmY += Math.round((6 / 25.4) * 203); // Daha fazla boşluk (2'den 6'ya)
+                      firmY += Math.round((3 / 25.4) * 203); // Boşluk azaltıldı (6'dan 3'e)
+                      
+                      // Telefon için daha küçük font (toplu yazdırma)
+                      const phoneFont = Math.round(799 * 0.035);
+                      ctx.font = `bold ${phoneFont}px Arial`;
+                      
                       ctx.fillText(`Tel: ${phoneText}`, canvas.width / 2, firmY);
-                      firmY += Math.round((4 / 25.4) * 203); // Alt boşluk aynı
+                      firmY += Math.round((3 / 25.4) * 203); // Alt boşluk azaltıldı
                     }
                   }
                   
