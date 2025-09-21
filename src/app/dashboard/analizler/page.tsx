@@ -326,9 +326,15 @@ export default function AnalyticsPage() {
     );
   }
 
+  // Uzun isimleri kısaltma fonksiyonu
+  const truncateText = (text: string, maxLength: number = 25) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  };
+
   // Chart yapılandırmaları
   const topStoresChartData = {
-    labels: analyticsData.topStores.map(store => store.store_name),
+    labels: analyticsData.topStores.map(store => truncateText(store.store_name, 20)),
     datasets: [
       {
         label: 'Sipariş Adedi',
@@ -353,7 +359,7 @@ export default function AnalyticsPage() {
   };
 
   const topProductsChartData = {
-    labels: analyticsData.topProducts.map(product => product.product_name),
+    labels: analyticsData.topProducts.map(product => truncateText(product.product_name, 15)),
     datasets: [
       {
         label: 'Toplam Adet',
@@ -443,18 +449,45 @@ export default function AnalyticsPage() {
 
   const simpleChartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: 'top' as const,
       },
       title: {
-        display: true,
-        text: 'Analiz Verileri'
+        display: false
       },
+      tooltip: {
+        callbacks: {
+          title: function(context: any) {
+            // Tooltip'te tam mağaza adını göster
+            const dataIndex = context[0].dataIndex;
+            if (context[0].chart.canvas.id.includes('stores')) {
+              return analyticsData.topStores[dataIndex]?.store_name || context[0].label;
+            } else {
+              return analyticsData.topProducts[dataIndex]?.product_name || context[0].label;
+            }
+          }
+        }
+      }
     },
     scales: {
+      x: {
+        ticks: {
+          maxRotation: 45,
+          minRotation: 45,
+          font: {
+            size: 10
+          }
+        }
+      },
       y: {
-        beginAtZero: true
+        beginAtZero: true,
+        ticks: {
+          font: {
+            size: 11
+          }
+        }
       }
     }
   };
@@ -546,13 +579,15 @@ export default function AnalyticsPage() {
           {/* En Çok Sipariş Veren Mağazalar */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">En Çok Sipariş Veren Mağazalar (TOP 5)</h2>
-            <div style={{ height: '400px' }}>
+            <div style={{ height: '350px', marginBottom: '20px' }}>
               <Bar data={topStoresChartData} options={simpleChartOptions} />
             </div>
             <div className="mt-4 space-y-2">
               {analyticsData.topStores.map((store, index) => (
                 <div key={store.store_id} className="flex justify-between items-center text-sm">
-                  <span className="font-medium">{index + 1}. {store.store_name}</span>
+                  <span className="font-medium" title={store.store_name}>
+                    {index + 1}. {truncateText(store.store_name, 30)}
+                  </span>
                   <div className="text-right">
                     <div className="text-gray-900">{store.order_count} sipariş</div>
                     <div className="text-gray-500">{store.total_amount.toLocaleString('tr-TR', {
@@ -568,7 +603,7 @@ export default function AnalyticsPage() {
           {/* En Çok Sipariş Edilen Ürünler */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">En Çok Sipariş Edilen Ürünler (TOP 5)</h2>
-            <div style={{ height: '400px' }}>
+            <div style={{ height: '350px', marginBottom: '20px' }}>
               <Bar data={topProductsChartData} options={simpleChartOptions} />
             </div>
             <div className="mt-4 space-y-2">
