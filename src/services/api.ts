@@ -3834,4 +3834,371 @@ export async function apiRequest(url: string, options: RequestInit = {}): Promis
   }
 
   return response;
+}
+
+// ==================== SATIN ALIM İŞLEMLERİ API'LERİ ====================
+
+// Satıcı türleri
+export interface Supplier {
+  id: string;
+  name: string;
+  company_name: string;
+  phone: string;
+  address: string;
+  balance: number;
+  currency: string;
+  notes: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  purchasePriceLists: any[];
+}
+
+export interface CreateSupplierRequest {
+  name: string;
+  company_name: string;
+  phone?: string;
+  address?: string;
+  notes?: string;
+  balance?: number;
+  exchange_rate?: number;
+  currency?: string;
+}
+
+export interface UpdateSupplierRequest {
+  name?: string;
+  company_name?: string;
+  phone?: string;
+  address?: string;
+  notes?: string;
+  balance?: number;
+  exchange_rate?: number;
+  currency?: string;
+}
+
+// Alış fiyat listesi türleri
+export interface PurchasePriceList {
+  id: string;
+  name: string;
+  description: string;
+  supplier_id?: string;
+  currency: string;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+  collectionPrices: CollectionPrice[];
+}
+
+export interface CollectionPrice {
+  id: string;
+  collection_id: string;
+  price_per_square_meter: number;
+  collection: {
+    id: string;
+    name: string;
+  };
+}
+
+export interface CreatePurchasePriceListRequest {
+  name: string;
+  description?: string;
+  supplier_id?: string;
+  currency?: string;
+  collectionPrices: Array<{
+    collection_id: string;
+    price_per_square_meter: number;
+  }>;
+}
+
+// Bakiye yönetimi türleri
+export interface BalanceUpdateRequest {
+  amount: number;
+  exchange_rate: number;
+  transaction_type: 'PAYMENT' | 'PURCHASE' | 'ADJUSTMENT' | 'REFUND' | 'DISCOUNT';
+  description: string;
+  reference_number?: string;
+}
+
+export interface BalanceTransaction {
+  id: string;
+  supplier_id: string;
+  transaction_type: string;
+  amount: number;
+  original_amount?: number;
+  exchange_rate?: number;
+  original_currency?: string;
+  previous_balance: number;
+  new_balance: number;
+  description: string;
+  reference_number?: string;
+  created_by: string;
+  created_at: string;
+  supplier: {
+    name: string;
+    company_name: string;
+  };
+}
+
+export interface BalanceSummary {
+  summary: {
+    totalReceivable: number;
+    totalPayable: number;
+    receivableCount: number;
+    payableCount: number;
+    neutralCount: number;
+    totalSuppliers: number;
+    netBalance: number;
+  };
+  debtors: Supplier[];
+  creditors: Supplier[];
+  allSuppliers: Supplier[];
+}
+
+// Ürün alımı türleri
+export interface PurchaseProductRequest {
+  product_id: string;
+  quantity_m2: number;
+  description?: string;
+  reference_number?: string;
+}
+
+export interface PurchaseProductResponse {
+  supplier: {
+    id: string;
+    name: string;
+    balance: number;
+  };
+  product: {
+    productId: string;
+    name: string;
+    collection: {
+      name: string;
+    };
+  };
+  transaction: {
+    id: string;
+    transaction_type: string;
+    amount: number;
+    description: string;
+  };
+  purchase_details: {
+    quantity_m2: number;
+    unit_price_usd: number;
+    total_usd: number;
+  };
+}
+
+// ==================== SATICI YÖNETİMİ API'LERİ ====================
+
+// Tüm satıcıları listele
+export async function getSuppliers(): Promise<Supplier[]> {
+  const response = await apiRequest(`${API_URL}/api/admin/purchase-management/suppliers`);
+  
+  if (!response.ok) {
+    throw new Error('Satıcılar yüklenirken hata oluştu');
+  }
+  
+  const data = await response.json();
+  return data.data;
+}
+
+// Yeni satıcı oluştur
+export async function createSupplier(supplierData: CreateSupplierRequest): Promise<Supplier> {
+  const response = await apiRequest(`${API_URL}/api/admin/purchase-management/suppliers`, {
+    method: 'POST',
+    body: JSON.stringify(supplierData),
+  });
+  
+  if (!response.ok) {
+    throw new Error('Satıcı oluşturulurken hata oluştu');
+  }
+  
+  const data = await response.json();
+  return data.data;
+}
+
+// Satıcı güncelle
+export async function updateSupplier(supplierId: string, supplierData: UpdateSupplierRequest): Promise<Supplier> {
+  const response = await apiRequest(`${API_URL}/api/admin/purchase-management/suppliers/${supplierId}`, {
+    method: 'PUT',
+    body: JSON.stringify(supplierData),
+  });
+  
+  if (!response.ok) {
+    throw new Error('Satıcı güncellenirken hata oluştu');
+  }
+  
+  const data = await response.json();
+  return data.data;
+}
+
+// Satıcı sil (deaktif et)
+export async function deleteSupplier(supplierId: string): Promise<void> {
+  const response = await apiRequest(`${API_URL}/api/admin/purchase-management/suppliers/${supplierId}`, {
+    method: 'DELETE',
+  });
+  
+  if (!response.ok) {
+    throw new Error('Satıcı silinirken hata oluştu');
+  }
+}
+
+// ==================== BAKİYE YÖNETİMİ API'LERİ ====================
+
+// Satıcı bakiyesi güncelle
+export async function updateSupplierBalance(supplierId: string, balanceData: BalanceUpdateRequest): Promise<Supplier> {
+  const response = await apiRequest(`${API_URL}/api/admin/purchase-management/suppliers/${supplierId}/balance`, {
+    method: 'PUT',
+    body: JSON.stringify(balanceData),
+  });
+  
+  if (!response.ok) {
+    throw new Error('Satıcı bakiyesi güncellenirken hata oluştu');
+  }
+  
+  const data = await response.json();
+  return data.data;
+}
+
+// Satıcı bakiye geçmişi
+export async function getSupplierBalanceHistory(
+  supplierId: string, 
+  page: number = 1, 
+  limit: number = 50
+): Promise<{ transactions: BalanceTransaction[]; pagination: any }> {
+  const response = await apiRequest(
+    `${API_URL}/api/admin/purchase-management/suppliers/${supplierId}/balance-history?page=${page}&limit=${limit}`
+  );
+  
+  if (!response.ok) {
+    throw new Error('Bakiye geçmişi yüklenirken hata oluştu');
+  }
+  
+  const data = await response.json();
+  return data.data;
+}
+
+// Satıcı bakiye özeti ve borç raporu
+export async function getBalanceSummary(): Promise<BalanceSummary> {
+  const response = await apiRequest(`${API_URL}/api/admin/purchase-management/suppliers/balance-summary`);
+  
+  if (!response.ok) {
+    throw new Error('Bakiye özeti yüklenirken hata oluştu');
+  }
+  
+  const data = await response.json();
+  return data.data;
+}
+
+// ==================== ÜRÜN ALIMI API'LERİ ====================
+
+// Satıcıdan ürün alımı yap
+export async function purchaseProductFromSupplier(
+  supplierId: string, 
+  purchaseData: PurchaseProductRequest
+): Promise<PurchaseProductResponse> {
+  const response = await apiRequest(`${API_URL}/api/admin/purchase-management/suppliers/${supplierId}/purchase-product`, {
+    method: 'POST',
+    body: JSON.stringify(purchaseData),
+  });
+  
+  if (!response.ok) {
+    throw new Error('Ürün alımı yapılırken hata oluştu');
+  }
+  
+  const data = await response.json();
+  return data.data;
+}
+
+// ==================== ALIŞ FİYAT LİSTESİ API'LERİ ====================
+
+// Tüm alış fiyat listelerini getir
+export async function getPurchasePriceLists(): Promise<PurchasePriceList[]> {
+  const response = await apiRequest(`${API_URL}/api/admin/purchase-management/purchase-price-lists`);
+  
+  if (!response.ok) {
+    throw new Error('Alış fiyat listeleri yüklenirken hata oluştu');
+  }
+  
+  const data = await response.json();
+  return data.data;
+}
+
+// Varsayılan alış fiyat listesi
+export async function getDefaultPurchasePriceList(): Promise<PurchasePriceList> {
+  const response = await apiRequest(`${API_URL}/api/admin/purchase-management/purchase-price-lists/default`);
+  
+  if (!response.ok) {
+    throw new Error('Varsayılan alış fiyat listesi yüklenirken hata oluştu');
+  }
+  
+  const data = await response.json();
+  return data.data;
+}
+
+// ID'ye göre alış fiyat listesi
+export async function getPurchasePriceListById(listId: string): Promise<PurchasePriceList> {
+  const response = await apiRequest(`${API_URL}/api/admin/purchase-management/purchase-price-lists/${listId}`);
+  
+  if (!response.ok) {
+    throw new Error('Alış fiyat listesi yüklenirken hata oluştu');
+  }
+  
+  const data = await response.json();
+  return data.data;
+}
+
+// Yeni alış fiyat listesi oluştur
+export async function createPurchasePriceList(listData: CreatePurchasePriceListRequest): Promise<PurchasePriceList> {
+  const response = await apiRequest(`${API_URL}/api/admin/purchase-management/purchase-price-lists`, {
+    method: 'POST',
+    body: JSON.stringify(listData),
+  });
+  
+  if (!response.ok) {
+    throw new Error('Alış fiyat listesi oluşturulurken hata oluştu');
+  }
+  
+  const data = await response.json();
+  return data.data;
+}
+
+// Alış fiyat listesi güncelle
+export async function updatePurchasePriceList(
+  listId: string, 
+  listData: Partial<CreatePurchasePriceListRequest>
+): Promise<PurchasePriceList> {
+  const response = await apiRequest(`${API_URL}/api/admin/purchase-management/purchase-price-lists/${listId}`, {
+    method: 'PUT',
+    body: JSON.stringify(listData),
+  });
+  
+  if (!response.ok) {
+    throw new Error('Alış fiyat listesi güncellenirken hata oluştu');
+  }
+  
+  const data = await response.json();
+  return data.data;
+}
+
+// Koleksiyon fiyatı güncelle
+export async function updateCollectionPrice(
+  listId: string, 
+  collectionId: string, 
+  price: number
+): Promise<CollectionPrice> {
+  const response = await apiRequest(
+    `${API_URL}/api/admin/purchase-management/purchase-price-lists/${listId}/collections/${collectionId}`, 
+    {
+      method: 'PUT',
+      body: JSON.stringify({ price_per_square_meter: price }),
+    }
+  );
+  
+  if (!response.ok) {
+    throw new Error('Koleksiyon fiyatı güncellenirken hata oluştu');
+  }
+  
+  const data = await response.json();
+  return data.data;
 } 
