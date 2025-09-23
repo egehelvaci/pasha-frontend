@@ -650,13 +650,28 @@ export interface CreateOrderFromAdminCartResponse {
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'; // API sunucusunun adresi
 
-export async function getProducts(): Promise<Product[]> {
+export async function getProducts(page: number = 1, limit: number = 50, search?: string, collectionId?: string): Promise<{ data: Product[], pagination?: any }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/products`);
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      ...(search && { search }),
+      ...(collectionId && { collectionId })
+    });
+
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/api/products?${params}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
     if (!response.ok) {
       throw new Error('Ürünler getirilemedi');
     }
-    return await response.json();
+    
+    const result = await response.json();
+    return result;
   } catch (error) {
     console.error('Ürünleri getirirken hata oluştu:', error);
     throw error;
@@ -4090,25 +4105,6 @@ export async function getBalanceSummary(): Promise<BalanceSummary> {
   return data.data;
 }
 
-// ==================== ÜRÜN ALIMI API'LERİ ====================
-
-// Satıcıdan ürün alımı yap
-export async function purchaseProductFromSupplier(
-  supplierId: string, 
-  purchaseData: PurchaseProductRequest
-): Promise<PurchaseProductResponse> {
-  const response = await apiRequest(`${API_URL}/api/admin/purchase-management/suppliers/${supplierId}/purchase-product`, {
-    method: 'POST',
-    body: JSON.stringify(purchaseData),
-  });
-  
-  if (!response.ok) {
-    throw new Error('Ürün alımı yapılırken hata oluştu');
-  }
-  
-  const data = await response.json();
-  return data.data;
-}
 
 // ==================== ALIŞ FİYAT LİSTESİ API'LERİ ====================
 
@@ -4201,4 +4197,364 @@ export async function updateCollectionPrice(
   
   const data = await response.json();
   return data.data;
+}
+
+// Supplier Purchase Cart APIs
+export interface SupplierCartItem {
+  id: number;
+  product_id: string;
+  quantity: number;
+  width: string;
+  height: string;
+  area_m2: string;
+  unit_price: string;
+  total_price: string;
+  has_fringe: boolean;
+  cut_type: string;
+  notes?: string;
+  product: {
+    productId: string;
+    name: string;
+    collection: {
+      name: string;
+    };
+  };
+}
+
+export interface SupplierCart {
+  id: number;
+  supplier_id: string;
+  user_id: string;
+  is_active: boolean;
+  created_at: string;
+  items: SupplierCartItem[];
+  supplier: {
+    id: string;
+    name: string;
+    company_name: string;
+    balance: string;
+  };
+}
+
+export interface SupplierCartResponse {
+  success: boolean;
+  data: {
+    cart: SupplierCart;
+    total: {
+      amount: number;
+      currency: string;
+      formatted: string;
+    };
+  };
+  message: string;
+}
+
+export interface AddToSupplierCartData {
+  productId: string;
+  quantity: number;
+  width: number;
+  height: number;
+  hasFringe: boolean;
+  cutType: string;
+  notes?: string;
+}
+
+export interface AddToSupplierCartResponse {
+  success: boolean;
+  data: SupplierCartItem;
+  message: string;
+}
+
+export interface UpdateSupplierCartItemData {
+  quantity?: number;
+  width?: number;
+  height?: number;
+  hasFringe?: boolean;
+  cutType?: string;
+  notes?: string;
+}
+
+export interface SupplierPurchaseResponse {
+  success: boolean;
+  data: {
+    supplier: {
+      id: string;
+      name: string;
+      balance: string;
+      currency: string;
+    };
+    transaction: {
+      id: string;
+      supplier_id: string;
+      transaction_type: string;
+      amount: number;
+      previous_balance: string;
+      new_balance: string;
+      description: string;
+      reference_number: string;
+      created_at: string;
+    };
+    stockUpdates: Array<{
+      product_id: string;
+      variation_id: number;
+      added_m2: number;
+    }>;
+    purchasedItems: Array<{
+      product_id: string;
+      quantity: number;
+      area_m2: string;
+      total_price: string;
+      product: {
+        name: string;
+        collection: {
+          name: string;
+        };
+      };
+    }>;
+    totalAmount: number;
+  };
+  message: string;
+}
+
+// Add item to supplier purchase cart
+export async function addToSupplierCart(
+  supplierId: string,
+  data: AddToSupplierCartData
+): Promise<AddToSupplierCartResponse> {
+  const token = getAuthToken();
+  if (!token) throw new Error('Token bulunamadı');
+
+  const response = await fetch(`${API_BASE_URL}/api/admin/purchase-management/suppliers/${supplierId}/purchase-cart/items`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error('Ürün sepete eklenirken hata oluştu');
+  }
+
+  return await response.json();
+}
+
+// Get supplier purchase cart
+export async function getSupplierCart(supplierId: string): Promise<SupplierCartResponse> {
+  const token = getAuthToken();
+  if (!token) throw new Error('Token bulunamadı');
+
+  const response = await fetch(`${API_BASE_URL}/api/admin/purchase-management/suppliers/${supplierId}/purchase-cart`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Sepet bilgileri alınırken hata oluştu');
+  }
+
+  return await response.json();
+}
+
+// Update supplier cart item
+export async function updateSupplierCartItem(
+  supplierId: string,
+  itemId: number,
+  data: UpdateSupplierCartItemData
+): Promise<AddToSupplierCartResponse> {
+  const token = getAuthToken();
+  if (!token) throw new Error('Token bulunamadı');
+
+  const response = await fetch(`${API_BASE_URL}/api/admin/purchase-management/suppliers/${supplierId}/purchase-cart/items/${itemId}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error('Sepet öğesi güncellenirken hata oluştu');
+  }
+
+  return await response.json();
+}
+
+// Delete supplier cart item
+export async function deleteSupplierCartItem(
+  supplierId: string,
+  itemId: number
+): Promise<{ success: boolean; message: string }> {
+  const token = getAuthToken();
+  if (!token) throw new Error('Token bulunamadı');
+
+  const response = await fetch(`${API_BASE_URL}/api/admin/purchase-management/suppliers/${supplierId}/purchase-cart/items/${itemId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Sepet öğesi silinirken hata oluştu');
+  }
+
+  return await response.json();
+}
+
+// Complete supplier purchase
+export async function completeSupplierPurchase(
+  supplierId: string
+): Promise<SupplierPurchaseResponse> {
+  const token = getAuthToken();
+  if (!token) throw new Error('Token bulunamadı');
+
+  const response = await fetch(`${API_BASE_URL}/api/admin/purchase-management/suppliers/${supplierId}/balance`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Satın alma işlemi tamamlanırken hata oluştu');
+  }
+
+  return await response.json();
+}
+
+// Purchase product from supplier
+export interface PurchaseProductFromSupplierData {
+  product_id: string;
+  quantity_m2: number;
+  description?: string;
+  reference_number?: string;
+}
+
+export interface PurchaseProductFromSupplierResponse {
+  success: boolean;
+  data: {
+    supplier: {
+      id: string;
+      name: string;
+      balance: number;
+    };
+    product: {
+      productId: string;
+      name: string;
+      collection: {
+        name: string;
+      };
+    };
+    transaction: {
+      id: string;
+      transaction_type: string;
+      amount: number;
+      description: string;
+    };
+    purchase_details: {
+      quantity_m2: number;
+      unit_price_usd: number;
+      total_usd: number;
+    };
+  };
+  message: string;
+}
+
+export async function purchaseProductFromSupplier(
+  supplierId: string,
+  data: PurchaseProductFromSupplierData
+): Promise<PurchaseProductFromSupplierResponse> {
+  const token = getAuthToken();
+  if (!token) throw new Error('Token bulunamadı');
+
+  const response = await fetch(`${API_BASE_URL}/api/admin/purchase-management/suppliers/${supplierId}/purchase-product`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error('Ürün alımı yapılırken hata oluştu');
+  }
+
+  return await response.json();
+}
+
+// Purchase History APIs
+export interface PurchaseHistoryItem {
+  id: string;
+  supplier_id: string;
+  transaction_type: string;
+  amount: string;
+  original_amount?: string | null;
+  exchange_rate?: string | null;
+  original_currency?: string | null;
+  previous_balance: string;
+  new_balance: string;
+  description: string;
+  reference_number?: string | null;
+  created_by: string;
+  created_at: string;
+  supplier: {
+    id: string;
+    name: string;
+    company_name: string;
+    currency: string;
+  };
+  transaction_type_description: string;
+  amount_formatted: string;
+  balance_change: string;
+}
+
+export interface PurchaseHistoryResponse {
+  success: boolean;
+  data: {
+    transactions: PurchaseHistoryItem[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+    stats: {
+      totalTransactions: number;
+      totalAmount: number;
+      totalAmountFormatted: string;
+    };
+  };
+  message: string;
+}
+
+export async function getPurchaseHistory(
+  page: number = 1,
+  limit: number = 20,
+  supplierId?: string
+): Promise<PurchaseHistoryResponse> {
+  const token = getAuthToken();
+  if (!token) throw new Error('Token bulunamadı');
+
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+    ...(supplierId && { supplier_id: supplierId })
+  });
+
+  const response = await fetch(`${API_BASE_URL}/api/admin/purchase-management/purchases?${params}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Satın alma geçmişi alınırken hata oluştu');
+  }
+
+  return await response.json();
 } 
