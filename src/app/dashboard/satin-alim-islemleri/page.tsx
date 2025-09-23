@@ -5,31 +5,26 @@ import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { 
   Supplier, 
-  PurchasePriceList, 
   BalanceSummary, 
   CreateSupplierRequest, 
   UpdateSupplierRequest,
   BalanceUpdateRequest,
-  CreatePurchasePriceListRequest,
   getSuppliers,
   createSupplier,
   updateSupplier,
   deleteSupplier,
   updateSupplierBalance,
-  getBalanceSummary,
-  getPurchasePriceLists
+  getBalanceSummary
 } from '../../../services/api';
 import SupplierModal from '../../../components/SupplierModal';
 import BalanceModal from '../../../components/BalanceModal';
-import PurchasePriceListModal from '../../../components/PurchasePriceListModal';
 
 
 export default function SatinAlimIslemleriPage() {
   const { user, isAdmin } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'suppliers' | 'price-lists' | 'balance'>('suppliers');
+  const [activeTab, setActiveTab] = useState<'suppliers'>('suppliers');
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [priceLists, setPriceLists] = useState<PurchasePriceList[]>([]);
   const [balanceSummary, setBalanceSummary] = useState<BalanceSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,10 +32,8 @@ export default function SatinAlimIslemleriPage() {
   // Modal states
   const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false);
   const [isBalanceModalOpen, setIsBalanceModalOpen] = useState(false);
-  const [isPriceListModalOpen, setIsPriceListModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
-  const [selectedPriceList, setSelectedPriceList] = useState<PurchasePriceList | null>(null);
   const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
   const [isModalLoading, setIsModalLoading] = useState(false);
 
@@ -65,14 +58,12 @@ export default function SatinAlimIslemleriPage() {
     
     try {
       // Paralel API çağrıları
-      const [suppliersData, priceListsData, balanceSummaryData] = await Promise.all([
+      const [suppliersData, balanceSummaryData] = await Promise.all([
         getSuppliers(),
-        getPurchasePriceLists(),
         getBalanceSummary()
       ]);
       
       setSuppliers(suppliersData);
-      setPriceLists(priceListsData);
       setBalanceSummary(balanceSummaryData);
 
     } catch (err) {
@@ -153,35 +144,6 @@ export default function SatinAlimIslemleriPage() {
     }
   };
 
-  // Fiyat listesi işlemleri
-  const handleCreatePriceList = () => {
-    setSelectedPriceList(null);
-    setIsPriceListModalOpen(true);
-  };
-
-  const handleEditPriceList = (priceList: PurchasePriceList) => {
-    setSelectedPriceList(priceList);
-    setIsPriceListModalOpen(true);
-  };
-
-  const handleSavePriceList = async (data: CreatePurchasePriceListRequest) => {
-    setIsModalLoading(true);
-    try {
-      if (selectedPriceList) {
-        // Güncelleme işlemi - API'de updatePurchasePriceList fonksiyonu kullanılabilir
-        console.log('Fiyat listesi güncelleme:', selectedPriceList.id, data);
-      } else {
-        // Yeni oluşturma işlemi - API'de createPurchasePriceList fonksiyonu kullanılabilir
-        console.log('Yeni fiyat listesi oluşturma:', data);
-      }
-      await loadData(); // Verileri yenile
-    } catch (error) {
-      console.error('Fiyat listesi kaydetme hatası:', error);
-      throw error; // Modal'da hata gösterilsin
-    } finally {
-      setIsModalLoading(false);
-    }
-  };
 
   if (!isAdmin) {
     return null;
@@ -244,36 +206,6 @@ export default function SatinAlimIslemleriPage() {
                   <span>Satıcılar</span>
                 </div>
               </button>
-              <button
-                onClick={() => setActiveTab('price-lists')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === 'price-lists'
-                    ? 'border-[#00365a] text-[#00365a]'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center space-x-2">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                  </svg>
-                  <span>Alış Fiyat Listeleri</span>
-                </div>
-              </button>
-              <button
-                onClick={() => setActiveTab('balance')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === 'balance'
-                    ? 'border-[#00365a] text-[#00365a]'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center space-x-2">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                  </svg>
-                  <span>Bakiye Özeti</span>
-                </div>
-              </button>
             </nav>
           </div>
         </div>
@@ -284,6 +216,18 @@ export default function SatinAlimIslemleriPage() {
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">Satıcı Yönetimi</h2>
+                <div className="flex space-x-3">
+                  <button 
+                    onClick={() => router.push('/dashboard/alis-fiyat-listesi')}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                      <span>Alış Fiyat Listesini Görüntüle</span>
+                    </div>
+                  </button>
                 <button 
                   onClick={handleCreateSupplier}
                   className="px-4 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors"
@@ -296,150 +240,13 @@ export default function SatinAlimIslemleriPage() {
                   </div>
                 </button>
               </div>
-
-              {/* Satıcı Listesi */}
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Satıcı
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Firma
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        İletişim
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Bakiye
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Durum
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        İşlemler
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {suppliers.map((supplier) => (
-                      <tr key={supplier.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{supplier.name}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{supplier.company_name}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{supplier.phone}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`text-sm font-medium ${
-                            supplier.balance < 0 ? 'text-red-600' : supplier.balance > 0 ? 'text-green-600' : 'text-gray-600'
-                          }`}>
-                            {supplier.balance.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {supplier.currency}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            supplier.is_active 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {supplier.is_active ? 'Aktif' : 'Pasif'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex space-x-2">
-                            <button 
-                              onClick={() => handleUpdateBalance(supplier)}
-                              className="text-green-600 hover:text-green-800"
-                            >
-                              Kayıt Gir
-                            </button>
-                            <button 
-                              onClick={() => handleEditSupplier(supplier)}
-                              className="text-[#00365a] hover:text-[#004170]"
-                            >
-                              Düzenle
-                            </button>
-                            <button 
-                              onClick={() => handleDeleteSupplier(supplier)}
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              Sil
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'price-lists' && (
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Alış Fiyat Listeleri</h2>
-                <button 
-                  onClick={handleCreatePriceList}
-                  className="px-4 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors"
-                >
-                  <div className="flex items-center space-x-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    <span>Yeni Liste</span>
-                  </div>
-                </button>
               </div>
 
-              {/* Fiyat Listesi */}
-              <div className="grid gap-4">
-                {priceLists.map((list) => (
-                  <div key={list.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-lg font-medium text-gray-900">{list.name}</h3>
-                        <p className="text-sm text-gray-600 mt-1">{list.description}</p>
-                        <div className="flex items-center space-x-4 mt-2">
-                          <span className="text-sm text-gray-500">
-                            Para Birimi: {list.currency}
-                          </span>
-                          {list.is_default && (
-                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                              Varsayılan
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex space-x-2">
-                        <button 
-                          onClick={() => handleEditPriceList(list)}
-                          className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
-                        >
-                          Düzenle
-                        </button>
-                        <button className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors">
-                          Görüntüle
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'balance' && balanceSummary && (
-            <div className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Bakiye Özeti</h2>
-              
-              {/* Özet Kartları */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              {/* Bakiye Özeti */}
+              {balanceSummary && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Bakiye Özeti</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
@@ -514,21 +321,99 @@ export default function SatinAlimIslemleriPage() {
                   </div>
                 </div>
               </div>
-
-              {/* Detaylı Bilgiler */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Borçlu Satıcılar</h3>
-                  <p className="text-sm text-gray-600">Detaylı borçlu satıcı listesi burada görüntülenecek.</p>
                 </div>
+              )}
 
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Alacaklı Satıcılar</h3>
-                  <p className="text-sm text-gray-600">Detaylı alacaklı satıcı listesi burada görüntülenecek.</p>
-                </div>
+              {/* Satıcı Listesi */}
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-[#00365a]">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                        SATICI BİLGİLERİ
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                        İLETİŞİM
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                        FİNANSAL DURUM
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                        DURUM
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                        İŞLEMLER
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {suppliers.map((supplier) => (
+                      <tr key={supplier.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="space-y-1">
+                            <div className="text-sm font-medium text-gray-900">{supplier.name}</div>
+                            <div className="text-sm text-gray-600">{supplier.company_name}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{supplier.phone}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className={`text-sm font-medium ${
+                            supplier.balance < 0 ? 'text-red-600' : supplier.balance > 0 ? 'text-green-600' : 'text-gray-600'
+                          }`}>
+                            {supplier.balance.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {supplier.currency}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                            supplier.is_active 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {supplier.is_active ? 'Aktif' : 'Pasif'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex space-x-1">
+                            <button 
+                              onClick={() => router.push(`/dashboard/satici-siparis-ver?supplierId=${supplier.id}`)}
+                              className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors"
+                              title="Sipariş Ver"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                              </svg>
+                            </button>
+                            <button 
+                              onClick={() => handleEditSupplier(supplier)}
+                              className="p-2 text-gray-400 hover:text-[#00365a] hover:bg-gray-100 rounded-full transition-colors"
+                              title="Güncelle"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteSupplier(supplier)}
+                              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                              title="Sil"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
+
+
         </div>
 
         {/* Modals */}
@@ -548,13 +433,6 @@ export default function SatinAlimIslemleriPage() {
           isLoading={isModalLoading}
         />
 
-        <PurchasePriceListModal
-          isOpen={isPriceListModalOpen}
-          onClose={() => setIsPriceListModalOpen(false)}
-          onSave={handleSavePriceList}
-          priceList={selectedPriceList}
-          isLoading={isModalLoading}
-        />
 
         {/* Silme Onay Modalı */}
         {isDeleteModalOpen && supplierToDelete && (
