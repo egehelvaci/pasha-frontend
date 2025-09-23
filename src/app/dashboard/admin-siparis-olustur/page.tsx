@@ -174,7 +174,7 @@ const AdminSiparisOlustur = () => {
     try {
       const productList = await getProducts();
       console.log('Gelen ürünler:', productList);
-      setProducts(productList);
+      setProducts(productList.data);
       
       // Mock order data oluştur
       setOrderData({
@@ -206,8 +206,8 @@ const AdminSiparisOlustur = () => {
           limit_amount: 10000
         },
         products: [],
-        totalProducts: productList.length,
-        availableCollections: [...new Set(productList.map(p => p.collection?.name).filter(Boolean))]
+        totalProducts: productList.data.length,
+        availableCollections: [...new Set(productList.data.map(p => p.collection?.name).filter(Boolean))]
       });
     } catch (error: any) {
       console.error('Ürünler alınamadı:', error);

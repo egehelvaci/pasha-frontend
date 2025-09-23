@@ -36,10 +36,10 @@ export default function AlisFiyatListesiPage() {
           setPriceList(list);
           
           // Koleksiyon fiyatlarını state'e doldur
-          const details = list.details as CollectionDetail[];
+          const details = list.collectionPrices;
           const prices: Record<string, number> = {};
           details.forEach((detail) => {
-            prices[detail.collection_id] = parseFloat(detail.price_per_square_meter);
+            prices[detail.collection_id] = parseFloat(detail.price_per_square_meter.toString());
           });
           setCollectionPrices(prices);
         }
@@ -82,10 +82,10 @@ export default function AlisFiyatListesiPage() {
         const list = response[0];
         setPriceList(list);
         
-        const details = list.details as CollectionDetail[];
+        const details = list.collectionPrices;
         const prices: Record<string, number> = {};
         details.forEach((detail) => {
-          prices[detail.collection_id] = parseFloat(detail.price_per_square_meter);
+          prices[detail.collection_id] = parseFloat(detail.price_per_square_meter.toString());
         });
         setCollectionPrices(prices);
       }
@@ -131,7 +131,7 @@ export default function AlisFiyatListesiPage() {
     );
   }
 
-  const details = (priceList.details as CollectionDetail[]).sort((a, b) => 
+  const details = priceList.collectionPrices.sort((a, b) => 
     a.collection.name.localeCompare(b.collection.name, 'tr-TR')
   );
 
@@ -174,11 +174,11 @@ export default function AlisFiyatListesiPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700">Durum</label>
               <span className={`mt-1 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                priceList.is_active 
+                priceList.is_default 
                   ? 'bg-green-100 text-green-800' 
                   : 'bg-red-100 text-red-800'
               }`}>
-                {priceList.is_active ? 'Aktif' : 'Pasif'}
+                {priceList.is_default ? 'Varsayılan' : 'Özel'}
               </span>
             </div>
             <div>
@@ -218,7 +218,7 @@ export default function AlisFiyatListesiPage() {
                   <tr key={detail.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {detail.collection.code}
+                        {detail.collection.id}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -242,7 +242,7 @@ export default function AlisFiyatListesiPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(detail.updated_at).toLocaleDateString('tr-TR', {
+                      {new Date(priceList.updated_at).toLocaleDateString('tr-TR', {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric',

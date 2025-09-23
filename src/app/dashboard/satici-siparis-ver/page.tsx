@@ -9,7 +9,6 @@ import {
   Product,
   getPurchasePriceLists,
   PurchasePriceList,
-  createSupplierOrder,
   Supplier,
   addToSupplierCart,
   getSupplierCart,
@@ -121,9 +120,14 @@ const SaticiSiparisVer = () => {
           name: cartData.data.cart.supplier.name,
           company_name: cartData.data.cart.supplier.company_name,
           phone: '0555 123 45 67', // API'den gelmiyor
+          address: '', // API'den gelmiyor
           balance: parseFloat(cartData.data.cart.supplier.balance),
           currency: 'USD',
-          is_active: true
+          notes: '', // API'den gelmiyor
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          purchasePriceLists: []
         });
       } else {
         // Satıcı bilgilerini URL'den al (şimdilik mock data)
@@ -132,9 +136,14 @@ const SaticiSiparisVer = () => {
           name: 'Seçilen Satıcı',
           company_name: 'Satıcı Firma',
           phone: '0555 123 45 67',
+          address: '',
           balance: 0,
           currency: 'USD',
-          is_active: true
+          notes: '',
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          purchasePriceLists: []
         });
       }
     } catch (err) {
@@ -379,7 +388,7 @@ const SaticiSiparisVer = () => {
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {filteredProducts.map((product) => (
-                    <div key={product.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div key={product.productId} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                       <div className="flex items-start space-x-4">
                         <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
                           {product.productImage ? (
@@ -398,7 +407,7 @@ const SaticiSiparisVer = () => {
                           <h3 className="text-sm font-medium text-gray-900">{product.name}</h3>
                           <p className="text-xs text-gray-500">{product.collection_name}</p>
                           <p className="text-sm font-semibold text-green-600 mt-1">
-                            {getProductPrice(product).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {product.purchasePricing?.currency}/m²
+                            {getProductPrice(product).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD/m²
                           </p>
                           <button
                             onClick={() => {
@@ -766,7 +775,7 @@ const SaticiSiparisVer = () => {
                         <div className="flex flex-col gap-2">
                           <span className="text-sm text-gray-500">Metrekare Fiyatı</span>
                           <span className="font-medium text-black">
-                            {getProductPrice(selectedProduct).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {selectedProduct.purchasePricing?.currency}/m²
+                            {getProductPrice(selectedProduct).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD/m²
                           </span>
                         </div>
                         
@@ -778,7 +787,7 @@ const SaticiSiparisVer = () => {
                                 const width = typeof productForm.width === 'string' ? parseInt(productForm.width) || 80 : productForm.width;
                                 const height = typeof productForm.height === 'string' ? parseInt(productForm.height) || 100 : productForm.height;
                                 return ((getProductPrice(selectedProduct) * (width * height) / 10000) * productForm.quantity).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
-                              })()} {selectedProduct.purchasePricing?.currency}
+                              })()} USD
                             </span>
                           </div>
                           <div className="text-xs mt-1 text-blue-700">

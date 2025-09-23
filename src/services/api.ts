@@ -70,6 +70,22 @@ export interface Product {
   updatedAt: string;
   collection_name: string;
   collection: Collection;
+  purchasePricing?: {
+    price_per_square_meter: number;
+  };
+  rules?: {
+    canHaveFringe?: boolean;
+    cutTypes?: Array<{
+      id: number;
+      name: string;
+    }>;
+    sizeOptions?: Array<{
+      id: number;
+      name: string;
+      width: number;
+      height: number;
+    }>;
+  };
 }
 
 export interface CreateProductResponse {
@@ -3901,10 +3917,10 @@ export interface PurchasePriceList {
   is_default: boolean;
   created_at: string;
   updated_at: string;
-  collectionPrices: CollectionPrice[];
+  collectionPrices: PurchaseCollectionPrice[];
 }
 
-export interface CollectionPrice {
+export interface PurchaseCollectionPrice {
   id: string;
   collection_id: string;
   price_per_square_meter: number;
