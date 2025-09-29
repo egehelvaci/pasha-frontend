@@ -84,8 +84,25 @@ export interface Product {
       name: string;
       width: number;
       height: number;
+      is_optional_height?: boolean;
+      stockAreaM2?: number;
+      stockQuantity?: number;
     }>;
   };
+  // Ürün varyantları - API'den gelen gerçek veriler
+  sizeOptions?: Array<{
+    id: number;
+    width: number;
+    height: number;
+    is_optional_height: boolean;
+    stockAreaM2?: number;
+    stockQuantity?: number;
+  }>;
+  cutTypes?: Array<{
+    id: number;
+    name: string;
+  }>;
+  canHaveFringe?: boolean;
 }
 
 export interface CreateProductResponse {
@@ -3914,19 +3931,24 @@ export interface PurchasePriceList {
   description: string;
   supplier_id?: string;
   currency: string;
-  is_default: boolean;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
-  collectionPrices: PurchaseCollectionPrice[];
+  supplier?: any;
+  details: PurchaseCollectionPrice[];
 }
 
 export interface PurchaseCollectionPrice {
   id: string;
+  purchase_price_list_id: string;
   collection_id: string;
-  price_per_square_meter: number;
+  price_per_square_meter: string;
+  created_at: string;
+  updated_at: string;
   collection: {
-    id: string;
+    collectionId: string;
     name: string;
+    code: string;
   };
 }
 
@@ -4553,23 +4575,224 @@ export async function getPurchaseHistory(
   limit: number = 20,
   supplierId?: string
 ): Promise<PurchaseHistoryResponse> {
-  const token = getAuthToken();
-  if (!token) throw new Error('Token bulunamadı');
-
   const params = new URLSearchParams({
     page: page.toString(),
     limit: limit.toString(),
     ...(supplierId && { supplier_id: supplierId })
   });
 
-  const response = await fetch(`${API_BASE_URL}/api/admin/purchase-management/purchases?${params}`, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
+  const response = await apiRequest(`${API_URL}/api/admin/purchase-management/purchases?${params}`);
 
   if (!response.ok) {
     throw new Error('Satın alma geçmişi alınırken hata oluştu');
+  }
+
+  return await response.json();
+}
+
+// Satıcı sepetinden sipariş oluştur
+export interface PurchaseFromCartResponse {
+  success: boolean;
+  data: {
+    supplier: {
+      id: string;
+      name: string;
+      company_name: string;
+      phone: string;
+      address: string;
+      notes: string | null;
+      balance: string;
+      currency: string;
+      is_active: boolean;
+      created_at: string;
+      updated_at: string;
+    };
+    transaction: {
+      id: string;
+      supplier_id: string;
+      transaction_type: string;
+      amount: string;
+      original_amount: string | null;
+      exchange_rate: string | null;
+      original_currency: string | null;
+      previous_balance: string;
+      new_balance: string;
+      description: string;
+      reference_number: string;
+      created_by: string;
+      created_at: string;
+    };
+    stockUpdates: Array<{
+      product_id: string;
+      variation_id: number;
+      variation_match: string;
+      size: string;
+      actual_size: string;
+      has_fringe: boolean;
+      cut_type: string;
+      added_m2: number;
+      added_quantity: number;
+      old_area_m2: number;
+      new_area_m2: number;
+    }>;
+    purchasedItems: Array<{
+      id: number;
+      purchase_cart_id: number;
+      product_id: string;
+      quantity: number;
+      width: string;
+      height: string;
+      area_m2: string;
+      unit_price: string;
+      total_price: string;
+      has_fringe: boolean;
+      cut_type: string;
+      notes: string;
+      created_at: string;
+      updated_at: string;
+      product: {
+        productId: string;
+        name: string;
+        description: string;
+        productImage: string | null;
+        collectionId: string;
+        createdAt: string;
+        updatedAt: string;
+        rule_id: number;
+        collection: {
+          collectionId: string;
+          name: string;
+          description: string;
+          code: string;
+          isActive: boolean;
+          createdAt: string;
+          updatedAt: string;
+        };
+      };
+    }>;
+    totalAmount: number;
+  };
+  message: string;
+}
+
+export async function purchaseFromSupplierCart(supplierId: string): Promise<PurchaseFromCartResponse> {
+  try {
+    const response = await apiRequest(`${API_URL}/api/admin/purchase-management/suppliers/${supplierId}/purchase-from-cart`, {
+      method: 'PUT'
+    });
+
+    console.log('Purchase from cart response status:', response.status);
+    
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('Purchase from cart error response:', errorData);
+      throw new Error(`Sepetten sipariş oluşturulurken hata oluştu: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('Purchase from cart success:', data);
+    return data;
+  } catch (error) {
+    console.error('Purchase from cart function error:', error);
+    throw error;
+  }
+}
+
+// Satıcı geçmiş işlemler özeti
+export interface SupplierPurchaseSummaryItem {
+  id: string;
+  transaction_type: string;
+  amount: string;
+  description: string;
+  created_at: string;
+  reference_number: string | null;
+  amount_formatted: string;
+  balance_change: string;
+}
+
+export interface CartPurchaseWithProducts {
+  transaction_id: string;
+  transaction_date: string;
+  transaction_amount: number;
+  transaction_amount_formatted: string;
+  reference_number: string;
+  description: string;
+  products: Array<{
+    id: number;
+    product: {
+      name: string;
+      collection: {
+        name: string;
+      };
+    };
+    quantity: number;
+    width: string;
+    height: string;
+    area_m2: string;
+    unit_price: string;
+    total_price: string;
+  }>;
+  total_items: number;
+  total_quantity: number;
+  total_area_m2: number;
+  total_area_m2_formatted: string;
+}
+
+export interface SupplierPurchaseSummaryResponse {
+  success: boolean;
+  data: {
+    supplier: {
+      id: string;
+      name: string;
+      company_name: string;
+      phone: string;
+      address: string;
+      balance: string;
+      currency: string;
+    };
+    summary: {
+      period: {
+        start_date: string;
+        end_date: string;
+      };
+      totals: {
+        transaction_count: number;
+        total_amount: number;
+        total_amount_formatted: string;
+      };
+      purchases: {
+        count: number;
+        amount: number;
+        amount_formatted: string;
+      };
+      payments: {
+        count: number;
+        amount: number;
+        amount_formatted: string;
+      };
+      cart_purchases: {
+        count: number;
+        amount: number;
+        amount_formatted: string;
+      };
+    };
+    all_transactions: SupplierPurchaseSummaryItem[];
+    cart_purchases_with_products: CartPurchaseWithProducts[];
+  };
+  message: string;
+}
+
+export async function getSupplierPurchaseSummary(
+  supplierId: string
+): Promise<SupplierPurchaseSummaryResponse> {
+  const params = new URLSearchParams({
+
+  });
+
+  const response = await apiRequest(`${API_URL}/api/admin/purchase-management/suppliers/${supplierId}/purchase-summary?${params}`);
+
+  if (!response.ok) {
+    throw new Error('Satıcı geçmiş işlemleri alınırken hata oluştu');
   }
 
   return await response.json();

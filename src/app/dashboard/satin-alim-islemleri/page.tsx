@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { 
@@ -33,9 +33,21 @@ export default function SatinAlimIslemleriPage() {
   const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false);
   const [isBalanceModalOpen, setIsBalanceModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
   const [isModalLoading, setIsModalLoading] = useState(false);
+
+  // Payment modal states
+  const [selectedPaymentSupplier, setSelectedPaymentSupplier] = useState<Supplier | null>(null);
+  const [supplierSearchTerm, setSupplierSearchTerm] = useState('');
+  const [isSupplierDropdownOpen, setIsSupplierDropdownOpen] = useState(false);
+  const [tlAmount, setTlAmount] = useState('');
+  const [exchangeRate, setExchangeRate] = useState('');
+  const [isPaymentLoading, setIsPaymentLoading] = useState(false);
+
+  // Refs
+  const supplierDropdownRef = useRef<HTMLDivElement>(null);
 
   // Admin kontrolü
   useEffect(() => {
@@ -44,6 +56,22 @@ export default function SatinAlimIslemleriPage() {
       return;
     }
   }, [isAdmin, router]);
+
+  // Click outside handler for supplier dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (supplierDropdownRef.current && !supplierDropdownRef.current.contains(event.target as Node)) {
+        setIsSupplierDropdownOpen(false);
+      }
+    }
+
+    if (isSupplierDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isSupplierDropdownOpen]);
 
   // Veri yükleme
   useEffect(() => {
@@ -160,6 +188,61 @@ export default function SatinAlimIslemleriPage() {
     );
   }
 
+  // Filtrelenmiş satıcıları döndür
+  const filteredSuppliers = suppliers.filter(supplier =>
+    supplier.name.toLowerCase().includes(supplierSearchTerm.toLowerCase()) ||
+    supplier.company_name.toLowerCase().includes(supplierSearchTerm.toLowerCase())
+  );
+
+  // Ödeme modalını sıfırla
+  const resetPaymentModal = () => {
+    setSelectedPaymentSupplier(null);
+    setSupplierSearchTerm('');
+    setIsSupplierDropdownOpen(false);
+    setTlAmount('');
+    setExchangeRate('');
+    setIsPaymentLoading(false);
+  };
+
+  // Ödeme modalını kapat
+  const closePaymentModal = () => {
+    setShowPaymentModal(false);
+    resetPaymentModal();
+  };
+
+  // Ödeme işlemini onayla
+  const handlePaymentConfirm = async () => {
+    if (!selectedPaymentSupplier || !tlAmount || !exchangeRate) {
+      alert('Lütfen tüm alanları doldurun');
+      return;
+    }
+
+    const usdAmount = parseFloat(tlAmount) / parseFloat(exchangeRate);
+    const currentDate = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    
+    setIsPaymentLoading(true);
+    try {
+      const balanceUpdate: BalanceUpdateRequest = {
+        amount: usdAmount,
+        transaction_type: 'PAYMENT',
+        description: `TL ödeme - ${tlAmount} TL (Kur: ${exchangeRate})`,
+        reference_number: `PAY-${currentDate}-${randomNum}`,
+        exchange_rate: parseFloat(exchangeRate)
+      };
+
+      await updateSupplierBalance(selectedPaymentSupplier.id, balanceUpdate);
+      await loadData(); // Verileri yenile
+      closePaymentModal();
+      alert('Ödeme başarıyla gerçekleştirildi');
+    } catch (err) {
+      console.error('Ödeme işlemi hatası:', err);
+      alert('Ödeme işlemi sırasında bir hata oluştu');
+    } finally {
+      setIsPaymentLoading(false);
+    }
+  };
+
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -185,12 +268,15 @@ export default function SatinAlimIslemleriPage() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Satın Alım İşlemleri</h1>
-            <a
-              href="/dashboard/satin-alim-islemleri/gecmis-islemler"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            <button
+              onClick={() => setShowPaymentModal(true)}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center space-x-2 shadow-sm"
             >
-              Geçmiş İşlemler
-            </a>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <span>ÖDEME YAP</span>
+            </button>
           </div>
         </div>
 
@@ -369,6 +455,15 @@ export default function SatinAlimIslemleriPage() {
                               </svg>
                             </button>
                             <button 
+                              onClick={() => router.push(`/dashboard/satin-alim-islemleri/satici-gecmis-islemler/${supplier.id}`)}
+                              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                              title="Geçmiş İşlemler"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                            </button>
+                            <button 
                               onClick={() => handleEditSupplier(supplier)}
                               className="p-2 text-gray-400 hover:text-[#00365a] hover:bg-gray-100 rounded-full transition-colors"
                               title="Güncelle"
@@ -489,6 +584,154 @@ export default function SatinAlimIslemleriPage() {
                   )}
                   <span>Evet, Sil</span>
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Payment Modal */}
+        {showPaymentModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl w-full max-w-md shadow-lg relative">
+              <div className="bg-blue-600 rounded-t-xl px-6 py-4 relative">
+                <h2 className="text-xl font-bold text-white">Ödeme Yap</h2>
+                <button
+                  onClick={closePaymentModal}
+                  className="absolute right-4 top-4 text-white hover:text-gray-200 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="p-6">
+                {/* Satıcı Seçimi */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Satıcı Seçin *
+                  </label>
+                  <div className="relative" ref={supplierDropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() => setIsSupplierDropdownOpen(!isSupplierDropdownOpen)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-left bg-white flex items-center justify-between"
+                    >
+                      <span className={selectedPaymentSupplier ? "text-gray-900" : "text-gray-500"}>
+                        {selectedPaymentSupplier
+                          ? `${selectedPaymentSupplier.company_name} (${selectedPaymentSupplier.name})`
+                          : "Satıcı Seçin"
+                        }
+                      </span>
+                      <svg
+                        className={`w-5 h-5 text-gray-400 transition-transform ${
+                          isSupplierDropdownOpen ? 'rotate-180' : ''
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+
+                    {isSupplierDropdownOpen && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-hidden">
+                        <div className="p-3 border-b border-gray-200">
+                          <input
+                            type="text"
+                            placeholder="Satıcı ara..."
+                            value={supplierSearchTerm}
+                            onChange={(e) => setSupplierSearchTerm(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                        <div className="max-h-40 overflow-y-auto">
+                          {filteredSuppliers.length > 0 ? (
+                            filteredSuppliers.map((supplier) => (
+                              <button
+                                key={supplier.id}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedPaymentSupplier(supplier);
+                                  setIsSupplierDropdownOpen(false);
+                                  setSupplierSearchTerm('');
+                                }}
+                                className="w-full px-3 py-2 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                              >
+                                <div className="font-medium text-gray-900">{supplier.company_name}</div>
+                                <div className="text-sm text-gray-600">{supplier.name}</div>
+                                <div className="text-xs text-gray-500">
+                                  Bakiye: ${supplier.balance} {supplier.currency}
+                                </div>
+                              </button>
+                            ))
+                          ) : (
+                            <div className="px-3 py-2 text-gray-500 text-center">Satıcı bulunamadı</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* TL Değeri */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    TL Değeri *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="Örn: 1000.00"
+                    value={tlAmount}
+                    onChange={(e) => setTlAmount(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                {/* Dolar Kuru */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Dolar Kuru (TL/USD) *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="Örn: 34.50"
+                    value={exchangeRate}
+                    onChange={(e) => setExchangeRate(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  {tlAmount && exchangeRate && (
+                    <div className="mt-2 text-sm text-gray-600">
+                      USD Karşılığı: ${(parseFloat(tlAmount) / parseFloat(exchangeRate)).toFixed(2)}
+                    </div>
+                  )}
+                </div>
+
+                {/* Butonlar */}
+                <div className="flex space-x-3">
+                  <button
+                    type="button"
+                    onClick={closePaymentModal}
+                    disabled={isPaymentLoading}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Kapat
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handlePaymentConfirm}
+                    disabled={isPaymentLoading || !selectedPaymentSupplier || !tlAmount || !exchangeRate}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                  >
+                    {isPaymentLoading && (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    )}
+                    <span>İşlemi Onayla</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>

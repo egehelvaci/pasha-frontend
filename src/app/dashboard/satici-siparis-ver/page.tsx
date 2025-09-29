@@ -15,6 +15,7 @@ import {
   deleteSupplierCartItem,
   completeSupplierPurchase,
   purchaseProductFromSupplier,
+  purchaseFromSupplierCart,
   SupplierCartItem as ApiSupplierCartItem,
   SupplierCartResponse
 } from '@/services/api';
@@ -38,18 +39,21 @@ const SaticiSiparisVer = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [productForm, setProductForm] = useState({
     quantity: 1,
-    width: 80 as number | string,
-    height: 100 as number | string,
-    hasFringe: false,
-    cutType: '',
     notes: ''
   });
+  const [selectedSize, setSelectedSize] = useState<any>(null);
+  const [selectedCutType, setSelectedCutType] = useState<any>(null);
+  const [selectedHasFringe, setSelectedHasFringe] = useState<boolean | null>(null);
+  const [customHeight, setCustomHeight] = useState<number | string>(100);
   const [sizeDropdownOpen, setSizeDropdownOpen] = useState(false);
   const [cutTypeDropdownOpen, setCutTypeDropdownOpen] = useState(false);
+  const [fringeDropdownOpen, setFringeDropdownOpen] = useState(false);
   const [supplierCart, setSupplierCart] = useState<ApiSupplierCartItem[]>([]);
   const [cartTotal, setCartTotal] = useState(0);
   const [cartLoading, setCartLoading] = useState(false);
   const [orderLoading, setOrderLoading] = useState(false);
+  const [showPurchaseSuccessModal, setShowPurchaseSuccessModal] = useState(false);
+  const [purchaseResult, setPurchaseResult] = useState<any>(null);
 
   const supplierId = searchParams.get('supplierId');
 
@@ -80,6 +84,7 @@ const SaticiSiparisVer = () => {
     if (showAddProductModal) {
       setSizeDropdownOpen(false);
       setCutTypeDropdownOpen(false);
+      setFringeDropdownOpen(false);
       // Body scroll'u engelle
       document.body.style.overflow = 'hidden';
     } else {
@@ -92,6 +97,70 @@ const SaticiSiparisVer = () => {
       document.body.style.overflow = 'unset';
     };
   }, [showAddProductModal]);
+
+  // Satın alma başarı modalı açıldığında body scroll'u engelle
+  useEffect(() => {
+    if (showPurchaseSuccessModal) {
+      // Body scroll'u engelle
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Modal kapandığında body scroll'u geri aç
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup function
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showPurchaseSuccessModal]);
+
+  // Modal açıldığında ve ürün değiştiğinde default seçimleri ayarla
+  useEffect(() => {
+    if (showAddProductModal && selectedProduct) {
+      // Default olarak ilk boyut seçeneğini seç
+      if (selectedProduct.sizeOptions && selectedProduct.sizeOptions.length > 0) {
+        setSelectedSize(selectedProduct.sizeOptions[0]);
+      } else {
+        setSelectedSize(null);
+      }
+      
+      // Default olarak ilk kesim türünü seç
+      if (selectedProduct.cutTypes && selectedProduct.cutTypes.length > 0) {
+        setSelectedCutType(selectedProduct.cutTypes[0]);
+      } else {
+        setSelectedCutType(null);
+      }
+      
+      // Default saçak değerini ayarla
+      setSelectedHasFringe(selectedProduct.canHaveFringe ? false : null);
+      
+      // Custom height'ı reset et
+      setCustomHeight(100);
+      
+      // Form'u reset et
+      setProductForm({
+        quantity: 1,
+        notes: ''
+      });
+    }
+  }, [showAddProductModal, selectedProduct]);
+
+  // Dropdown'ların dışına tıklandığında kapanması
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.dropdown-container')) {
+        setSizeDropdownOpen(false);
+        setCutTypeDropdownOpen(false);
+        setFringeDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
@@ -195,10 +264,37 @@ const SaticiSiparisVer = () => {
 
   // Sepete ürün ekle
   const handleAddToCart = async () => {
-    if (!selectedProduct || !supplierId) return;
+    // Validasyon kontrolleri
+    if (!selectedProduct || !supplierId || !selectedSize || !selectedCutType) {
+      alert('Lütfen tüm gerekli alanları doldurun (boyut, kesim türü)');
+      return;
+    }
+    
+    if (productForm.quantity <= 0) {
+      alert('Lütfen geçerli bir miktar girin');
+      return;
+    }
 
-    const width = typeof productForm.width === 'string' ? parseInt(productForm.width) || 80 : productForm.width;
-    const height = typeof productForm.height === 'string' ? parseInt(productForm.height) || 100 : productForm.height;
+    // Boyut hesaplama
+    let width = selectedSize.width;
+    let height = selectedSize.height;
+    
+    if (selectedSize.is_optional_height) {
+      const heightValue = parseFloat(customHeight.toString()) || 100;
+      height = heightValue;
+    }
+
+    // Kesim türünü API isteğine uygun formata dönüştür
+    let cutTypeValue = "rectangle"; // Varsayılan
+    if (selectedCutType.name === "oval") {
+      cutTypeValue = "oval";
+    } else if (selectedCutType.name === "daire") {
+      cutTypeValue = "round";
+    } else if (selectedCutType.name === "custom") {
+      cutTypeValue = "custom";
+    } else if (selectedCutType.name === "post kesim") {
+      cutTypeValue = "post kesim";
+    }
 
     setCartLoading(true);
     try {
@@ -207,8 +303,8 @@ const SaticiSiparisVer = () => {
         quantity: productForm.quantity,
         width: width,
         height: height,
-        hasFringe: productForm.hasFringe,
-        cutType: productForm.cutType || 'rectangle', // Default to rectangle if empty
+        hasFringe: selectedHasFringe || false,
+        cutType: cutTypeValue,
         notes: productForm.notes
       };
       
@@ -221,12 +317,14 @@ const SaticiSiparisVer = () => {
       setCartTotal(updatedCartData.data.total.amount);
 
       setShowAddProductModal(false);
+      
+      // Form'u temizle
+      setSelectedSize(null);
+      setSelectedCutType(null);
+      setSelectedHasFringe(null);
+      setCustomHeight(100);
       setProductForm({
         quantity: 1,
-        width: 80,
-        height: 100,
-        hasFringe: false,
-        cutType: '',
         notes: ''
       });
     } catch (err) {
@@ -287,30 +385,26 @@ const SaticiSiparisVer = () => {
 
     setOrderLoading(true);
     try {
-      // Her sepet öğesi için ayrı ayrı satın alma işlemi yap
-      const purchaseResults = [];
-      let totalPurchased = 0;
-      const referenceNumber = `AL-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
-
-      for (const cartItem of supplierCart) {
-        const quantityM2 = parseFloat(cartItem.area_m2);
-        
-        const result = await purchaseProductFromSupplier(supplierId, {
-          product_id: cartItem.product_id,
-          quantity_m2: quantityM2,
-          description: `${cartItem.product.name} - ${cartItem.quantity} adet (${cartItem.width}x${cartItem.height}cm) - ${cartItem.product.collection.name}`,
-          reference_number: `${referenceNumber}-${cartItem.id}`
-        });
-
-        purchaseResults.push(result);
-        totalPurchased += result.data.purchase_details.total_usd;
-      }
-
-      // Sepeti temizle
-      await handleClearCart();
+      // Yeni endpoint kullanarak sepetten sipariş oluştur
+      const result = await purchaseFromSupplierCart(supplierId);
+      console.log('Sipariş başarılı:', result);
       
-      alert(`Satıcı siparişi başarıyla oluşturuldu! ${purchaseResults.length} ürün satın alındı. Toplam: $${totalPurchased.toFixed(2)} USD`);
-      router.push('/dashboard/satin-alim-islemleri');
+      // Başarı modalını göster
+      setPurchaseResult(result);
+      setShowPurchaseSuccessModal(true);
+      
+      // Sepeti yeniden yükle (sipariş sonrası temizlenmiş olacak)
+      try {
+        const cartData = await getSupplierCart(supplierId);
+        setSupplierCart(cartData.data.cart.items);
+        setCartTotal(cartData.data.total.amount);
+      } catch (cartError) {
+        console.log('Sepet yeniden yüklenirken hata (normal olabilir - sepet boş):', cartError);
+        // Sepet boş olabilir, bu normal - sepeti temizle
+        setSupplierCart([]);
+        setCartTotal(0);
+      }
+      
     } catch (err) {
       console.error('Sipariş oluşturma hatası:', err);
       alert('Sipariş oluşturulurken bir hata oluştu');
@@ -354,12 +448,6 @@ const SaticiSiparisVer = () => {
                 className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
               >
                 Geri Dön
-              </Link>
-              <Link
-                href="/dashboard/satin-alim-islemleri/gecmis-islemler"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Geçmiş İşlemler
               </Link>
             </div>
           </div>
@@ -581,188 +669,214 @@ const SaticiSiparisVer = () => {
                         {/* Boyut Seçimi */}
                         <div className="flex flex-col gap-2 dropdown-container bg-blue-50 rounded-lg p-6 border border-blue-200">
                           <span className="text-sm font-medium text-gray-700">Boyut Seçimi</span>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">Genişlik (cm)</label>
-                              <input
-                                type="number"
-                                min="1"
-                                value={productForm.width}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  if (value === '') {
-                                    setProductForm(prev => ({ ...prev, width: '' }));
-                                  } else {
-                                    const numValue = parseInt(value);
-                                    if (numValue >= 1) {
-                                      setProductForm(prev => ({ ...prev, width: numValue }));
-                                    }
-                                  }
-                                }}
-                                onBlur={(e) => {
-                                  const value = e.target.value;
-                                  if (value === '' || parseInt(value) < 1) {
-                                    setProductForm(prev => ({ ...prev, width: 80 }));
-                                  }
-                                }}
-                                onWheel={(e) => e.currentTarget.blur()}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">Yükseklik (cm)</label>
-                              <input
-                                type="number"
-                                min="1"
-                                value={productForm.height}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  if (value === '') {
-                                    setProductForm(prev => ({ ...prev, height: '' }));
-                                  } else {
-                                    const numValue = parseInt(value);
-                                    if (numValue >= 1) {
-                                      setProductForm(prev => ({ ...prev, height: numValue }));
-                                    }
-                                  }
-                                }}
-                                onBlur={(e) => {
-                                  const value = e.target.value;
-                                  if (value === '' || parseInt(value) < 1) {
-                                    setProductForm(prev => ({ ...prev, height: 100 }));
-                                  }
-                                }}
-                                onWheel={(e) => e.currentTarget.blur()}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Hazır Boyutlar - Ürün kurallarına göre dropdown */}
-                        {selectedProduct.rules && selectedProduct.rules.sizeOptions && selectedProduct.rules.sizeOptions.length > 0 && (
-                          <div className="flex flex-col gap-2 dropdown-container">
-                            <span className="text-sm font-medium text-gray-700">Hazır Boyutlar</span>
-                            <div className="relative">
-                              <button
-                                type="button"
-                                onClick={() => setSizeDropdownOpen(!sizeDropdownOpen)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={() => setSizeDropdownOpen(!sizeDropdownOpen)}
+                              className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                            >
+                              <span className={selectedSize ? "text-gray-900" : "text-gray-500"}>
+                                {selectedSize 
+                                  ? `${selectedSize.width}x${selectedSize.is_optional_height ? 'İsteğe Bağlı' : selectedSize.height} cm`
+                                  : "Boyut Seçin"
+                                }
+                              </span>
+                              <svg 
+                                className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${sizeDropdownOpen ? 'rotate-180' : ''}`}
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
                               >
-                                <span className="text-gray-500">Hazır boyut seçin</span>
-                                <svg 
-                                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${sizeDropdownOpen ? 'rotate-180' : ''}`}
-                                  fill="none" 
-                                  stroke="currentColor" 
-                                  viewBox="0 0 24 24"
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </button>
+                            
+                            {sizeDropdownOpen && (
+                              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                <div 
+                                  className="px-3 py-2 text-gray-500 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
+                                  onClick={() => {
+                                    setSelectedSize(null);
+                                    setSizeDropdownOpen(false);
+                                  }}
                                 >
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                              </button>
-                              
-                              {sizeDropdownOpen && (
-                                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                  <div 
-                                    className="px-3 py-2 text-gray-500 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
+                                  Boyut Seçin
+                                </div>
+                                {selectedProduct.sizeOptions?.map((size: any) => (
+                                  <div
+                                    key={size.id}
+                                    className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                      selectedSize?.id === size.id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                    }`}
                                     onClick={() => {
+                                      setSelectedSize(size);
                                       setSizeDropdownOpen(false);
                                     }}
                                   >
-                                    Hazır boyut seçin
+                                    {size.width}x{size.is_optional_height ? 'İsteğe Bağlı' : size.height} cm
                                   </div>
-                                  {selectedProduct.rules.sizeOptions.map((sizeOption: any) => (
-                                    <div
-                                      key={sizeOption.id}
-                                      className="px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors text-gray-900"
-                                      onClick={() => {
-                                        setProductForm(prev => ({ 
-                                          ...prev, 
-                                          width: sizeOption.width, 
-                                          height: sizeOption.height 
-                                        }));
-                                        setSizeDropdownOpen(false);
-                                      }}
-                                    >
-                                      {sizeOption.width}x{sizeOption.height} cm
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                        )}
-                        
-                        {/* Kesim Türü - Ürün kurallarına göre dropdown */}
-                        {selectedProduct.rules && selectedProduct.rules.cutTypes && selectedProduct.rules.cutTypes.length > 0 && (
-                          <div className="flex flex-col gap-2 dropdown-container">
-                            <span className="text-sm font-medium text-gray-700">Kesim Türü</span>
-                            <div className="relative">
-                              <button
-                                type="button"
-                                onClick={() => setCutTypeDropdownOpen(!cutTypeDropdownOpen)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                          
+                          {selectedSize && selectedSize.is_optional_height && (
+                            <div className="mt-2">
+                              <label className="text-sm text-gray-500 block mb-1">Özel Boy (cm)</label>
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="number"
+                                  min="10"
+                                  max="10000"
+                                  value={customHeight}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    if (value === '') {
+                                      setCustomHeight('');
+                                    } else {
+                                      const numValue = Number(value);
+                                      if (numValue >= 10) {
+                                        setCustomHeight(numValue);
+                                      } else if (value.length <= 1) {
+                                        setCustomHeight(value);
+                                      }
+                                    }
+                                  }}
+                                  onBlur={(e) => {
+                                    const value = e.target.value;
+                                    if (value === '' || Number(value) < 10) {
+                                      setCustomHeight(100);
+                                    }
+                                  }}
+                                  className="border rounded-md p-2 text-black w-24"
+                                />
+                                <span className="text-sm text-gray-500">cm</span>
+                              </div>
+                              <span className="text-xs text-gray-500 block mt-1">
+                                {selectedSize.width}x{customHeight} cm olarak hesaplanacak
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Kesim Türü */}
+                        <div className="flex flex-col gap-2 dropdown-container">
+                          <span className="text-sm font-medium text-gray-700">Kesim Türü</span>
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={() => setCutTypeDropdownOpen(!cutTypeDropdownOpen)}
+                              className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                            >
+                              <span className={selectedCutType ? "text-gray-900" : "text-gray-500"}>
+                                {selectedCutType 
+                                  ? selectedCutType.name.charAt(0).toUpperCase() + selectedCutType.name.slice(1)
+                                  : "Kesim Türü Seçin"
+                                }
+                              </span>
+                              <svg 
+                                className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${cutTypeDropdownOpen ? 'rotate-180' : ''}`}
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
                               >
-                                <span className={productForm.cutType ? "text-gray-900" : "text-gray-500"}>
-                                  {productForm.cutType 
-                                    ? productForm.cutType.charAt(0).toUpperCase() + productForm.cutType.slice(1)
-                                    : "Kesim Türü Seçin"
-                                  }
-                                </span>
-                                <svg 
-                                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${cutTypeDropdownOpen ? 'rotate-180' : ''}`}
-                                  fill="none" 
-                                  stroke="currentColor" 
-                                  viewBox="0 0 24 24"
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </button>
+                            
+                            {cutTypeDropdownOpen && (
+                              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                <div 
+                                  className="px-3 py-2 text-gray-500 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
+                                  onClick={() => {
+                                    setSelectedCutType(null);
+                                    setCutTypeDropdownOpen(false);
+                                  }}
                                 >
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                              </button>
-                              
-                              {cutTypeDropdownOpen && (
-                                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                  <div 
-                                    className="px-3 py-2 text-gray-500 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
+                                  Kesim Türü Seçin
+                                </div>
+                                {selectedProduct.cutTypes?.map((cutType: any) => (
+                                  <div
+                                    key={cutType.id}
+                                    className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                      selectedCutType?.id === cutType.id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                    }`}
                                     onClick={() => {
-                                      setProductForm(prev => ({ ...prev, cutType: '' }));
+                                      setSelectedCutType(cutType);
                                       setCutTypeDropdownOpen(false);
                                     }}
                                   >
-                                    Kesim Türü Seçin
+                                    {cutType.name.charAt(0).toUpperCase() + cutType.name.slice(1)}
                                   </div>
-                                  {selectedProduct.rules.cutTypes.map((cutType: any) => (
-                                    <div
-                                      key={cutType.id}
-                                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                        productForm.cutType === cutType.name ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                                      }`}
-                                      onClick={() => {
-                                        setProductForm(prev => ({ ...prev, cutType: cutType.name }));
-                                        setCutTypeDropdownOpen(false);
-                                      }}
-                                    >
-                                      {cutType.name.charAt(0).toUpperCase() + cutType.name.slice(1)}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
                         
-                        {/* Saçak Seçeneği - Ürün kurallarına göre göster/gizle */}
-                        {selectedProduct.rules && selectedProduct.rules.canHaveFringe && (
+                        {/* Saçak Seçeneği */}
+                        {selectedProduct.canHaveFringe && (
                           <div className="flex flex-col gap-2 dropdown-container">
                             <span className="text-sm font-medium text-gray-700">Saçak</span>
                             <div className="relative">
                               <button
                                 type="button"
-                                onClick={() => setProductForm(prev => ({ ...prev, hasFringe: !prev.hasFringe }))}
+                                onClick={() => setFringeDropdownOpen(!fringeDropdownOpen)}
                                 className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                               >
-                                <span className="text-gray-900">
-                                  {productForm.hasFringe ? "Saçaklı" : "Saçaksız"}
+                                <span className={selectedHasFringe !== null ? "text-gray-900" : "text-gray-500"}>
+                                  {selectedHasFringe === true 
+                                    ? "Saçaklı"
+                                    : selectedHasFringe === false
+                                    ? "Saçaksız"
+                                    : "Saçak Seçin"
+                                  }
                                 </span>
+                                <svg 
+                                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${fringeDropdownOpen ? 'rotate-180' : ''}`}
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
                               </button>
+                              
+                              {fringeDropdownOpen && (
+                                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                  <div 
+                                    className="px-3 py-2 text-gray-500 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
+                                    onClick={() => {
+                                      setSelectedHasFringe(null);
+                                      setFringeDropdownOpen(false);
+                                    }}
+                                  >
+                                    Saçak Seçin
+                                  </div>
+                                  <div
+                                    className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                      selectedHasFringe === true ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                    }`}
+                                    onClick={() => {
+                                      setSelectedHasFringe(true);
+                                      setFringeDropdownOpen(false);
+                                    }}
+                                  >
+                                    Saçaklı
+                                  </div>
+                                  <div
+                                    className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                      selectedHasFringe === false ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                    }`}
+                                    onClick={() => {
+                                      setSelectedHasFringe(false);
+                                      setFringeDropdownOpen(false);
+                                    }}
+                                  >
+                                    Saçaksız
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
                         )}
@@ -784,19 +898,35 @@ const SaticiSiparisVer = () => {
                             <span className="text-sm font-medium text-blue-900">Toplam Tutar</span>
                             <span className="text-lg font-bold text-blue-900">
                               {(() => {
-                                const width = typeof productForm.width === 'string' ? parseInt(productForm.width) || 80 : productForm.width;
-                                const height = typeof productForm.height === 'string' ? parseInt(productForm.height) || 100 : productForm.height;
-                                return ((getProductPrice(selectedProduct) * (width * height) / 10000) * productForm.quantity).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
+                                if (!selectedSize || !productForm.quantity) return '0.00';
+                                // Metrekare hesapla
+                                let squareMeters;
+                                if (selectedSize.is_optional_height) {
+                                  // İsteğe bağlı boy için kullanıcının girdiği değeri kullan
+                                  const heightValue = parseFloat(customHeight.toString()) || 100;
+                                  squareMeters = (selectedSize.width * heightValue) / 10000; // cm² -> m²
+                                } else {
+                                  // Sabit boy için metrekare hesapla
+                                  squareMeters = (selectedSize.width * selectedSize.height) / 10000; // cm² -> m²
+                                }
+                                
+                                // Birim fiyat ve toplam fiyat hesapla (quantity ile çarp)
+                                const unitPrice = getProductPrice(selectedProduct) || 0;
+                                const calculatedPrice = squareMeters * unitPrice * productForm.quantity;
+                                
+                                return calculatedPrice.toFixed(2);
                               })()} USD
                             </span>
                           </div>
-                          <div className="text-xs mt-1 text-blue-700">
-                            {(() => {
-                              const width = typeof productForm.width === 'string' ? parseInt(productForm.width) || 80 : productForm.width;
-                              const height = typeof productForm.height === 'string' ? parseInt(productForm.height) || 100 : productForm.height;
-                              return `${width} cm genişlik × ${height} cm boy × ${productForm.quantity} adet için hesaplandı`;
-                            })()}
-                          </div>
+                          {selectedSize && (
+                            <div className="text-xs mt-1 text-blue-700">
+                              {selectedSize.width} cm genişlik × 
+                              {selectedSize.is_optional_height 
+                                ? ` ${customHeight} cm boy (özel)` 
+                                : ` ${selectedSize.height} cm boy`} 
+                              × {productForm.quantity} adet için hesaplandı
+                            </div>
+                          )}
                         </div>
                         
                         <div className="mt-5">
@@ -879,6 +1009,90 @@ const SaticiSiparisVer = () => {
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Satın Alma Başarı Modalı */}
+        {showPurchaseSuccessModal && purchaseResult && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl w-full max-w-4xl shadow-lg relative overflow-hidden max-h-[90vh]">
+              {/* Header */}
+              <div className="bg-green-600 rounded-t-xl px-6 py-4 relative">
+                <button 
+                  className="absolute top-3 right-3 text-white hover:text-gray-200 text-3xl font-bold" 
+                  onClick={() => {
+                    setShowPurchaseSuccessModal(false);
+                    router.push('/dashboard/satin-alim-islemleri');
+                  }}
+                >
+                  &times;
+                </button>
+                
+                <div className="flex items-center gap-3">
+                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <h2 className="text-xl font-bold text-white">Satın Alma Başarılı</h2>
+                </div>
+              </div>
+              
+              {/* Content */}
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+                {/* Özet Bilgiler */}
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                  <div className="text-center">
+                    <p className="text-sm text-green-600">Toplam Tutar</p>
+                    <p className="text-2xl font-bold text-green-800">
+                      ${purchaseResult.data.totalAmount.toFixed(2)} USD
+                    </p>
+                  </div>
+                </div>
+
+                {/* Satın Alınan Ürünler */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Satın Alınan Ürünler</h3>
+                  <div className="space-y-3">
+                    {purchaseResult.data.purchasedItems.map((item: any, index: number) => (
+                      <div key={item.id} className="bg-white border border-gray-200 rounded-lg p-4">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-gray-900">{item.product.name}</h4>
+                            <p className="text-sm text-gray-600">{item.product.collection.name}</p>
+                            <div className="mt-2 flex flex-wrap gap-4 text-sm text-gray-600">
+                              <span>Miktar: {item.quantity} adet</span>
+                              <span>Boyut: {item.width}x{item.height} cm</span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-lg font-bold text-gray-900">${item.total_price}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+
+                {/* Butonlar */}
+                <div className="mt-6 flex gap-3 justify-end">
+                  <button
+                    onClick={() => {
+                      setShowPurchaseSuccessModal(false);
+                      router.push('/dashboard/satin-alim-islemleri');
+                    }}
+                    className="px-6 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors"
+                  >
+                    Satın Alım İşlemlerine Git
+                  </button>
+                  <button
+                    onClick={() => setShowPurchaseSuccessModal(false)}
+                    className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                  >
+                    Kapat
+                  </button>
                 </div>
               </div>
             </div>

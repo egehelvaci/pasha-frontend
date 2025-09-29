@@ -138,6 +138,20 @@ export default function Settings() {
   // API çağrısını takip etmek için ref oluştur
   const fetchedRef = useRef(false);
 
+  // Modal açıldığında body scroll'ını kapat
+  useEffect(() => {
+    if (modalOpen || showAddressModal || deleteModalOpen || assignStoreModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup function - component unmount olduğunda scroll'ı geri aç
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [modalOpen, showAddressModal, deleteModalOpen, assignStoreModalOpen]);
+
   useEffect(() => {
     // Auth yüklemesi tamamlanmadıysa bekle
     if (authLoading) return;

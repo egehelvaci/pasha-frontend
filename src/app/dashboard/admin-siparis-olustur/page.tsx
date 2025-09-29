@@ -1228,8 +1228,8 @@ const AdminSiparisOlustur = () => {
                             <span className={productForm.width ? "text-gray-900" : "text-gray-500"}>
                               {productForm.width 
                                 ? (() => {
-                                    if ('sizeOptions' in selectedProduct) {
-                                      const selectedOption = selectedProduct.sizeOptions.find((opt: any) => 
+                                    if (selectedProduct.sizeOptions) {
+                                      const selectedOption = selectedProduct.sizeOptions?.find((opt: any) => 
                                         opt.width === productForm.width
                                       );
                                       if (selectedOption) {
@@ -1263,7 +1263,7 @@ const AdminSiparisOlustur = () => {
                               >
                                 Boyut Seçin
                               </div>
-                              {('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions.map((option: any) => (
+                              {selectedProduct.sizeOptions?.map((option: any) => (
                                 <div
                                   key={option.id}
                                   className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
@@ -1280,28 +1280,17 @@ const AdminSiparisOlustur = () => {
                                 >
                                   {option.width}x{option.is_optional_height ? 'İsteğe Bağlı' : option.height} cm (Stok: {option.is_optional_height ? `${(option.stockAreaM2 || 0).toFixed(1)} m²` : `${option.stockQuantity || 0} adet`})
                                 </div>
-                              )) : (
-                                <div
-                                  className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                    `${selectedProduct.width}x${selectedProduct.height}` === `${productForm.width}x${productForm.height}` ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                                  }`}
-                                  onClick={() => {
-                                    setProductForm(prev => ({ 
-                                      ...prev, 
-                                      width: selectedProduct.width, 
-                                      height: selectedProduct.height || ''
-                                    }));
-                                    setSizeDropdownOpen(false);
-                                  }}
-                                >
-                                  {selectedProduct.width}x{selectedProduct.height} cm (Stok: {selectedProduct.stock || 0} adet)
+                              ))}
+                              {(!selectedProduct.sizeOptions || selectedProduct.sizeOptions.length === 0) && (
+                                <div className="px-3 py-2 text-gray-500">
+                                  Bu ürün için boyut seçenekleri mevcut değil
                                 </div>
                               )}
                             </div>
                           )}
                         </div>
                         
-                        {productForm.width && (('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions.find((s: any) => s.width === productForm.width && s.is_optional_height) : false) && (
+                        {productForm.width && (('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions?.find((s: any) => s.width === productForm.width && s.is_optional_height) : false) && (
                           <div className="mt-2">
                             <label className="text-sm text-gray-500 block mb-1">Özel Boy (cm)</label>
                             <div className="flex items-center gap-2">
@@ -1366,7 +1355,7 @@ const AdminSiparisOlustur = () => {
                               >
                                 Kesim Türü Seçin
                               </div>
-                              {('cutTypes' in selectedProduct) ? selectedProduct.cutTypes.map((ct: any) => (
+                              {('cutTypes' in selectedProduct) ? selectedProduct.cutTypes?.map((ct: any) => (
                                 <div
                                   key={ct.id}
                                   className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
@@ -1452,7 +1441,7 @@ const AdminSiparisOlustur = () => {
                             }
                           </span>
                         </div>
-                        {productForm.width && (productForm.height || (('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions.find((s: any) => s.width === productForm.width && s.is_optional_height) : false)) && (
+                        {productForm.width && (productForm.height || (('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions?.find((s: any) => s.width === productForm.width && s.is_optional_height) : false)) && (
                           <div className="text-xs mt-1 text-blue-700">
                             {productForm.width} cm genişlik × {typeof productForm.height === 'string' ? (parseFloat(productForm.height) || 100) : (productForm.height || 100)} cm Boy × {productForm.quantity} adet için hesaplandı
                           </div>
@@ -1519,7 +1508,7 @@ const AdminSiparisOlustur = () => {
                             type="button"
                             className="mt-2 w-full py-3 bg-[#00365a] text-white rounded-md font-semibold flex items-center justify-center disabled:opacity-70 hover:bg-[#004170] transition-colors"
                             onClick={handleAddToAdminCart}
-                            disabled={!productForm.width || (!productForm.height && !(('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions.find((s: any) => s.width === productForm.width && s.is_optional_height) : false)) || !productForm.cutType || productForm.quantity < 1 || (typeof productForm.height === 'string' && productForm.height !== '' && parseFloat(productForm.height) < 10)}
+                            disabled={!productForm.width || (!productForm.height && !(('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions?.find((s: any) => s.width === productForm.width && s.is_optional_height) : false)) || !productForm.cutType || productForm.quantity < 1 || (typeof productForm.height === 'string' && productForm.height !== '' && parseFloat(productForm.height) < 10)}
                           >
                             Sepete Ekle
                           </button>
