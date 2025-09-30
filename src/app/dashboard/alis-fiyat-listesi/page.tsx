@@ -130,12 +130,6 @@ export default function AlisFiyatListesiPage() {
           <div className="flex justify-between items-start">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Alış Fiyat Listesi</h1>
-              <p className="mt-2 text-gray-600">
-                {priceList.name} - {priceList.currency}
-              </p>
-              {priceList.description && (
-                <p className="mt-1 text-sm text-gray-500">{priceList.description}</p>
-              )}
             </div>
             <button 
               onClick={() => router.push('/dashboard/satin-alim-islemleri')}

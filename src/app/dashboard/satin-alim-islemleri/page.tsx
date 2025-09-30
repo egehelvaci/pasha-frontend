@@ -45,9 +45,20 @@ export default function SatinAlimIslemleriPage() {
   const [tlAmount, setTlAmount] = useState('');
   const [exchangeRate, setExchangeRate] = useState('');
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
+  
+  // Search states
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Refs
   const supplierDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Filtered suppliers based on search term
+  const filteredSuppliers = suppliers.filter(supplier => 
+    supplier.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    supplier.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    supplier.address.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   // Modal açıldığında body scroll'unu engelle
   useEffect(() => {
@@ -87,36 +98,27 @@ export default function SatinAlimIslemleriPage() {
     }
   }, [isSupplierDropdownOpen]);
 
-  // Veri yükleme
-  useEffect(() => {
-    if (isAdmin) {
-      loadData();
-    }
-  }, [isAdmin]);
-
   const loadData = async () => {
     setIsLoading(true);
     setError(null);
-    
     try {
-      // Paralel API çağrıları
-      const [suppliersData, balanceSummaryData] = await Promise.all([
+      const [suppliersData, balanceData] = await Promise.all([
         getSuppliers(),
         getBalanceSummary()
       ]);
-      
       setSuppliers(suppliersData);
-      setBalanceSummary(balanceSummaryData);
-
+      setBalanceSummary(balanceData);
     } catch (err) {
       setError('Veriler yüklenirken bir hata oluştu');
-      console.error('Data loading error:', err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Modal işlemleri
+  useEffect(() => {
+    loadData();
+  }, []);
+
   const handleCreateSupplier = () => {
     setSelectedSupplier(null);
     setIsSupplierModalOpen(true);
@@ -142,7 +144,6 @@ export default function SatinAlimIslemleriPage() {
       setIsDeleteModalOpen(false);
       setSupplierToDelete(null);
     } catch (error) {
-      console.error('Satıcı silme hatası:', error);
       alert('Satıcı silinirken bir hata oluştu');
     } finally {
       setIsModalLoading(false);
@@ -164,7 +165,6 @@ export default function SatinAlimIslemleriPage() {
       }
       await loadData(); // Verileri yenile
     } catch (error) {
-      console.error('Satıcı kaydetme hatası:', error);
       throw error; // Modal'da hata gösterilsin
     } finally {
       setIsModalLoading(false);
@@ -179,34 +179,11 @@ export default function SatinAlimIslemleriPage() {
       await updateSupplierBalance(selectedSupplier.id, data);
       await loadData(); // Verileri yenile
     } catch (error) {
-      console.error('Bakiye güncelleme hatası:', error);
       throw error; // Modal'da hata gösterilsin
     } finally {
       setIsModalLoading(false);
     }
   };
-
-
-  if (!isAdmin) {
-    return null;
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00365a] mx-auto mb-4"></div>
-          <p className="text-gray-600">Yükleniyor...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Filtrelenmiş satıcıları döndür
-  const filteredSuppliers = suppliers.filter(supplier =>
-    supplier.name.toLowerCase().includes(supplierSearchTerm.toLowerCase()) ||
-    supplier.company_name.toLowerCase().includes(supplierSearchTerm.toLowerCase())
-  );
 
   // Ödeme modalını sıfırla
   const resetPaymentModal = () => {
@@ -256,6 +233,21 @@ export default function SatinAlimIslemleriPage() {
     }
   };
 
+  if (!isAdmin) {
+    return null;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00365a] mx-auto mb-4"></div>
+          <p className="text-gray-600">Yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -290,9 +282,6 @@ export default function SatinAlimIslemleriPage() {
               onClick={() => setShowPaymentModal(true)}
               className="bg-[#00365a] hover:bg-[#004170] text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
               <span>Ödeme Yap</span>
             </button>
           </div>
@@ -301,101 +290,63 @@ export default function SatinAlimIslemleriPage() {
         {/* Main Content */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 bg-[#00365a]">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div className="flex items-center">
-                <svg className="h-5 w-5 mr-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
                 <h3 className="text-lg font-semibold text-white">Satıcı Yönetimi</h3>
-                <span className="ml-4 text-blue-100 text-sm">({suppliers.length} satıcı)</span>
+                <span className="ml-4 text-blue-100 text-sm">({filteredSuppliers.length}/{suppliers.length} satıcı)</span>
               </div>
-              <div className="flex space-x-3">
-                <button 
-                  onClick={() => router.push('/dashboard/alis-fiyat-listesi')}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-all shadow-sm hover:shadow-md flex items-center gap-2"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                  </svg>
-                  Alış Fiyat Listesi
-                </button>
-                <button 
-                  onClick={handleCreateSupplier}
-                  className="bg-white hover:bg-gray-100 text-[#00365a] border border-white px-4 py-2 rounded-lg font-medium transition-all shadow-sm hover:shadow-md flex items-center gap-2"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Yeni Satıcı
-                </button>
+              
+              {/* Search Bar */}
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Satıcı, firma, telefon veya adres ara..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 pr-4 py-2 w-80 bg-white border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 focus:border-transparent"
+                  />
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    >
+                      <svg className="h-4 w-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
               </div>
+            </div>
+            <div className="flex space-x-3 mt-4">
+              <button 
+                onClick={() => router.push('/dashboard/alis-fiyat-listesi')}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-all shadow-sm hover:shadow-md flex items-center gap-2"
+              >
+                Alış Fiyat Listesi
+              </button>
+              <button 
+                onClick={handleCreateSupplier}
+                className="bg-white hover:bg-gray-100 text-[#00365a] border border-white px-4 py-2 rounded-lg font-medium transition-all shadow-sm hover:shadow-md flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Yeni Satıcı
+              </button>
             </div>
           </div>
 
-          {activeTab === 'suppliers' && (
-            <div className="p-6">
-
-              {/* Bakiye Özeti */}
-              {balanceSummary && (
-                <div className="mb-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="flex items-center">
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-green-600">Toplam Alacak</p>
-                      <p className="text-2xl font-bold text-green-900">
-                        {balanceSummary.summary.totalReceivable.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <div className="flex items-center">
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-red-600">Toplam Borç</p>
-                      <p className="text-2xl font-bold text-red-900">
-                        {balanceSummary.summary.totalPayable.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center">
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-blue-600">Toplam Satıcı</p>
-                      <p className="text-2xl font-bold text-blue-900">
-                        {balanceSummary.summary.totalSuppliers}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className={`border rounded-lg p-4 ${
-                  balanceSummary.summary.netBalance < 0 
-                    ? 'bg-red-50 border-red-200' 
-                    : 'bg-green-50 border-green-200'
-                }`}>
-                  <div className="flex items-center">
-                    <div className="ml-4">
-                      <p className={`text-sm font-medium ${
-                        balanceSummary.summary.netBalance < 0 ? 'text-red-600' : 'text-green-600'
-                      }`}>Net Durum</p>
-                      <p className={`text-2xl font-bold ${
-                        balanceSummary.summary.netBalance < 0 ? 'text-red-900' : 'text-green-900'
-                      }`}>
-                        {balanceSummary.summary.netBalance.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-                </div>
-              )}
-
-              {/* Satıcı Listesi */}
-              <div className="overflow-x-auto">
+          {/* Suppliers Table */}
+          {!isLoading && (
+            <div className="overflow-x-auto">
+              <div className="min-w-full">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -409,79 +360,69 @@ export default function SatinAlimIslemleriPage() {
                         Finansal Durum
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Durum
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                         İşlemler
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {suppliers.map((supplier) => (
+                    {filteredSuppliers.map((supplier) => (
                       <tr key={supplier.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="space-y-1">
-                            <div className="text-sm font-medium text-gray-900">{supplier.name}</div>
-                            <div className="text-sm text-gray-600">{supplier.company_name}</div>
+                            <div className="text-lg font-bold text-gray-900 uppercase">{supplier.company_name}</div>
+                            <div className="text-sm text-gray-600 capitalize">{supplier.name}</div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{supplier.phone}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className={`text-sm font-medium ${
-                            supplier.balance < 0 ? 'text-red-600' : supplier.balance > 0 ? 'text-green-600' : 'text-gray-600'
-                          }`}>
-                            {supplier.balance.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {supplier.currency}
+                          <div className="space-y-1">
+                            <div className="text-sm text-gray-900">{supplier.phone}</div>
+                            <div className="text-sm text-gray-600 max-w-xs truncate">{supplier.address}</div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                            supplier.is_active 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {supplier.is_active ? 'Aktif' : 'Pasif'}
-                          </span>
+                          <div className="space-y-1">
+                            <div className={`text-sm font-medium ${
+                              supplier.balance >= 0 ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {supplier.balance}$
+                            </div>
+                          </div>
                         </td>
-                        <td className="px-6 py-4 w-80">
-                          <div className="flex gap-1 items-center justify-start">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center space-x-2">
                             <button
                               onClick={() => router.push(`/dashboard/satici-siparis-ver?supplierId=${supplier.id}`)}
-                              className="text-green-600 hover:text-green-700 p-2 rounded-lg hover:bg-green-50 transition-all shadow-sm hover:shadow-md group"
+                              className="group relative bg-blue-50 hover:bg-blue-100 text-blue-700 p-2 rounded-lg transition-all shadow-sm hover:shadow-md"
                               title="Sipariş Ver"
                             >
-                              <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                               </svg>
                             </button>
-                            
                             <button
                               onClick={() => router.push(`/dashboard/satin-alim-islemleri/satici-gecmis-islemler/${supplier.id}`)}
-                              className="text-blue-600 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition-all shadow-sm hover:shadow-md group"
+                              className="group relative bg-purple-50 hover:bg-purple-100 text-purple-700 p-2 rounded-lg transition-all shadow-sm hover:shadow-md"
                               title="Geçmiş İşlemler"
                             >
-                              <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
                             </button>
-                            
                             <button
                               onClick={() => handleEditSupplier(supplier)}
-                              className="text-[#00365a] hover:text-[#004170] p-2 rounded-lg hover:bg-blue-50 transition-all shadow-sm hover:shadow-md group"
-                              title="Satıcı Bilgilerini Düzenle"
+                              className="group relative bg-green-50 hover:bg-green-100 text-green-700 p-2 rounded-lg transition-all shadow-sm hover:shadow-md"
+                              title="Düzenle"
                             >
-                              <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                               </svg>
                             </button>
-
                             <button
                               onClick={() => handleDeleteSupplier(supplier)}
-                              className="text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-all shadow-sm hover:shadow-md group"
-                              title="Satıcıyı Sil"
+                              className="group relative bg-red-50 hover:bg-red-100 text-red-700 p-2 rounded-lg transition-all shadow-sm hover:shadow-md"
+                              title="Sil"
                             >
-                              <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                               </svg>
                             </button>
@@ -489,19 +430,48 @@ export default function SatinAlimIslemleriPage() {
                         </td>
                       </tr>
                     ))}
+                    {filteredSuppliers.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-12 text-center">
+                          <div className="flex flex-col items-center">
+                            <svg className="h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">
+                              {searchTerm ? 'Arama sonucu bulunamadı' : 'Henüz satıcı eklenmemiş'}
+                            </h3>
+                            <p className="text-gray-500 text-center max-w-sm">
+                              {searchTerm 
+                                ? `"${searchTerm}" araması için sonuç bulunamadı. Farklı anahtar kelimeler deneyin.`
+                                : 'Yeni satıcı ekleyerek başlayabilirsiniz.'
+                              }
+                            </p>
+                            {searchTerm && (
+                              <button
+                                onClick={() => setSearchTerm('')}
+                                className="mt-4 px-4 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors"
+                              >
+                                Aramayı Temizle
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
           )}
-
-
         </div>
 
         {/* Modals */}
         <SupplierModal
           isOpen={isSupplierModalOpen}
-          onClose={() => setIsSupplierModalOpen(false)}
+          onClose={() => {
+            setIsSupplierModalOpen(false);
+            setSelectedSupplier(null);
+          }}
           onSave={handleSaveSupplier}
           supplier={selectedSupplier}
           isLoading={isModalLoading}
@@ -509,12 +479,14 @@ export default function SatinAlimIslemleriPage() {
 
         <BalanceModal
           isOpen={isBalanceModalOpen}
-          onClose={() => setIsBalanceModalOpen(false)}
+          onClose={() => {
+            setIsBalanceModalOpen(false);
+            setSelectedSupplier(null);
+          }}
           onSave={handleSaveBalance}
           supplier={selectedSupplier}
           isLoading={isModalLoading}
         />
-
 
         {/* Silme Onay Modalı */}
         {isDeleteModalOpen && supplierToDelete && (
@@ -546,48 +518,51 @@ export default function SatinAlimIslemleriPage() {
                   </svg>
                 </button>
               </div>
-              
+
               {/* Modal Content */}
               <div className="p-6">
-                <div className="text-center">
-                  <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-                    <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </div>
-                  <h4 className="text-lg font-medium text-gray-900 mb-2">
-                    Satıcıyı Silmek İstediğinizden Emin Misiniz?
-                  </h4>
-                  <p className="text-sm text-gray-600 mb-4">
-                    <strong>{supplierToDelete.name}</strong> adlı satıcıyı silmek üzeresiniz.
+                <div className="mb-6">
+                  <p className="text-gray-700 text-base leading-relaxed">
+                    <span className="font-semibold text-red-600">{supplierToDelete.company_name}</span> satıcısını silmek istediğinizden emin misiniz?
                   </p>
+                  <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-start">
+                      <svg className="w-5 h-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.664-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                      <div>
+                        <p className="text-sm font-medium text-red-800">Bu işlem geri alınamaz!</p>
+                        <p className="text-sm text-red-700 mt-1">
+                          Satıcı bilgileri ve tüm ilişkili veriler kalıcı olarak silinecektir.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              
-              {/* Modal Footer */}
-              <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsDeleteModalOpen(false);
-                    setSupplierToDelete(null);
-                  }}
-                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-                  disabled={isModalLoading}
-                >
-                  İptal
-                </button>
-                <button
-                  type="button"
-                  onClick={confirmDeleteSupplier}
-                  disabled={isModalLoading}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                >
-                  {isModalLoading && (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  )}
-                  <span>Evet, Sil</span>
-                </button>
+
+                {/* Modal Footer */}
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={() => {
+                      setIsDeleteModalOpen(false);
+                      setSupplierToDelete(null);
+                    }}
+                    disabled={isModalLoading}
+                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    İptal
+                  </button>
+                  <button
+                    onClick={confirmDeleteSupplier}
+                    disabled={isModalLoading}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                  >
+                    {isModalLoading && (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    )}
+                    <span>Sil</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -599,11 +574,6 @@ export default function SatinAlimIslemleriPage() {
             <div className="bg-white rounded-xl w-full max-w-md shadow-lg relative">
               <div className="bg-[#00365a] rounded-t-xl px-6 py-4 relative">
                 <div className="flex items-center">
-                  <div className="bg-white bg-opacity-20 rounded-xl p-2 mr-3">
-                    <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                  </div>
                   <h2 className="text-xl font-bold text-white">Ödeme Yap</h2>
                 </div>
                 <button
@@ -626,29 +596,24 @@ export default function SatinAlimIslemleriPage() {
                     <button
                       type="button"
                       onClick={() => setIsSupplierDropdownOpen(!isSupplierDropdownOpen)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-left bg-white flex items-center justify-between"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between"
                     >
-                      <span className={selectedPaymentSupplier ? "text-gray-900" : "text-gray-500"}>
-                        {selectedPaymentSupplier
-                          ? `${selectedPaymentSupplier.company_name} (${selectedPaymentSupplier.name})`
-                          : "Satıcı Seçin"
-                        }
+                      <span className={selectedPaymentSupplier ? 'text-gray-900' : 'text-gray-500'}>
+                        {selectedPaymentSupplier ? (
+                          <div className="text-left">
+                            <div className="font-bold uppercase">{selectedPaymentSupplier.company_name}</div>
+                            <div className="text-sm capitalize">{selectedPaymentSupplier.name}</div>
+                          </div>
+                        ) : 'Satıcı seçin'}
                       </span>
-                      <svg
-                        className={`w-5 h-5 text-gray-400 transition-transform ${
-                          isSupplierDropdownOpen ? 'rotate-180' : ''
-                        }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
+                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </button>
-
+                    
                     {isSupplierDropdownOpen && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-hidden">
-                        <div className="p-3 border-b border-gray-200">
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                        <div className="p-2">
                           <input
                             type="text"
                             placeholder="Satıcı ara..."
@@ -658,8 +623,14 @@ export default function SatinAlimIslemleriPage() {
                           />
                         </div>
                         <div className="max-h-40 overflow-y-auto">
-                          {filteredSuppliers.length > 0 ? (
-                            filteredSuppliers.map((supplier) => (
+                          {suppliers.filter(supplier =>
+                            supplier.name.toLowerCase().includes(supplierSearchTerm.toLowerCase()) ||
+                            supplier.company_name.toLowerCase().includes(supplierSearchTerm.toLowerCase())
+                          ).length > 0 ? (
+                            suppliers.filter(supplier =>
+                              supplier.name.toLowerCase().includes(supplierSearchTerm.toLowerCase()) ||
+                              supplier.company_name.toLowerCase().includes(supplierSearchTerm.toLowerCase())
+                            ).map((supplier) => (
                               <button
                                 key={supplier.id}
                                 type="button"
@@ -670,10 +641,12 @@ export default function SatinAlimIslemleriPage() {
                                 }}
                                 className="w-full px-3 py-2 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                               >
-                                <div className="font-medium text-gray-900">{supplier.company_name}</div>
-                                <div className="text-sm text-gray-600">{supplier.name}</div>
-                                <div className="text-xs text-gray-500">
-                                  Bakiye: ${supplier.balance} {supplier.currency}
+                                <div className="font-bold text-gray-900 uppercase">{supplier.company_name}</div>
+                                <div className="text-sm text-gray-600 capitalize">{supplier.name}</div>
+                                <div className={`text-xs font-medium ${
+                                  supplier.balance >= 0 ? 'text-green-600' : 'text-red-600'
+                                }`}>
+                                  Bakiye: {supplier.balance}$
                                 </div>
                               </button>
                             ))
@@ -714,11 +687,6 @@ export default function SatinAlimIslemleriPage() {
                     onChange={(e) => setExchangeRate(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
-                  {tlAmount && exchangeRate && (
-                    <div className="mt-2 text-sm text-gray-600">
-                      USD Karşılığı: ${(parseFloat(tlAmount) / parseFloat(exchangeRate)).toFixed(2)}
-                    </div>
-                  )}
                 </div>
 
                 {/* Butonlar */}
