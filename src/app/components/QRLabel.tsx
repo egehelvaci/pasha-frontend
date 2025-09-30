@@ -474,14 +474,8 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
            ctx.fillText(fringeText, mmToPx(3), textY);
            textY += infoLineHeight;
            
-           // Store type bilgisi - işaret ile
-           const storeType = orderData.store_info?.store_type || orderData.user?.Store?.store_type || orderData.store_type || 'KARGO';
-           console.log('OrderData store_type sources:', {
-             store_info: orderData.store_info?.store_type,
-             user_store: orderData.user?.Store?.store_type,
-             direct: orderData.store_type,
-             final: storeType
-           }); // Debug
+          // Store type bilgisi - işaret ile
+          const storeType = orderData.store_info?.store_type || orderData.user?.Store?.store_type || orderData.store_type || 'KARGO';
            
            drawStoreTypeIcon(ctx, storeType, mmToPx(3), textY - mmToPx(1.5), mmToPx(3));
            const storeTypeText = `    ${translateStoreType(storeType)}`;
@@ -716,10 +710,10 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
         
         qrImage.src = qrCodeDataURL;
       } catch (qrError) {
-        console.error('QR kod oluşturma hatası:', qrError);
+        // QR kod oluşturma hatası
       }
     } catch (error) {
-      console.error('QR kod önizleme hatası:', error);
+      // QR kod önizleme hatası
     }
   };
 
@@ -757,17 +751,6 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
     
     // Sadece QR codes temel alınır, barcode quantity fazlası dikkate alınmaz
     // Çünkü her QR için zaten ilgili barcode eşleştiriliyor
-    
-    // Debug: Toplam etiket sayısı ve detayları
-    console.log(`QR Label: ${allLabels.length} toplam etiket yazdırılacak`);
-    console.log('Etiket detayları:', allLabels.map((label, i) => ({
-      index: i,
-      source: label._source,
-      labelIndex: label._labelIndex,
-      totalLabels: label._totalLabels,
-      qrId: label.qrCode?.id?.slice(0, 8),
-      barcodeId: label.barcode?.id?.slice(0, 8)
-    })));
     
     if (!allLabels.length) {
       alert('Bu sipariş için henüz QR kod veya barcode oluşturulmamış.');
@@ -900,12 +883,6 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
               
               // Store type bilgisi - işaret ile (yazdırma)
               const storeType = orderData.store_info?.store_type || orderData.user?.Store?.store_type || orderData.store_type || 'KARGO';
-              console.log('OrderData store_type sources (print):', {
-                store_info: orderData.store_info?.store_type,
-                user_store: orderData.user?.Store?.store_type,
-                direct: orderData.store_type,
-                final: storeType
-              }); // Debug
               
               drawStoreTypeIcon(ctx, storeType, mmToPx(3), textY - mmToPx(1.5), mmToPx(3));
               const storeTypeText = `    ${translateStoreType(storeType)}`;
@@ -1107,18 +1084,16 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
             };
             
             qrImage.onerror = () => {
-              console.error('QR kod görsel yükleme hatası');
               resolve(false);
             };
             
             qrImage.src = qrCodeDataURL;
           } catch (qrError) {
-            console.error('QR kod oluşturma hatası:', qrError);
             resolve(false);
           }
         });
       } catch (error) {
-        console.error('QR kod etiketi oluşturma hatası:', error);
+        // QR kod etiketi oluşturma hatası
       }
     }
 
@@ -1342,13 +1317,6 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
         printWindow.document.close();
         
         printWindow.onload = () => {
-          // Optimizasyonlar ve yazdırma debug bilgileri
-          console.log('🎯 QR Etiket Yazdırma Başlatılıyor');
-          console.log('📏 Etiket Boyutları: 80mm × 100mm');
-          console.log('🖨️ Barcode yazıcı için optimize edildi');
-          console.log('✅ Canvas boyutu:', LABEL_W_PX, '×', LABEL_H_PX, 'piksel');
-          console.log('📄 Toplam etiket sayısı:', allCodes.length);
-          console.log('🔧 Yazıcı DPI:', PRINTER_DPI);
           
           // Yazdırma ayarları uyarısı kaldırıldı
           
@@ -1357,9 +1325,7 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
             try {
               printWindow.focus();
               printWindow.print();
-              console.log('✅ Yazdırma dialog açıldı');
             } catch (error) {
-              console.error('❌ Yazdırma hatası:', error);
               alert('Yazdırma hatası: ' + (error instanceof Error ? error.message : 'Bilinmeyen hata'));
             }
             
@@ -1367,16 +1333,13 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
             setTimeout(() => {
               try {
                 printWindow.close();
-                console.log('✅ Yazdırma penceresi kapatıldı');
               } catch (error) {
-                console.error('❌ Pencere kapatma hatası:', error);
               }
             }, 5000);
           }, 1000);
         };
       } else {
         // Popup bloklandı - kullanıcıya bilgi ver ve alternatif çözüm sun
-        console.error('❌ Popup bloklandı! Popup blocker\'ı devre dışı bırakın.');
         
         // Alternatif: Blob URL kullanarak dosya indirme
         const htmlBlob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });

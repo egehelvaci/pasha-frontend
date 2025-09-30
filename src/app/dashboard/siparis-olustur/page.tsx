@@ -699,7 +699,6 @@ const SiparisOlustur: React.FC = () => {
               
               <div className="space-y-4 max-h-96 overflow-y-auto">
                 {cartData.items.map((item) => {
-                  // console.log('Product Image URL:', item.product.productImage); // Debug log
                   const imageUrl = item.product.productImage && 
                                    item.product.productImage !== 'undefined' && 
                                    item.product.productImage.trim() !== '' 
@@ -720,7 +719,7 @@ const SiparisOlustur: React.FC = () => {
                               </svg>
                             </div>
                           }
-                          onError={() => console.log('Image failed to load:', imageUrl)}
+                          onError={() => {}}
                         />
                       ) : (
                         <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200">

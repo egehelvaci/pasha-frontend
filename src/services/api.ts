@@ -3745,8 +3745,6 @@ export async function getContactForms(
     }
 
     const url = `${API_BASE_URL}/api/admin/contact-forms?${params}`;
-    console.log('API URL:', url);
-    console.log('Token:', token ? 'Mevcut' : 'Yok');
 
     const response = await fetch(url, {
       method: 'GET',
@@ -3755,9 +3753,6 @@ export async function getContactForms(
         'Content-Type': 'application/json',
       },
     });
-
-    console.log('Response status:', response.status);
-    console.log('Response ok:', response.ok);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -4681,7 +4676,6 @@ export async function purchaseFromSupplierCart(supplierId: string): Promise<Purc
       method: 'PUT'
     });
 
-    console.log('Purchase from cart response status:', response.status);
     
     if (!response.ok) {
       const errorData = await response.text();
@@ -4690,10 +4684,10 @@ export async function purchaseFromSupplierCart(supplierId: string): Promise<Purc
     }
 
     const data = await response.json();
-    console.log('Purchase from cart success:', data);
+    
     return data;
   } catch (error) {
-    console.error('Purchase from cart function error:', error);
+    
     throw error;
   }
 }

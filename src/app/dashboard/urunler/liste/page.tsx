@@ -399,9 +399,7 @@ export default function ProductList() {
 
   const fetchProductRules = async () => {
     try {
-      console.log('🔄 Ürün kuralları çekiliyor...');
       const rules = await getProductRules();
-      console.log('✅ Ürün kuralları başarıyla çekildi:', rules);
       setProductRules(rules);
     } catch (error) {
       console.error('❌ Ürün kuralları yüklenirken hata:', error);

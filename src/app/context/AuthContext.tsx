@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { setTokenExpiryHandler, setupGlobalFetchInterceptor } from "../../services/api";
 
@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   // Token süresi dolduğunda çağrılacak fonksiyon
-  const handleTokenExpiry = () => {
+  const handleTokenExpiry = useCallback(() => {
     // Kullanıcı bilgilerini temizle
     setUser(null);
     setToken(null);
@@ -97,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     // Login sayfasına yönlendir
     router.push("/login");
-  };
+  }, [router]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -167,7 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     // Global fetch interceptor'ı başlat
     setupGlobalFetchInterceptor();
-  }, []);
+  }, [handleTokenExpiry]);
 
   const login = async (username: string, password: string, rememberMe: boolean = false) => {
     setIsLoading(true);

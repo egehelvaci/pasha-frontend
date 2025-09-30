@@ -64,13 +64,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   // Bildirimleri getir (pagination desteği ile)
   const fetchNotifications = useCallback(async (page: number = 1, append: boolean = false) => {
     if (!user?.userId || authLoading || fetchingRef.current) {
-      console.log('🔄 fetchNotifications skipped:', { userId: !!user?.userId, authLoading, fetching: fetchingRef.current });
       return;
     }
     
     const now = Date.now();
     if (!append && now - lastFetchTime.current < FETCH_COOLDOWN) {
-      console.log('⏰ fetchNotifications cooldown active, remaining:', Math.round((FETCH_COOLDOWN - (now - lastFetchTime.current)) / 1000), 'seconds');
       return;
     }
     
@@ -79,7 +77,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     setError(null);
     if (!append) lastFetchTime.current = now;
     
-    console.log('📥 Fetching notifications page:', page, append ? '(append)' : '(replace)');
     
     try {
       const response = await getUserNotifications(user.userId, { 
@@ -100,7 +97,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         hasMore: response.pagination.page < response.pagination.totalPages
       });
       
-      console.log('✅ Notifications fetched:', response.data.length, 'total:', response.pagination.total);
     } catch (err: any) {
       setError(err.message || 'Bildirimler alınamadı');
       console.error('❌ Bildirimler getirme hatası:', err);
@@ -113,25 +109,21 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   // Okunmamış bildirim sayısını getir (cooldown ile)
   const fetchUnreadCount = useCallback(async () => {
     if (!user?.userId || authLoading || unreadCountFetchingRef.current) {
-      console.log('🔄 fetchUnreadCount skipped:', { userId: !!user?.userId, authLoading, fetching: unreadCountFetchingRef.current });
       return;
     }
     
     const now = Date.now();
     if (now - lastUnreadCountFetch.current < UNREAD_COUNT_COOLDOWN) {
-      console.log('⏰ fetchUnreadCount cooldown active, remaining:', Math.round((UNREAD_COUNT_COOLDOWN - (now - lastUnreadCountFetch.current)) / 1000), 'seconds');
       return;
     }
     
     unreadCountFetchingRef.current = true;
     lastUnreadCountFetch.current = now;
     
-    console.log('🔢 Fetching unread count...');
     
     try {
       const count = await getUnreadNotificationCount(user.userId);
       setUnreadCount(count);
-      console.log('✅ Unread count fetched:', count);
     } catch (err: any) {
       console.error('❌ Okunmamış bildirim sayısı getirme hatası:', err);
     } finally {
@@ -141,7 +133,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
   // Tek bildirimi okundu işaretle
   const markAsRead = useCallback(async (notificationId: string) => {
-    console.log('✓ Marking notification as read:', notificationId);
     try {
       await markNotificationAsRead(notificationId);
       
@@ -155,7 +146,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       // Okunmamış sayıyı lokal olarak azalt
       setUnreadCount(prev => Math.max(0, prev - 1));
       
-      console.log('✅ Notification marked as read');
     } catch (err: any) {
       setError(err.message || 'Bildirim okundu işaretlenemedi');
       console.error('❌ Bildirim okundu işaretleme hatası:', err);
@@ -166,7 +156,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   const markAllAsRead = useCallback(async () => {
     if (!user?.userId) return;
     
-    console.log('✓ Marking all notifications as read');
     try {
       await markAllNotificationsAsRead(user.userId);
       
@@ -176,7 +165,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       );
       setUnreadCount(0);
       
-      console.log('✅ All notifications marked as read');
     } catch (err: any) {
       setError(err.message || 'Tüm bildirimler okundu işaretlenemedi');
       console.error('❌ Tüm bildirimleri okundu işaretleme hatası:', err);
@@ -185,7 +173,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
   // Yeni bildirim ekle (WebSocket veya server-sent events için)
   const addNotification = useCallback((notification: Notification) => {
-    console.log('➕ Adding new notification:', notification.title);
     setNotifications(prev => [notification, ...prev]);
     if (!notification.isRead) {
       setUnreadCount(prev => prev + 1);
@@ -196,7 +183,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   const loadMore = useCallback(async () => {
     if (!pagination.hasMore || loading) return;
     
-    console.log('📄 Loading more notifications, page:', pagination.currentPage + 1);
     await fetchNotifications(pagination.currentPage + 1, true);
   }, [fetchNotifications, pagination.hasMore, pagination.currentPage, loading]);
 
@@ -204,13 +190,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   const goToPage = useCallback(async (page: number) => {
     if (page < 1 || page > pagination.totalPages || loading) return;
     
-    console.log('📄 Going to page:', page);
     await fetchNotifications(page, false);
   }, [fetchNotifications, pagination.totalPages, loading]);
 
   // Bildirimleri yenile (manuel)
   const refreshNotifications = useCallback(async () => {
-    console.log('🔄 Manual refresh requested');
     // Reset cooldown for manual refresh
     lastFetchTime.current = 0;
     lastUnreadCountFetch.current = 0;
@@ -221,7 +205,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   // İlk yüklemede veri çek (sadece bir kez)
   useEffect(() => {
     if (user?.userId && !authLoading) {
-      console.log('🚀 Initial notification setup for user:', user.userId);
       fetchUnreadCount(); // Sadece okunmamış sayıyı al, bildirimler lazy load
     }
   }, [user?.userId, authLoading, fetchUnreadCount]);
@@ -230,14 +213,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   useEffect(() => {
     if (!user?.userId || authLoading) return;
 
-    console.log('⏲️ Setting up periodic unread count check (60 seconds)');
     const interval = setInterval(() => {
-      console.log('⏰ Periodic unread count check triggered (every 60s)');
       fetchUnreadCount();
     }, 60 * 1000); // 60 saniye
 
     return () => {
-      console.log('🛑 Clearing periodic unread count check');
       clearInterval(interval);
     };
   }, [user?.userId, authLoading, fetchUnreadCount]);

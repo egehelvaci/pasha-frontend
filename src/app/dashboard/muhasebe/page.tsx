@@ -595,20 +595,17 @@ const MuhasebePage = () => {
       setFilteredStores(stores);
     } else {
       const normalizedSearch = normalizeText(searchTerm.trim());
-      console.log('Arama terimi:', searchTerm, '-> Normalize:', normalizedSearch); // Debug log
 
       const filtered = stores.filter(store => {
         const normalizedStoreName = normalizeText(store.kurum_adi);
         const isMatch = normalizedStoreName.includes(normalizedSearch);
 
         if (isMatch) {
-          console.log('Eşleşen mağaza:', store.kurum_adi, '-> Normalize:', normalizedStoreName); // Debug log
         }
 
         return isMatch;
       });
 
-      console.log('Bulunan mağaza sayısı:', filtered.length); // Debug log
       setFilteredStores(filtered);
     }
   };
@@ -2061,7 +2058,6 @@ const MuhasebePage = () => {
                   <button
                     onClick={() => {
                       // Sayfa değiştirme fonksiyonu - API'ye page parametresi ekle
-                      console.log('Önceki sayfa:', responseData.pagination.page - 1);
                     }}
                     className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
                   >
@@ -2075,7 +2071,6 @@ const MuhasebePage = () => {
                   <button
                     onClick={() => {
                       // Sayfa değiştirme fonksiyonu - API'ye page parametresi ekle
-                      console.log('Sonraki sayfa:', responseData.pagination.page + 1);
                     }}
                     className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
                   >

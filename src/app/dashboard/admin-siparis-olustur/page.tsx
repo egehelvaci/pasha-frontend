@@ -173,7 +173,6 @@ const AdminSiparisOlustur = () => {
   const fetchNormalProducts = async () => {
     try {
       const productList = await getProducts();
-      console.log('Gelen ürünler:', productList);
       setProducts(productList.data);
       
       // Mock order data oluştur
@@ -465,11 +464,6 @@ const AdminSiparisOlustur = () => {
       
       // Debug: Seçilen adres bilgilerini log'la
       const selectedAddress = storeAddresses.find(addr => addr.id === selectedAddressId);
-      console.log('Admin sipariş oluşturma - Adres bilgileri:', {
-        selectedAddressId: selectedAddressId,
-        selectedAddress: selectedAddress,
-        allAddresses: storeAddresses
-      });
 
       const result = await createOrderFromAdminCart({
         targetUserId: userId,
@@ -478,19 +472,9 @@ const AdminSiparisOlustur = () => {
         address_id: selectedAddressId
       });
       
-      // Admin sipariş oluştururken adres bilgisini log'layalım debug için
-      console.log('Admin sipariş oluşturuldu:', {
-        orderId: result.order?.id,
-        selectedAddressId: selectedAddressId,
-        orderData: result.order,
-        orderDeliveryAddress: result.order?.delivery_address,
-        orderAddress: result.order?.address
-      });
-      
       alert('Sipariş başarıyla oluşturuldu!');
       router.push('/dashboard/siparisler');
     } catch (error: any) {
-      console.error('Sipariş oluşturma hatası:', error);
       
       // Sepet boş hatası için özel mesaj
       if (error.message && error.message.includes('Sepet bulunamadı veya boş')) {

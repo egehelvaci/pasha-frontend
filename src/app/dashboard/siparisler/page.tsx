@@ -495,10 +495,6 @@ const Siparisler = () => {
       // receiptPrinted filtresi sadece admin için
       if (receiptPrinted && isAdminOrEditor) queryParams.append('receiptPrinted', receiptPrinted === 'printed' ? 'true' : 'false');
 
-      console.log('🔍 FILTRELEME DEBUG:');
-      console.log('📝 Parametreler:', { page, status, receiptPrinted, isAdminOrEditor });
-      console.log('🔗 Query String:', queryParams.toString());
-      console.log('🎯 Endpoint:', isAdminOrEditor ? 'admin/orders' : 'my-orders');
 
       // Admin veya Editör ise sadece admin/orders endpoint'ini kullan, my-orders asla kullanma
       if (isAdminOrEditor) {
@@ -525,15 +521,12 @@ const Siparisler = () => {
       }
 
       const data = await response.json();
-      console.log('📦 API Response:', data);
-      console.log('📊 Gelen Sipariş Sayısı:', data.data?.orders?.length);
       
       if (data.success) {
         // Geçici çözüm: Frontend'de fiş filtrelemesi yapın (backend API henüz desteklemiyor)
         let filteredOrders = data.data.orders;
         
         if (receiptPrinted && isAdminOrEditor) {
-          console.log('🔧 Frontend fiş filtresi uygulanıyor:', receiptPrinted);
           if (receiptPrinted === 'printed') {
             // Yazdırılan fişler: receipt_printed = true olan siparişler
             filteredOrders = data.data.orders.filter((order: any) => order.receipt_printed === true);
@@ -544,7 +537,6 @@ const Siparisler = () => {
               order.receipt_printed === false
             );
           }
-          console.log('📊 Filtreleme sonrası sipariş sayısı:', filteredOrders.length);
         }
         
         const processedData = {
@@ -878,7 +870,6 @@ const Siparisler = () => {
 
   // Mağaza türüne göre QR kod şablonları - Backend'den gelen store_type değerine göre
   const getQRTemplateByStoreType = (storeType: StoreType | null | undefined) => {
-    console.log('Store Type for QR Template:', storeType);
     // KARGO ve AMBAR mağazaları için: adres + telefon + ürün bilgileri
     if (storeType && (storeType === 'KARGO' || storeType === 'AMBAR')) {
       return {
@@ -1055,13 +1046,6 @@ const Siparisler = () => {
                       const template = getQRTemplateByStoreType(storeType);
                       const customerName = order.user ? `${order.user.name} ${order.user.surname}` : '';
                       
-                      // DEBUG: Detaylı log
-                      console.log('=== QR KOD DEBUG ===');
-                      console.log('User Store Type:', storeType);
-                      console.log('Template Header:', template.headerText);
-                      console.log('Template showAddress:', template.showAddress);
-                      console.log('Template showPhone:', template.showPhone);
-                      console.log('Template showCustomerName:', template.showCustomerName);
                       
                       return `
                     <div class="qr-header" style="background-color: ${template.headerColor}; color: white; padding: 1mm; margin: -2mm -2mm 1mm -2mm;">
@@ -1555,12 +1539,6 @@ const Siparisler = () => {
                    
                    // Store type bilgisi - işaret ile (toplu yazdırma)
                    const storeType = labelData.order.store_info?.store_type || labelData.order.user?.Store?.store_type || labelData.order.store_type || 'KARGO';
-                   console.log('Bulk print store_type sources:', {
-                     store_info: labelData.order.store_info?.store_type,
-                     user_store: labelData.order.user?.Store?.store_type,
-                     direct: labelData.order.store_type,
-                     final: storeType
-                   }); // Debug
                    
                    drawStoreTypeIcon(ctx, storeType, Math.round((3 / 25.4) * 203), textY - Math.round((1.5 / 25.4) * 203), Math.round((3 / 25.4) * 203));
                    const storeTypeText = `    ${translateStoreType(storeType)}`;
@@ -2003,13 +1981,6 @@ const Siparisler = () => {
           printWindow.document.close();
           
           printWindow.onload = () => {
-            // Optimizasyonlar ve yazdırma debug bilgileri
-            console.log('🎯 Toplu QR Etiket Yazdırma Başlatılıyor');
-            console.log('📏 Etiket Boyutları: 80mm × 100mm');
-            console.log('🖨️ Barcode yazıcı için optimize edildi');
-            console.log('✅ Canvas boyutu: 639 × 799 piksel');
-            console.log('📄 Toplam etiket sayısı:', allLabelsData.length);
-            console.log('🔧 Yazıcı DPI: 203');
             
             // Yazdırma ayarları uyarısı kaldırıldı
             
@@ -2018,7 +1989,6 @@ const Siparisler = () => {
               try {
                 printWindow.focus();
                 printWindow.print();
-                console.log('✅ Yazdırma dialog açıldı');
               } catch (error) {
                 console.error('❌ Yazdırma hatası:', error);
                 alert('Yazdırma hatası: ' + (error instanceof Error ? error.message : 'Bilinmeyen hata'));
@@ -2028,7 +1998,6 @@ const Siparisler = () => {
               setTimeout(() => {
                 try {
                   printWindow.close();
-                  console.log('✅ Yazdırma penceresi kapatıldı');
                 } catch (error) {
                   console.error('❌ Pencere kapatma hatası:', error);
                 }
@@ -2326,7 +2295,6 @@ const Siparisler = () => {
       }
 
       const result = await response.json();
-      console.log('Fiş durumu güncellendi:', result.message);
     } catch (error: any) {
       console.error('Fiş durumu güncelleme API hatası:', error);
       throw error;

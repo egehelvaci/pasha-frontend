@@ -308,7 +308,6 @@ const SaticiSiparisVer = () => {
         notes: productForm.notes
       };
       
-      console.log('Adding to cart:', cartData);
       await addToSupplierCart(supplierId, cartData);
 
       // Sepeti yeniden yükle
@@ -387,7 +386,6 @@ const SaticiSiparisVer = () => {
     try {
       // Yeni endpoint kullanarak sepetten sipariş oluştur
       const result = await purchaseFromSupplierCart(supplierId);
-      console.log('Sipariş başarılı:', result);
       
       // Başarı modalını göster
       setPurchaseResult(result);
@@ -399,7 +397,6 @@ const SaticiSiparisVer = () => {
         setSupplierCart(cartData.data.cart.items);
         setCartTotal(cartData.data.total.amount);
       } catch (cartError) {
-        console.log('Sepet yeniden yüklenirken hata (normal olabilir - sepet boş):', cartError);
         // Sepet boş olabilir, bu normal - sepeti temizle
         setSupplierCart([]);
         setCartTotal(0);

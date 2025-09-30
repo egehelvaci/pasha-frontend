@@ -569,19 +569,9 @@ export default function StokPage() {
         // EKLEME MODU: Mevcut stok + eklenen miktar
         const currentStock = selectedSizeOption.stockAreaM2 || 0;
         finalAreaM2 = currentStock + (stockForm.areaM2 || 0);
-        console.log('🔄 Stok Ekleme - M²:', {
-          mode: stockForm.updateMode,
-          currentStock,
-          addingAmount: stockForm.areaM2,
-          finalAmount: finalAreaM2
-        });
       } else if (stockForm.updateMode === 'set') {
         // GÜNCELLEME MODU: Direkt yazılan değer
         finalAreaM2 = stockForm.areaM2 || 0;
-        console.log('🔄 Stok Güncelleme - M²:', {
-          mode: stockForm.updateMode,
-          newValue: finalAreaM2
-        });
       }
 
       requestBody = {
@@ -617,21 +607,9 @@ export default function StokPage() {
         }
         
         finalQuantity = currentStock + stockForm.quantity;
-        console.log('🔄 Stok Ekleme - Adet:', {
-          mode: stockForm.updateMode,
-          currentStock,
-          addingAmount: stockForm.quantity,
-          finalAmount: finalQuantity,
-          hasSelectedOption: !!selectedSizeOption,
-          hasVariations: selectedProduct.variations?.length > 0
-        });
       } else if (stockForm.updateMode === 'set') {
         // GÜNCELLEME MODU: Direkt yazılan değer
         finalQuantity = stockForm.quantity;
-        console.log('🔄 Stok Güncelleme - Adet:', {
-          mode: stockForm.updateMode,
-          newValue: finalQuantity
-        });
       }
 
       requestBody = {
@@ -643,14 +621,6 @@ export default function StokPage() {
     }
 
     setIsUpdatingStock(true);
-    
-    console.log('📤 API İsteği:', {
-      url: apiUrl,
-      method: 'PATCH',
-      body: requestBody,
-      mode: stockForm.updateMode,
-      productType
-    });
     
     try {
       const response = await fetch(apiUrl, {
@@ -684,14 +654,6 @@ export default function StokPage() {
               );
               if (updatedSizeOption) {
                 setSelectedSizeOption(updatedSizeOption);
-                console.log('🔄 SizeOption güncellendi:', {
-                  oldStock: selectedSizeOption.is_optional_height 
-                    ? selectedSizeOption.stockAreaM2 
-                    : selectedSizeOption.stockQuantity,
-                  newStock: updatedSizeOption.is_optional_height 
-                    ? updatedSizeOption.stockAreaM2 
-                    : updatedSizeOption.stockQuantity
-                });
               }
             }
 

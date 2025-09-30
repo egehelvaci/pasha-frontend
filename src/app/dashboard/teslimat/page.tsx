@@ -140,10 +140,6 @@ export default function TeslimatPage() {
         // Sipariş bilgilerini activeOrders'a ekle/güncelle
         if (data.order && data.order.id) {
           // Debug için console log ekle
-          console.log('Scan Info:', data.scanInfo);
-          console.log('Current scan count:', data.scanInfo?.current_scan_count);
-          console.log('Required scans:', data.scanInfo?.required_scans);
-          console.log('Progress percentage:', data.scanInfo?.progress_percentage);
           
           setActiveOrders(prev => ({
             ...prev,
@@ -161,7 +157,6 @@ export default function TeslimatPage() {
         try {
           playSuccessSound();
         } catch (audioError) {
-          console.log('Audio notification failed:', audioError);
         }
         
         // Success mesajını temizle
@@ -176,7 +171,6 @@ export default function TeslimatPage() {
       try {
         playErrorSound();
       } catch (audioError) {
-        console.log('Audio notification failed:', audioError);
       }
       
       // Eğer barkod zaten okutulmuşsa popup göster
@@ -228,33 +222,17 @@ export default function TeslimatPage() {
     const value = e.target.value;
     setBarcodeInput(value);
     
-    // Debug: Barkod okuyucudan gelen ham veriyi logla
-    console.log('🔍 Barkod okuyucu ham veri:', {
-      original: value,
-      length: value.length,
-      charCodes: value.split('').map(c => c.charCodeAt(0))
-    });
     
     // Barkodu temizle
     const cleanValue = cleanBarcode(value);
     
-    // Debug: Temizlenmiş veriyi logla
-    console.log('🧹 Temizlenmiş barkod:', {
-      original: value,
-      cleaned: cleanValue,
-      length: cleanValue.length,
-      isValid: isBarcodeValid(cleanValue),
-      transformation: value.includes('*') ? 'Yıldız (*) karakterleri tire (-) ile değiştirildi' : 'Dönüşüm gerekmedi'
-    });
     
     // Eğer değer boşsa veya geçerli barkod formatında değilse return
     if (!cleanValue || !isBarcodeValid(cleanValue)) {
-      console.log('❌ Geçersiz barkod formatı');
       return;
     }
     
     // Geçerli barkod formatında ise otomatik olarak API'ye gönder
-    console.log('✅ Geçerli barkod, API\'ye gönderiliyor:', cleanValue);
     scanSingleBarcode(cleanValue);
     
     // Input'u temizle
@@ -280,7 +258,6 @@ export default function TeslimatPage() {
       try {
         playErrorSound();
       } catch (audioError) {
-        console.log('Audio notification failed:', audioError);
       }
       
       setTimeout(() => setError(''), 5000);
