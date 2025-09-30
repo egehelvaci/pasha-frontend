@@ -8,8 +8,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useToken } from '../hooks/useToken';
-import { FaUser, FaSignOutAlt, FaCog, FaShoppingCart } from 'react-icons/fa';
-import { getMyBalance, BalanceInfo } from '../../services/api';
+import { FaUser, FaSignOutAlt, FaCog, FaShoppingCart, FaLock } from 'react-icons/fa';
+import { getMyBalance, BalanceInfo, changePassword, PasswordChangeData } from '../../services/api';
 import NotificationDropdown from '../../components/NotificationDropdown';
 
 // Currency sembollerini tanımla
@@ -56,6 +56,14 @@ const Header = ({ title, user, className }: HeaderProps) => {
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [lastBalanceUpdate, setLastBalanceUpdate] = useState<number>(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordForm, setPasswordForm] = useState<PasswordChangeData>({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState('');
   
   // Currency state
   const [userCurrency, setUserCurrency] = useState<string>('TRY');
@@ -204,6 +212,54 @@ const Header = ({ title, user, className }: HeaderProps) => {
     if (result.success) {
       router.push('/');
     }
+  };
+
+  // Şifre değiştirme fonksiyonları
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPasswordForm(prev => ({ ...prev, [name]: value }));
+    setPasswordMessage('');
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordMessage('');
+
+    // Validasyon
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordMessage('Yeni şifre ve onay şifresi eşleşmiyor');
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordMessage('Yeni şifre en az 6 karakter olmalıdır');
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const message = await changePassword(passwordForm);
+      setPasswordMessage(message);
+      setPasswordForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    } catch (err: any) {
+      setPasswordMessage('Hata: ' + err.message);
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const closePasswordModal = () => {
+    setShowPasswordModal(false);
+    setPasswordForm({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    });
+    setPasswordMessage('');
   };
   
 
@@ -606,15 +662,26 @@ const Header = ({ title, user, className }: HeaderProps) => {
                     </div>
                   </Link>
                 ) : (
-                  <button 
-                    onClick={() => setIsProfileModalOpen(true)}
-                    className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <FaUser size={16} />
-                      <span>Profiliniz</span>
-                    </div>
-                  </button>
+                  <>
+                    <button 
+                      onClick={() => setIsProfileModalOpen(true)}
+                      className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <FaUser size={16} />
+                        <span>Profiliniz</span>
+                      </div>
+                    </button>
+                    <button 
+                      onClick={() => setShowPasswordModal(true)}
+                      className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <FaLock size={16} />
+                        <span>Şifre Değiştir</span>
+                      </div>
+                    </button>
+                  </>
                 )}
                 <hr className="my-1 border-gray-200" />
                 <button
@@ -1145,6 +1212,110 @@ const Header = ({ title, user, className }: HeaderProps) => {
                 Kapat
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Şifre Değiştirme Modalı */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 min-h-screen">
+          <div className="bg-white rounded-xl w-full max-w-md shadow-lg mx-auto">
+            <div className="bg-[#00365a] rounded-t-xl px-6 py-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-white">Şifre Değiştir</h2>
+                <button
+                  onClick={closePasswordModal}
+                  className="text-white hover:text-gray-200 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <form onSubmit={handlePasswordSubmit} className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Mevcut Şifre *
+                  </label>
+                  <input
+                    type="password"
+                    name="currentPassword"
+                    value={passwordForm.currentPassword}
+                    onChange={handlePasswordChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a]"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Yeni Şifre *
+                  </label>
+                  <input
+                    type="password"
+                    name="newPassword"
+                    value={passwordForm.newPassword}
+                    onChange={handlePasswordChange}
+                    required
+                    minLength={6}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a]"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Yeni Şifre Onayı *
+                  </label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    value={passwordForm.confirmPassword}
+                    onChange={handlePasswordChange}
+                    required
+                    minLength={6}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a]"
+                  />
+                </div>
+                
+                {passwordMessage && (
+                  <div className={`p-3 rounded-lg text-sm ${
+                    passwordMessage.includes('Hata') 
+                      ? 'bg-red-50 text-red-700 border border-red-200' 
+                      : 'bg-green-50 text-green-700 border border-green-200'
+                  }`}>
+                    {passwordMessage}
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex space-x-3 mt-6">
+                <button
+                  type="button"
+                  onClick={closePasswordModal}
+                  disabled={passwordLoading}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  İptal
+                </button>
+                <button
+                  type="submit"
+                  disabled={passwordLoading}
+                  className="flex-1 px-4 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors disabled:opacity-50 flex items-center justify-center"
+                >
+                  {passwordLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Değiştiriliyor...
+                    </>
+                  ) : (
+                    'Şifre Değiştir'
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

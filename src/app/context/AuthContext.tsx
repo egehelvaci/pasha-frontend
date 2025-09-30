@@ -92,9 +92,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     sessionStorage.removeItem("userType");
     sessionStorage.removeItem("currency");
     
-    // Kullanıcıya uyarı göster
-    alert("Oturum süreniz dolmuştur. Lütfen tekrar giriş yapınız.");
-    
     // Login sayfasına yönlendir
     router.push("/login");
   }, [router]);
