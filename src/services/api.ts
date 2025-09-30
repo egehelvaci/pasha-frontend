@@ -4702,6 +4702,18 @@ export interface SupplierPurchaseSummaryItem {
   reference_number: string | null;
   amount_formatted: string;
   balance_change: string;
+  // Yeni alanlar
+  items?: Array<{
+    urun_ismi: string;
+    en: number;
+    boy: number;
+    m2_fiyati: number;
+    adet: number;
+    toplam_tutar: number;
+  }>;
+  items_count?: number;
+  total_quantity?: number;
+  total_value?: number;
 }
 
 export interface CartPurchaseWithProducts {

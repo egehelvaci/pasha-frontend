@@ -377,14 +377,23 @@ const SaticiSiparisVer = () => {
 
   // Sipariş oluştur
   const handleCreateOrder = async () => {
-    if (!selectedSupplier || !supplierId || supplierCart.length === 0) {
-      alert('Sepet boş! Lütfen önce ürün ekleyin.');
+    if (!selectedSupplier || !supplierId) {
+      alert('Satıcı bilgisi bulunamadı!');
       return;
     }
 
     setOrderLoading(true);
     try {
-      // Yeni endpoint kullanarak sepetten sipariş oluştur
+      // Önce sepet durumunu gerçek zamanlı kontrol et
+      const currentCartData = await getSupplierCart(supplierId);
+      
+      if (!currentCartData.data.cart.items || currentCartData.data.cart.items.length === 0) {
+        alert('Sepet boş! Lütfen önce ürün ekleyin.');
+        setOrderLoading(false);
+        return;
+      }
+
+      // Sepet doluysa sipariş oluştur
       const result = await purchaseFromSupplierCart(supplierId);
       
       // Başarı modalını göster
@@ -597,7 +606,7 @@ const SaticiSiparisVer = () => {
                     <div className="flex justify-between items-center mb-4">
                       <span className="text-lg font-semibold text-gray-900">Toplam:</span>
                       <span className="text-lg font-bold text-green-600">
-                        {cartTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD
+                        {cartTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
 
@@ -754,133 +763,6 @@ const SaticiSiparisVer = () => {
                               </span>
                             </div>
                           )}
-                        </div>
-
-                        {/* Kesim Türü */}
-                        <div className="flex flex-col gap-2 dropdown-container">
-                          <span className="text-sm font-medium text-gray-700">Kesim Türü</span>
-                          <div className="relative">
-                            <button
-                              type="button"
-                              onClick={() => setCutTypeDropdownOpen(!cutTypeDropdownOpen)}
-                              className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                            >
-                              <span className={selectedCutType ? "text-gray-900" : "text-gray-500"}>
-                                {selectedCutType 
-                                  ? selectedCutType.name.charAt(0).toUpperCase() + selectedCutType.name.slice(1)
-                                  : "Kesim Türü Seçin"
-                                }
-                              </span>
-                              <svg 
-                                className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${cutTypeDropdownOpen ? 'rotate-180' : ''}`}
-                                fill="none" 
-                                stroke="currentColor" 
-                                viewBox="0 0 24 24"
-                              >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                              </svg>
-                            </button>
-                            
-                            {cutTypeDropdownOpen && (
-                              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                <div 
-                                  className="px-3 py-2 text-gray-500 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
-                                  onClick={() => {
-                                    setSelectedCutType(null);
-                                    setCutTypeDropdownOpen(false);
-                                  }}
-                                >
-                                  Kesim Türü Seçin
-                                </div>
-                                {selectedProduct.cutTypes?.map((cutType: any) => (
-                                  <div
-                                    key={cutType.id}
-                                    className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                      selectedCutType?.id === cutType.id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                                    }`}
-                                    onClick={() => {
-                                      setSelectedCutType(cutType);
-                                      setCutTypeDropdownOpen(false);
-                                    }}
-                                  >
-                                    {cutType.name.charAt(0).toUpperCase() + cutType.name.slice(1)}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        
-                        {/* Saçak Seçeneği */}
-                        {selectedProduct.canHaveFringe && (
-                          <div className="flex flex-col gap-2 dropdown-container">
-                            <span className="text-sm font-medium text-gray-700">Saçak</span>
-                            <div className="relative">
-                              <button
-                                type="button"
-                                onClick={() => setFringeDropdownOpen(!fringeDropdownOpen)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                              >
-                                <span className={selectedHasFringe !== null ? "text-gray-900" : "text-gray-500"}>
-                                  {selectedHasFringe === true 
-                                    ? "Saçaklı"
-                                    : selectedHasFringe === false
-                                    ? "Saçaksız"
-                                    : "Saçak Seçin"
-                                  }
-                                </span>
-                                <svg 
-                                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${fringeDropdownOpen ? 'rotate-180' : ''}`}
-                                  fill="none" 
-                                  stroke="currentColor" 
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                              </button>
-                              
-                              {fringeDropdownOpen && (
-                                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                  <div 
-                                    className="px-3 py-2 text-gray-500 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
-                                    onClick={() => {
-                                      setSelectedHasFringe(null);
-                                      setFringeDropdownOpen(false);
-                                    }}
-                                  >
-                                    Saçak Seçin
-                                  </div>
-                                  <div
-                                    className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                      selectedHasFringe === true ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                                    }`}
-                                    onClick={() => {
-                                      setSelectedHasFringe(true);
-                                      setFringeDropdownOpen(false);
-                                    }}
-                                  >
-                                    Saçaklı
-                                  </div>
-                                  <div
-                                    className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                      selectedHasFringe === false ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                                    }`}
-                                    onClick={() => {
-                                      setSelectedHasFringe(false);
-                                      setFringeDropdownOpen(false);
-                                    }}
-                                  >
-                                    Saçaksız
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                        
-                        <div className="flex flex-col">
-                          <span className="text-sm text-gray-500">Açıklama</span>
-                          <p className="text-black">{selectedProduct.description}</p>
                         </div>
                         
                         <div className="flex flex-col gap-2">
@@ -1043,7 +925,7 @@ const SaticiSiparisVer = () => {
                   <div className="text-center">
                     <p className="text-sm text-green-600">Toplam Tutar</p>
                     <p className="text-2xl font-bold text-green-800">
-                      ${purchaseResult.data.totalAmount.toFixed(2)} USD
+                      ${purchaseResult.data.totalAmount.toFixed(2)}
                     </p>
                   </div>
                 </div>

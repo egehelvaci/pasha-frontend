@@ -177,122 +177,84 @@ const SupplierPurchaseHistoryPage = () => {
               <div className="space-y-6">
                 {transactions.map((transaction) => (
                   <div key={transaction.id} className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900">{transaction.description}</h3>
-                          {transaction.transaction_type === 'PAYMENT' ? (
-                            <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                              </svg>
-                              Ödeme
-                            </span>
-                          ) : transaction.transaction_type === 'CART_PURCHASE' ? (
-                            <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                              </svg>
-                              Satın Alım
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                              İşlem
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m4 0V9a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2m-4 0H8m0 0V9a2 2 0 012-2h4a2 2 0 012 2v4M8 7h8m-5 8h.01" />
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex items-center gap-3">
+                        {transaction.transaction_type === 'PAYMENT' ? (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
-                            İşlem ID: {transaction.id.slice(-8)}
+                            Ödeme
                           </span>
-                          <span className="flex items-center gap-1">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m4 0V9a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2m-4 0H8m0 0V9a2 2 0 012-2h4a2 2 0 012 2v4M8 7h8m-5 8h.01" />
+                        ) : transaction.transaction_type === 'CART_PURCHASE' ? (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                             </svg>
-                            {formatDate(transaction.created_at)}
+                            Satın Alım
                           </span>
-                        </div>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            İşlem
+                          </span>
+                        )}
+                        <span className="text-sm text-gray-500">
+                          {formatDate(transaction.created_at)}
+                        </span>
                       </div>
                       <div className="text-right">
-                        <p className="text-xl font-bold text-red-600">
+                        <p className={`text-xl font-bold ${
+                          transaction.transaction_type === 'PAYMENT' 
+                            ? 'text-green-600' 
+                            : 'text-red-600'
+                        }`}>
                           {formatAmount(transaction.amount)}
                         </p>
                         <p className="text-sm text-gray-500 mt-1">USD</p>
                       </div>
                     </div>
 
-                    {/* Satın Alınan Ürünler */}
-                    {(() => {
-                      const productDetails = getProductDetailsForTransaction(transaction.id);
-                      if (productDetails && productDetails.products && productDetails.products.length > 0) {
-                        return (
-                          <div className="mt-6">
-                            <div className="bg-blue-50 rounded-lg p-4">
-                              <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                                <svg className="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                </svg>
-                                Satın Alınan Ürünler ({productDetails.products.length} ürün)
-                              </h4>
-                              <div className="space-y-3">
-                                {productDetails.products.map((item, index) => (
-                                  <div key={index} className="bg-white rounded-lg p-4 border border-blue-100">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                      <div className="space-y-2">
-                                        <h5 className="font-semibold text-gray-900">{item.product.name}</h5>
-                                        <p className="text-sm text-gray-600 flex items-center gap-1">
-                                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 7a2 2 0 012-2h10a2 2 0 012 2v2M7 7h10" />
-                                          </svg>
-                                          {item.product.collection.name}
-                                        </p>
-                                        <div className="flex flex-wrap gap-3 text-sm">
-                                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-md">
-                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z" />
-                                            </svg>
-                                            {item.quantity} adet
-                                          </span>
-                                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-md">
-                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4a1 1 0 011-1h4m0 0V1m0 2h4m0 0V1m0 2h4a1 1 0 011 1v4M4 8H2m2 0v4m0 0v4a1 1 0 001 1h4m0 0H7m2 0h4m0 0h2a1 1 0 001-1v-4m0 0V8" />
-                                            </svg>
-                                            {item.width}×{item.height} cm
-                                          </span>
-                                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-md">
-                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
-                                            </svg>
-                                            {item.area_m2} m²
-                                          </span>
-                                        </div>
-                                      </div>
-                                      <div className="space-y-2">
-                                        <div className="text-right">
-                                          <p className="text-sm text-gray-500">Birim Fiyat</p>
-                                          <p className="text-lg font-semibold text-[#00365a]">${item.unit_price}/m²</p>
-                                        </div>
-                                        <div className="text-right">
-                                          <p className="text-sm text-gray-500">Toplam</p>
-                                          <p className="text-xl font-bold text-green-600">${item.total_price}</p>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
+                    {/* Ödeme Açıklaması - PAYMENT için */}
+                    {transaction.transaction_type === 'PAYMENT' && transaction.description && (
+                      <div className="mt-4">
+                        <div className="bg-green-50 rounded-lg p-4">
+                          <h4 className="text-sm font-medium text-green-700 mb-2">
+                            Ödeme Detayı
+                          </h4>
+                          <p className="text-sm text-green-800">{transaction.description}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Satın Alınan Ürünler - Minimal Format */}
+                    {transaction.items && transaction.items.length > 0 && (
+                      <div className="mt-4">
+                        <div className="bg-gray-50 rounded-lg p-4">
+                          <h4 className="text-sm font-medium text-gray-700 mb-3">
+                            Satın Alınan Ürünler ({transaction.items_count} ürün)
+                          </h4>
+                          <div className="space-y-2">
+                            {transaction.items.map((item: any, index: number) => (
+                              <div key={index} className="text-sm text-gray-800">
+                                <span className="font-medium">{item.urun_ismi}</span>
+                                <span className="text-gray-600 mx-2">•</span>
+                                <span>{item.en}×{item.boy}cm</span>
+                                <span className="text-gray-600 mx-2">•</span>
+                                <span>${item.m2_fiyati}/m²</span>
+                                <span className="text-gray-600 mx-2">x</span>
+                                <span className="font-medium">{item.adet} adet</span>
+                                <span className="text-gray-600 mx-2">=</span>
+                                <span className="font-semibold text-green-600">${item.toplam_tutar}</span>
                               </div>
-                            </div>
+                            ))}
                           </div>
-                        );
-                      }
-                      return null;
-                    })()}
+
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

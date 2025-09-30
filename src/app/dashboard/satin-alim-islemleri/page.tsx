@@ -287,6 +287,35 @@ export default function SatinAlimIslemleriPage() {
           </div>
         </div>
 
+        {/* Summary Card */}
+        {balanceSummary && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+            <div className="px-6 py-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Finansal Özet</h3>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="text-center p-4 bg-gray-50 rounded-lg">
+                  <div className="text-2xl font-bold text-gray-900">{balanceSummary.summary.totalSuppliers}</div>
+                  <div className="text-sm text-gray-600">Toplam Satıcı</div>
+                </div>
+                <div className="text-center p-4 bg-red-50 rounded-lg">
+                  <div className="text-2xl font-bold text-red-600">${balanceSummary.summary.totalPayable.toFixed(2)}</div>
+                  <div className="text-sm text-red-700">Borç</div>
+                </div>
+                <div className="text-center p-4 bg-green-50 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600">${balanceSummary.summary.totalReceivable.toFixed(2)}</div>
+                  <div className="text-sm text-green-700">Alacak</div>
+                </div>
+                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                  <div className={`text-2xl font-bold ${balanceSummary.summary.netBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    ${Math.abs(balanceSummary.summary.netBalance).toFixed(2)}
+                  </div>
+                  <div className="text-sm text-blue-700">Net Durum</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Main Content */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 bg-[#00365a]">
@@ -688,6 +717,13 @@ export default function SatinAlimIslemleriPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
+
+                {/* USD Karşılığı */}
+                {tlAmount && exchangeRate && (
+                  <div className="text-center text-sm text-gray-600 mb-2.5">
+                    USD Karşılığı: <span className="font-semibold text-gray-900">${(parseFloat(tlAmount) / parseFloat(exchangeRate)).toFixed(2)}</span>
+                  </div>
+                )}
 
                 {/* Butonlar */}
                 <div className="flex space-x-3">
