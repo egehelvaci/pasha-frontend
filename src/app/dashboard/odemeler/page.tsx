@@ -270,7 +270,11 @@ export default function PaymentsPage() {
       const data = await response.json();
       
       if (data.success && data.data) {
-        setStores(data.data);
+        // Mağazaları alfabetik sıraya göre sırala
+        const sortedStores = [...data.data].sort((a, b) => 
+          a.kurum_adi.localeCompare(b.kurum_adi, 'tr', { sensitivity: 'base' })
+        );
+        setStores(sortedStores);
       } else {
         console.error('API başarı durumu false:', data);
         throw new Error(data.message || 'Mağazalar getirilemedi');
@@ -673,7 +677,7 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto">
+      <div className="w-full mx-auto" style={{ maxWidth: '100%' }}>
         {/* Page Header */}
         <div className="mb-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -914,7 +918,7 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
                       >
                         Tüm Mağazalar
                       </div>
-                      {stores.map((store) => (
+                      {[...stores].sort((a, b) => a.kurum_adi.localeCompare(b.kurum_adi, 'tr', { sensitivity: 'base' })).map((store) => (
                         <div
                           key={store.store_id}
                           className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
@@ -1001,110 +1005,110 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
 
         {/* Payments Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 bg-[#00365a]">
+          <div className="px-12 py-6 border-b border-gray-200 bg-[#00365a]">
             <div className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               <h3 className="text-lg font-semibold text-white">Ödeme Listesi</h3>
             </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Referans No
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Durum
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Tutar
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Mağaza
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Açıklama
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Tarih
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    İşlemler
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredPayments.map((payment) => (
-                  <tr key={payment.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-semibold text-gray-900">{payment.sellerReference}</div>
-                      <div className="text-sm text-gray-500 font-mono">{payment.apiReferenceNumber}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${statusColors[payment.status]}`}>
-                        {statusLabels[payment.status]}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-semibold text-gray-900">
-                        {payment.original_amount && payment.payment_currency 
-                          ? `${payment.original_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${payment.payment_currency}`
-                          : `${payment.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}`
-                        }
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{payment.store.kurum_adi}</div>
-                      {isAdminOrEditor && payment.store.vergi_numarasi && (
-                        <div className="text-sm text-gray-500">{payment.store.vergi_numarasi}</div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900 max-w-xs truncate" title={payment.description}>
-                        {payment.description}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {new Date(payment.paymentDate || payment.createdAt).toLocaleDateString('tr-TR', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex gap-3">
-                        <button
-                          onClick={() => handleViewDetails(payment)}
-                          className="text-[#00365a] hover:text-[#004170] flex items-center gap-1 px-3 py-1 rounded-lg hover:bg-blue-50 transition-all"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                          Detay
-                        </button>
-                        <button
-                          onClick={() => handlePrintPayment(payment)}
-                          className="text-gray-600 hover:text-gray-900 flex items-center gap-1 px-3 py-1 rounded-lg hover:bg-gray-50 transition-all"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                          </svg>
-                          Yazdır
-                        </button>
-                      </div>
-                    </td>
+          <div style={{ width: '100%' }}>
+            <table className="w-full divide-y divide-gray-200" style={{ fontSize: '16px' }}>
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-6 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
+                      Referans No
+                    </th>
+                    <th className="px-6 py-6 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
+                      Durum
+                    </th>
+                    <th className="px-6 py-6 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
+                      Tutar
+                    </th>
+                    <th className="px-6 py-6 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
+                      Mağaza
+                    </th>
+                    <th className="px-6 py-6 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
+                      Açıklama
+                    </th>
+                    <th className="px-6 py-6 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
+                      Tarih
+                    </th>
+                    <th className="px-6 py-6 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
+                      İşlemler
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {payments.map((payment) => (
+                    <tr key={payment.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-6 whitespace-nowrap">
+                        <div className="text-base font-bold text-gray-900">{payment.sellerReference}</div>
+                        <div className="text-sm text-gray-500 font-mono mt-1">{payment.apiReferenceNumber}</div>
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap">
+                        <span className={`inline-flex px-4 py-2 text-sm font-bold rounded-full ${statusColors[payment.status]}`}>
+                          {statusLabels[payment.status]}
+                        </span>
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap">
+                        <div className="text-base font-bold text-gray-900">
+                          {payment.original_amount && payment.payment_currency 
+                            ? `${payment.original_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${payment.payment_currency}`
+                            : `${payment.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}`
+                          }
+                        </div>
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap">
+                        <div className="text-base font-semibold text-gray-900">{payment.store.kurum_adi}</div>
+                        {isAdminOrEditor && payment.store.vergi_numarasi && (
+                          <div className="text-sm text-gray-500 mt-1">{payment.store.vergi_numarasi}</div>
+                        )}
+                      </td>
+                      <td className="px-6 py-6">
+                        <div className="text-base text-gray-900 truncate" style={{ maxWidth: '250px' }} title={payment.description}>
+                          {payment.description}
+                        </div>
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap">
+                        <div className="text-base text-gray-900">
+                          {new Date(payment.paymentDate || payment.createdAt).toLocaleDateString('tr-TR', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </div>
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap">
+                        <div className="flex gap-2 items-center">
+                          <button
+                            onClick={() => handleViewDetails(payment)}
+                            className="text-[#00365a] hover:text-[#004170] flex items-center gap-1 px-4 py-2 rounded-lg hover:bg-blue-50 transition-all whitespace-nowrap text-base font-semibold"
+                          >
+                            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <span>Detay</span>
+                          </button>
+                          <button
+                            onClick={() => handlePrintPayment(payment)}
+                            className="text-gray-600 hover:text-gray-900 flex items-center gap-1 px-4 py-2 rounded-lg hover:bg-gray-50 transition-all whitespace-nowrap text-base font-semibold"
+                          >
+                            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                            </svg>
+                            <span>Yazdır</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
           </div>
 
           {/* Pagination */}
@@ -1141,7 +1145,7 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
         </div>
 
         {/* Empty State */}
-        {filteredPayments.length === 0 && !loading && (
+        {payments.length === 0 && !loading && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
             <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
               <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1409,7 +1413,7 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
                             >
                               Mağaza Seçiniz
                             </div>
-                            {stores.map((store) => (
+                            {[...stores].sort((a, b) => a.kurum_adi.localeCompare(b.kurum_adi, 'tr', { sensitivity: 'base' })).map((store) => (
                               <div
                                 key={store.store_id}
                                 className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
