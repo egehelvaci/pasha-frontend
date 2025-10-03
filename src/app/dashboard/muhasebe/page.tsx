@@ -309,7 +309,7 @@ const MuhasebePage = () => {
     };
   }, [isModalOpen]);
 
-  const fetchAccountingData = async (forceRefresh = false) => {
+  const fetchAccountingData = async (forceRefresh = false, storeId?: string) => {
     try {
       setLoading(true);
       setError(null);
@@ -322,9 +322,12 @@ const MuhasebePage = () => {
       // API URL'i oluştur - mağaza seçiliyse mağaza bazlı endpoint kullan
       let apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}`;
 
-      if (selectedStoreFilter) {
+      // storeId parametresi varsa onu kullan, yoksa state'den al
+      const targetStoreId = storeId || selectedStoreFilter;
+
+      if (targetStoreId) {
         // Mağaza bazlı endpoint
-        apiUrl += `/api/admin/muhasebe/store/${selectedStoreFilter}`;
+        apiUrl += `/api/admin/muhasebe/store/${targetStoreId}`;
       } else {
         // Tüm mağazalar için endpoint
         apiUrl += '/api/admin/muhasebe-hareketleri';
@@ -364,7 +367,7 @@ const MuhasebePage = () => {
       }
 
       // Mağaza bazlı veya genel veri yapısını handle et
-      if (selectedStoreFilter && (result.data.magaza || result.data.bakiyeDurumu)) {
+      if (targetStoreId && (result.data.magaza || result.data.bakiyeDurumu)) {
         // Mağaza bazlı response - /api/admin/muhasebe/store/storeID
         const magazaData = result.data.magaza || result.data;
         const bakiyeDurumu = result.data.bakiyeDurumu || result.data.magaza;
@@ -412,7 +415,7 @@ const MuhasebePage = () => {
   };
 
   // USD Muhasebe verilerini getir
-  const fetchUSDAccountingData = async (forceRefresh = false) => {
+  const fetchUSDAccountingData = async (forceRefresh = false, storeId?: string) => {
     try {
       setLoading(true);
       setError(null);
@@ -425,9 +428,12 @@ const MuhasebePage = () => {
       // USD API URL'i oluştur
       let apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}`;
 
-      if (selectedStoreFilter) {
+      // storeId parametresi varsa onu kullan, yoksa state'den al
+      const targetStoreId = storeId || selectedStoreFilter;
+
+      if (targetStoreId) {
         // USD mağaza bazlı endpoint
-        apiUrl += `/api/admin/usd-muhasebe/store/${selectedStoreFilter}`;
+        apiUrl += `/api/admin/usd-muhasebe/store/${targetStoreId}`;
       } else {
         // Tüm USD mağazalar için endpoint
         apiUrl += '/api/admin/usd-muhasebe/hareketler';
@@ -464,7 +470,7 @@ const MuhasebePage = () => {
 
       if (result.success) {
         // Mağaza bazlı veya genel veri yapısını handle et
-        if (selectedStoreFilter && result.data.bakiyeDurumu) {
+        if (targetStoreId && result.data.bakiyeDurumu) {
           // Mağaza bazlı response - /api/admin/usd-muhasebe/store/storeID
           setData({
             hareketler: result.data.hareketler || [],
@@ -1525,9 +1531,9 @@ const MuhasebePage = () => {
                       onClick={() => {
                         setSelectedStoreFilter(magaza.store_id);
                         if (selectedCurrency === 'USD') {
-                          fetchUSDAccountingData();
+                          fetchUSDAccountingData(false, magaza.store_id);
                         } else {
-                          fetchAccountingData();
+                          fetchAccountingData(false, magaza.store_id);
                         }
                       }}
                     >
@@ -1555,9 +1561,9 @@ const MuhasebePage = () => {
                       onClick={() => {
                         setSelectedStoreFilter(magaza.store_id);
                         if (selectedCurrency === 'USD') {
-                          fetchUSDAccountingData();
+                          fetchUSDAccountingData(false, magaza.store_id);
                         } else {
-                          fetchAccountingData();
+                          fetchAccountingData(false, magaza.store_id);
                         }
                       }}
                     >
@@ -1585,9 +1591,9 @@ const MuhasebePage = () => {
                       onClick={() => {
                         setSelectedStoreFilter(magaza.store_id);
                         if (selectedCurrency === 'USD') {
-                          fetchUSDAccountingData();
+                          fetchUSDAccountingData(false, magaza.store_id);
                         } else {
-                          fetchAccountingData();
+                          fetchAccountingData(false, magaza.store_id);
                         }
                       }}
                     >
