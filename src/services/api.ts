@@ -692,10 +692,16 @@ export async function getProducts(page: number = 1, limit: number = 50, search?:
       ...(collectionId && { collectionId })
     });
 
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
+    
+    if (!token) {
+      throw new Error('Oturum açmanız gerekiyor');
+    }
+    
     const response = await fetch(`${API_BASE_URL}/api/products?${params}`, {
       headers: {
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
       }
     });
     

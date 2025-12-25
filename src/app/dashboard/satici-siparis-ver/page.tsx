@@ -57,13 +57,13 @@ const SaticiSiparisVer = () => {
 
   const supplierId = searchParams.get('supplierId');
 
-  // Admin kontrolü
+  // Admin kontrolü - authLoading tamamlandıktan sonra kontrol et
   useEffect(() => {
-    if (!isAdmin) {
+    if (!authLoading && !isAdmin) {
       router.push('/dashboard');
       return;
     }
-  }, [isAdmin, router]);
+  }, [isAdmin, authLoading, router]);
 
   // Veri yükleme
   useEffect(() => {
@@ -419,6 +419,19 @@ const SaticiSiparisVer = () => {
     }
   };
 
+  // Auth yüklenirken loading göster
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00365a] mx-auto mb-4"></div>
+          <p className="text-gray-600">Yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Admin kontrolü
   if (!isAdmin) {
     return null;
   }
