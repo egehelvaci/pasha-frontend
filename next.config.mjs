@@ -2,7 +2,36 @@
 const nextConfig = {
   output: 'standalone',
   images: {
-    domains: ['localhost', 's3.tebi.io', 'tebi.io', 'images.unsplash.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'localhost',
+      },
+      {
+        protocol: 'https',
+        hostname: 's3.tebi.io',
+      },
+      {
+        protocol: 'https',
+        hostname: 'tebi.io',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.b-cdn.net',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.bunnycdn.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.bunny.net',
+      },
+    ],
     unoptimized: false,
   },
   eslint: {
