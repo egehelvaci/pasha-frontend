@@ -3119,8 +3119,8 @@ const Siparisler = () => {
                                       </table>
                                     </div>
 
-                                    <!-- Bakiye Bilgileri -->
-                                    ${receiptData.bakiye ? `
+                                    <!-- Bakiye Bilgileri - sadece admin görebilir -->
+                                    ${isAdmin && receiptData.bakiye ? `
                                     <div class="section">
                                       <h3>Bakiye Bilgileri</h3>
                                       <div class="info-grid">
@@ -4171,8 +4171,8 @@ const Siparisler = () => {
                                       </table>
                                     </div>
 
-                                    <!-- Bakiye Bilgileri -->
-                                    ${receiptData.bakiye ? `
+                                    <!-- Bakiye Bilgileri - sadece admin görebilir -->
+                                    ${isAdmin && receiptData.bakiye ? `
                                     <div class="section">
                                       <h3>Bakiye Bilgileri</h3>
                                       <div class="info-grid">

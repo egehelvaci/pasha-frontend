@@ -575,42 +575,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
           
           {/* Desktop: Sağ taraf kontrolleri */}
           <div className="hidden lg:flex items-center space-x-4">
-            {/* Finansal özet kutusu - Sadece mağaza kullanıcıları ve canSeePrice=true olanlar için */}
-            {authUser?.store && authUser.canSeePrice && (
-              <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
-                {isLoadingBalance ? (
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#00365a]"></div>
-                    <span className="text-sm text-gray-600">Güncelleniyor...</span>
-                  </div>
-                ) : (
-                  <div className="text-center">
-                    <span className="block font-semibold text-gray-700">Bakiye</span>
-                    <span className={`font-medium ${financialInfo.bakiye < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                      {financialInfo.bakiye.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}
-                    </span>
-                  </div>
-                )}
-                <button
-                  type="button"
-                  className="p-1.5 bg-white rounded-full hover:bg-gray-100 transition-colors"
-                  onClick={refreshBalance}
-                  title="Bakiye Bilgilerini Yenile"
-                  disabled={isLoadingBalance}
-                >
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    strokeWidth={1.5} 
-                    stroke="currentColor" 
-                    className={`w-4 h-4 text-[#00365a] ${isLoadingBalance ? 'animate-spin' : ''}`}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                  </svg>
-                </button>
-              </div>
-            )}
+            {/* Bakiye bilgisi sadece admin tarafında (mağaza yönetimi) gösterilir */}
             
             {/* Bildirim Dropdown */}
             {authUser?.userId && (
@@ -1008,40 +973,12 @@ const Header = ({ title, user, className }: HeaderProps) => {
                 </nav>
               </div>
               
-                            {/* Finansal özet - Minimal - Navigasyondan sonra - Sadece mağaza kullanıcıları ve canSeePrice=true olanlar için */}
-              {authUser?.store && authUser.canSeePrice && (
+                            {/* Mağaza bilgisi - Bakiye gösterimi kaldırıldı, sadece admin mağaza bakiyelerini görebilir */}
+              {authUser?.store && (
                 <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-3 border-b border-gray-200">
-                  <div className="space-y-2">
-                    {/* Mağaza adı - kompakt */}
-                    <div className="text-center">
-                      <p className="text-xs text-gray-600">Mağaza</p>
-                      <p className="text-sm font-semibold text-gray-900 truncate">{authUser.store.kurum_adi}</p>
-                    </div>
-                    
-                    {isLoadingBalance ? (
-                      <div className="flex items-center justify-center py-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
-                        <span className="ml-2 text-xs text-gray-600">Yükleniyor...</span>
-                      </div>
-                    ) : (
-                      <div className="text-center">
-                        <p className="text-xs text-gray-600">Bakiye</p>
-                        <p className={`text-sm font-bold ${financialInfo.bakiye < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                          {financialInfo.bakiye.toLocaleString('tr-TR', { minimumFractionDigits: 0 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}
-                        </p>
-                      </div>
-                    )}
-                    
-                    {/* Yenile butonu */}
-                    <div className="flex justify-center pt-1">
-                      <button
-                        onClick={refreshBalance}
-                        disabled={isLoadingBalance}
-                        className="px-4 py-1 text-xs bg-white/80 border border-green-300 text-green-700 rounded hover:bg-green-50 transition-colors disabled:opacity-50"
-                      >
-                        {isLoadingBalance ? 'Yükleniyor...' : 'Yenile'}
-                      </button>
-                    </div>
+                  <div className="text-center">
+                    <p className="text-xs text-gray-600">Mağaza</p>
+                    <p className="text-sm font-semibold text-gray-900 truncate">{authUser.store.kurum_adi}</p>
                   </div>
                 </div>
               )}
@@ -1152,15 +1089,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
                           </div>
                           
                           <div className="grid grid-cols-1 gap-3">
-                            <div className="bg-white/50 rounded-lg p-3">
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium text-gray-600">Bakiye</span>
-                                <span className={`font-bold ${financialInfo.bakiye < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                  {financialInfo.bakiye.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}
-                                </span>
-                              </div>
-                            </div>
-                            
+                            {/* Bakiye ve Toplam Kullanılabilir gösterimi kaldırıldı - sadece admin mağaza bakiyelerini görebilir */}
                             <div className="bg-white/50 rounded-lg p-3">
                               <div className="flex justify-between items-center">
                                 <span className="text-sm font-medium text-gray-600">Açık Hesap Limiti</span>
@@ -1168,18 +1097,6 @@ const Header = ({ title, user, className }: HeaderProps) => {
                                   {financialInfo.limitsizAcikHesap 
                                     ? 'Limitsiz' 
                                     : `${financialInfo.acikHesapLimiti.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}`
-                                  }
-                                </span>
-                              </div>
-                            </div>
-                            
-                            <div className="bg-white/50 rounded-lg p-3 border-2 border-purple-200">
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm font-semibold text-gray-700">Toplam Kullanılabilir</span>
-                                <span className="text-purple-600 font-bold text-lg">
-                                  {financialInfo.limitsizAcikHesap 
-                                    ? 'Limitsiz' 
-                                    : `${financialInfo.toplamKullanilabilir.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}`
                                   }
                                 </span>
                               </div>

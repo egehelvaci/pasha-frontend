@@ -284,11 +284,6 @@ export default function MuhasebeHareketlerimPage() {
             hour: '2-digit',
             minute: '2-digit'
           })}</div>
-          <div class="balance-box ${(data.data.ozet?.guncelBakiye ?? 0) < 0 ? 'balance-negative' : 'balance-positive'}">
-            <strong>
-              Toplam Bakiye: ${formatCurrency(Math.abs(data.data.ozet?.guncelBakiye ?? 0))} ${(data.data.ozet?.guncelBakiye ?? 0) < 0 ? '(Borç)' : '(Alacak)'}
-            </strong>
-          </div>
         </div>
 
         <table class="print-table">
@@ -336,11 +331,6 @@ export default function MuhasebeHareketlerimPage() {
         </table>
 
         <div class="print-footer">
-          <div class="balance-box ${(data.data.ozet?.guncelBakiye ?? 0) < 0 ? 'balance-negative' : 'balance-positive'}" style="margin-bottom: 8px;">
-            <strong>
-              Toplam Bakiye: ${formatCurrency(Math.abs(data.data.ozet?.guncelBakiye ?? 0))} ${(data.data.ozet?.guncelBakiye ?? 0) < 0 ? '(Borç)' : '(Alacak)'}
-            </strong>
-          </div>
           <p><strong>Toplam ${hareketler.length} hareket listelendi</strong></p>
           <p>Bu rapor Paşa Bayi Sipariş Sistemi tarafından ${new Date().toLocaleDateString('tr-TR')} tarihinde otomatik olarak oluşturulmuştur.</p>
         </div>
@@ -417,7 +407,7 @@ export default function MuhasebeHareketlerimPage() {
     );
   }
 
-  const { ozet, muhasebeHareketleri } = data.data || {};
+  const { muhasebeHareketleri } = data.data || {};
 
   return (
     <div className="container-responsive py-8">
@@ -426,22 +416,7 @@ export default function MuhasebeHareketlerimPage() {
         <p className="text-gray-600">Finansal özet ve hareket detaylarınız</p>
       </div>
 
-      {/* Özet Kartı */}
-      <div className="flex justify-center mb-8">
-        <div className={`bg-gradient-to-r ${(ozet?.guncelBakiye ?? 0) < 0 ? 'from-red-500 to-red-600' : 'from-green-500 to-green-600'} rounded-xl p-8 text-white max-w-md w-full`}>
-          <div className="flex items-center justify-between mb-4">
-            <FaWallet className="text-4xl opacity-80" />
-            <span className="text-sm bg-white/20 px-3 py-2 rounded-full">Güncel</span>
-          </div>
-          <p className="text-lg opacity-90 mb-2">
-            {(ozet?.guncelBakiye ?? 0) < 0 ? 'Borç Durumu' : 'Alacak Durumu'}
-          </p>
-          <p className="text-3xl font-bold mb-2">{formatCurrency(Math.abs(ozet?.guncelBakiye ?? 0))}</p>
-          <p className="text-sm opacity-90">
-            {(ozet?.guncelBakiye ?? 0) < 0 ? 'Borçlusunuz' : 'Alacaklısınız'}
-          </p>
-        </div>
-      </div>
+      {/* Bakiye özet kartı kaldırıldı - sadece admin mağaza bakiyelerini görebilir */}
 
       {/* Muhasebe Hareketleri */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200">

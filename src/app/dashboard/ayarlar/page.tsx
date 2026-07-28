@@ -187,6 +187,40 @@ export default function Settings() {
     };
   }, []);
 
+  // Seçili kullanıcı değiştiğinde formu doldur
+  // NOT: Bu effect, aşağıdaki authLoading erken return'ünden ÖNCE olmalı (React hooks kuralı)
+  useEffect(() => {
+    if (selectedUser) {
+      setFormData({
+        username: selectedUser.username,
+        name: (selectedUser.fullName || ((selectedUser.name || '') + ' ' + (selectedUser.surname || ''))).split(' ')[0],
+        surname: (selectedUser.fullName || ((selectedUser.name || '') + ' ' + (selectedUser.surname || ''))).split(' ').slice(1).join(' '),
+        email: selectedUser.email,
+        phoneNumber: (selectedUser as any).phoneNumber || '',
+        adres: '', // Artık kullanılmıyor - mağaza bazlı sistem
+        userTypeName:
+          typeof selectedUser.userType === 'object'
+            ? selectedUser.userType.name
+            : selectedUser.userType || '',
+        storeId: selectedUser.Store?.store_id || '',
+        canSeePrice: selectedUser.canSeePrice ?? true
+      });
+    } else {
+      setFormData({
+        username: '',
+        password: '',
+        name: '',
+        surname: '',
+        email: '',
+        phoneNumber: '',
+        adres: '',
+        userTypeName: 'viewer',
+        storeId: '',
+        canSeePrice: true
+      });
+    }
+  }, [selectedUser]);
+
   // Auth yüklenirken loading göster
   if (authLoading) {
     return (
@@ -435,39 +469,6 @@ export default function Settings() {
       setUserLoading(false);
     }
   };
-
-  // Admin için mevcut fonksiyonlar (değişiklik yok)
-  useEffect(() => {
-    if (selectedUser) {
-      setFormData({
-        username: selectedUser.username,
-        name: (selectedUser.fullName || ((selectedUser.name || '') + ' ' + (selectedUser.surname || ''))).split(' ')[0],
-        surname: (selectedUser.fullName || ((selectedUser.name || '') + ' ' + (selectedUser.surname || ''))).split(' ').slice(1).join(' '),
-        email: selectedUser.email,
-        phoneNumber: (selectedUser as any).phoneNumber || '',
-        adres: '', // Artık kullanılmıyor - mağaza bazlı sistem
-        userTypeName:
-          typeof selectedUser.userType === 'object'
-            ? selectedUser.userType.name
-            : selectedUser.userType || '',
-        storeId: selectedUser.Store?.store_id || '',
-        canSeePrice: selectedUser.canSeePrice ?? true
-      });
-    } else {
-      setFormData({
-        username: '',
-        password: '',
-        name: '',
-        surname: '',
-        email: '',
-        phoneNumber: '',
-        adres: '',
-        userTypeName: 'viewer',
-        storeId: '',
-        canSeePrice: true
-      });
-    }
-  }, [selectedUser]);
 
   const fetchUsers = async () => {
     // Zaten yükleme yapılıyorsa çık

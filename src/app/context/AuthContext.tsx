@@ -296,6 +296,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToken(null);
       setIsAdmin(false);
       setIsEditor(false);
+      setIsViewer(false);
       setIsAdminOrEditor(false);
       localStorage.removeItem("user");
       localStorage.removeItem("token");
