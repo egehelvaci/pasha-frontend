@@ -494,22 +494,11 @@ const AdminSiparisOlustur = () => {
   // Loading state
   if (authLoading) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="relative">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[#00365a]"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <svg className="w-6 h-6 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-            </div>
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-900">Yetkilendirme Kontrol Ediliyor</h3>
-              <p className="text-sm text-gray-500 mt-1">Lütfen bekleyiniz...</p>
-            </div>
-          </div>
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f8fa] px-4">
+        <div className="rounded-xl border border-slate-200/80 bg-white px-8 py-10 text-center">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]/70" />
+          <h3 className="mt-4 text-sm font-semibold text-slate-900">Yetkilendirme Kontrol Ediliyor</h3>
+          <p className="mt-1 text-xs text-slate-500">Lütfen bekleyiniz...</p>
         </div>
       </div>
     );
@@ -518,22 +507,19 @@ const AdminSiparisOlustur = () => {
   // Kullanıcı doğrulaması - giriş yapmış herkes sipariş verebilir
   if (!user) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center max-w-md">
-          <div className="w-20 h-20 mx-auto mb-6 bg-blue-100 rounded-full flex items-center justify-center">
-            <svg className="h-10 w-10 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f8fa] px-4">
+        <div className="max-w-md rounded-xl border border-slate-200/80 bg-white px-8 py-10 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
+            <svg className="h-7 w-7 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-3">Giriş Gerekli</h3>
-          <p className="text-gray-600 mb-8 leading-relaxed">Sipariş verebilmek için lütfen giriş yapınız.</p>
+          <h3 className="text-base font-semibold text-slate-900">Giriş Gerekli</h3>
+          <p className="mt-2 text-sm text-slate-500">Sipariş verebilmek için lütfen giriş yapınız.</p>
           <button
             onClick={() => router.push('/auth/login')}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
+            className="mt-6 inline-flex items-center justify-center rounded-lg bg-[#00365a] px-5 py-2.5 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98]"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14" />
-            </svg>
             Giriş Yap
           </button>
         </div>
@@ -543,22 +529,11 @@ const AdminSiparisOlustur = () => {
 
   if (loading) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="relative">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[#00365a]"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <svg className="w-6 h-6 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4H5v8h14v-8h-3z" />
-                </svg>
-              </div>
-            </div>
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-900">Sipariş Bilgileri Yükleniyor</h3>
-              <p className="text-sm text-gray-500 mt-1">Lütfen bekleyiniz...</p>
-            </div>
-          </div>
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f8fa] px-4">
+        <div className="rounded-xl border border-slate-200/80 bg-white px-8 py-10 text-center">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]/70" />
+          <h3 className="mt-4 text-sm font-semibold text-slate-900">Sipariş Bilgileri Yükleniyor</h3>
+          <p className="mt-1 text-xs text-slate-500">Lütfen bekleyiniz...</p>
         </div>
       </div>
     );
@@ -566,22 +541,19 @@ const AdminSiparisOlustur = () => {
 
   if (!orderData) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center max-w-md">
-          <div className="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
-            <svg className="h-10 w-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f8fa] px-4">
+        <div className="max-w-md rounded-xl border border-slate-200/80 bg-white px-8 py-10 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-rose-50">
+            <svg className="h-7 w-7 text-rose-600/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-3">Bilgi Bulunamadı</h3>
-          <p className="text-gray-600 mb-8 leading-relaxed">Sipariş oluşturma bilgileri alınamadı. Lütfen tekrar deneyiniz.</p>
+          <h3 className="text-base font-semibold text-slate-900">Bilgi Bulunamadı</h3>
+          <p className="mt-2 text-sm text-slate-500">Sipariş oluşturma bilgileri alınamadı. Lütfen tekrar deneyiniz.</p>
           <button
             onClick={() => router.push('/dashboard/magazalar')}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
+            className="mt-6 inline-flex items-center justify-center rounded-lg bg-[#00365a] px-5 py-2.5 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98]"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
-            </svg>
             Mağazalara Dön
           </button>
         </div>
@@ -590,589 +562,462 @@ const AdminSiparisOlustur = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-[#f7f8fa]">
+      <div className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 sm:py-8">
         {/* Page Header */}
-        <div className="mb-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <div className="flex items-center mb-2">
+        <div className="mb-5 sm:mb-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
+              <div className="mb-2 flex w-full items-center justify-center gap-3 sm:justify-start">
                 <button
                   onClick={() => router.push(`/dashboard/magazalar/${storeId}/kullanicilar`)}
-                  className="mr-4 text-gray-500 hover:text-gray-700 transition-colors"
+                  className="rounded-lg p-1.5 text-slate-400 transition-all duration-200 ease-out hover:bg-stone-200/70 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20"
+                  aria-label="Geri"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
-                <h1 className="text-3xl font-bold text-[#00365a] flex items-center">
+                <h1 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl sm:tracking-[0.12em]">
                   Admin Sipariş Oluştur
                 </h1>
               </div>
-              <div className="text-gray-600">
-                <p className="text-lg font-semibold">{orderData.store.kurum_adi}</p>
-                <p className="text-sm">Kullanıcı: {orderData.user.name} {orderData.user.surname}</p>
-                <p className="text-sm">Fiyat Listesi: {orderData.priceList.name}</p>
+              <div className="mt-1 h-px w-[min(100%,20rem)] bg-neutral-300 sm:mt-2" />
+            </div>
+          </div>
+        </div>
+
+        {/* Minimal Sepet — başlığın hemen altında */}
+        <div className="mb-5 rounded-xl border border-slate-200/80 bg-white shadow-sm">
+          {/* Mağaza bilgisi — sepet bu mağazaya ait */}
+          <div className="border-b border-slate-100 px-3 py-2.5 sm:px-4">
+            <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Mağaza</p>
+            <div className="mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm">
+              <span className="font-medium text-slate-800">{orderData.store.kurum_adi}</span>
+              <span className="text-slate-300">·</span>
+              <span className="text-slate-500">
+                {orderData.user.name} {orderData.user.surname}
+              </span>
+              <span className="text-slate-300">·</span>
+              <span className="text-slate-500">{orderData.priceList.name}</span>
+            </div>
+          </div>
+
+          <div className="border-b border-slate-100 px-3 py-2.5 sm:px-4">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Sepet
+                <span className="ml-1 font-medium tabular-nums text-slate-400">({adminCart?.totalItems || 0})</span>
+              </span>
+              {adminCart && adminCart.items.length > 0 && (
+                <span className="text-xs font-semibold tabular-nums text-[#00365a]">
+                  {getTotalPrice().toLocaleString('tr-TR')} ₺
+                </span>
+              )}
+            </div>
+
+            {cartLoading ? (
+              <p className="text-xs text-slate-400">Yükleniyor...</p>
+            ) : !adminCart || adminCart.items.length === 0 ? (
+              <p className="text-xs text-slate-400">Boş</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <div className="min-w-[640px]">
+                  <div className="grid grid-cols-[minmax(0,2fr)_7rem_5.5rem_6.5rem_8.5rem_2.25rem] items-center gap-x-3 border-b border-slate-100 pb-1.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                    <span>Ürün</span>
+                    <span className="text-right">Ölçü</span>
+                    <span className="text-right">m²</span>
+                    <span className="text-right">Fiyat</span>
+                    <span className="text-center">Adet</span>
+                    <span className="sr-only">Sil</span>
+                  </div>
+                  <ul className="divide-y divide-slate-100">
+                    {adminCart.items.map((item) => (
+                      <li
+                        key={item.id}
+                        className="grid grid-cols-[minmax(0,2fr)_7rem_5.5rem_6.5rem_8.5rem_2.25rem] items-center gap-x-3 py-2"
+                      >
+                        <span className="min-w-0 truncate text-xs font-medium text-slate-900">
+                          {item.product?.name || 'Ürün'}
+                        </span>
+                        <span className="text-right text-xs tabular-nums text-slate-600">
+                          {item.width}x{item.height}
+                        </span>
+                        <span className="text-right text-xs tabular-nums text-slate-600">
+                          {item.area_m2} m²
+                        </span>
+                        <span className="text-right text-xs font-medium tabular-nums text-slate-800">
+                          {item.total_price.toLocaleString('tr-TR')} ₺
+                        </span>
+                        <div className="flex justify-center">
+                          <div className="flex h-8 overflow-hidden rounded-md border border-slate-300 bg-white shadow-sm">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const next = Math.max(1, (item.quantity || 1) - 1);
+                                handleUpdateAdminCartItem(item.id, { quantity: next });
+                              }}
+                              disabled={item.quantity <= 1}
+                              className="flex h-full w-8 items-center justify-center text-slate-500 transition-colors duration-150 hover:bg-stone-50 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+                              aria-label="Adedi azalt"
+                            >
+                              −
+                            </button>
+                            <input
+                              type="number"
+                              min="1"
+                              value={item.quantity}
+                              onChange={(e) => {
+                                const newQuantity = parseInt(e.target.value) || 1;
+                                handleUpdateAdminCartItem(item.id, { quantity: newQuantity });
+                              }}
+                              className="h-full w-12 border-x border-slate-200 bg-transparent px-1 text-center text-sm font-medium tabular-nums text-slate-900 outline-none focus:bg-stone-50/50"
+                              title="Adedi güncelle"
+                              aria-label="Adet"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleUpdateAdminCartItem(item.id, { quantity: (item.quantity || 1) + 1 });
+                              }}
+                              className="flex h-full w-8 items-center justify-center text-slate-500 transition-colors duration-150 hover:bg-stone-50 hover:text-slate-800"
+                              aria-label="Adedi artır"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFromAdminCart(item.id)}
+                          className="inline-flex h-8 w-8 items-center justify-center justify-self-end rounded-md border border-slate-200/80 bg-stone-50 text-slate-400 transition-colors duration-150 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+                          aria-label="Sepetten çıkar"
+                        >
+                          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {adminCart && adminCart.items.length > 0 && (
+            <div className="grid grid-cols-1 gap-3 px-3 py-3 sm:grid-cols-2 lg:grid-cols-4 sm:px-4">
+              <div className="sm:col-span-1 lg:col-span-1">
+                <label className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-slate-500">
+                  <span className="text-rose-500">*</span> Teslimat Adresi
+                </label>
+                <div className="relative dropdown-container">
+                  <button
+                    type="button"
+                    onClick={() => setAddressDropdownOpen(!addressDropdownOpen)}
+                    disabled={addressesLoading}
+                    className="w-full rounded-lg border border-slate-200/80 bg-slate-50/50 px-2.5 py-2 text-left text-xs text-slate-800 transition-all duration-200 ease-out hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <span className={selectedAddressId ? 'text-slate-800' : 'text-slate-400'}>
+                      {selectedAddressId
+                        ? (() => {
+                            const selectedAddress = storeAddresses.find(addr => addr.id === selectedAddressId);
+                            return selectedAddress
+                              ? `${selectedAddress.title} - ${selectedAddress.address.substring(0, 40)}${selectedAddress.address.length > 40 ? '...' : ''}`
+                              : 'Teslimat adresi seçin';
+                          })()
+                        : 'Teslimat adresi seçin'}
+                    </span>
+                  </button>
+                  {addressDropdownOpen && (
+                    <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-slate-200/80 bg-white py-1 shadow-sm">
+                      {storeAddresses.length > 0 ? (
+                        storeAddresses
+                          .filter(addr => addr.is_active)
+                          .map((address) => (
+                            <button
+                              key={address.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedAddressId(address.id);
+                                setAddressDropdownOpen(false);
+                              }}
+                              className={`w-full px-3 py-2 text-left text-xs transition-colors duration-150 hover:bg-stone-50 ${
+                                selectedAddressId === address.id ? 'bg-stone-100 text-slate-900' : 'text-slate-700'
+                              }`}
+                            >
+                              <div className="font-medium">{address.title}</div>
+                              <div className="mt-0.5 text-slate-500">{address.address}</div>
+                            </button>
+                          ))
+                      ) : (
+                        <div className="px-3 py-4 text-center text-xs text-slate-400">Henüz adres bulunamadı</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {!selectedAddressId && (
+                  <p className="mt-1 text-[10px] text-rose-600/80">Lütfen bir teslimat adresi seçin</p>
+                )}
+              </div>
+
+              <div className="sm:col-span-1 lg:col-span-2">
+                <label className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-slate-500">Sipariş Notları</label>
+                <textarea
+                  value={orderNotes}
+                  onChange={(e) => setOrderNotes(e.target.value)}
+                  placeholder="Sipariş notları..."
+                  rows={2}
+                  className="w-full resize-none rounded-lg border border-slate-200/80 bg-slate-50/50 px-2.5 py-2 text-xs text-slate-800 transition-all duration-200 ease-out placeholder:text-slate-400 hover:border-slate-300 focus:border-slate-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00365a]/15"
+                />
+              </div>
+
+              <div className="flex items-end gap-2 sm:col-span-2 lg:col-span-1">
+                <button
+                  onClick={handleClearAdminCart}
+                  className="rounded-lg border border-slate-200/80 bg-stone-50 px-3 py-2 text-xs font-medium text-slate-600 transition-all duration-200 ease-out hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98]"
+                >
+                  Temizle
+                </button>
+                <button
+                  onClick={handleCreateOrderFromAdminCart}
+                  disabled={orderLoading || !adminCart || adminCart.items.length === 0}
+                  className="flex-1 rounded-lg bg-[#00365a] px-3 py-2 text-xs font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {orderLoading ? 'İşleniyor...' : 'Siparişi Tamamla'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Filtreler */}
+        <div className="mb-5 rounded-xl border border-slate-200/80 bg-white p-4 sm:p-5">
+          <h3 className="mb-3 text-sm font-semibold text-slate-900">Filtreler</h3>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
+            <div className="min-w-0">
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Arama</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Ürün adına göre ara..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full rounded-lg border border-slate-200/80 bg-slate-50/50 py-2.5 pl-9 pr-3 text-sm text-slate-900 transition-all duration-200 ease-out placeholder:text-slate-400 hover:border-slate-300 focus:border-slate-300 focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                />
+                <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="M21 21l-4.35-4.35"/>
+                </svg>
+              </div>
+            </div>
+            <div className="min-w-0">
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Koleksiyon</label>
+              <div className="relative dropdown-container">
+                <button
+                  type="button"
+                  onClick={() => setCollectionDropdownOpen(!collectionDropdownOpen)}
+                  className="w-full rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 text-left text-sm text-slate-900 transition-all duration-200 ease-out hover:border-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                >
+                  {selectedCollection === 'all' ? 'Tüm Koleksiyonlar' : selectedCollection}
+                  <svg
+                    className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-transform duration-200 ${collectionDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {collectionDropdownOpen && (
+                  <div className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200/80 bg-white py-1 shadow-sm scrollbar-hide">
+                    <div
+                      className={`cursor-pointer px-3 py-2.5 text-sm transition-colors duration-150 hover:bg-stone-50 ${
+                        selectedCollection === 'all' ? 'bg-stone-100 text-slate-900' : 'text-slate-700'
+                      }`}
+                      onClick={() => {
+                        setSelectedCollection('all');
+                        setCollectionDropdownOpen(false);
+                      }}
+                    >
+                      Tüm Koleksiyonlar
+                    </div>
+                    {orderData.availableCollections.map(collection => (
+                      <div
+                        key={collection}
+                        className={`cursor-pointer px-3 py-2.5 text-sm transition-colors duration-150 hover:bg-stone-50 ${
+                          selectedCollection === collection ? 'bg-stone-100 text-slate-900' : 'text-slate-700'
+                        }`}
+                        onClick={() => {
+                          setSelectedCollection(collection);
+                          setCollectionDropdownOpen(false);
+                        }}
+                      >
+                        {collection}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="min-w-0">
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Stok Durumu</label>
+              <div className="relative dropdown-container">
+                <button
+                  type="button"
+                  onClick={() => setStockFilterDropdownOpen(!stockFilterDropdownOpen)}
+                  className="w-full rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 text-left text-sm text-slate-900 transition-all duration-200 ease-out hover:border-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                >
+                  {stockFilter === 'all' ? 'Tüm Ürünler' :
+                   stockFilter === 'inStock' ? 'Stokta Olanlar' :
+                   stockFilter === 'outOfStock' ? 'Stokta Olmayanlar' : 'Stok Durumu'}
+                  <svg
+                    className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-transform duration-200 ${stockFilterDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {stockFilterDropdownOpen && (
+                  <div className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200/80 bg-white py-1 shadow-sm scrollbar-hide">
+                    {[
+                      { key: 'all', label: 'Tüm Ürünler' },
+                      { key: 'inStock', label: 'Stokta Olanlar' },
+                      { key: 'outOfStock', label: 'Stokta Olmayanlar' },
+                    ].map(opt => (
+                      <div
+                        key={opt.key}
+                        className={`cursor-pointer px-3 py-2.5 text-sm transition-colors duration-150 hover:bg-stone-50 ${
+                          stockFilter === opt.key ? 'bg-stone-100 text-slate-900' : 'text-slate-700'
+                        }`}
+                        onClick={() => {
+                          setStockFilter(opt.key);
+                          setStockFilterDropdownOpen(false);
+                        }}
+                      >
+                        {opt.label}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Sol Panel - Ürünler */}
-          <div className="lg:col-span-2">
-            {/* Filtreler */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-              <div className="flex items-center mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#00365a]" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.553.894l-2 1A1 1 0 018 16v-4.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
-                </svg>
-                <h3 className="text-lg font-semibold text-[#00365a]">Filtreler</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="min-w-0">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Arama</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Ürün adına göre ara..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all"
-                    />
-                    <svg className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <circle cx="11" cy="11" r="8"/>
-                      <path d="M21 21l-4.35-4.35"/>
-                    </svg>
-                  </div>
-                </div>
-                <div className="min-w-0">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Koleksiyon</label>
-                  <div className="relative dropdown-container">
-                    <button
-                      type="button"
-                      onClick={() => setCollectionDropdownOpen(!collectionDropdownOpen)}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors text-left bg-white"
-                    >
-                      <span className="text-gray-900">
-                        {selectedCollection === 'all' ? 'Tüm Koleksiyonlar' : selectedCollection}
-                      </span>
-                      <svg 
-                        className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${collectionDropdownOpen ? 'rotate-180' : ''}`}
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                    
-                    {collectionDropdownOpen && (
-                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
-                        <div
-                          className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                            selectedCollection === 'all' ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                          }`}
-                          onClick={() => {
-                            setSelectedCollection('all');
-                            setCollectionDropdownOpen(false);
-                          }}
-                        >
-                          Tüm Koleksiyonlar
-                        </div>
-                        {orderData.availableCollections.map(collection => (
-                          <div
-                            key={collection}
-                            className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                              selectedCollection === collection ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                            }`}
-                            onClick={() => {
-                              setSelectedCollection(collection);
-                              setCollectionDropdownOpen(false);
-                            }}
-                          >
-                            {collection}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="min-w-0">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Stok Durumu</label>
-                  <div className="relative dropdown-container">
-                    <button
-                      type="button"
-                      onClick={() => setStockFilterDropdownOpen(!stockFilterDropdownOpen)}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors text-left bg-white"
-                    >
-                      <span className="text-gray-900">
-                        {stockFilter === 'all' ? 'Tüm Ürünler' : 
-                         stockFilter === 'inStock' ? 'Stokta Olanlar' : 
-                         stockFilter === 'outOfStock' ? 'Stokta Olmayanlar' : 'Stok Durumu'}
-                      </span>
-                      <svg 
-                        className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${stockFilterDropdownOpen ? 'rotate-180' : ''}`}
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                    
-                    {stockFilterDropdownOpen && (
-                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
-                        <div
-                          className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                            stockFilter === 'all' ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                          }`}
-                          onClick={() => {
-                            setStockFilter('all');
-                            setStockFilterDropdownOpen(false);
-                          }}
-                        >
-                          Tüm Ürünler
-                        </div>
-                        <div
-                          className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                            stockFilter === 'inStock' ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                          }`}
-                          onClick={() => {
-                            setStockFilter('inStock');
-                            setStockFilterDropdownOpen(false);
-                          }}
-                        >
-                          Stokta Olanlar
-                        </div>
-                        <div
-                          className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                            stockFilter === 'outOfStock' ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                          }`}
-                          onClick={() => {
-                            setStockFilter('outOfStock');
-                            setStockFilterDropdownOpen(false);
-                          }}
-                        >
-                          Stokta Olmayanlar
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Ürün Listesi */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200 bg-[#00365a]">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
-                    <h3 className="text-lg font-semibold text-white">Ürünler</h3>
-                  </div>
-                  <span className="text-blue-100 text-sm">({filteredProducts.length} ürün)</span>
-                </div>
-              </div>
-
-              <div className="p-6">
-                {filteredProducts.length > 0 ? (
-                  <div className="flex flex-wrap justify-center lg:justify-start gap-6">
-                    {filteredProducts.map((product) => {
-                      return (
-                        <div 
-                          key={product.productId} 
-                          className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow relative cursor-pointer" 
-                          style={{ width: '350px', height: '550px' }}
-                        >
-                          
-                          {/* Koleksiyon adı - sol üst */}
-                          <div className="absolute top-3 left-3 z-10">
-                            <span className="bg-[#00365a] text-white text-xs px-2 py-1 rounded-md font-medium">
-                              {('collectionName' in product) ? product.collectionName : product.collection?.name || 'Koleksiyon'}
-                            </span>
-                          </div>
-                          
-                          {/* Ürün görseli - daha büyük alan */}
-                          <div className="relative overflow-hidden bg-gray-50" style={{ height: '400px' }}>
-                            {product.productImage && (
-                              <img 
-                                src={product.productImage} 
-                                alt={product.name}
-                                className="w-full h-full object-contain p-3"
-                              />
-                            )}
-                          </div>
-                          
-                          {/* Ürün bilgileri - kompakt alan */}
-                          <div className="p-4 h-[150px] flex flex-col justify-between">
-                            <div className="flex-1">
-                              <h3 className="text-black font-medium text-sm mb-2 line-clamp-2">
-                                {product.name}
-                              </h3>
-                              <p className="text-sm text-gray-500 mb-2 line-clamp-2">
-                                {product.description}
-                              </p>
-                              {/* Stok bilgisi debug */}
-                              <div className="text-xs text-gray-400 mt-1">
-                                {('sizeOptions' in product) ? (
-                                  <span>
-                                    Stok: {product.sizeOptions?.some(opt => 
-                                      opt.is_optional_height ? (opt.stockAreaM2 || 0) > 0 : (opt.stockQuantity || 0) > 0
-                                    ) ? 'Var' : 'Yok'}
-                                  </span>
-                                ) : (
-                                  <span>Stok: {product.stock || 0} adet</span>
-                                )}
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => openAddProductModal(product)}
-                                className="flex-1 px-3 py-2 rounded-md flex items-center justify-center gap-2 text-sm shadow-sm transition-colors font-semibold bg-[#00365a] hover:bg-[#004170] text-white hover:shadow-md"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
-                                Ekle
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                      <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Ürün Bulunamadı</h3>
-                    <p className="text-gray-600">Arama kriterlerinize uygun ürün bulunamadı.</p>
-                  </div>
-                )}
-              </div>
-            </div>
+        {/* Ürün Listesi — 2 kolon */}
+        <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-slate-200/80 px-4 py-3 sm:px-5">
+            <h3 className="text-sm font-semibold text-slate-900">Ürünler</h3>
+            <span className="text-xs text-slate-400">({filteredProducts.length} ürün)</span>
           </div>
 
-          {/* Sağ Panel - Sepet */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden sticky top-6 max-h-[calc(100vh-2rem)] overflow-y-auto">
-              <div className="px-6 py-4 border-b border-gray-200 bg-orange-600 sticky top-0 z-10">
-                <div className="flex items-center">
-                  <h3 className="text-lg font-semibold text-white">Sepet</h3>
-                  <span className="ml-auto text-orange-100 text-sm">({adminCart?.totalItems || 0} ürün)</span>
-                </div>
-              </div>
-
-              <div className="p-6 flex flex-col h-full">
-                {cartLoading ? (
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-4 border-gray-200 border-t-[#00365a] mx-auto mb-4"></div>
-                    <p className="text-gray-600">Sepet yükleniyor...</p>
-                  </div>
-                ) : adminCart && adminCart.items.length > 0 ? (
-                  <>
-                    <div className="space-y-4 mb-6 flex-1 overflow-y-auto">
-                      {adminCart.items.map((item) => (
-                        <div key={item.id} className="bg-gray-50 rounded-lg p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="flex-1">
-                              <h4 className="font-medium text-gray-900">{item.product?.name || 'Ürün'}</h4>
-                              <p className="text-sm text-gray-500">{item.product?.collection?.name || 'Koleksiyon'}</p>
-                            </div>
-                            <button
-                              onClick={() => handleRemoveFromAdminCart(item.id)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <div className="flex justify-between text-sm">
-                              <span>Adet:</span>
-                              <input
-                                type="number"
-                                min="1"
-                                value={item.quantity}
-                                onChange={(e) => {
-                                  const newQuantity = parseInt(e.target.value) || 1;
-                                  handleUpdateAdminCartItem(item.id, { quantity: newQuantity });
-                                }}
-                                className="w-16 px-2 py-1 border border-gray-300 rounded text-center"
-                              />
-                            </div>
-                            
-                            <div className="flex justify-between text-sm">
-                              <span>Boyut:</span>
-                              <span className="font-medium">{item.width}x{item.height} cm</span>
-                            </div>
-                            
-                            <div className="flex justify-between text-sm">
-                              <span>Alan:</span>
-                              <span className="font-medium">{item.area_m2} m²</span>
-                            </div>
-                            
-                            <div className="flex justify-between text-sm">
-                              <span>Birim Fiyat:</span>
-                              <span className="font-medium">{item.unit_price.toLocaleString('tr-TR')} ₺</span>
-                            </div>
-                            
-                            <div className="flex justify-between text-sm">
-                              <span>Toplam:</span>
-                              <span className="font-bold text-[#00365a]">{item.total_price.toLocaleString('tr-TR')} ₺</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="border-t border-gray-200 pt-4 flex-shrink-0">
-                      {/* Teslimat Adresi Seçimi */}
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          <span className="text-red-500">*</span> Teslimat Adresi
-                        </label>
-                        
-                        {/* Custom Dropdown */}
-                        <div className="relative dropdown-container">
-                          <button
-                            type="button"
-                            onClick={() => setAddressDropdownOpen(!addressDropdownOpen)}
-                            disabled={addressesLoading}
-                            className="w-full px-4 py-3 text-left bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-all duration-200 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
-                                <span className={`${selectedAddressId ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
-                                  {selectedAddressId ? 
-                                    (() => {
-                                      const selectedAddress = storeAddresses.find(addr => addr.id === selectedAddressId);
-                                      return selectedAddress ? `${selectedAddress.title} - ${selectedAddress.address.substring(0, 50)}${selectedAddress.address.length > 50 ? '...' : ''}` : 'Teslimat adresi seçin';
-                                    })() 
-                                    : 'Teslimat adresi seçin'
-                                  }
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {addressesLoading && (
-                                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#00365a] border-t-transparent"></div>
-                                )}
-                                <svg
-                                  className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${addressDropdownOpen ? 'rotate-180' : ''}`}
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                              </div>
-                            </div>
-                          </button>
-
-                          {/* Dropdown Options */}
-                          {addressDropdownOpen && (
-                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
-                              {storeAddresses.length > 0 ? (
-                                <>
-                                  <div className="py-1">
-                                    <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide bg-gray-50">
-                                      Kayıtlı Adresler
-                                    </div>
-                                  </div>
-                                  {storeAddresses
-                                    .filter(addr => addr.is_active)
-                                    .map((address) => (
-                                      <button
-                                        key={address.id}
-                                        type="button"
-                                        onClick={() => {
-                                          setSelectedAddressId(address.id);
-                                          setAddressDropdownOpen(false);
-                                        }}
-                                        className={`w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0 ${
-                                          selectedAddressId === address.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
-                                        }`}
-                                      >
-                                        <div className="flex items-start gap-3">
-                                          <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
-                                            selectedAddressId === address.id ? 'bg-blue-500' : 'bg-gray-300'
-                                          }`}></div>
-                                          <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2">
-                                              <span className="text-sm font-medium text-gray-900">{address.title}</span>
-                                              {address.is_default && (
-                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                  Varsayılan
-                                                </span>
-                                              )}
-                                            </div>
-                                            <p className="text-sm text-gray-600 mt-1">{address.address}</p>
-                                            {(address.city || address.district) && (
-                                              <p className="text-xs text-gray-500 mt-1">
-                                                {address.district && address.district + ', '}
-                                                {address.city}
-                                                {address.postal_code && ' - ' + address.postal_code}
-                                              </p>
-                                            )}
-                                          </div>
-                                          {selectedAddressId === address.id && (
-                                            <div className="flex-shrink-0">
-                                              <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
-                                                <path d="M9 16.17L5.53 12.7a.996.996 0 10-1.41 1.41L9 19l11-11a.996.996 0 10-1.41-1.41L9 16.17z"/>
-                                              </svg>
-                                            </div>
-                                          )}
-                                        </div>
-                                      </button>
-                                    ))
-                                  }
-                                </>
-                              ) : (
-                                <div className="px-4 py-6 text-center">
-                                  <div className="text-gray-400 mb-2">
-                                    <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                  </div>
-                                  <p className="text-sm text-gray-600 font-medium">Henüz adres bulunamadı</p>
-                                  <p className="text-xs text-gray-500 mt-1">Yeni adres ekleyebilirsiniz</p>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                        
-                        {!selectedAddressId && (
-                          <p className="text-red-500 text-sm mt-1">Lütfen bir teslimat adresi seçin</p>
+          <div className="p-3 sm:p-4 lg:p-5">
+            {filteredProducts.length > 0 ? (
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
+                {filteredProducts.map((product) => (
+                  <div
+                    key={product.productId}
+                    className="group overflow-hidden rounded-xl border border-slate-200/80 bg-white transition-all duration-200 ease-out hover:border-slate-300/90"
+                  >
+                    <div className="relative">
+                      <div className="absolute left-3 top-3 z-10">
+                        <span className="rounded-md bg-[#00365a]/90 px-2 py-1 text-[11px] font-medium text-white">
+                          {('collectionName' in product) ? product.collectionName : product.collection?.name || 'Koleksiyon'}
+                        </span>
+                      </div>
+                      <div className="relative overflow-hidden bg-slate-50 aspect-[350/400]">
+                        {product.productImage && (
+                          <img
+                            src={product.productImage}
+                            alt={product.name}
+                            className="h-full w-full object-contain p-3 transition duration-300 ease-out group-hover:scale-[1.02]"
+                          />
                         )}
-                        
-                        {/* Seçilen adres bilgilerini göster */}
-                        {selectedAddressId && (() => {
-                          const selectedAddress = storeAddresses.find(addr => addr.id === selectedAddressId);
-                          return selectedAddress ? (
-                            <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                              <div className="text-sm">
-                                <div className="font-medium text-blue-900 mb-1">{selectedAddress.title}</div>
-                                <div className="text-blue-800">{selectedAddress.address}</div>
-                                <div className="text-blue-700">
-                                  {selectedAddress.district && selectedAddress.district + ', '}
-                                  {selectedAddress.city}
-                                  {selectedAddress.postal_code && ' - ' + selectedAddress.postal_code}
-                                </div>
-                              </div>
-                            </div>
-                          ) : null;
-                        })()}
                       </div>
+                    </div>
 
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Sipariş Notları</label>
-                        <textarea
-                          value={orderNotes}
-                          onChange={(e) => setOrderNotes(e.target.value)}
-                          placeholder="Sipariş notları..."
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent"
-                          rows={3}
-                        />
-                      </div>
-
-                      <div className="flex justify-between items-center mb-4">
-                        <span className="text-lg font-semibold text-gray-900">Toplam:</span>
-                        <span className="text-2xl font-bold text-[#00365a]">{getTotalPrice().toLocaleString('tr-TR')} ₺</span>
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        <button
-                          onClick={handleClearAdminCart}
-                          className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold transition-all"
-                        >
-                          Sepeti Temizle
-                        </button>
-                        <button
-                          onClick={handleCreateOrderFromAdminCart}
-                          disabled={orderLoading || !adminCart || adminCart.items.length === 0}
-                          className="flex-1 bg-[#00365a] hover:bg-[#004170] text-white py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {orderLoading ? (
-                            <div className="flex items-center justify-center">
-                              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                              İşleniyor...
-                            </div>
+                    <div className="flex flex-col gap-3 p-3.5 sm:p-4">
+                      <div className="min-w-0">
+                        <h3 className="line-clamp-2 text-sm font-medium text-slate-900">{product.name}</h3>
+                        <p className="mt-1 line-clamp-2 text-xs text-slate-500">{product.description}</p>
+                        <div className="mt-1.5 text-[11px] text-slate-400">
+                          {('sizeOptions' in product) ? (
+                            <span>
+                              Stok: {product.sizeOptions?.some(opt =>
+                                opt.is_optional_height ? (opt.stockAreaM2 || 0) > 0 : (opt.stockQuantity || 0) > 0
+                              ) ? 'Var' : 'Yok'}
+                            </span>
                           ) : (
-                            'Siparişi Tamamla'
+                            <span>Stok: {product.stock || 0} adet</span>
                           )}
-                        </button>
+                        </div>
                       </div>
+                      <button
+                        onClick={() => openAddProductModal(product)}
+                        className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#00365a] px-3.5 py-2 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98]"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        Ekle
+                      </button>
                     </div>
-                  </>
-                ) : (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                      <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Sepet Boş</h3>
-                    <p className="text-gray-600">Sepete ürün ekleyerek sipariş oluşturmaya başlayın.</p>
                   </div>
-                )}
+                ))}
               </div>
-            </div>
+            ) : (
+              <div className="px-5 py-14 text-center">
+                <p className="text-sm font-medium text-slate-900">Ürün Bulunamadı</p>
+                <p className="mt-1 text-xs text-slate-500">Arama kriterlerinize uygun ürün bulunamadı.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Ürün Ekleme Modal */}
       {showAddProductModal && selectedProduct && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-6xl shadow-lg relative overflow-hidden max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+          <div className="relative flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white">
             {/* Header */}
-            <div className="bg-[#00365a] rounded-t-xl px-6 py-4 relative">
+            <div className="relative shrink-0 border-b border-slate-200/80 bg-stone-50/90 px-5 py-4">
               <button 
-                className="absolute top-3 right-3 text-white hover:text-gray-200 text-3xl font-bold" 
+                className="absolute right-3 top-3 rounded-lg p-1.5 text-slate-400 transition-all duration-200 ease-out hover:bg-stone-200/70 hover:text-slate-700" 
                 onClick={() => setShowAddProductModal(false)}
               >
                 &times;
               </button>
               
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-white">Sepete Ekle</h2>
+                <h2 className="text-base font-semibold tracking-tight text-slate-900 sm:text-lg">Sepete Ekle</h2>
               </div>
             </div>
             
             {/* Content */}
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <div className="overflow-y-auto p-4 sm:p-5 max-h-[calc(90vh-120px)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <div>
                 <div className="flex items-center justify-between mb-6">
-                  <h1 className="text-2xl font-bold text-black">
+                  <h1 className="text-lg font-semibold tracking-tight text-slate-900">
                     {('collection' in selectedProduct && selectedProduct.collection?.name) || 'Koleksiyon'} - {selectedProduct.name}
                   </h1>
                 </div>
                 
                 <div className="flex flex-col md:flex-row gap-8">
                   <div className="w-full md:w-1/2">
-                    <div className="aspect-[4/3] relative overflow-hidden bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="relative aspect-[350/400] overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
                       <img 
                         src={selectedProduct.productImage || "https://tebi.io/pashahome/products/ornek-urun.jpg"} 
                         alt={selectedProduct.name}
-                        className="w-full h-full object-contain p-4"
+                        className="h-full w-full object-contain p-3"
                       />
                     </div>
                     {/* Stok Durumu */}
                     {('sizeOptions' in selectedProduct) && selectedProduct.sizeOptions && selectedProduct.sizeOptions.length > 0 && (
-                      <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <h3 className="text-sm font-medium text-gray-700 mb-3">Stok Durumu</h3>
+                      <div className="mt-4 rounded-lg border border-slate-200/80 bg-stone-50/70 p-3.5">
+                        <h3 className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Stok Durumu</h3>
                         <div className="space-y-2">
                           {selectedProduct.sizeOptions.map((size: any, index: number) => {
                             const isOptionalHeight = size.is_optional_height;
@@ -1180,12 +1025,12 @@ const AdminSiparisOlustur = () => {
                               ? `${(size.stockAreaM2 || 0).toFixed(1)} m²`
                               : `${size.stockQuantity || 0} adet`;
                             const stockColor = (isOptionalHeight ? (size.stockAreaM2 || 0) : (size.stockQuantity || 0)) > 0 
-                              ? 'text-green-600' 
-                              : 'text-red-600';
+                              ? 'text-emerald-700/80' 
+                              : 'text-rose-700/80';
                             
                             return (
                               <div key={size.id || index} className="flex items-center justify-between text-sm">
-                                <span className="text-gray-700">
+                                <span className="text-slate-700">
                                   {size.width}x{isOptionalHeight ? 'İsteğe Bağlı' : size.height} cm
                                 </span>
                                 <span className={`font-medium ${stockColor}`}>
@@ -1201,83 +1046,51 @@ const AdminSiparisOlustur = () => {
                   
                   <div className="w-full md:w-1/2">
                     <div className="grid grid-cols-1 gap-5">
-                      <div className="flex flex-col gap-2 dropdown-container">
-                        <span className="text-sm font-medium text-gray-700">Boyut Seçimi</span>
-                        <div className="relative">
-                          <button
-                            type="button"
-                            onClick={() => setSizeDropdownOpen(!sizeDropdownOpen)}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                          >
-                            <span className={productForm.width ? "text-gray-900" : "text-gray-500"}>
-                              {productForm.width 
-                                ? (() => {
-                                    if (selectedProduct.sizeOptions) {
-                                      const selectedOption = selectedProduct.sizeOptions?.find((opt: any) => 
-                                        opt.width === productForm.width
-                                      );
-                                      if (selectedOption) {
-                                        const displayHeight = selectedOption.is_optional_height ? (productForm.height ? `${productForm.height} cm` : 'İsteğe Bağlı') : (typeof productForm.height === 'string' ? (parseFloat(productForm.height) || 100) : (productForm.height || 100));
-                                        return `${productForm.width}x${displayHeight} cm (Stok: ${selectedOption.is_optional_height ? `${(selectedOption.stockAreaM2 || 0).toFixed(1)} m²` : `${selectedOption.stockQuantity || 0} adet`})`;
-                                      }
-                                    }
-                                    return `${productForm.width}x${(typeof productForm.height === 'string' ? (parseFloat(productForm.height) || 100) : (productForm.height || 100)).toFixed(2)} cm (Stok: ${('stock' in selectedProduct ? selectedProduct.stock : 0) || 0} adet)`;
-                                  })()
-                                : "Boyut Seçin"
-                              }
-                            </span>
-                            <svg 
-                              className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${sizeDropdownOpen ? 'rotate-180' : ''}`}
-                              fill="none" 
-                              stroke="currentColor" 
-                              viewBox="0 0 24 24"
-                            >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </button>
-                          
-                          {sizeDropdownOpen && (
-                            <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                              <div 
-                                className="px-3 py-2 text-gray-500 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
-                                onClick={() => {
-                                  setProductForm(prev => ({ ...prev, width: 0, height: '' }));
-                                  setSizeDropdownOpen(false);
-                                }}
-                              >
-                                Boyut Seçin
-                              </div>
-                              {selectedProduct.sizeOptions?.map((option: any) => (
-                                <div
+                      <div className="flex flex-col gap-2">
+                        <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Boyut</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {selectedProduct.sizeOptions && selectedProduct.sizeOptions.length > 0 ? (
+                            selectedProduct.sizeOptions.map((option: any) => {
+                              const isSelected = option.is_optional_height
+                                ? productForm.width === option.width && (productForm.height === '' || productForm.height === null || productForm.height === undefined)
+                                : productForm.width === option.width && (
+                                    productForm.height === option.height || Number(productForm.height) === option.height
+                                  );
+                              const label = option.is_optional_height
+                                ? `${option.width} × Özel`
+                                : `${option.width} × ${option.height}`;
+
+                              return (
+                                <button
                                   key={option.id}
-                                  className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                    option.width === productForm.width ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                                  }`}
+                                  type="button"
                                   onClick={() => {
-                                    setProductForm(prev => ({ 
-                                      ...prev, 
-                                      width: option.width, 
-                                      height: option.is_optional_height ? '' : option.height 
+                                    setProductForm(prev => ({
+                                      ...prev,
+                                      width: option.width,
+                                      height: option.is_optional_height ? '' : option.height
                                     }));
                                     setSizeDropdownOpen(false);
                                   }}
+                                  className={`rounded-md border px-2.5 py-1.5 text-xs tabular-nums transition-all duration-200 ease-out active:scale-[0.98] ${
+                                    isSelected
+                                      ? 'border-[#00365a] bg-[#00365a] font-medium text-white'
+                                      : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-stone-50'
+                                  }`}
                                 >
-                                  {option.width}x{option.is_optional_height ? 'İsteğe Bağlı' : option.height} cm (Stok: {option.is_optional_height ? `${(option.stockAreaM2 || 0).toFixed(1)} m²` : `${option.stockQuantity || 0} adet`})
-                                </div>
-                              ))}
-                              {(!selectedProduct.sizeOptions || selectedProduct.sizeOptions.length === 0) && (
-                                <div className="px-3 py-2 text-gray-500">
-                                  Bu ürün için boyut seçenekleri mevcut değil
-                                </div>
-                              )}
-                            </div>
+                                  {label}
+                                </button>
+                              );
+                            })
+                          ) : (
+                            <span className="text-xs text-slate-400">Bu ürün için boyut seçenekleri mevcut değil</span>
                           )}
                         </div>
-                        
+
                         {productForm.width && (('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions?.find((s: any) => s.width === productForm.width && s.is_optional_height) : false) && (
-                          <div className="mt-2">
-                            <label className="text-sm text-gray-500 block mb-1">Özel Boy (cm)</label>
-                            <div className="flex items-center gap-2">
+                          <div className="mt-1 flex items-center gap-2">
+                            <label className="shrink-0 text-xs text-slate-500">Boy</label>
+                            <div className="flex h-9 max-w-[120px] items-center overflow-hidden rounded-lg border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-[#00365a]/20">
                               <input
                                 type="number"
                                 min="10"
@@ -1293,86 +1106,61 @@ const AdminSiparisOlustur = () => {
                                     setProductForm(prev => ({ ...prev, height: '' }));
                                   }
                                 }}
-                                className="border rounded-md p-2 text-black w-24"
+                                className="h-full w-full bg-transparent px-2.5 text-sm tabular-nums text-slate-900 outline-none"
+                                aria-label="Boy (cm)"
                               />
-                              <span className="text-sm text-gray-500">cm</span>
+                              <span className="pr-2.5 text-xs text-slate-400">cm</span>
                             </div>
-                            <span className="text-xs text-gray-500 block mt-1">
-                              {productForm.width}x{typeof productForm.height === 'string' ? (parseFloat(productForm.height) || 100) : (productForm.height || 100)} cm olarak hesaplanacak
-                            </span>
                           </div>
                         )}
                       </div>
-                      
-                      <div className="flex flex-col gap-2 dropdown-container">
-                        <span className="text-sm font-medium text-gray-700">Kesim Türü</span>
-                        <div className="relative">
-                          <button
-                            type="button"
-                            onClick={() => setCutTypeDropdownOpen(!cutTypeDropdownOpen)}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                          >
-                            <span className={productForm.cutType ? "text-gray-900" : "text-gray-500"}>
-                              {productForm.cutType 
-                                ? productForm.cutType.charAt(0).toUpperCase() + productForm.cutType.slice(1)
-                                : "Kesim Türü Seçin"
-                              }
-                            </span>
-                            <svg 
-                              className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${cutTypeDropdownOpen ? 'rotate-180' : ''}`}
-                              fill="none" 
-                              stroke="currentColor" 
-                              viewBox="0 0 24 24"
-                            >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </button>
-                          
-                          {cutTypeDropdownOpen && (
-                            <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                              <div 
-                                className="px-3 py-2 text-gray-500 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
-                                onClick={() => {
-                                  setProductForm(prev => ({ ...prev, cutType: '' }));
-                                  setCutTypeDropdownOpen(false);
-                                }}
-                              >
-                                Kesim Türü Seçin
-                              </div>
-                              {('cutTypes' in selectedProduct) ? selectedProduct.cutTypes?.map((ct: any) => (
-                                <div
+
+                      <div className="flex flex-col gap-2">
+                        <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Kesim Türü</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {('cutTypes' in selectedProduct) && selectedProduct.cutTypes?.length ? (
+                            selectedProduct.cutTypes.map((ct: any) => {
+                              const isSelected = ct.name === productForm.cutType;
+                              return (
+                                <button
                                   key={ct.id}
-                                  className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                    ct.name === productForm.cutType ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                                  }`}
+                                  type="button"
                                   onClick={() => {
                                     setProductForm(prev => ({ ...prev, cutType: ct.name }));
                                     setCutTypeDropdownOpen(false);
                                   }}
+                                  className={`rounded-md border px-2.5 py-1.5 text-xs transition-all duration-200 ease-out active:scale-[0.98] ${
+                                    isSelected
+                                      ? 'border-[#00365a] bg-[#00365a] font-medium text-white'
+                                      : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-stone-50'
+                                  }`}
                                 >
                                   {ct.name.charAt(0).toUpperCase() + ct.name.slice(1)}
-                                </div>
-                              )) : (
-                                <div
-                                  className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                    'standart' === productForm.cutType ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                                  }`}
-                                  onClick={() => {
-                                    setProductForm(prev => ({ ...prev, cutType: 'standart' }));
-                                    setCutTypeDropdownOpen(false);
-                                  }}
-                                >
-                                  Standart
-                                </div>
-                              )}
-                            </div>
+                                </button>
+                              );
+                            })
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setProductForm(prev => ({ ...prev, cutType: 'standart' }));
+                                setCutTypeDropdownOpen(false);
+                              }}
+                              className={`rounded-md border px-2.5 py-1.5 text-xs transition-all duration-200 ease-out active:scale-[0.98] ${
+                                productForm.cutType === 'standart'
+                                  ? 'border-[#00365a] bg-[#00365a] font-medium text-white'
+                                  : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-stone-50'
+                              }`}
+                            >
+                              Standart
+                            </button>
                           )}
                         </div>
                       </div>
-                      
+
                       {('canHaveFringe' in selectedProduct) && selectedProduct.canHaveFringe && (
                         <div className="flex flex-col gap-2">
-                          <span className="text-sm font-medium text-gray-700">Saçak</span>
+                          <span className="text-sm font-medium text-slate-700">Saçak</span>
                           <div className="flex items-center space-x-4">
                             <label className="flex items-center space-x-2">
                               <input
@@ -1382,7 +1170,7 @@ const AdminSiparisOlustur = () => {
                                 onChange={() => setProductForm(prev => ({ ...prev, hasFringe: true }))}
                                 className="text-[#00365a] focus:ring-[#00365a]"
                               />
-                              <span className="text-sm text-gray-700">Saçaklı</span>
+                              <span className="text-sm text-slate-700">Saçaklı</span>
                             </label>
                             <label className="flex items-center space-x-2">
                               <input
@@ -1392,28 +1180,28 @@ const AdminSiparisOlustur = () => {
                                 onChange={() => setProductForm(prev => ({ ...prev, hasFringe: false }))}
                                 className="text-[#00365a] focus:ring-[#00365a]"
                               />
-                              <span className="text-sm text-gray-700">Saçaksız</span>
+                              <span className="text-sm text-slate-700">Saçaksız</span>
                             </label>
                           </div>
                         </div>
                       )}
                       
                       <div className="flex flex-col">
-                        <span className="text-sm text-gray-500">Açıklama</span>
-                        <p className="text-black">{selectedProduct.description}</p>
+                        <span className="text-sm text-slate-500">Açıklama</span>
+                        <p className="text-slate-800">{selectedProduct.description}</p>
                       </div>
                       
                       <div className="flex flex-col gap-2">
-                        <span className="text-sm text-gray-500">Metrekare Fiyatı</span>
-                        <span className="font-medium text-black">
+                        <span className="text-sm text-slate-500">Metrekare Fiyatı</span>
+                        <span className="font-medium text-slate-800">
                           {('pricing' in selectedProduct) ? `${selectedProduct.pricing.price} ${selectedProduct.pricing.currency}/m²` : 'Fiyat bilgisi yok'}
                         </span>
                       </div>
                       
-                      <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
+                      <div className="rounded-lg border border-slate-200/80 bg-stone-50/80 p-3.5">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium text-blue-900">Toplam Tutar</span>
-                          <span className="text-lg font-bold text-blue-900">
+                          <span className="text-sm font-medium text-slate-700">Toplam Tutar</span>
+                          <span className="text-base font-semibold tabular-nums text-[#00365a]">
                             {('pricing' in selectedProduct) && productForm.width && (productForm.height || (('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions.find((s: any) => s.width === productForm.width && s.is_optional_height) : false)) ? 
                               (() => {
                                 const height = typeof productForm.height === 'string' ? parseFloat(productForm.height) || 100 : (productForm.height || 100);
@@ -1426,7 +1214,7 @@ const AdminSiparisOlustur = () => {
                           </span>
                         </div>
                         {productForm.width && (productForm.height || (('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions?.find((s: any) => s.width === productForm.width && s.is_optional_height) : false)) && (
-                          <div className="text-xs mt-1 text-blue-700">
+                          <div className="mt-1 text-xs text-slate-500">
                             {productForm.width} cm genişlik × {typeof productForm.height === 'string' ? (parseFloat(productForm.height) || 100) : (productForm.height || 100)} cm Boy × {productForm.quantity} adet için hesaplandı
                           </div>
                         )}
@@ -1435,11 +1223,11 @@ const AdminSiparisOlustur = () => {
                       <div className="mt-5">
                         <div className="flex flex-col gap-4">
                           <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-700">Miktar</label>
+                            <label className="text-sm font-medium text-slate-700">Miktar</label>
                             <div className="flex">
                               <button 
                                 type="button"
-                                className="w-8 h-8 border border-gray-300 flex items-center justify-center rounded-l-md text-gray-500 hover:bg-gray-50"
+                                className="w-8 h-8 border border-gray-300 flex items-center justify-center rounded-l-md text-slate-500 hover:bg-gray-50"
                                 onClick={() => productForm.quantity > 1 && setProductForm(prev => ({ ...prev, quantity: prev.quantity - 1 }))}
                               >
                                 -
@@ -1465,11 +1253,11 @@ const AdminSiparisOlustur = () => {
                                     setProductForm(prev => ({ ...prev, quantity: 1 }));
                                   }
                                 }}
-                                className="w-16 border-y border-gray-300 py-1 px-2 text-center text-black"
+                                className="w-16 border-y border-gray-300 py-1 px-2 text-center text-slate-800"
                               />
                               <button 
                                 type="button"
-                                className="w-8 h-8 border border-gray-300 flex items-center justify-center rounded-r-md text-gray-500 hover:bg-gray-50"
+                                className="w-8 h-8 border border-gray-300 flex items-center justify-center rounded-r-md text-slate-500 hover:bg-gray-50"
                                 onClick={() => setProductForm(prev => ({ ...prev, quantity: prev.quantity + 1 }))}
                               >
                                 +
@@ -1478,19 +1266,19 @@ const AdminSiparisOlustur = () => {
                           </div>
                           
                           <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-700">Özel Notlar (Opsiyonel)</label>
+                            <label className="text-sm font-medium text-slate-700">Özel Notlar (Opsiyonel)</label>
                             <textarea
                               value={productForm.notes}
                               onChange={(e) => setProductForm(prev => ({ ...prev, notes: e.target.value }))}
                               placeholder="Özel kesim notları veya diğer istekleriniz..."
-                              className="w-full border border-gray-300 rounded-md p-2 text-black text-sm"
+                              className="w-full border border-gray-300 rounded-md p-2 text-slate-800 text-sm"
                               rows={3}
                             />
                           </div>
                           
                           <button
                             type="button"
-                            className="mt-2 w-full py-3 bg-[#00365a] text-white rounded-md font-semibold flex items-center justify-center disabled:opacity-70 hover:bg-[#004170] transition-colors"
+                            className="mt-2 flex w-full items-center justify-center rounded-lg bg-[#00365a] py-2.5 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                             onClick={handleAddToAdminCart}
                             disabled={!productForm.width || (!productForm.height && !(('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions?.find((s: any) => s.width === productForm.width && s.is_optional_height) : false)) || !productForm.cutType || productForm.quantity < 1 || (typeof productForm.height === 'string' && productForm.height !== '' && parseFloat(productForm.height) < 10)}
                           >
@@ -1509,18 +1297,18 @@ const AdminSiparisOlustur = () => {
       
       {/* Başarı Pop-up */}
       {showSuccessPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-md rounded-xl border border-slate-200/80 bg-white">
             <div className="p-6 text-center">
               {/* Başarı İkonu */}
-              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
-                <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
+                <svg className="h-8 w-8 text-emerald-700/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
               
               {/* Başlık */}
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">
                 Ürün sepete eklendi
               </h3>
               
@@ -1528,7 +1316,7 @@ const AdminSiparisOlustur = () => {
               <div className="flex justify-center mt-6">
                 <button
                   onClick={() => setShowSuccessPopup(false)}
-                  className="bg-[#00365a] hover:bg-[#004170] text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+                  className="rounded-lg bg-[#00365a] px-5 py-2.5 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98]"
                 >
                   Kapat
                 </button>
@@ -1540,23 +1328,23 @@ const AdminSiparisOlustur = () => {
 
       {/* Adres Uyarı Pop-up */}
       {showAddressWarningPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-md rounded-xl border border-slate-200/80 bg-white">
             <div className="p-6 text-center">
               {/* Uyarı İkonu */}
-              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
-                <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-rose-50">
+                <svg className="h-8 w-8 text-rose-700/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
               </div>
               
               {/* Başlık */}
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">
                 Lütfen teslimat adresi seçiniz
               </h3>
               
               {/* Açıklama */}
-              <p className="text-gray-600 mb-6">
+              <p className="mb-6 text-sm text-slate-500">
                 Sipariş verebilmek için önce bir teslimat adresi seçmeniz gerekmektedir.
               </p>
               
@@ -1564,7 +1352,7 @@ const AdminSiparisOlustur = () => {
               <div className="flex justify-center">
                 <button
                   onClick={() => setShowAddressWarningPopup(false)}
-                  className="bg-[#00365a] hover:bg-[#004170] text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+                  className="rounded-lg bg-[#00365a] px-5 py-2.5 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98]"
                 >
                   Kapat
                 </button>
@@ -1577,4 +1365,4 @@ const AdminSiparisOlustur = () => {
   );
 };
 
-export default AdminSiparisOlustur; 
+export default AdminSiparisOlustur;

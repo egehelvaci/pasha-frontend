@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Supplier, CreateSupplierRequest, UpdateSupplierRequest } from '../services/api';
+import { useAuth } from '@/app/context/AuthContext';
 
 interface SupplierModalProps {
   isOpen: boolean;
@@ -18,6 +19,8 @@ export default function SupplierModal({
   supplier, 
   isLoading = false 
 }: SupplierModalProps) {
+  const { isAdmin } = useAuth();
+  const canSeeBalance = isAdmin;
   const [formData, setFormData] = useState({
     name: '',
     company_name: '',
@@ -115,8 +118,8 @@ export default function SupplierModal({
       currency: 'USD' // Sabit USD
     };
 
-    // Bakiye varsa ekle
-    if (formData.balance && formData.balance !== '') {
+    // Bakiye yalnızca admin tarafından gönderilir
+    if (canSeeBalance && formData.balance && formData.balance !== '') {
       submitData.balance = parseFloat(formData.balance);
     }
 
@@ -238,6 +241,7 @@ export default function SupplierModal({
               </div>
             </div>
 
+            {canSeeBalance && (
             <div>
               <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                 Bakiye (USD)
@@ -254,6 +258,7 @@ export default function SupplierModal({
               />
               {errors.balance && <p className="mt-1.5 text-xs text-red-600">{errors.balance}</p>}
             </div>
+            )}
 
             <div>
               <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">

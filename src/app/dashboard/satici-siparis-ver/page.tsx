@@ -24,7 +24,8 @@ import {
 const SaticiSiparisVer = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isAdmin, user, isLoading: authLoading } = useAuth();
+  const { isAdmin, isAdminOrEditor, user, isLoading: authLoading } = useAuth();
+  const canSeePurchasePrices = isAdmin;
   
   const [products, setProducts] = useState<Product[]>([]);
   const [priceList, setPriceList] = useState<PurchasePriceList | null>(null);
@@ -57,24 +58,24 @@ const SaticiSiparisVer = () => {
 
   const supplierId = searchParams.get('supplierId');
 
-  // Admin kontrolü - authLoading tamamlandıktan sonra kontrol et
+  // Admin / Editör kontrolü - authLoading tamamlandıktan sonra kontrol et
   useEffect(() => {
-    if (!authLoading && !isAdmin) {
+    if (!authLoading && !isAdminOrEditor) {
       router.push('/dashboard');
       return;
     }
-  }, [isAdmin, authLoading, router]);
+  }, [isAdminOrEditor, authLoading, router]);
 
   // Veri yükleme
   useEffect(() => {
-    if (isAdmin && supplierId) {
+    if (isAdminOrEditor && supplierId) {
       loadData();
     }
-  }, [isAdmin, supplierId]);
+  }, [isAdminOrEditor, supplierId]);
 
   // Arama değişikliklerinde ürünleri yeniden yükle
   useEffect(() => {
-    if (isAdmin && supplierId) {
+    if (isAdminOrEditor && supplierId) {
       loadProducts(1, false); // Arama yapıldığında sayfa 1'den başla
     }
   }, [searchTerm]);
@@ -422,486 +423,429 @@ const SaticiSiparisVer = () => {
   // Auth yüklenirken loading göster
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f8fa]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00365a] mx-auto mb-4"></div>
-          <p className="text-gray-600">Yükleniyor...</p>
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
+          <p className="text-sm text-slate-600">Yükleniyor...</p>
         </div>
       </div>
     );
   }
 
-  // Admin kontrolü
-  if (!isAdmin) {
+  // Admin / Editör kontrolü
+  if (!isAdminOrEditor) {
     return null;
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f8fa]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00365a] mx-auto mb-4"></div>
-          <p className="text-gray-600">Yükleniyor...</p>
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
+          <p className="text-sm text-slate-600">Yükleniyor...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Satın Alım İşlemleri</h1>
+    <div className="min-h-screen bg-[#f7f8fa]">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 sm:py-8">
+        {/* Page Header */}
+        <div className="mb-5 sm:mb-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
+              <h1 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl sm:tracking-[0.12em]">
+                Satın Alım İşlemleri
+              </h1>
+              <div className="mt-3 h-px w-[min(100%,20rem)] bg-neutral-300 sm:mt-4" />
               {selectedSupplier && (
-                <p className="mt-2 text-gray-600">
-                  <strong>{selectedSupplier.name}</strong> - {selectedSupplier.company_name}
+                <p className="mt-3 text-sm text-slate-500">
+                  <span className="font-medium text-slate-700">{selectedSupplier.name}</span>
+                  <span className="mx-1.5 text-slate-300">·</span>
+                  <span>{selectedSupplier.company_name}</span>
                 </p>
               )}
             </div>
-            <div className="flex space-x-3">
-              <Link
-                href="/dashboard/satin-alim-islemleri"
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+            <Link
+              href="/dashboard/satin-alim-islemleri"
+              className="inline-flex items-center justify-center self-center rounded-lg border border-slate-200/80 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98] sm:self-auto"
+            >
+              Geri Dön
+            </Link>
+          </div>
+        </div>
+
+        {/* Minimal Sepet — başlığın hemen altında */}
+        <div className="mb-5 rounded-xl border border-slate-200/80 bg-white px-3 py-2.5 shadow-sm sm:px-4">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto">
+              <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Sepet
+                <span className="ml-1 font-medium tabular-nums text-slate-400">({supplierCart.length})</span>
+              </span>
+
+              {supplierCart.length === 0 ? (
+                <span className="text-xs text-slate-400">Boş</span>
+              ) : (
+                <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto pb-0.5">
+                  {supplierCart.map((item) => (
+                    <div
+                      key={item.id}
+                      className="inline-flex max-w-[220px] shrink-0 items-center gap-1.5 rounded-md border border-slate-200/80 bg-slate-50 px-2 py-1"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-medium text-slate-800">{item.product.name}</p>
+                        <p className="truncate text-[10px] text-slate-500">
+                          {item.width}x{item.height} · {item.quantity} ad
+                          {canSeePurchasePrices && (
+                            <> · {parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 0 })} $</>
+                          )}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFromCart(item.id)}
+                        disabled={cartLoading}
+                        className="shrink-0 rounded p-0.5 text-slate-400 transition-colors duration-150 hover:bg-white hover:text-red-600 disabled:opacity-50"
+                        aria-label="Sepetten çıkar"
+                      >
+                        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="ml-auto flex shrink-0 items-center gap-2">
+              {canSeePurchasePrices && supplierCart.length > 0 && (
+                <span className="text-xs font-semibold tabular-nums text-[#00365a]">
+                  {cartTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} $
+                </span>
+              )}
+              {supplierCart.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearCart}
+                  className="text-[11px] font-medium text-slate-400 transition-colors duration-150 hover:text-red-600"
+                >
+                  Temizle
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={handleCreateOrder}
+                disabled={orderLoading || cartLoading || supplierCart.length === 0}
+                className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-3 py-1.5 text-xs font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
               >
-                Geri Dön
-              </Link>
+                {orderLoading ? '...' : 'Sipariş Oluştur'}
+              </button>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Ürün Listesi */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              {/* Arama */}
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex flex-wrap gap-4">
-                  <div className="flex-1 min-w-64">
-                    <input
-                      type="text"
-                      placeholder="Ürün ara..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Ürün Listesi */}
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {filteredProducts.map((product) => (
-                    <div key={product.productId} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <div className="flex items-start space-x-4">
-                        <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
-                          {product.productImage ? (
-                            <img
-                              src={product.productImage}
-                              alt={product.name}
-                              className="w-full h-full object-cover rounded-lg"
-                            />
-                          ) : (
-                            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-sm font-medium text-gray-900">{product.name}</h3>
-                          <p className="text-xs text-gray-500">{product.collection_name}</p>
-                          <p className="text-sm font-semibold text-green-600 mt-1">
-                            {getProductPrice(product).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD/m²
-                          </p>
-                          <button
-                            onClick={() => {
-                              setSelectedProduct(product);
-                              setShowAddProductModal(true);
-                            }}
-                            className="mt-2 px-3 py-1 bg-[#00365a] text-white text-xs rounded hover:bg-[#004170] transition-colors"
-                          >
-                            Sepete Ekle
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Sayfalama Kontrolleri */}
-                {hasMore && (
-                  <div className="mt-6 text-center">
-                    <button
-                      onClick={loadMoreProducts}
-                      disabled={loadingMore}
-                      className="px-6 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {loadingMore ? (
-                        <div className="flex items-center">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Yükleniyor...
-                        </div>
-                      ) : (
-                        'Daha Fazla Yükle'
-                      )}
-                    </button>
-                    <p className="text-sm text-gray-500 mt-2">
-                      {filteredProducts.length} ürün gösteriliyor
-                      {totalPages > 1 && ` (Sayfa ${currentPage}/${totalPages})`}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
+        {/* Ürün Listesi — 2 sütun */}
+        <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+          <div className="border-b border-slate-200/80 px-4 py-3 sm:px-5">
+            <label htmlFor="product-search" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+              Ürün Ara
+            </label>
+            <input
+              id="product-search"
+              type="text"
+              placeholder="Ürün ara..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full rounded-lg border border-slate-200/80 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 transition-all duration-200 ease-out hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20"
+            />
           </div>
 
-          {/* Sepet */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 sticky top-4">
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-gray-900">Sepet</h2>
-                  {supplierCart.length > 0 && (
-                    <button
-                      onClick={handleClearCart}
-                      className="text-sm text-red-600 hover:text-red-800"
-                    >
-                      Temizle
-                    </button>
-                  )}
-                </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2">
+            {filteredProducts.length === 0 ? (
+              <div className="col-span-full px-5 py-14 text-center sm:col-span-2">
+                <p className="text-sm text-slate-500">Ürün bulunamadı</p>
               </div>
+            ) : (
+              filteredProducts.map((product, index) => (
+                <div
+                  key={product.productId}
+                  className={`flex items-center justify-between gap-2 border-b border-slate-100 px-3 py-2 transition-colors duration-200 ease-out hover:bg-slate-50/80 sm:px-4 sm:py-2.5 ${
+                    index % 2 === 0 ? 'sm:border-r' : ''
+                  }`}
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-baseline gap-x-1.5">
+                      <h3 className="truncate text-sm font-medium text-slate-900">{product.name}</h3>
+                      <span className="truncate text-[11px] text-slate-500">{product.collection_name}</span>
+                    </div>
+                    {canSeePurchasePrices && (
+                      <p className="mt-0.5 text-[11px] font-semibold tabular-nums text-[#00365a]">
+                        {getProductPrice(product).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD/m²
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedProduct(product);
+                      setShowAddProductModal(true);
+                    }}
+                    className="inline-flex shrink-0 items-center justify-center rounded-lg bg-[#00365a] px-2.5 py-1.5 text-[11px] font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98]"
+                  >
+                    Sepete Ekle
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
 
-              <div className="p-6">
-                {supplierCart.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">Sepet boş</p>
+          {hasMore && (
+            <div className="border-t border-slate-100 px-5 py-4 text-center">
+              <button
+                type="button"
+                onClick={loadMoreProducts}
+                disabled={loadingMore}
+                className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-5 py-2 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {loadingMore ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    Yükleniyor...
+                  </span>
                 ) : (
-                  <div className="space-y-4">
-                    {supplierCart.map((item) => (
-                      <div key={item.id} className="border border-gray-200 rounded-lg p-3">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h4 className="text-sm font-medium text-gray-900">{item.product.name}</h4>
-                            <p className="text-xs text-gray-500">{item.product.collection.name}</p>
-                            <p className="text-xs text-gray-500">
-                              {item.width}x{item.height}cm - {item.quantity} adet
-                            </p>
-                            {item.cut_type && (
-                              <p className="text-xs text-gray-500">Kesim: {item.cut_type}</p>
-                            )}
-                            {item.has_fringe && (
-                              <p className="text-xs text-gray-500">Saçaklı</p>
-                            )}
-                            <p className="text-sm font-semibold text-green-600 mt-1">
-                              {parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => handleRemoveFromCart(item.id)}
-                            disabled={cartLoading}
-                            className="text-red-600 hover:text-red-800 ml-2 disabled:opacity-50"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  'Daha Fazla Yükle'
                 )}
-
-                {supplierCart.length > 0 && (
-                  <div className="mt-6 pt-4 border-t border-gray-200">
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="text-lg font-semibold text-gray-900">Toplam:</span>
-                      <span className="text-lg font-bold text-green-600">
-                        {cartTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-
-                    <div className="space-y-3">
-                      <button
-                        onClick={handleCreateOrder}
-                        disabled={orderLoading || cartLoading}
-                        className="w-full px-4 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {orderLoading ? 'Sipariş Oluşturuluyor...' : 'Sipariş Oluştur'}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+              </button>
+              <p className="mt-2 text-xs text-slate-500">
+                {filteredProducts.length} ürün gösteriliyor
+                {totalPages > 1 && ` (Sayfa ${currentPage}/${totalPages})`}
+              </p>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Ürün Ekleme Modal */}
         {showAddProductModal && selectedProduct && (
-          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl w-full max-w-6xl shadow-lg relative overflow-hidden max-h-[90vh]">
-              {/* Header */}
-              <div className="rounded-t-xl px-6 py-4 relative bg-[#00365a]">
-                <button 
-                  className="absolute top-3 right-3 text-white hover:text-gray-200 text-3xl font-bold" 
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-[2px]">
+            <div className="relative flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+              {/* Compact header */}
+              <div className="flex items-start gap-3 border-b border-slate-100 px-4 py-3 pr-12">
+                <div className="relative h-14 w-12 shrink-0 overflow-hidden rounded-lg border border-slate-200/80 bg-slate-50 aspect-[350/400]">
+                  {selectedProduct.productImage ? (
+                    <img
+                      src={selectedProduct.productImage}
+                      alt={selectedProduct.name}
+                      className="h-full w-full object-contain p-1"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <svg className="h-5 w-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1 pt-0.5">
+                  <h2 className="truncate text-sm font-semibold text-slate-900">
+                    {selectedProduct.name}
+                  </h2>
+                  <p className="truncate text-xs text-slate-500">{selectedProduct.collection_name}</p>
+                  {canSeePurchasePrices && (
+                    <p className="mt-1 text-xs font-semibold tabular-nums text-[#00365a]">
+                      {getProductPrice(selectedProduct).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD/m²
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-all duration-200 ease-out hover:bg-slate-50 hover:text-slate-700 active:scale-[0.96]"
                   onClick={() => setShowAddProductModal(false)}
+                  aria-label="Kapat"
                 >
-                  &times;
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
-                
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-white">Sepete Ekle</h2>
+              </div>
+
+              <div className="space-y-4 overflow-y-auto px-4 py-4 max-h-[calc(90vh-140px)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                {/* Boyut */}
+                <div className="dropdown-container">
+                  <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-slate-500">Boyut</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selectedProduct.sizeOptions?.map((size: any) => {
+                      const isSelected = selectedSize?.id === size.id;
+                      const label = size.is_optional_height
+                        ? `${size.width} × Özel`
+                        : `${size.width} × ${size.height}`;
+
+                      return (
+                        <button
+                          key={size.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedSize(size);
+                            setSizeDropdownOpen(false);
+                          }}
+                          className={`rounded-md border px-2.5 py-1.5 text-xs tabular-nums transition-all duration-200 ease-out active:scale-[0.98] ${
+                            isSelected
+                              ? 'border-[#00365a] bg-[#00365a] font-medium text-white'
+                              : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {selectedSize && selectedSize.is_optional_height && (
+                    <div className="mt-2.5 flex items-center gap-2">
+                      <label className="shrink-0 text-xs text-slate-500">Boy</label>
+                      <div className="flex h-9 max-w-[120px] items-center overflow-hidden rounded-lg border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-[#00365a]/20">
+                        <input
+                          type="number"
+                          min="10"
+                          max="10000"
+                          value={customHeight}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === '') {
+                              setCustomHeight('');
+                            } else {
+                              const numValue = Number(value);
+                              if (numValue >= 10) {
+                                setCustomHeight(numValue);
+                              } else if (value.length <= 1) {
+                                setCustomHeight(value);
+                              }
+                            }
+                          }}
+                          onBlur={(e) => {
+                            const value = e.target.value;
+                            if (value === '' || Number(value) < 10) {
+                              setCustomHeight(100);
+                            }
+                          }}
+                          className="h-full w-full bg-transparent px-2.5 text-sm tabular-nums text-slate-900 outline-none"
+                          aria-label="Boy (cm)"
+                        />
+                        <span className="pr-2.5 text-xs text-slate-400">cm</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Miktar + Notlar yan yana hissi */}
+                <div className="flex items-end gap-4">
+                  <div className="shrink-0">
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Miktar</label>
+                    <div className="flex h-9 w-fit overflow-hidden rounded-lg border border-slate-200/80 bg-white">
+                      <button
+                        type="button"
+                        className="flex h-full w-8 items-center justify-center text-slate-500 transition-all duration-200 ease-out hover:bg-slate-50 hover:text-slate-800 active:scale-[0.96]"
+                        onClick={() => productForm.quantity > 1 && setProductForm(prev => ({ ...prev, quantity: prev.quantity - 1 }))}
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        min="1"
+                        value={productForm.quantity}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === '') {
+                            setProductForm(prev => ({ ...prev, quantity: 0 }));
+                          } else {
+                            const numValue = parseInt(value);
+                            if (numValue >= 1) {
+                              setProductForm(prev => ({ ...prev, quantity: numValue }));
+                            }
+                          }
+                        }}
+                        onBlur={(e) => {
+                          const value = e.target.value;
+                          if (value === '' || parseInt(value) < 1) {
+                            setProductForm(prev => ({ ...prev, quantity: 1 }));
+                          }
+                        }}
+                        onWheel={(e) => e.currentTarget.blur()}
+                        className="w-12 border-x border-slate-200/80 bg-transparent py-1 text-center text-sm tabular-nums text-slate-900 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#00365a]/20"
+                      />
+                      <button
+                        type="button"
+                        className="flex h-full w-8 items-center justify-center text-slate-500 transition-all duration-200 ease-out hover:bg-slate-50 hover:text-slate-800 active:scale-[0.96]"
+                        onClick={() => setProductForm(prev => ({ ...prev, quantity: prev.quantity + 1 }))}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  {canSeePurchasePrices && selectedSize && (
+                    <div className="min-w-0 flex-1 rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2">
+                      <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Toplam</p>
+                      <p className="text-sm font-semibold tabular-nums text-[#00365a]">
+                        {(() => {
+                          if (!selectedSize || !productForm.quantity) return '0.00';
+                          // Metrekare hesapla
+                          let squareMeters;
+                          if (selectedSize.is_optional_height) {
+                            // İsteğe bağlı boy için kullanıcının girdiği değeri kullan
+                            const heightValue = parseFloat(customHeight.toString()) || 100;
+                            squareMeters = (selectedSize.width * heightValue) / 10000; // cm² -> m²
+                          } else {
+                            // Sabit boy için metrekare hesapla
+                            squareMeters = (selectedSize.width * selectedSize.height) / 10000; // cm² -> m²
+                          }
+
+                          // Birim fiyat ve toplam fiyat hesapla (quantity ile çarp)
+                          const unitPrice = getProductPrice(selectedProduct) || 0;
+                          const calculatedPrice = squareMeters * unitPrice * productForm.quantity;
+
+                          return calculatedPrice.toFixed(2);
+                        })()} USD
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Not (opsiyonel)
+                  </label>
+                  <textarea
+                    value={productForm.notes}
+                    onChange={(e) => setProductForm(prev => ({ ...prev, notes: e.target.value }))}
+                    placeholder="Özel kesim veya not..."
+                    className="h-16 w-full resize-none rounded-lg border border-slate-200/80 px-3 py-2 text-sm text-slate-900 transition-all duration-200 ease-out placeholder:text-slate-400 hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20"
+                    rows={2}
+                  />
                 </div>
               </div>
-              
-              {/* Content */}
-              <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                <div>
-                  <div className="flex items-center justify-between mb-6">
-                    <h1 className="text-2xl font-bold text-black">{selectedProduct.collection_name} - {selectedProduct.name}</h1>
-                  </div>
-                  
-                  <div className="flex flex-col md:flex-row gap-8">
-                    <div className="w-full md:w-1/2">
-                      <div className="aspect-[4/3] relative overflow-hidden bg-gray-50 rounded-lg border border-gray-200">
-                        {selectedProduct.productImage ? (
-                          <img
-                            src={selectedProduct.productImage}
-                            alt={selectedProduct.name}
-                            className="w-full h-full object-contain p-4"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="w-full md:w-1/2">
-                      <div className="grid grid-cols-1 gap-5">
-                        {/* Boyut Seçimi */}
-                        <div className="flex flex-col gap-2 dropdown-container bg-blue-50 rounded-lg p-6 border border-blue-200">
-                          <span className="text-sm font-medium text-gray-700">Boyut Seçimi</span>
-                          <div className="relative">
-                            <button
-                              type="button"
-                              onClick={() => setSizeDropdownOpen(!sizeDropdownOpen)}
-                              className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                            >
-                              <span className={selectedSize ? "text-gray-900" : "text-gray-500"}>
-                                {selectedSize 
-                                  ? `${selectedSize.width}x${selectedSize.is_optional_height ? 'İsteğe Bağlı' : selectedSize.height} cm`
-                                  : "Boyut Seçin"
-                                }
-                              </span>
-                              <svg 
-                                className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${sizeDropdownOpen ? 'rotate-180' : ''}`}
-                                fill="none" 
-                                stroke="currentColor" 
-                                viewBox="0 0 24 24"
-                              >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                              </svg>
-                            </button>
-                            
-                            {sizeDropdownOpen && (
-                              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                <div 
-                                  className="px-3 py-2 text-gray-500 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
-                                  onClick={() => {
-                                    setSelectedSize(null);
-                                    setSizeDropdownOpen(false);
-                                  }}
-                                >
-                                  Boyut Seçin
-                                </div>
-                                {selectedProduct.sizeOptions?.map((size: any) => (
-                                  <div
-                                    key={size.id}
-                                    className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                      selectedSize?.id === size.id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                                    }`}
-                                    onClick={() => {
-                                      setSelectedSize(size);
-                                      setSizeDropdownOpen(false);
-                                    }}
-                                  >
-                                    {size.width}x{size.is_optional_height ? 'İsteğe Bağlı' : size.height} cm
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                          
-                          {selectedSize && selectedSize.is_optional_height && (
-                            <div className="mt-2">
-                              <label className="text-sm text-gray-500 block mb-1">Özel Boy (cm)</label>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="number"
-                                  min="10"
-                                  max="10000"
-                                  value={customHeight}
-                                  onChange={(e) => {
-                                    const value = e.target.value;
-                                    if (value === '') {
-                                      setCustomHeight('');
-                                    } else {
-                                      const numValue = Number(value);
-                                      if (numValue >= 10) {
-                                        setCustomHeight(numValue);
-                                      } else if (value.length <= 1) {
-                                        setCustomHeight(value);
-                                      }
-                                    }
-                                  }}
-                                  onBlur={(e) => {
-                                    const value = e.target.value;
-                                    if (value === '' || Number(value) < 10) {
-                                      setCustomHeight(100);
-                                    }
-                                  }}
-                                  className="border rounded-md p-2 text-black w-24"
-                                />
-                                <span className="text-sm text-gray-500">cm</span>
-                              </div>
-                              <span className="text-xs text-gray-500 block mt-1">
-                                {selectedSize.width}x{customHeight} cm olarak hesaplanacak
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="flex flex-col gap-2">
-                          <span className="text-sm text-gray-500">Metrekare Fiyatı</span>
-                          <span className="font-medium text-black">
-                            {getProductPrice(selectedProduct).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD/m²
-                          </span>
-                        </div>
-                        
-                        <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium text-blue-900">Toplam Tutar</span>
-                            <span className="text-lg font-bold text-blue-900">
-                              {(() => {
-                                if (!selectedSize || !productForm.quantity) return '0.00';
-                                // Metrekare hesapla
-                                let squareMeters;
-                                if (selectedSize.is_optional_height) {
-                                  // İsteğe bağlı boy için kullanıcının girdiği değeri kullan
-                                  const heightValue = parseFloat(customHeight.toString()) || 100;
-                                  squareMeters = (selectedSize.width * heightValue) / 10000; // cm² -> m²
-                                } else {
-                                  // Sabit boy için metrekare hesapla
-                                  squareMeters = (selectedSize.width * selectedSize.height) / 10000; // cm² -> m²
-                                }
-                                
-                                // Birim fiyat ve toplam fiyat hesapla (quantity ile çarp)
-                                const unitPrice = getProductPrice(selectedProduct) || 0;
-                                const calculatedPrice = squareMeters * unitPrice * productForm.quantity;
-                                
-                                return calculatedPrice.toFixed(2);
-                              })()} USD
-                            </span>
-                          </div>
-                          {selectedSize && (
-                            <div className="text-xs mt-1 text-blue-700">
-                              {selectedSize.width} cm genişlik × 
-                              {selectedSize.is_optional_height 
-                                ? ` ${customHeight} cm boy (özel)` 
-                                : ` ${selectedSize.height} cm boy`} 
-                              × {productForm.quantity} adet için hesaplandı
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="mt-5">
-                          <div className="flex flex-col gap-4">
-                            <div className="flex flex-col gap-2">
-                              <label className="text-sm font-medium text-gray-700">Miktar</label>
-                              <div className="flex">
-                                <button 
-                                  type="button"
-                                  className="w-8 h-8 border border-gray-300 flex items-center justify-center rounded-l-md text-gray-500 hover:bg-gray-50"
-                                  onClick={() => productForm.quantity > 1 && setProductForm(prev => ({ ...prev, quantity: prev.quantity - 1 }))}
-                                >
-                                  -
-                                </button>
-                                <input 
-                                  type="number" 
-                                  min="1" 
-                                  value={productForm.quantity}
-                                  onChange={(e) => {
-                                    const value = e.target.value;
-                                    if (value === '') {
-                                      setProductForm(prev => ({ ...prev, quantity: 0 }));
-                                    } else {
-                                      const numValue = parseInt(value);
-                                      if (numValue >= 1) {
-                                        setProductForm(prev => ({ ...prev, quantity: numValue }));
-                                      }
-                                    }
-                                  }}
-                                  onBlur={(e) => {
-                                    const value = e.target.value;
-                                    if (value === '' || parseInt(value) < 1) {
-                                      setProductForm(prev => ({ ...prev, quantity: 1 }));
-                                    }
-                                  }}
-                                  onWheel={(e) => e.currentTarget.blur()}
-                                  className="w-16 border-y border-gray-300 py-1 px-2 text-center text-black"
-                                />
-                                <button 
-                                  type="button"
-                                  className="w-8 h-8 border border-gray-300 flex items-center justify-center rounded-r-md text-gray-500 hover:bg-gray-50"
-                                  onClick={() => setProductForm(prev => ({ ...prev, quantity: prev.quantity + 1 }))}
-                                >
-                                  +
-                                </button>
-                              </div>
-                            </div>
-                            
-                            <div className="flex flex-col gap-2">
-                              <label className="text-sm font-medium text-gray-700">Özel Notlar (Opsiyonel)</label>
-                              <textarea
-                                value={productForm.notes}
-                                onChange={(e) => setProductForm(prev => ({ ...prev, notes: e.target.value }))}
-                                placeholder="Özel kesim notları veya diğer istekleriniz..."
-                                className="w-full border border-gray-300 rounded-md p-2 text-black text-sm"
-                                rows={3}
-                              />
-                            </div>
-                            
-                            <button
-                              type="button"
-                              className="mt-2 w-full py-3 text-white rounded-md font-semibold flex items-center justify-center bg-blue-900 hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                              onClick={handleAddToCart}
-                              disabled={cartLoading}
-                            >
-                              {cartLoading ? (
-                                <>
-                                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                  </svg>
-                                  Ekleniyor...
-                                </>
-                              ) : (
-                                'Sepete Ekle'
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+
+              <div className="border-t border-slate-100 px-4 py-3">
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#00365a] py-2.5 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                  onClick={handleAddToCart}
+                  disabled={cartLoading}
+                >
+                  {cartLoading ? (
+                    <>
+                      <svg className="h-4 w-4 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Ekleniyor...
+                    </>
+                  ) : (
+                    'Sepete Ekle'
+                  )}
+                </button>
               </div>
             </div>
           </div>
@@ -909,81 +853,88 @@ const SaticiSiparisVer = () => {
 
         {/* Satın Alma Başarı Modalı */}
         {showPurchaseSuccessModal && purchaseResult && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl w-full max-w-4xl shadow-lg relative overflow-hidden max-h-[90vh]">
-              {/* Header */}
-              <div className="bg-green-600 rounded-t-xl px-6 py-4 relative">
-                <button 
-                  className="absolute top-3 right-3 text-white hover:text-gray-200 text-3xl font-bold" 
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-[2px]">
+            <div className="relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+              <div className="relative border-b border-slate-100 px-5 py-5 sm:px-6">
+                <button
+                  type="button"
+                  className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-all duration-200 ease-out hover:bg-slate-50 hover:text-slate-700 active:scale-[0.96] sm:right-4 sm:top-4"
                   onClick={() => {
                     setShowPurchaseSuccessModal(false);
                     router.push('/dashboard/satin-alim-islemleri');
                   }}
+                  aria-label="Kapat"
                 >
-                  &times;
-                </button>
-                
-                <div className="flex items-center gap-3">
-                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                  <h2 className="text-xl font-bold text-white">Satın Alma Başarılı</h2>
+                </button>
+
+                <div className="flex items-center gap-3 pr-8">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-900">Satın Alma Başarılı</h2>
+                    <p className="mt-0.5 text-xs text-slate-500">İşlem tamamlandı</p>
+                  </div>
                 </div>
               </div>
-              
-              {/* Content */}
-              <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-                {/* Özet Bilgiler */}
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-                  <div className="text-center">
-                    <p className="text-sm text-green-600">Toplam Tutar</p>
-                    <p className="text-2xl font-bold text-green-800">
+
+              <div className="overflow-y-auto p-5 sm:p-6 max-h-[calc(90vh-120px)]">
+                {canSeePurchasePrices && (
+                  <div className="mb-6 rounded-xl border border-emerald-100 bg-emerald-50/80 p-4 text-center">
+                    <p className="text-xs font-medium uppercase tracking-wide text-emerald-700/80">Toplam Tutar</p>
+                    <p className="mt-1 text-2xl font-semibold tabular-nums text-emerald-800">
                       ${purchaseResult.data.totalAmount.toFixed(2)}
                     </p>
                   </div>
-                </div>
+                )}
 
-                {/* Satın Alınan Ürünler */}
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Satın Alınan Ürünler</h3>
+                  <h3 className="mb-3 text-sm font-semibold text-slate-900">Satın Alınan Ürünler</h3>
                   <div className="space-y-3">
                     {purchaseResult.data.purchasedItems.map((item: any, index: number) => (
-                      <div key={item.id} className="bg-white border border-gray-200 rounded-lg p-4">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h4 className="font-medium text-gray-900">{item.product.name}</h4>
-                            <p className="text-sm text-gray-600">{item.product.collection.name}</p>
-                            <div className="mt-2 flex flex-wrap gap-4 text-sm text-gray-600">
+                      <div key={item.id} className="rounded-xl border border-slate-200/80 bg-white p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <h4 className="font-medium text-slate-900">{item.product.name}</h4>
+                            <p className="text-sm text-slate-500">{item.product.collection.name}</p>
+                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
                               <span>Miktar: {item.quantity} adet</span>
                               <span>Boyut: {item.width}x{item.height} cm</span>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p className="text-lg font-bold text-gray-900">${item.total_price}</p>
-                          </div>
+                          {canSeePurchasePrices && (
+                            <div className="shrink-0 text-right">
+                              <p className="text-lg font-semibold tabular-nums text-slate-900">${item.total_price}</p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
 
-
-                {/* Butonlar */}
-                <div className="mt-6 flex gap-3 justify-end">
+                <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                   <button
+                    type="button"
+                    onClick={() => setShowPurchaseSuccessModal(false)}
+                    className="rounded-lg border border-slate-200/80 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98]"
+                  >
+                    Kapat
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => {
                       setShowPurchaseSuccessModal(false);
                       router.push('/dashboard/satin-alim-islemleri');
                     }}
-                    className="px-6 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors"
+                    className="rounded-lg bg-[#00365a] px-5 py-2.5 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98]"
                   >
                     Satın Alım İşlemlerine Git
-                  </button>
-                  <button
-                    onClick={() => setShowPurchaseSuccessModal(false)}
-                    className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                  >
-                    Kapat
                   </button>
                 </div>
               </div>

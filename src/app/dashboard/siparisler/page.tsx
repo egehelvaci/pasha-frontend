@@ -291,11 +291,11 @@ const statusLabels: { [key: string]: string } = {
 };
 
 const statusColors: { [key: string]: string } = {
-  'PENDING': 'bg-yellow-100 text-yellow-800',
-  'CONFIRMED': 'bg-blue-100 text-[#00365a]',
-  'READY': 'bg-orange-100 text-orange-800',
-  'DELIVERED': 'bg-green-100 text-green-800',
-  'CANCELED': 'bg-red-100 text-red-800'
+  'PENDING': 'bg-amber-50 text-amber-800/90 border border-amber-200/70',
+  'CONFIRMED': 'bg-slate-100 text-slate-700 border border-slate-200/80',
+  'READY': 'bg-stone-100 text-stone-700 border border-stone-200/80',
+  'DELIVERED': 'bg-emerald-50 text-emerald-800/80 border border-emerald-200/60',
+  'CANCELED': 'bg-rose-50 text-rose-800/80 border border-rose-200/60'
 };
 
 // Kesim türlerini Türkçe'ye çeviren fonksiyon
@@ -2303,9 +2303,11 @@ const Siparisler = () => {
 
   if (loading || authLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-[#f7f8fa]">
+        <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
+          <div className="flex h-64 items-center justify-center">
+            <div className="h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]/70" />
+          </div>
         </div>
       </div>
     );
@@ -2313,121 +2315,129 @@ const Siparisler = () => {
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Hata Oluştu</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Tekrar Dene
-          </button>
+      <div className="min-h-screen bg-[#f7f8fa]">
+        <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-md rounded-xl border border-slate-200/80 bg-white px-6 py-10 text-center">
+            <h2 className="text-lg font-semibold tracking-tight text-slate-900">Hata Oluştu</h2>
+            <p className="mt-2 text-sm text-slate-500">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-6 inline-flex items-center justify-center rounded-lg bg-[#00365a] px-5 py-2.5 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98]"
+            >
+              Tekrar Dene
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-[#f7f8fa]">
+      <div className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 sm:py-8">
         {/* Başlık */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {isAdminOrEditor ? 'Tüm Siparişler' : 'Siparişlerim'}
-          </h1>
-          <p className="text-gray-600">
-            {isAdminOrEditor 
-              ? 'Sistemdeki tüm siparişleri görüntüleyin ve yönetin.' 
-              : 'Vermiş olduğunuz siparişlerin listesi.'
-            }
-          </p>
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
+            <h1 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl sm:tracking-[0.12em]">
+              {isAdminOrEditor ? 'Tüm Siparişler' : 'Siparişlerim'}
+            </h1>
+            <div className="mt-3 h-px w-[min(100%,20rem)] bg-neutral-300 sm:mt-4" />
+            <p className="mt-3 max-w-xl text-sm text-slate-500">
+              {isAdminOrEditor
+                ? 'Sistemdeki tüm siparişleri görüntüleyin ve yönetin.'
+                : 'Vermiş olduğunuz siparişlerin listesi.'}
+            </p>
+          </div>
         </div>
 
         {/* Admin/Editor İstatistikleri */}
         {isAdminOrEditor && fixedStats && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+          <div className="mb-6 grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-6 sm:mb-8">
             <button
               onClick={() => handleStatusFilter('')}
-              className={`p-4 rounded-lg border transition-all duration-200 text-left hover:shadow-md ${
-                statusFilter === '' 
-                  ? 'bg-gray-100 border-gray-300 shadow-md' 
-                  : 'bg-white border-gray-200 hover:bg-gray-50'
+              className={`rounded-xl border p-3.5 text-left transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.99] sm:p-4 ${
+                statusFilter === ''
+                  ? 'border-slate-300/90 bg-stone-100/90'
+                  : 'border-slate-200/80 bg-white hover:bg-stone-50/80'
               }`}
             >
-              <div className="text-2xl font-bold text-gray-900">{totalOrdersCount}</div>
-              <div className="text-sm text-gray-500">Toplam</div>
+              <div className="text-xl font-semibold tabular-nums text-slate-900 sm:text-2xl">{totalOrdersCount}</div>
+              <div className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-500">Toplam</div>
             </button>
             <button
               onClick={() => handleStatusFilter('PENDING')}
-              className={`p-4 rounded-lg border transition-all duration-200 text-left hover:shadow-md ${
-                statusFilter === 'PENDING' 
-                  ? 'bg-yellow-100 border-yellow-300 shadow-md' 
-                  : 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100'
+              className={`rounded-xl border p-3.5 text-left transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/30 active:scale-[0.99] sm:p-4 ${
+                statusFilter === 'PENDING'
+                  ? 'border-amber-300/70 bg-amber-50'
+                  : 'border-amber-200/50 bg-amber-50/40 hover:bg-amber-50/80'
               }`}
             >
-              <div className="text-2xl font-bold text-yellow-800">{fixedStats.pending}</div>
-              <div className="text-sm text-yellow-600">Beklemede</div>
+              <div className="text-xl font-semibold tabular-nums text-amber-900/80 sm:text-2xl">{fixedStats.pending}</div>
+              <div className="mt-1 text-xs font-medium uppercase tracking-wide text-amber-700/70">Beklemede</div>
             </button>
             <button
               onClick={() => handleStatusFilter('CONFIRMED')}
-              className={`p-4 rounded-lg border transition-all duration-200 text-left hover:shadow-md ${
-                statusFilter === 'CONFIRMED' 
-                  ? 'bg-blue-100 border-blue-300 shadow-md' 
-                  : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+              className={`rounded-xl border p-3.5 text-left transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/30 active:scale-[0.99] sm:p-4 ${
+                statusFilter === 'CONFIRMED'
+                  ? 'border-slate-300/80 bg-slate-100'
+                  : 'border-slate-200/70 bg-slate-50/60 hover:bg-slate-100/80'
               }`}
             >
-              <div className="text-2xl font-bold text-[#00365a]">{fixedStats.confirmed}</div>
-              <div className="text-sm text-[#00365a]">Onaylandı</div>
+              <div className="text-xl font-semibold tabular-nums text-slate-800 sm:text-2xl">{fixedStats.confirmed}</div>
+              <div className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-500">Onaylandı</div>
             </button>
             <button
               onClick={() => handleStatusFilter('READY')}
-              className={`p-4 rounded-lg border transition-all duration-200 text-left hover:shadow-md ${
-                statusFilter === 'READY' 
-                  ? 'bg-orange-100 border-orange-300 shadow-md' 
-                  : 'bg-orange-50 border-orange-200 hover:bg-orange-100'
+              className={`rounded-xl border p-3.5 text-left transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-400/30 active:scale-[0.99] sm:p-4 ${
+                statusFilter === 'READY'
+                  ? 'border-stone-300/80 bg-stone-100'
+                  : 'border-stone-200/70 bg-stone-50/70 hover:bg-stone-100/80'
               }`}
             >
-              <div className="text-2xl font-bold text-orange-800">{fixedStats.ready}</div>
-              <div className="text-sm text-orange-600">Hazır</div>
+              <div className="text-xl font-semibold tabular-nums text-stone-800 sm:text-2xl">{fixedStats.ready}</div>
+              <div className="mt-1 text-xs font-medium uppercase tracking-wide text-stone-500">Hazır</div>
             </button>
             <button
               onClick={() => handleStatusFilter('DELIVERED')}
-              className={`p-4 rounded-lg border transition-all duration-200 text-left hover:shadow-md ${
-                statusFilter === 'DELIVERED' 
-                  ? 'bg-green-100 border-green-300 shadow-md' 
-                  : 'bg-green-50 border-green-200 hover:bg-green-100'
+              className={`rounded-xl border p-3.5 text-left transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/25 active:scale-[0.99] sm:p-4 ${
+                statusFilter === 'DELIVERED'
+                  ? 'border-emerald-300/60 bg-emerald-50'
+                  : 'border-emerald-200/50 bg-emerald-50/40 hover:bg-emerald-50/80'
               }`}
             >
-              <div className="text-2xl font-bold text-green-800">{fixedStats.delivered}</div>
-              <div className="text-sm text-green-600">Teslim</div>
+              <div className="text-xl font-semibold tabular-nums text-emerald-900/80 sm:text-2xl">{fixedStats.delivered}</div>
+              <div className="mt-1 text-xs font-medium uppercase tracking-wide text-emerald-700/70">Teslim</div>
             </button>
             <button
               onClick={() => handleStatusFilter('CANCELED')}
-              className={`p-4 rounded-lg border transition-all duration-200 text-left hover:shadow-md ${
-                statusFilter === 'CANCELED' 
-                  ? 'bg-red-100 border-red-300 shadow-md' 
-                  : 'bg-red-50 border-red-200 hover:bg-red-100'
+              className={`rounded-xl border p-3.5 text-left transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/25 active:scale-[0.99] sm:p-4 ${
+                statusFilter === 'CANCELED'
+                  ? 'border-rose-300/60 bg-rose-50'
+                  : 'border-rose-200/50 bg-rose-50/40 hover:bg-rose-50/80'
               }`}
             >
-              <div className="text-2xl font-bold text-red-800">{fixedStats.canceled}</div>
-              <div className="text-sm text-red-600">İptal</div>
+              <div className="text-xl font-semibold tabular-nums text-rose-900/80 sm:text-2xl">{fixedStats.canceled}</div>
+              <div className="mt-1 text-xs font-medium uppercase tracking-wide text-rose-700/70">İptal</div>
             </button>
           </div>
         )}
 
         {/* Filtreleme ve Arama */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
+        <div className="mb-6 rounded-xl border border-slate-200/80 bg-white p-4 sm:p-5">
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold text-slate-900">Filtreler</h3>
+            <p className="mt-0.5 text-xs text-slate-500">Siparişleri mağaza, durum ve fiş bilgisine göre daraltın</p>
+          </div>
+          <div className="flex flex-col gap-4 md:flex-row">
             {/* Mağaza Filtresi (Sadece Admin/Editor için) */}
             {isAdminOrEditor && (
               <div className="flex-1" ref={storeDropdownRef}>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                   Mağaza Seç
                 </label>
                 <div className="relative">
                   <div
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-gray-400 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-colors"
+                    className="w-full cursor-pointer rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 transition-all duration-200 ease-out hover:border-slate-300 focus-within:border-slate-300 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#00365a]/15"
                     onClick={() => setIsStoreDropdownOpen(!isStoreDropdownOpen)}
                   >
                     <div className="flex items-center justify-between">
@@ -2439,11 +2449,11 @@ const Siparisler = () => {
                           setIsStoreDropdownOpen(true);
                         }}
                         placeholder={storeFilter ? (stores.find(s => s.store_id === storeFilter)?.kurum_adi || "Mağaza seç...") : "Mağaza ara..."}
-                        className="flex-1 outline-none bg-transparent"
+                        className="flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
                         disabled={loadingStores}
                       />
                       <svg
-                        className={`w-5 h-5 text-gray-400 transition-transform ${isStoreDropdownOpen ? 'rotate-180' : ''}`}
+                        className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${isStoreDropdownOpen ? 'rotate-180' : ''}`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -2454,28 +2464,28 @@ const Siparisler = () => {
                   </div>
                   
                   {isStoreDropdownOpen && (
-                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200/80 bg-white py-1 shadow-sm">
                       <div
-                        className="px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
+                        className="cursor-pointer border-b border-slate-100 px-3 py-2.5 text-sm transition-colors duration-150 hover:bg-stone-50"
                         onClick={() => handleStoreFilter('')}
                       >
-                        <span className="text-gray-600">Tüm Mağazalar</span>
+                        <span className="text-slate-500">Tüm Mağazalar</span>
                       </div>
                       {filteredStores.length > 0 ? (
                         filteredStores.map((store) => (
                           <div
                             key={store.store_id}
-                            className={`px-3 py-2 hover:bg-blue-50 cursor-pointer ${
-                              storeFilter === store.store_id ? 'bg-blue-100 text-blue-900' : 'text-gray-900'
+                            className={`cursor-pointer px-3 py-2.5 text-sm transition-colors duration-150 hover:bg-stone-50 ${
+                              storeFilter === store.store_id ? 'bg-stone-100 text-slate-900' : 'text-slate-700'
                             }`}
                             onClick={() => handleStoreFilter(store.store_id)}
                           >
                             <div className="font-medium">{store.kurum_adi}</div>
-                            <div className="text-xs text-gray-500">{store.telefon}</div>
+                            <div className="text-xs text-slate-400">{store.telefon}</div>
                           </div>
                         ))
                       ) : (
-                        <div className="px-3 py-2 text-gray-500 text-center">
+                        <div className="px-3 py-2.5 text-center text-sm text-slate-400">
                           Mağaza bulunamadı
                         </div>
                       )}
@@ -2483,8 +2493,8 @@ const Siparisler = () => {
                   )}
                   
                   {loadingStores && (
-                    <div className="absolute right-10 top-2 text-gray-400">
-                      <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                    <div className="absolute right-10 top-2.5 text-slate-400">
+                      <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="m12 2a10 10 0 0 1 10 10h-4a6 6 0 0 0-6-6z"></path>
                       </svg>
@@ -2496,20 +2506,20 @@ const Siparisler = () => {
 
             {/* Durum Filtresi */}
             <div className="md:w-64" ref={statusDropdownRef}>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                 Sipariş Durumu
               </label>
               <div className="relative">
                 <div
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-gray-400 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-colors"
+                  className="w-full cursor-pointer rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 transition-all duration-200 ease-out hover:border-slate-300 focus-within:border-slate-300 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#00365a]/15"
                   onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-900">
+                    <span className="text-sm text-slate-900">
                       {statusFilter ? statusLabels[statusFilter] : 'Tüm Durumlar'}
                     </span>
                     <svg
-                      className={`w-5 h-5 text-gray-400 transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''}`}
+                      className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${isStatusDropdownOpen ? 'rotate-180' : ''}`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -2520,28 +2530,28 @@ const Siparisler = () => {
                 </div>
                 
                 {isStatusDropdownOpen && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                  <div className="absolute z-50 mt-1.5 w-full rounded-lg border border-slate-200/80 bg-white py-1 shadow-sm">
                     <div
-                      className="px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
+                      className="cursor-pointer border-b border-slate-100 px-3 py-2.5 text-sm transition-colors duration-150 hover:bg-stone-50"
                       onClick={() => handleStatusFilter('')}
                     >
-                      <span className="text-gray-600">Tüm Durumlar</span>
+                      <span className="text-slate-500">Tüm Durumlar</span>
                     </div>
                     {Object.entries(statusLabels).map(([status, label]) => (
                       <div
                         key={status}
-                        className={`px-3 py-2 hover:bg-blue-50 cursor-pointer flex items-center justify-between ${
-                          statusFilter === status ? 'bg-blue-100 text-blue-900' : 'text-gray-900'
+                        className={`flex cursor-pointer items-center justify-between px-3 py-2.5 text-sm transition-colors duration-150 hover:bg-stone-50 ${
+                          statusFilter === status ? 'bg-stone-100 text-slate-900' : 'text-slate-700'
                         }`}
                         onClick={() => handleStatusFilter(status)}
                       >
                         <span>{label}</span>
-                        <span className={`w-3 h-3 rounded-full ${
-                          status === 'PENDING' ? 'bg-yellow-400' :
-                          status === 'CONFIRMED' ? 'bg-blue-400' :
-                          status === 'READY' ? 'bg-orange-400' :
-                          status === 'DELIVERED' ? 'bg-green-400' :
-                          status === 'CANCELED' ? 'bg-red-400' : 'bg-gray-400'
+                        <span className={`h-2.5 w-2.5 rounded-full ${
+                          status === 'PENDING' ? 'bg-amber-400/80' :
+                          status === 'CONFIRMED' ? 'bg-slate-400' :
+                          status === 'READY' ? 'bg-stone-400' :
+                          status === 'DELIVERED' ? 'bg-emerald-400/80' :
+                          status === 'CANCELED' ? 'bg-rose-400/80' : 'bg-slate-300'
                         }`}></span>
                       </div>
                     ))}
@@ -2553,22 +2563,22 @@ const Siparisler = () => {
             {/* Fiş Durumu Filtresi - Sadece Admin/Editor için */}
             {isAdminOrEditor && (
               <div className="md:w-64" ref={receiptDropdownRef}>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                   Fiş Durumu
                 </label>
                 <div className="relative">
                   <div
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-gray-400 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-colors"
+                    className="w-full cursor-pointer rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 transition-all duration-200 ease-out hover:border-slate-300 focus-within:border-slate-300 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#00365a]/15"
                     onClick={() => setIsReceiptDropdownOpen(!isReceiptDropdownOpen)}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-900">
+                      <span className="text-sm text-slate-900">
                         {receiptFilter === 'printed' ? 'Yazdırılan Fişler' : 
                          receiptFilter === 'not_printed' ? 'Yazdırılmayan Fişler' : 
                          'Tüm Fişler'}
                       </span>
                       <svg
-                        className={`w-5 h-5 text-gray-400 transition-transform ${isReceiptDropdownOpen ? 'rotate-180' : ''}`}
+                        className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${isReceiptDropdownOpen ? 'rotate-180' : ''}`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -2579,33 +2589,33 @@ const Siparisler = () => {
                   </div>
                   
                   {isReceiptDropdownOpen && (
-                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                    <div className="absolute z-50 mt-1.5 w-full rounded-lg border border-slate-200/80 bg-white py-1 shadow-sm">
                       <div
-                        className={`px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 flex items-center justify-between ${
-                          receiptFilter === '' ? 'bg-blue-100 text-blue-900' : 'text-gray-600'
+                        className={`flex cursor-pointer items-center justify-between border-b border-slate-100 px-3 py-2.5 text-sm transition-colors duration-150 hover:bg-stone-50 ${
+                          receiptFilter === '' ? 'bg-stone-100 text-slate-900' : 'text-slate-500'
                         }`}
                         onClick={() => handleReceiptFilter('')}
                       >
                         <span>Tüm Fişler</span>
-                        <span className="w-3 h-3 rounded-full bg-gray-400"></span>
+                        <span className="h-2.5 w-2.5 rounded-full bg-slate-300"></span>
                       </div>
                       <div
-                        className={`px-3 py-2 hover:bg-blue-50 cursor-pointer flex items-center justify-between ${
-                          receiptFilter === 'printed' ? 'bg-blue-100 text-blue-900' : 'text-gray-900'
+                        className={`flex cursor-pointer items-center justify-between px-3 py-2.5 text-sm transition-colors duration-150 hover:bg-stone-50 ${
+                          receiptFilter === 'printed' ? 'bg-stone-100 text-slate-900' : 'text-slate-700'
                         }`}
                         onClick={() => handleReceiptFilter('printed')}
                       >
                         <span>Yazdırılan Fişler</span>
-                        <span className="w-3 h-3 rounded-full bg-green-400"></span>
+                        <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80"></span>
                       </div>
                       <div
-                        className={`px-3 py-2 hover:bg-blue-50 cursor-pointer flex items-center justify-between ${
-                          receiptFilter === 'not_printed' ? 'bg-blue-100 text-blue-900' : 'text-gray-900'
+                        className={`flex cursor-pointer items-center justify-between px-3 py-2.5 text-sm transition-colors duration-150 hover:bg-stone-50 ${
+                          receiptFilter === 'not_printed' ? 'bg-stone-100 text-slate-900' : 'text-slate-700'
                         }`}
                         onClick={() => handleReceiptFilter('not_printed')}
                       >
                         <span>Yazdırılmayan Fişler</span>
-                        <span className="w-3 h-3 rounded-full bg-red-400"></span>
+                        <span className="h-2.5 w-2.5 rounded-full bg-rose-400/70"></span>
                       </div>
                     </div>
                   )}
@@ -2618,33 +2628,36 @@ const Siparisler = () => {
           {(statusFilter || storeFilter || receiptFilter) && (
             <div className="mt-4 flex flex-wrap gap-2">
               {statusFilter && (
-                <div className="flex items-center bg-blue-100 text-[#00365a] px-3 py-1 rounded-full text-sm">
+                <div className="inline-flex items-center gap-1.5 rounded-md border border-slate-200/80 bg-stone-50 px-2.5 py-1 text-xs font-medium text-slate-700">
                   Durum: {statusLabels[statusFilter]}
                   <button
                     onClick={() => handleStatusFilter('')}
-                    className="ml-2 text-[#00365a] hover:text-[#004170]"
+                    className="ml-0.5 text-slate-400 transition-colors duration-150 hover:text-slate-700 focus-visible:outline-none"
+                    aria-label="Durum filtresini temizle"
                   >
                     ×
                   </button>
                 </div>
               )}
               {receiptFilter && (
-                <div className="flex items-center bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
+                <div className="inline-flex items-center gap-1.5 rounded-md border border-stone-200/80 bg-stone-50 px-2.5 py-1 text-xs font-medium text-stone-700">
                   Fiş: {receiptFilter === 'printed' ? 'Yazdırılan' : 'Yazdırılmayan'}
                   <button
                     onClick={() => handleReceiptFilter('')}
-                    className="ml-2 text-purple-800 hover:text-purple-900"
+                    className="ml-0.5 text-stone-400 transition-colors duration-150 hover:text-stone-700 focus-visible:outline-none"
+                    aria-label="Fiş filtresini temizle"
                   >
                     ×
                   </button>
                 </div>
               )}
               {storeFilter && (
-                <div className="flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                <div className="inline-flex items-center gap-1.5 rounded-md border border-emerald-200/60 bg-emerald-50/70 px-2.5 py-1 text-xs font-medium text-emerald-800/80">
                   Mağaza: {stores.find(store => store.store_id === storeFilter)?.kurum_adi || storeFilter}
                   <button
                     onClick={() => handleStoreFilter('')}
-                    className="ml-2 text-green-600 hover:text-green-800"
+                    className="ml-0.5 text-emerald-600/70 transition-colors duration-150 hover:text-emerald-800 focus-visible:outline-none"
+                    aria-label="Mağaza filtresini temizle"
                   >
                     ×
                   </button>
@@ -2656,9 +2669,9 @@ const Siparisler = () => {
 
         {/* Toplu İşlemler - Sadece Admin/Editor için ve PENDING siparişler varsa */}
         {isAdminOrEditor && ordersData?.orders.some(order => order.status === 'PENDING') && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+          <div className="mb-6 rounded-xl border border-slate-200/80 bg-stone-50/80 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                 <label className="flex items-center gap-2">
                   <input
                     type="checkbox"
@@ -2667,32 +2680,32 @@ const Siparisler = () => {
                       ordersData?.orders.filter(order => order.status === 'PENDING').every(order => selectedOrderIds.includes(order.id))
                     }
                     onChange={(e) => handleSelectAll(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                    className="h-4 w-4 rounded border-slate-300 text-[#00365a] focus:ring-[#00365a]/30"
                   />
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-slate-700">
                     Tüm beklemedeki siparişleri seç
                   </span>
                 </label>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-slate-500">
                   ({selectedOrderIds.length} seçili)
                 </span>
               </div>
               
               {selectedOrderIds.length > 0 && (
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={handleBulkConfirm}
                     disabled={bulkConfirming}
-                    className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                    className="inline-flex items-center gap-2 rounded-lg bg-emerald-700/90 px-4 py-2 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600/30 active:scale-[0.98]"
                   >
                       {bulkConfirming ? (
                         <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                           Onaylanıyor...
                         </>
                       ) : (
                         <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
                           {selectedOrderIds.length} Siparişi Onayla
@@ -2703,9 +2716,9 @@ const Siparisler = () => {
                   {(statusFilter === 'CONFIRMED' || statusFilter === 'READY') && (
                     <button
                       onClick={printBulkQRCodes}
-                      className="bg-[#00365a] hover:bg-[#004170] text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                      className="inline-flex items-center gap-2 rounded-lg bg-[#00365a] px-4 py-2 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98]"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                       </svg>
                       {selectedOrderIds.length} Sipariş QR Yazdır
@@ -2719,12 +2732,16 @@ const Siparisler = () => {
 
         {/* Siparişler Listesi */}
         {!filteredOrders || filteredOrders.orders.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-gray-400 text-6xl mb-4">📦</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          <div className="rounded-xl border border-slate-200/80 bg-white px-6 py-14 text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-stone-100 text-slate-400">
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </div>
+            <h3 className="text-base font-semibold text-slate-900">
               {statusFilter || storeFilter || receiptFilter ? 'Filtreye uygun sipariş bulunamadı' : 'Henüz sipariş yok'}
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
               {statusFilter || storeFilter || receiptFilter 
                 ? 'Farklı filtreler deneyin veya filtreleri temizleyin.'
                 : isAdminOrEditor 
@@ -2735,114 +2752,135 @@ const Siparisler = () => {
             {!isAdminOrEditor && !statusFilter && !storeFilter && !receiptFilter && (
               <Link
                 href="/dashboard/sepetim"
-                className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                className="mt-6 inline-flex items-center justify-center rounded-lg bg-[#00365a] px-5 py-2.5 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98]"
               >
                 Alışverişe Başla
               </Link>
             )}
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {filteredOrders.orders.map((order) => (
               <div
                 key={order.id}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                className="rounded-xl border border-slate-200/80 bg-white p-4 transition-all duration-200 ease-out hover:border-slate-300/90 hover:bg-stone-50/40 sm:p-5"
               >
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex gap-3 sm:gap-4">
                   {/* Checkbox - Sadece Admin/Editor için ve PENDING siparişlerde */}
                   {isAdminOrEditor && order.status === 'PENDING' && (
-                    <div className="mr-4 self-start lg:self-center">
+                    <div className="pt-1">
                       <input
                         type="checkbox"
                         checked={selectedOrderIds.includes(order.id)}
                         onChange={(e) => handleSelectOrder(order.id, e.target.checked)}
-                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                        className="h-4 w-4 rounded border-slate-300 text-[#00365a] focus:ring-[#00365a]/30"
                       />
                     </div>
                   )}
-                  
-                  <div className="flex-1">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          Sipariş #{order.id.slice(0, 8)}...
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          {new Date(order.created_at).toLocaleDateString('tr-TR', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
-                      </div>
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusColors[order.status]}`}>
+
+                  <div className="min-w-0 flex-1">
+                    {/* Üst: Mağaza + Sipariş durumu */}
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                      <h3 className="min-w-0 truncate text-base font-semibold tracking-tight text-slate-900">
+                        {order.store_name}
+                      </h3>
+                      <span className={`inline-flex w-fit shrink-0 items-center rounded-md px-2 py-0.5 text-xs font-medium ${statusColors[order.status]}`}>
                         {statusLabels[order.status]}
                       </span>
                     </div>
 
-                    {/* Admin/Editor için müşteri bilgileri */}
-                    {isAdminOrEditor && order.user && (
-                      <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                        <h4 className="text-sm font-medium text-gray-900 mb-2">Müşteri Bilgileri</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <span className="text-gray-600">Ad Soyad:</span>
-                            <span className="ml-2 text-gray-900">{order.user.name} {order.user.surname}</span>
+                    {/* Sipariş Bilgileri + Ürünler */}
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
+                      <div>
+                        <h4 className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          Sipariş Bilgileri
+                        </h4>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex flex-wrap gap-x-2">
+                            <span className="text-slate-500">Tarih:</span>
+                            <span className="text-slate-800">
+                              {new Date(order.created_at).toLocaleDateString('tr-TR', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
                           </div>
-                          <div>
-                            <span className="text-gray-600">E-posta:</span>
-                            <span className="ml-2 text-gray-900">{order.user.email}</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Telefon:</span>
-                            <span className="ml-2 text-gray-900">{order.user.phone}</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Mağaza:</span>
-                            <span className="ml-2 text-gray-900">{order.user.Store?.kurum_adi || order.store_name}</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <span className="text-gray-600">Mağaza:</span>
-                        <span className="ml-2 text-gray-900">{order.store_name}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-600">Ürün Sayısı:</span>
-                        <span className="ml-2 text-gray-900">{order.items.reduce((total, item) => total + item.quantity, 0)} adet</span>
-                      </div>
-                      {user?.canSeePrice && (
-                        <div>
-                          <span className="text-gray-600">Toplam Tutar:</span>
-                          <span className="ml-2 font-semibold text-[#00365a]">
-                            {getDisplayAmount(order, order.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {getCurrencyDisplay(order, userCurrency)}
-                          </span>
+                          {isAdminOrEditor && order.user && (
+                            <>
+                              <div className="flex flex-wrap gap-x-2">
+                                <span className="text-slate-500">Müşteri:</span>
+                                <span className="text-slate-800">{order.user.name} {order.user.surname}</span>
+                              </div>
+                              <div className="flex flex-wrap gap-x-2">
+                                <span className="text-slate-500">E-posta:</span>
+                                <span className="break-all text-slate-800">{order.user.email}</span>
+                              </div>
+                              <div className="flex flex-wrap gap-x-2">
+                                <span className="text-slate-500">Telefon:</span>
+                                <span className="text-slate-800">{order.user.phone}</span>
+                              </div>
+                            </>
+                          )}
+
+                          {user?.canSeePrice && (
+                            <div className="flex flex-wrap gap-x-2">
+                              <span className="text-slate-500">Toplam Tutar:</span>
+                              <span className="font-semibold tabular-nums text-[#00365a]">
+                                {getDisplayAmount(order, order.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {getCurrencyDisplay(order, userCurrency)}
+                              </span>
+                            </div>
+                          )}
+
+                          {order.notes && (
+                            <div className="mt-1 rounded-lg border border-amber-200/60 bg-amber-50/70 p-2.5">
+                              <span className="text-sm text-amber-900/80">
+                                <strong className="font-medium">Not:</strong> {order.notes}
+                              </span>
+                            </div>
+                          )}
                         </div>
-                      )}
+                      </div>
+
+                      <div>
+                        <h4 className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          Ürünler
+                          <span className="ml-1.5 font-normal normal-case tracking-normal text-slate-400">
+                            ({order.items.reduce((total, item) => total + item.quantity, 0)} adet)
+                          </span>
+                        </h4>
+                        <ul className="max-h-40 space-y-2 overflow-y-auto pr-1">
+                          {order.items.map((item) => (
+                            <li
+                              key={item.id}
+                              className="rounded-lg border border-slate-200/60 bg-stone-50/60 px-3 py-2"
+                            >
+                              <div className="truncate text-sm font-medium text-slate-800">
+                                {item.product.name}
+                              </div>
+                              <div className="mt-0.5 flex flex-wrap gap-x-2 text-xs text-slate-500">
+                                <span>{item.width}×{item.height} cm</span>
+                                <span>·</span>
+                                <span>{item.quantity} adet</span>
+                                {item.cut_type && (
+                                  <>
+                                    <span>·</span>
+                                    <span>{translateCutType(item.cut_type)}</span>
+                                  </>
+                                )}
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
 
-                    {order.notes && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                        <span className="text-sm text-yellow-800">
-                          <strong>Not:</strong> {order.notes}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mt-4 lg:mt-0 lg:ml-6 flex flex-col sm:flex-row gap-2">
-                    <button
-                      onClick={() => handleViewOrderDetail(order.id)}
-                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
-                    >
-                      Detayları Gör
-                    </button>
-
+                    {/* Aksiyonlar: üstte işlem butonları, alt sağda Detayları Gör */}
+                    <div className="mt-4 flex flex-col items-stretch gap-2 border-t border-slate-100 pt-4 sm:items-end">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
                     {/* İptal Butonu - Sadece PENDING durumunda ve admin/editör değilse */}
                     {!isAdminOrEditor && order.status === 'PENDING' && (
                       <button
@@ -2854,7 +2892,7 @@ const Siparisler = () => {
                             isLoading: false
                           });
                         }}
-                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                        className="rounded-lg border border-rose-200/70 bg-rose-50 px-3.5 py-2 text-sm font-medium text-rose-800/90 transition-all duration-200 ease-out hover:bg-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/30 active:scale-[0.98]"
                       >
                         İptal Et
                       </button>
@@ -2864,11 +2902,10 @@ const Siparisler = () => {
                     {order.status !== 'CANCELLED' && (order.status === 'CONFIRMED' || order.status === 'READY') && order.qr_codes && order.qr_codes.length > 0 && (
                       <button
                         onClick={() => openQRLabel(order)}
-                        className="px-4 py-2 text-white rounded-lg transition-colors text-sm flex items-center gap-1"
-                        style={{ backgroundColor: 'rgb(0 54 90)' }}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-[#00365a] px-3.5 py-2 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98]"
                         title="QR Etiketleri Yazdır (10x15 cm)"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                         </svg>
                         QR Yazdır
@@ -2877,22 +2914,22 @@ const Siparisler = () => {
 
                     {/* Fiş durumu göstergesi - Sadece DELIVERED durumunda */}
                     {order.status === 'DELIVERED' && (
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 sm:justify-end">
                         {order.receipt_printed ? (
-                          <div className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="inline-flex items-center gap-1 rounded-md border border-emerald-200/60 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800/80">
+                            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
                             Fiş Yazdırıldı
                             {order.receipt_printed_at && (
-                              <span className="ml-1 text-xs text-green-600">
+                              <span className="ml-1 text-xs text-emerald-700/70">
                                 ({new Date(order.receipt_printed_at).toLocaleDateString('tr-TR')})
                               </span>
                             )}
                           </div>
                         ) : (
-                          <div className="flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="inline-flex items-center gap-1 rounded-md border border-amber-200/60 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800/80">
+                            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             Fiş Yazdırılmadı
@@ -3191,8 +3228,7 @@ const Siparisler = () => {
                             alert('Fiş bilgileri alınamadı: ' + (error.message || 'Bilinmeyen hata'));
                           }
                         }}
-                        className="px-4 py-2 text-white rounded-lg transition-colors text-sm flex items-center gap-1"
-                        style={{ backgroundColor: 'rgb(34 197 94)' }}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200/70 bg-emerald-700/85 px-3.5 py-2 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600/30 active:scale-[0.98]"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -3208,7 +3244,7 @@ const Siparisler = () => {
                           setSelectedOrderForCargo(order);
                           setCargoReceiptVisible(true);
                         }}
-                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors text-sm flex items-center gap-1"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-slate-700/90 px-3.5 py-2 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/30 active:scale-[0.98]"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -3230,7 +3266,7 @@ const Siparisler = () => {
                             isRefund: true
                           });
                         }}
-                        className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors text-sm flex items-center gap-1"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200/70 bg-amber-700/85 px-3.5 py-2 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-amber-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-600/30 active:scale-[0.98]"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -3247,7 +3283,7 @@ const Siparisler = () => {
                             <button
                               onClick={() => handleUpdateOrderStatus(order.id, 'CONFIRMED')}
                               disabled={updatingStatus}
-                              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm disabled:opacity-50"
+                              className="rounded-lg bg-[#00365a] px-3.5 py-2 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                             >
                               Onayla
                             </button>
@@ -3262,7 +3298,7 @@ const Siparisler = () => {
                                 });
                               }}
                               disabled={updatingStatus}
-                              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm disabled:opacity-50"
+                              className="rounded-lg border border-rose-200/70 bg-rose-50 px-3.5 py-2 text-sm font-medium text-rose-800/90 transition-all duration-200 ease-out hover:bg-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                             >
                               İptal Et
                             </button>
@@ -3281,7 +3317,7 @@ const Siparisler = () => {
                               });
                             }}
                             disabled={updatingStatus}
-                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm disabled:opacity-50"
+                            className="rounded-lg border border-rose-200/70 bg-rose-50 px-3.5 py-2 text-sm font-medium text-rose-800/90 transition-all duration-200 ease-out hover:bg-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             İptal Et
                           </button>
@@ -3300,16 +3336,23 @@ const Siparisler = () => {
                                 });
                               }}
                               disabled={updatingStatus}
-                              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm disabled:opacity-50"
+                              className="rounded-lg border border-rose-200/70 bg-rose-50 px-3.5 py-2 text-sm font-medium text-rose-800/90 transition-all duration-200 ease-out hover:bg-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                             >
                               İptal Et
                             </button>
                           </>
                         )}
-
-
                       </div>
                     )}
+                      </div>
+
+                      <button
+                        onClick={() => handleViewOrderDetail(order.id)}
+                        className="w-full rounded-lg border border-slate-200/80 bg-stone-50 px-3.5 py-2 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98] sm:w-auto"
+                      >
+                        Detayları Gör
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -3319,17 +3362,17 @@ const Siparisler = () => {
 
         {/* Sayfalama - Mağaza filtresi aktif değilken göster */}
         {ordersData && ordersData.pagination && ordersData.pagination.totalPages > 1 && !storeFilter && (
-          <div className="mt-8 flex justify-center">
-            <div className="flex items-center space-x-2">
+          <div className="mt-6 flex justify-center sm:mt-8">
+            <div className="flex flex-wrap items-center justify-center gap-2">
               <button
                 onClick={() => handlePageChange(ordersData.pagination.page - 1)}
                 disabled={!ordersData.pagination.hasPrev}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="rounded-lg border border-slate-200/80 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-stone-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Önceki
               </button>
 
-              <div className="flex items-center space-x-1">
+              <div className="flex items-center gap-1">
                 {Array.from({ length: Math.min(5, ordersData.pagination.totalPages) }, (_, i) => {
                   const page = i + 1;
                   const isActive = page === ordersData.pagination.page;
@@ -3337,10 +3380,10 @@ const Siparisler = () => {
                     <button
                       key={page}
                       onClick={() => handlePageChange(page)}
-                      className={`px-3 py-2 text-sm font-medium rounded-lg ${
+                      className={`min-w-[2.25rem] rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98] ${
                         isActive
-                          ? 'bg-blue-600 text-white'
-                          : 'text-gray-700 hover:bg-gray-50 border border-gray-300'
+                          ? 'bg-[#00365a] text-white'
+                          : 'border border-slate-200/80 bg-white text-slate-700 hover:bg-stone-50'
                       }`}
                     >
                       {page}
@@ -3352,7 +3395,7 @@ const Siparisler = () => {
               <button
                 onClick={() => handlePageChange(ordersData.pagination.page + 1)}
                 disabled={!ordersData.pagination.hasNext}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="rounded-lg border border-slate-200/80 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-stone-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Sonraki
               </button>
@@ -3362,41 +3405,44 @@ const Siparisler = () => {
 
         {/* Sipariş Detay Modal */}
         {selectedOrder && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-xl max-w-7xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3 sm:p-4 backdrop-blur-sm">
+            <div className="flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white">
               {/* Modal Header */}
-              <div className="bg-[#00365a] px-6 py-4 relative">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="text-2xl font-bold text-white">
-                      Sipariş Detayları
+              <div className="shrink-0 border-b border-slate-200/80 bg-stone-50/90 px-4 py-3.5 sm:px-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex flex-wrap items-center gap-2.5">
+                    <h3 className="truncate text-base font-semibold tracking-tight text-slate-900 sm:text-lg">
+                      {selectedOrder.store_name}
                     </h3>
-                    <p className="text-blue-100 text-sm mt-1">
-                      Sipariş No: {selectedOrder.id}
-                    </p>
+                    <span className={`inline-flex shrink-0 items-center rounded-md px-2 py-0.5 text-xs font-medium ${statusColors[selectedOrder.status]}`}>
+                      {statusLabels[selectedOrder.status]}
+                    </span>
                   </div>
                   <button
                     onClick={() => setSelectedOrder(null)}
-                    className="text-white hover:text-blue-200 text-3xl font-bold transition-colors"
+                    className="shrink-0 rounded-lg p-1.5 text-slate-400 transition-all duration-200 ease-out hover:bg-stone-200/70 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20"
+                    aria-label="Kapat"
                   >
-                    ×
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                   </button>
                 </div>
               </div>
 
               {/* Modal Body */}
-              <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Sol taraf - Sipariş Bilgileri */}
-                  <div className="space-y-6">
-                    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                      <h4 className="text-lg font-semibold text-[#00365a] mb-4 flex items-center">
+              <div className="overflow-y-auto p-4 sm:p-5 max-h-[calc(92vh-8rem)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
+                  {/* Sol taraf - Özet bilgiler */}
+                  <div className="space-y-4">
+                    <section>
+                      <h4 className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
                         Sipariş Bilgileri
                       </h4>
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                          <span className="text-gray-600 font-medium">Tarih:</span>
-                          <span className="text-gray-900">
+                      <div className="rounded-lg border border-slate-200/80 bg-stone-50/50 divide-y divide-slate-100">
+                        <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+                          <span className="text-sm text-slate-500">Tarih</span>
+                          <span className="text-right text-sm text-slate-800">
                             {new Date(selectedOrder.created_at).toLocaleDateString('tr-TR', {
                               year: 'numeric',
                               month: 'long',
@@ -3406,188 +3452,162 @@ const Siparisler = () => {
                             })}
                           </span>
                         </div>
-                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                          <span className="text-gray-600 font-medium">Durum:</span>
-                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[selectedOrder.status]}`}>
-                            {statusLabels[selectedOrder.status]}
-                          </span>
-                        </div>
-                        
-                        {/* Fiş durumu - Sadece DELIVERED durumunda */}
+
                         {selectedOrder.status === 'DELIVERED' && (
-                          <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                            <span className="text-gray-600 font-medium">Fiş Durumu:</span>
-                            <div className="flex items-center gap-2">
-                              {selectedOrder.receipt_printed ? (
-                                <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded text-xs">
-                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                  </svg>
-                                  Yazdırıldı
-                                  {selectedOrder.receipt_printed_at && (
-                                    <span className="ml-1 text-xs">
-                                      ({new Date(selectedOrder.receipt_printed_at).toLocaleDateString('tr-TR')})
-                                    </span>
-                                  )}
-                                </div>
-                              ) : (
-                                <div className="flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">
-                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                  </svg>
-                                  Yazdırılmadı
-                                </div>
-                              )}
-                            </div>
+                          <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+                            <span className="text-sm text-slate-500">Fiş</span>
+                            {selectedOrder.receipt_printed ? (
+                              <span className="inline-flex items-center gap-1 rounded-md border border-emerald-200/60 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-800/80">
+                                Yazdırıldı
+                                {selectedOrder.receipt_printed_at && (
+                                  <span className="text-emerald-700/70">
+                                    ({new Date(selectedOrder.receipt_printed_at).toLocaleDateString('tr-TR')})
+                                  </span>
+                                )}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center rounded-md border border-amber-200/60 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800/80">
+                                Yazdırılmadı
+                              </span>
+                            )}
                           </div>
                         )}
+
                         {user?.canSeePrice && (
-                          <div className="flex justify-between items-center py-2">
-                            <span className="text-gray-600 font-medium">Toplam Tutar:</span>
-                            <span className="font-bold text-[#00365a] text-lg">
+                          <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+                            <span className="text-sm text-slate-500">Toplam</span>
+                            <span className="text-sm font-semibold tabular-nums text-[#00365a]">
                               {getDisplayAmount(selectedOrder, selectedOrder.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {getCurrencyDisplay(selectedOrder, userCurrency)}
                             </span>
                           </div>
                         )}
                       </div>
-                    </div>
+                    </section>
 
-                    {/* Admin/Editor için müşteri bilgileri */}
                     {isAdminOrEditor && selectedOrder.user && (
-                      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                        <h4 className="text-lg font-semibold text-[#00365a] mb-4 flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                          </svg>
-                          Müşteri Bilgileri
+                      <section>
+                        <h4 className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          Müşteri
                         </h4>
-                        <div className="space-y-4">
-                          <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                            <span className="text-gray-600 font-medium">Ad Soyad:</span>
-                            <span className="text-gray-900">{selectedOrder.user.name} {selectedOrder.user.surname}</span>
+                        <div className="rounded-lg border border-slate-200/80 bg-stone-50/50 divide-y divide-slate-100">
+                          <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+                            <span className="text-sm text-slate-500">Ad Soyad</span>
+                            <span className="text-sm text-slate-800">{selectedOrder.user.name} {selectedOrder.user.surname}</span>
                           </div>
-                          <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                            <span className="text-gray-600 font-medium">E-posta:</span>
-                            <span className="text-gray-900">{selectedOrder.user.email}</span>
+                          <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+                            <span className="text-sm text-slate-500">E-posta</span>
+                            <span className="break-all text-right text-sm text-slate-800">{selectedOrder.user.email}</span>
                           </div>
-                          <div className="flex justify-between items-center py-2">
-                            <span className="text-gray-600 font-medium">Telefon:</span>
-                            <span className="text-gray-900">{selectedOrder.user.phone}</span>
+                          <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+                            <span className="text-sm text-slate-500">Telefon</span>
+                            <span className="text-sm text-slate-800">{selectedOrder.user.phone}</span>
                           </div>
                         </div>
-                      </div>
+                      </section>
                     )}
 
-                    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                      <h4 className="text-lg font-semibold text-[#00365a] mb-4 flex items-center">
-                        Mağaza Bilgileri
+                    <section>
+                      <h4 className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Mağaza & Teslimat
                       </h4>
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                          <span className="text-gray-600 font-medium">Mağaza Adı:</span>
-                          <span className="text-gray-900 font-semibold">{selectedOrder.store_name}</span>
+                      <div className="rounded-lg border border-slate-200/80 bg-stone-50/50 divide-y divide-slate-100">
+                        <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+                          <span className="text-sm text-slate-500">Mağaza</span>
+                          <span className="text-right text-sm font-medium text-slate-800">{selectedOrder.store_name}</span>
                         </div>
-                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                          <span className="text-gray-600 font-medium">Vergi No:</span>
-                          <span className="text-gray-900 font-mono text-sm">{selectedOrder.store_tax_number}</span>
+                        <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+                          <span className="text-sm text-slate-500">Vergi No</span>
+                          <span className="font-mono text-sm text-slate-800">{selectedOrder.store_tax_number}</span>
                         </div>
-                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                          <span className="text-gray-600 font-medium">Telefon:</span>
-                          <span className="text-gray-900">{selectedOrder.store_phone}</span>
+                        <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+                          <span className="text-sm text-slate-500">Telefon</span>
+                          <span className="text-sm text-slate-800">{selectedOrder.store_phone}</span>
                         </div>
-                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                          <span className="text-gray-600 font-medium">E-posta:</span>
-                          <span className="text-gray-900">{selectedOrder.store_email}</span>
+                        <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+                          <span className="text-sm text-slate-500">E-posta</span>
+                          <span className="break-all text-right text-sm text-slate-800">{selectedOrder.store_email}</span>
                         </div>
-                        <div className="py-2">
-                          <span className="text-gray-600 font-medium block mb-2">Teslimat Adresi:</span>
+                        <div className="px-3.5 py-2.5">
+                          <span className="mb-1.5 block text-sm text-slate-500">Teslimat Adresi</span>
                           {selectedOrder.address ? (
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                              <h4 className="font-medium text-blue-900 mb-1">{selectedOrder.address.title}</h4>
-                              <p className="text-sm text-blue-800 mb-1">{selectedOrder.address.address}</p>
-                              <p className="text-xs text-blue-700">
+                            <div className="text-sm text-slate-800">
+                              {selectedOrder.address.title && (
+                                <div className="font-medium">{selectedOrder.address.title}</div>
+                              )}
+                              <p className="mt-0.5 text-slate-600">{selectedOrder.address.address}</p>
+                              <p className="mt-0.5 text-xs text-slate-500">
                                 {selectedOrder.address.district && selectedOrder.address.district + ', '}
                                 {selectedOrder.address.city}
                                 {selectedOrder.address.postal_code && ' - ' + selectedOrder.address.postal_code}
                               </p>
                               {selectedOrder.address.is_default && (
-                                <span className="inline-block mt-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                                <span className="mt-2 inline-block rounded-md border border-emerald-200/60 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-800/80">
                                   Varsayılan Adres
                                 </span>
                               )}
                             </div>
-                          ) : selectedOrder.address ? (
-                            <div className="text-gray-900 text-right max-w-xs">
-                              <div className="font-semibold">{(selectedOrder.address as any).title}</div>
-                              <div className="text-sm">{(selectedOrder.address as any).address}</div>
-                              <div className="text-sm">{(selectedOrder.address as any).district} / {(selectedOrder.address as any).city}</div>
-                              {(selectedOrder.address as any).postal_code && (
-                                <div className="text-sm">Posta Kodu: {(selectedOrder.address as any).postal_code}</div>
-                              )}
-                            </div>
                           ) : (
-                            <span className="text-gray-900 text-right max-w-xs">{selectedOrder.delivery_address}</span>
+                            <span className="text-sm text-slate-800">{selectedOrder.delivery_address || '—'}</span>
                           )}
                         </div>
                       </div>
-                    </div>
+                    </section>
 
                     {selectedOrder.notes && (
-                      <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-6 shadow-sm">
-                        <h4 className="text-lg font-semibold text-amber-700 mb-3 flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                          </svg>
+                      <section>
+                        <h4 className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
                           Sipariş Notu
                         </h4>
-                        <p className="text-amber-800 bg-white bg-opacity-70 p-3 rounded-lg">{selectedOrder.notes}</p>
-                      </div>
+                        <div className="rounded-lg border border-amber-200/60 bg-amber-50/70 px-3.5 py-2.5 text-sm text-amber-900/80">
+                          {selectedOrder.notes}
+                        </div>
+                      </section>
                     )}
-
-
                   </div>
 
                   {/* Sağ taraf - Ürünler */}
                   <div>
-                    <div className="mb-6">
-                      <h4 className="text-lg font-semibold text-[#00365a] mb-2 flex items-center">
+                    <div className="mb-3 flex items-baseline justify-between gap-2">
+                      <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                         Ürünler
                       </h4>
-                      <p className="text-gray-500 text-sm">{selectedOrder.items.reduce((total, item) => total + item.quantity, 0)} ürün</p>
+                      <p className="text-xs text-slate-400">
+                        {selectedOrder.items.reduce((total, item) => total + item.quantity, 0)} adet
+                      </p>
                     </div>
-                    <div className="space-y-4">
+                    <div className="space-y-2.5">
                       {selectedOrder.items.map((item) => (
-                        <div key={item.id} className="border border-gray-200 rounded-lg p-4">
-                          <div className="flex space-x-4">
+                        <div key={item.id} className="rounded-lg border border-slate-200/80 bg-white p-3">
+                          <div className="flex gap-3">
                             <Image
                               src={item.product.productImage || '/placeholder-product.jpg'}
                               alt={item.product.name}
-                              width={64}
-                              height={64}
-                              className="w-16 h-16 object-cover rounded-lg"
+                              width={56}
+                              height={56}
+                              className="h-14 w-14 shrink-0 rounded-md object-cover"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
                                 target.src = '/placeholder-product.jpg';
                               }}
                             />
-                            <div className="flex-1">
-                              <h5 className="font-medium text-gray-900">{item.product.name}</h5>
+                            <div className="min-w-0 flex-1">
+                              <h5 className="truncate text-sm font-medium text-slate-900">{item.product.name}</h5>
                               {item.product.collection && (
-                                <p className="text-xs text-[#00365a] mt-1">
+                                <p className="mt-0.5 text-xs text-slate-500">
                                   {item.product.collection.name}
                                 </p>
                               )}
-                              <div className="mt-1 text-xs text-gray-500">
+                              <div className="mt-1 text-xs text-slate-500">
                                 {item.width}×{item.height} cm
-                                {item.has_fringe ? ', Saçaklı' : ', Saçaksız'}
-                                {item.cut_type && `, ${translateCutType(item.cut_type)}`}
+                                {item.has_fringe ? ' · Saçaklı' : ' · Saçaksız'}
+                                {item.cut_type && ` · ${translateCutType(item.cut_type)}`}
                               </div>
-                              <div className="mt-2 flex justify-between items-center">
-                                <span className="text-sm text-gray-600">
+                              <div className="mt-1.5 flex items-center justify-between gap-2">
+                                <span className="text-sm text-slate-600">
                                   {item.quantity} adet{user?.canSeePrice ? ` × ${parseFloat(item.unit_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${getCurrencyDisplay(selectedOrder, userCurrency)}` : ''}
                                 </span>
                                 {user?.canSeePrice && (
-                                  <span className="font-semibold text-gray-900">
+                                  <span className="text-sm font-semibold tabular-nums text-slate-900">
                                     {parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {getCurrencyDisplay(selectedOrder, userCurrency)}
                                   </span>
                                 )}
@@ -3595,55 +3615,47 @@ const Siparisler = () => {
                               
                               {/* Ürün Notu */}
                               {item.notes && (
-                                <div className="mt-3 pt-3 border-t border-gray-100">
-                                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                                    <h6 className="text-sm font-medium text-yellow-800 mb-1 flex items-center">
-                                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                      </svg>
-                                      Ürün Notu
-                                    </h6>
-                                    <p className="text-sm text-yellow-700">{item.notes}</p>
-                                  </div>
+                                <div className="mt-2 rounded-md border border-amber-200/60 bg-amber-50/70 px-2.5 py-1.5 text-xs text-amber-900/80">
+                                  <span className="font-medium">Not:</span> {item.notes}
                                 </div>
                               )}
                               
                               {/* Barcode bilgileri */}
                               {((selectedOrder.qr_codes && selectedOrder.qr_codes.filter(qr => qr.order_item_id === item.id).length > 0) ||
                                 (selectedOrder.barcodes && selectedOrder.barcodes.filter(bc => bc.order_item_id === item.id).length > 0)) && (
-                                <div className="mt-3 pt-3 border-t border-gray-100">
-                                  <div className="text-xs text-gray-500 mb-2">Barkodlar:</div>
+                                <div className="mt-2 border-t border-slate-100 pt-2">
+                                  <div className="mb-1.5 text-xs text-slate-500">Barkodlar</div>
                                   <div className="space-y-1">
                                     {/* QR codes'daki barkodlar */}
                                     {selectedOrder.qr_codes && selectedOrder.qr_codes
                                       .filter(qr => qr.order_item_id === item.id && qr.barcode)
                                       .map((qr, qrIndex) => (
-                                        <div key={qr.id} className="flex items-center justify-between bg-gray-50 rounded px-2 py-1">
-                                          <span className="text-xs font-mono text-gray-700">
+                                        <div key={qr.id} className="flex items-center justify-between rounded-md bg-stone-50 px-2 py-1">
+                                          <span className="font-mono text-xs text-slate-600">
                                             {qr.barcode}
                                           </span>
-                                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                          <span className={`rounded-md px-2 py-0.5 text-xs font-medium ${
                                             qr.is_scanned 
-                                              ? 'bg-green-100 text-green-800' 
-                                              : 'bg-yellow-100 text-yellow-800'
+                                              ? 'border border-emerald-200/60 bg-emerald-50 text-emerald-800/80' 
+                                              : 'border border-amber-200/60 bg-amber-50 text-amber-800/80'
                                           }`}>
                                             {qr.is_scanned ? 'Tarandı' : 'Bekliyor'}
                                           </span>
-                            </div>
+                                        </div>
                                       ))
                                     }
                                     {/* Barcodes array'indeki barkodlar */}
                                     {selectedOrder.barcodes && selectedOrder.barcodes
                                       .filter(bc => bc.order_item_id === item.id)
                                       .map((bc, bcIndex) => (
-                                        <div key={bc.id} className="flex items-center justify-between bg-gray-50 rounded px-2 py-1">
-                                          <span className="text-xs font-mono text-gray-700">
+                                        <div key={bc.id} className="flex items-center justify-between rounded-md bg-stone-50 px-2 py-1">
+                                          <span className="font-mono text-xs text-slate-600">
                                             {bc.barcode}
                                           </span>
-                                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                          <span className={`rounded-md px-2 py-0.5 text-xs font-medium ${
                                             bc.is_scanned 
-                                              ? 'bg-green-100 text-green-800' 
-                                              : 'bg-yellow-100 text-yellow-800'
+                                              ? 'border border-emerald-200/60 bg-emerald-50 text-emerald-800/80' 
+                                              : 'border border-amber-200/60 bg-amber-50 text-amber-800/80'
                                           }`}>
                                             {bc.is_scanned ? 'Tarandı' : 'Bekliyor'}
                                           </span>
@@ -3661,33 +3673,32 @@ const Siparisler = () => {
 
                     {/* QR Kodları Bölümü - CANCELLED durumunda gösterme */}
                     {selectedOrder.status !== 'CANCELLED' && selectedOrder.qr_codes && selectedOrder.qr_codes.length > 0 && (
-                      <div className="mt-6">
-                        <div className="flex justify-between items-center mb-3">
-                          <h4 className="text-lg font-semibold text-gray-900">QR Kodları</h4>
+                      <div className="mt-5">
+                        <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
+                          <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">QR Kodları</h4>
                           <button
                             onClick={() => openQRLabel(selectedOrder)}
-                            className="flex items-center gap-2 px-4 py-2 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md"
-                            style={{ backgroundColor: 'rgb(0 54 90)' }}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-[#00365a] px-3 py-1.5 text-xs font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98]"
                             title="QR Etiketleri Yazdır (10x15 cm)"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                             </svg>
-                            QR Etiket Yazdır
+                            QR Yazdır
                           </button>
                         </div>
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="rounded-lg border border-slate-200/80 bg-stone-50/80 p-3.5">
                           {/* QR İstatistikleri */}
-                          <div className="mb-4">
-                            <div className="grid grid-cols-3 gap-4 mb-3">
-                              <div className="text-center">
-                                <div className="text-2xl font-bold text-[#00365a]">
+                          <div className="mb-3">
+                            <div className="mb-2.5 grid grid-cols-3 gap-2">
+                              <div className="rounded-md bg-white px-2 py-2 text-center border border-slate-200/60">
+                                <div className="text-lg font-semibold tabular-nums text-[#00365a]">
                                   {selectedOrder.items.reduce((total, item) => total + item.quantity, 0)}
                                 </div>
-                                <div className="text-sm text-gray-600">QR Kod</div>
+                                <div className="text-[11px] text-slate-500">QR Kod</div>
                               </div>
-                              <div className="text-center">
-                                <div className="text-2xl font-bold text-orange-600">
+                              <div className="rounded-md bg-white px-2 py-2 text-center border border-slate-200/60">
+                                <div className="text-lg font-semibold tabular-nums text-amber-800/80">
                                   {selectedOrder.qr_codes
                                     .filter(qr => qr.first_scan_at && !qr.second_scan_at)
                                     .reduce((total, qr) => {
@@ -3695,10 +3706,10 @@ const Siparisler = () => {
                                       return total + (item ? item.quantity : 0);
                                     }, 0)}
                                 </div>
-                                <div className="text-sm text-gray-600">Hazır</div>
+                                <div className="text-[11px] text-slate-500">Hazır</div>
                               </div>
-                              <div className="text-center">
-                                <div className="text-2xl font-bold text-green-600">
+                              <div className="rounded-md bg-white px-2 py-2 text-center border border-slate-200/60">
+                                <div className="text-lg font-semibold tabular-nums text-emerald-700/90">
                                   {selectedOrder.qr_codes
                                     .filter(qr => qr.second_scan_at)
                                     .reduce((total, qr) => {
@@ -3706,16 +3717,16 @@ const Siparisler = () => {
                                       return total + (item ? item.quantity : 0);
                                     }, 0)}
                                 </div>
-                                <div className="text-sm text-gray-600">Tamamlandı</div>
+                                <div className="text-[11px] text-slate-500">Tamamlandı</div>
                               </div>
                             </div>
                             
                             {/* Genel İlerleme Çubuğu */}
-                            <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                            <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
                               <div className="h-3 flex">
                                 {/* Tamamlanmış kısım - yeşil */}
                                 <div 
-                                  className="bg-green-600 transition-all duration-300" 
+                                  className="bg-emerald-600/80 transition-all duration-300" 
                                   style={{
                                     width: `${(() => {
                                       const totalQuantity = selectedOrder.items.reduce((total, item) => total + item.quantity, 0);
@@ -3731,7 +3742,7 @@ const Siparisler = () => {
                                 ></div>
                                 {/* Hazır kısım - turuncu */}
                                 <div 
-                                  className="bg-orange-500 transition-all duration-300" 
+                                  className="bg-amber-500/80 transition-all duration-300" 
                                   style={{
                                     width: `${(() => {
                                       const totalQuantity = selectedOrder.items.reduce((total, item) => total + item.quantity, 0);
@@ -3747,7 +3758,7 @@ const Siparisler = () => {
                                 ></div>
                               </div>
                             </div>
-                            <div className="text-center text-sm text-gray-600 mt-1">
+                            <div className="text-center text-sm text-slate-600 mt-1">
                               {(() => {
                                 const totalQuantity = selectedOrder.items.reduce((total, item) => total + item.quantity, 0);
                                 const completedQuantity = selectedOrder.qr_codes
@@ -3781,7 +3792,7 @@ const Siparisler = () => {
                               <div 
                                 key={qrCode.id}
                                 className={`flex items-center justify-between p-3 rounded ${
-                                  qrCode.is_scanned ? 'bg-green-100 border border-green-200' : 'bg-white border border-gray-200'
+                                  qrCode.is_scanned ? 'border border-emerald-200/60 bg-emerald-50/70' : 'border border-slate-200/80 bg-white'
                                 }`}
                               >
                                 <div className="flex items-center space-x-3">
@@ -3799,21 +3810,21 @@ const Siparisler = () => {
                                     />
                                   </div>
                                   <div>
-                                    <div className="text-sm font-medium text-gray-900">
+                                    <div className="text-sm font-medium text-slate-900">
                                       {qrCode.product.name}
                                     </div>
-                                    <div className="text-xs text-gray-500">
+                                    <div className="text-xs text-slate-500">
                                       {qrCode.order_item.width}×{qrCode.order_item.height} cm • 
                                       {qrCode.order_item.has_fringe ? ' Saçaklı' : ' Saçaksız'} • 
                                       {translateCutType(qrCode.order_item.cut_type)}
                                     </div>
-                                    <div className="text-xs text-[#00365a] mt-1">
+                                    <div className="mt-1 text-xs text-[#00365a]/80">
                                       Adet: {qrCode.order_item.quantity} • 
                                       Tarama: {qrCode.first_scan_at ? (qrCode.second_scan_at ? '2/2' : '1/2') : '0/2'}
                                     </div>
-                                    <div className="w-24 bg-gray-200 rounded-full h-2 mt-1">
+                                    <div className="mt-1 h-1.5 w-24 rounded-full bg-slate-200">
                                       <div 
-                                        className="bg-green-600 h-2 rounded-full" 
+                                        className="h-1.5 rounded-full bg-emerald-600/80" 
                                         style={{width: `${qrCode.second_scan_at ? 100 : (qrCode.first_scan_at ? 50 : 0)}%`}}
                                       ></div>
                                     </div>
@@ -3822,9 +3833,9 @@ const Siparisler = () => {
                                 <div className="flex items-center space-x-2">
                                   {qrCode.is_scanned ? (
                                     <div className="text-xs text-center">
-                                      <span className="text-green-600 font-medium">✓ Tamamlandı</span>
+                                      <span className="text-emerald-700/80 font-medium">✓ Tamamlandı</span>
                                       {qrCode.second_scan_at && (
-                                        <div className="text-gray-500">
+                                        <div className="text-slate-500">
                                           {new Date(qrCode.second_scan_at).toLocaleDateString('tr-TR', {
                                             day: '2-digit',
                                             month: '2-digit',
@@ -3840,7 +3851,7 @@ const Siparisler = () => {
                                         Hazır - 2. okuma bekliyor
                                       </span>
                                       {qrCode.first_scan_at && (
-                                        <div className="text-gray-500">
+                                        <div className="text-slate-500">
                                           1. Okuma: {new Date(qrCode.first_scan_at).toLocaleDateString('tr-TR', {
                                             day: '2-digit',
                                             month: '2-digit',
@@ -3924,7 +3935,7 @@ const Siparisler = () => {
                                           window.open(qrCode.qr_code, '_blank');
                                         }}
                                         disabled={qrCode.second_scan_at !== null}
-                                        className="text-green-600 hover:text-green-800 text-xs underline disabled:text-gray-400 disabled:cursor-not-allowed"
+                                        className="text-xs text-emerald-700/80 underline transition-colors duration-150 hover:text-emerald-900 disabled:cursor-not-allowed disabled:text-slate-400"
                                       >
                                         {qrCode.second_scan_at ? 'Tamamlandı' : (qrCode.first_scan_at ? '2. Okuma' : '1. Okuma')}
                                       </button>
@@ -4225,7 +4236,7 @@ const Siparisler = () => {
                               alert('Fiş bilgileri alınamadı: ' + (error.message || 'Bilinmeyen hata'));
                             }
                           }}
-                          className="px-6 py-3 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors text-sm font-medium"
+                          className="rounded-lg bg-[#00365a] px-5 py-2.5 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98]"
                         >
                           📄 Fiş Görüntüle
                         </button>
@@ -4234,10 +4245,10 @@ const Siparisler = () => {
 
                     {/* QR Kodu yoksa ama sipariş onaylanmış veya hazır durumda (CANCELLED hariç) */}
                     {isAdminOrEditor && selectedOrder.status !== 'CANCELLED' && (selectedOrder.status === 'CONFIRMED' || selectedOrder.status === 'READY') && (!selectedOrder.qr_codes || selectedOrder.qr_codes.length === 0) && (
-                      <div className="mt-6">
-                        <h4 className="text-lg font-semibold text-gray-900 mb-3">QR Kodları</h4>
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-                          <p className="text-yellow-800 mb-3">Bu sipariş için henüz QR kodları oluşturulmamış.</p>
+                      <div className="mt-5">
+                        <h4 className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">QR Kodları</h4>
+                        <div className="rounded-lg border border-amber-200/60 bg-amber-50/70 px-3.5 py-4 text-center">
+                          <p className="mb-3 text-sm text-amber-900/80">Bu sipariş için henüz QR kodları oluşturulmamış.</p>
                           <button
                             onClick={async () => {
                               try {
@@ -4254,54 +4265,52 @@ const Siparisler = () => {
                               }
                             }}
                             disabled={updatingStatus}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                            className="rounded-lg bg-[#00365a] px-4 py-2 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             {updatingStatus ? 'QR Kodları Oluşturuluyor...' : 'QR Kodları Oluştur'}
                           </button>
                         </div>
                       </div>
                     )}
-
-                    {/* Admin/Editor için durum güncelleme */}
-                    {isAdminOrEditor && (
-                      <div className="flex flex-wrap gap-2 mt-8 justify-center">
-                        {selectedOrder.status === 'PENDING' && (
-                          <>
-                            <button
-                              onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'CONFIRMED')}
-                              disabled={updatingStatus}
-                              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-                            >
-                              {updatingStatus ? 'Güncelleniyor...' : 'Siparişi Onayla'}
-                            </button>
-                            <button
-                              onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'CANCELED')}
-                              disabled={updatingStatus}
-                              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-                            >
-                              {updatingStatus ? 'Güncelleniyor...' : 'İptal Et'}
-                            </button>
-                          </>
-                        )}
-
-                        {selectedOrder.status === 'SHIPPED' && (
-                          <button
-                            onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'DELIVERED')}
-                            disabled={updatingStatus}
-                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
-                          >
-                            {updatingStatus ? 'Güncelleniyor...' : 'Sipariş Durumunu Güncelle'}
-                          </button>
-                        )}
-                      </div>
-                    )}
                   </div>
                 </div>
+              </div>
 
-                <div className="mt-6 pt-6 border-t border-gray-200 flex justify-end gap-3">
+              {/* Modal Footer */}
+              <div className="shrink-0 border-t border-slate-200/80 bg-stone-50/80 px-4 py-3 sm:px-5">
+                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-wrap gap-2 sm:justify-start">
+                    {isAdminOrEditor && selectedOrder.status === 'PENDING' && (
+                      <>
+                        <button
+                          onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'CONFIRMED')}
+                          disabled={updatingStatus}
+                          className="rounded-lg bg-[#00365a] px-3.5 py-2 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {updatingStatus ? 'Güncelleniyor...' : 'Onayla'}
+                        </button>
+                        <button
+                          onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'CANCELED')}
+                          disabled={updatingStatus}
+                          className="rounded-lg border border-rose-200/70 bg-rose-50 px-3.5 py-2 text-sm font-medium text-rose-800/90 transition-all duration-200 ease-out hover:bg-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {updatingStatus ? 'Güncelleniyor...' : 'İptal Et'}
+                        </button>
+                      </>
+                    )}
+                    {isAdminOrEditor && selectedOrder.status === 'SHIPPED' && (
+                      <button
+                        onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'DELIVERED')}
+                        disabled={updatingStatus}
+                        className="rounded-lg bg-emerald-700/90 px-3.5 py-2 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {updatingStatus ? 'Güncelleniyor...' : 'Durumu Güncelle'}
+                      </button>
+                    )}
+                  </div>
                   <button
                     onClick={() => setSelectedOrder(null)}
-                    className="px-6 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors font-medium"
+                    className="rounded-lg border border-slate-200/80 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98]"
                   >
                     Kapat
                   </button>
@@ -4313,11 +4322,11 @@ const Siparisler = () => {
 
         {/* Toplu Onaylama Sonuç Modal */}
         {bulkConfirmModal && bulkConfirmResult && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl max-w-2xl w-full mx-4 shadow-2xl max-h-[80vh] overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+            <div className="mx-4 max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-slate-200/80 bg-white">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold tracking-tight text-slate-900">
                     Toplu Onaylama Sonuçları
                   </h3>
                   <button
@@ -4325,7 +4334,7 @@ const Siparisler = () => {
                       setBulkConfirmModal(false);
                       setBulkConfirmResult(null);
                     }}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="rounded-lg p-1 text-slate-400 transition-colors duration-150 hover:bg-stone-100 hover:text-slate-700"
                   >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -4334,25 +4343,25 @@ const Siparisler = () => {
                 </div>
 
                 {/* Özet */}
-                <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <div className="mb-6 rounded-lg border border-slate-200/60 bg-stone-50/80 p-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                     <div>
-                      <div className="text-2xl font-bold text-gray-900">{(bulkConfirmResult.data.success?.length || 0) + (bulkConfirmResult.data.failed?.length || 0)}</div>
-                      <div className="text-sm text-gray-600">Toplam</div>
+                      <div className="text-2xl font-semibold tabular-nums text-slate-900">{(bulkConfirmResult.data.success?.length || 0) + (bulkConfirmResult.data.failed?.length || 0)}</div>
+                      <div className="text-sm text-slate-600">Toplam</div>
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-green-600">{bulkConfirmResult.data.success?.length || 0}</div>
-                      <div className="text-sm text-gray-600">Başarılı</div>
+                      <div className="text-2xl font-semibold tabular-nums text-emerald-700/90">{bulkConfirmResult.data.success?.length || 0}</div>
+                      <div className="text-sm text-slate-600">Başarılı</div>
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-red-600">{bulkConfirmResult.data.failed?.length || 0}</div>
-                      <div className="text-sm text-gray-600">Başarısız</div>
+                      <div className="text-2xl font-semibold tabular-nums text-rose-700/90">{bulkConfirmResult.data.failed?.length || 0}</div>
+                      <div className="text-sm text-slate-600">Başarısız</div>
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-blue-600">
+                      <div className="text-2xl font-semibold tabular-nums text-[#00365a]">
                         {bulkConfirmResult.data.success?.length || 0} / {(bulkConfirmResult.data.success?.length || 0) + (bulkConfirmResult.data.failed?.length || 0)}
                       </div>
-                      <div className="text-sm text-gray-600">Başarı Oranı</div>
+                      <div className="text-sm text-slate-600">Başarı Oranı</div>
                     </div>
                   </div>
                 </div>
@@ -4360,7 +4369,7 @@ const Siparisler = () => {
                 {/* Başarılı Siparişler */}
                 {bulkConfirmResult.data.success.length > 0 && (
                   <div className="mb-6">
-                    <h4 className="text-md font-semibold text-green-700 mb-3 flex items-center gap-2">
+                    <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-emerald-800/80">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
@@ -4368,19 +4377,19 @@ const Siparisler = () => {
                     </h4>
                     <div className="space-y-2">
                       {bulkConfirmResult.data.success.map((order) => (
-                        <div key={order.orderId} className="bg-green-50 border border-green-200 rounded-lg p-3">
+                        <div key={order.orderId} className="rounded-lg border border-emerald-200/60 bg-emerald-50/70 p-3">
                           <div className="flex justify-between items-start">
                             <div>
-                              <div className="font-medium text-gray-900">
+                              <div className="font-medium text-slate-900">
                                 Sipariş #{order.orderId.slice(0, 8)}
                               </div>
-                              <div className="text-sm text-green-700 mt-1">
+                              <div className="mt-1 text-sm text-emerald-700/80">
                                 Başarıyla onaylandı
                               </div>
                             </div>
                             <div className="text-right">
-                              <div className="text-sm text-gray-600">
-                                  <span className="text-green-600">✓ QR Kodları Oluşturuldu</span>
+                              <div className="text-sm text-slate-600">
+                                  <span className="text-emerald-700/80">✓ QR Kodları Oluşturuldu</span>
                               </div>
                             </div>
                           </div>
@@ -4393,7 +4402,7 @@ const Siparisler = () => {
                 {/* Başarısız Siparişler */}
                 {bulkConfirmResult.data.failed.length > 0 && (
                   <div className="mb-6">
-                    <h4 className="text-md font-semibold text-red-700 mb-3 flex items-center gap-2">
+                    <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-rose-800/80">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
@@ -4401,12 +4410,12 @@ const Siparisler = () => {
                     </h4>
                     <div className="space-y-2">
                       {bulkConfirmResult.data.failed.map((order) => (
-                        <div key={order.orderId} className="bg-red-50 border border-red-200 rounded-lg p-3">
+                        <div key={order.orderId} className="rounded-lg border border-rose-200/60 bg-rose-50/70 p-3">
                           <div>
-                            <div className="font-medium text-gray-900">
+                            <div className="font-medium text-slate-900">
                               Sipariş #{order.orderId.slice(0, 8)}
                             </div>
-                            <div className="text-sm text-red-700 mt-1">
+                            <div className="mt-1 text-sm text-rose-700/80">
                               Hata: {order.error}
                             </div>
                           </div>
@@ -4430,7 +4439,7 @@ const Siparisler = () => {
                         // QR'ları yazdır
                         await printBulkQRCodesForOrders(successOrderIds);
                       }}
-                      className="px-4 py-2 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg flex items-center gap-2 transition-colors"
+                      className="inline-flex items-center gap-2 rounded-lg bg-[#00365a] px-4 py-2 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98]"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -4443,7 +4452,7 @@ const Siparisler = () => {
                       setBulkConfirmModal(false);
                       setBulkConfirmResult(null);
                     }}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="rounded-lg bg-[#00365a] px-4 py-2 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98]"
                   >
                     Tamam
                   </button>
@@ -4455,33 +4464,33 @@ const Siparisler = () => {
 
         {/* Sipariş İptal Modal */}
         {cancelOrderModal.isOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl max-w-md w-full mx-4 shadow-2xl">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+            <div className="mx-4 w-full max-w-md rounded-xl border border-slate-200/80 bg-white">
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <h3 className="text-lg font-semibold tracking-tight text-slate-900 mb-4">
                   {cancelOrderModal.isRefund ? 'Siparişi İade Et' : 'Siparişi İptal Et'}
                 </h3>
                 
                 <div className="mb-4">
-                  <p className="text-sm text-gray-600 mb-4">
+                  <p className="mb-4 text-sm text-slate-500">
                     {cancelOrderModal.isRefund 
                       ? 'Bu siparişi iade etmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve sipariş tutarı müşteri bakiyesine iade edilecektir.'
                       : `Bu siparişi iptal etmek istediğinizden emin misiniz? Bu işlem geri alınamaz${user?.canSeePrice ? ' ve sipariş tutarı bakiyenize iade edilecektir' : ''}.`
                     }
                   </p>
                   
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-slate-500">
                     {cancelOrderModal.isRefund ? 'İade Nedeni (İsteğe bağlı)' : 'İptal Nedeni (İsteğe bağlı)'}
                   </label>
                   <textarea
                     value={cancelOrderModal.reason}
                     onChange={(e) => setCancelOrderModal(prev => ({ ...prev, reason: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                    className="w-full resize-none rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 transition-all duration-200 ease-out placeholder:text-slate-400 hover:border-slate-300 focus:border-slate-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-400/25"
                     rows={3}
                     placeholder="Vazgeçtim, yanlış ürün seçtim, vb..."
                     maxLength={500}
                   />
-                  <div className="text-xs text-gray-400 mt-1">
+                  <div className="mt-1 text-xs text-slate-400">
                     {cancelOrderModal.reason.length}/500 karakter
                   </div>
                 </div>
@@ -4496,7 +4505,7 @@ const Siparisler = () => {
                       isRefund: false
                     })}
                     disabled={cancelOrderModal.isLoading}
-                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+                    className="rounded-lg border border-slate-200/80 bg-stone-50 px-4 py-2 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Vazgeç
                   </button>
@@ -4511,8 +4520,8 @@ const Siparisler = () => {
                     disabled={cancelOrderModal.isLoading}
                     className={`px-4 py-2 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2 ${
                       cancelOrderModal.isRefund 
-                        ? 'bg-orange-600 hover:bg-orange-700' 
-                        : 'bg-red-600 hover:bg-red-700'
+                        ? 'bg-amber-700/90 hover:bg-amber-800' 
+                        : 'bg-rose-700/90 hover:bg-rose-800'
                     }`}
                   >
                     {cancelOrderModal.isLoading && (

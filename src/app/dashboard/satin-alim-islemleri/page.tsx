@@ -21,7 +21,8 @@ import BalanceModal from '../../../components/BalanceModal';
 
 
 export default function SatinAlimIslemleriPage() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isAdminOrEditor } = useAuth();
+  const canSeePurchasePrices = isAdmin;
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'suppliers'>('suppliers');
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -74,13 +75,13 @@ export default function SatinAlimIslemleriPage() {
     };
   }, [showPaymentModal]);
 
-  // Admin kontrolü
+  // Admin / Editör kontrolü
   useEffect(() => {
-    if (!isAdmin) {
+    if (!isAdminOrEditor) {
       router.push('/dashboard');
       return;
     }
-  }, [isAdmin, router]);
+  }, [isAdminOrEditor, router]);
 
   // Click outside handler for supplier dropdown
   useEffect(() => {
@@ -233,7 +234,7 @@ export default function SatinAlimIslemleriPage() {
     }
   };
 
-  if (!isAdmin) {
+  if (!isAdminOrEditor) {
     return null;
   }
 
@@ -285,17 +286,19 @@ export default function SatinAlimIslemleriPage() {
                 Satıcı bilgilerini yönetin ve satın alım işlemlerini gerçekleştirin
               </p>
             </div>
-            <button
-              onClick={() => setShowPaymentModal(true)}
-              className="inline-flex items-center justify-center gap-1.5 self-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98] sm:self-auto"
-            >
-              Ödeme Yap
-            </button>
+            {canSeePurchasePrices && (
+              <button
+                onClick={() => setShowPaymentModal(true)}
+                className="inline-flex items-center justify-center gap-1.5 self-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98] sm:self-auto"
+              >
+                Ödeme Yap
+              </button>
+            )}
           </div>
         </div>
 
         {/* Summary Card */}
-        {balanceSummary && (
+        {canSeePurchasePrices && balanceSummary && (
           <div className="mb-6 overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
             <div className="border-b border-slate-100 px-5 py-4 sm:px-6">
               <h3 className="text-sm font-semibold text-slate-900">Finansal Özet</h3>
@@ -370,13 +373,15 @@ export default function SatinAlimIslemleriPage() {
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => router.push('/dashboard/alis-fiyat-listesi')}
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200/80 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98]"
-              >
-                Alış Fiyat Listesi
-              </button>
+              {canSeePurchasePrices && (
+                <button
+                  type="button"
+                  onClick={() => router.push('/dashboard/alis-fiyat-listesi')}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200/80 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98]"
+                >
+                  Alış Fiyat Listesi
+                </button>
+              )}
               <button
                 type="button"
                 onClick={handleCreateSupplier}
@@ -402,9 +407,11 @@ export default function SatinAlimIslemleriPage() {
                     <th className="px-4 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-slate-500 sm:px-6">
                       İletişim
                     </th>
-                    <th className="px-4 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-slate-500 sm:px-6">
-                      Finansal Durum
-                    </th>
+                    {canSeePurchasePrices && (
+                      <th className="px-4 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-slate-500 sm:px-6">
+                        Finansal Durum
+                      </th>
+                    )}
                     <th className="px-4 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-slate-500 sm:px-6">
                       İşlemler
                     </th>
@@ -430,15 +437,17 @@ export default function SatinAlimIslemleriPage() {
                           <div className="max-w-xs truncate text-sm text-slate-500">{supplier.address}</div>
                         </div>
                       </td>
-                      <td className="px-4 py-4 sm:px-6">
-                        <div
-                          className={`text-sm font-semibold tabular-nums ${
-                            supplier.balance >= 0 ? 'text-emerald-600' : 'text-red-600'
-                          }`}
-                        >
-                          {supplier.balance}$
-                        </div>
-                      </td>
+                      {canSeePurchasePrices && (
+                        <td className="px-4 py-4 sm:px-6">
+                          <div
+                            className={`text-sm font-semibold tabular-nums ${
+                              supplier.balance >= 0 ? 'text-emerald-600' : 'text-red-600'
+                            }`}
+                          >
+                            {supplier.balance}$
+                          </div>
+                        </td>
+                      )}
                       <td className="px-4 py-4 sm:px-6">
                         <div className="flex flex-wrap items-center gap-1.5">
                           <button
@@ -487,7 +496,7 @@ export default function SatinAlimIslemleriPage() {
                   ))}
                   {filteredSuppliers.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="px-6 py-14 text-center">
+                        <td colSpan={canSeePurchasePrices ? 4 : 3} className="px-6 py-14 text-center">
                         <div className="mx-auto flex max-w-sm flex-col items-center">
                           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                             <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -619,8 +628,8 @@ export default function SatinAlimIslemleriPage() {
           </div>
         )}
 
-        {/* Payment Modal */}
-        {showPaymentModal && (
+        {/* Payment Modal - yalnızca admin */}
+        {canSeePurchasePrices && showPaymentModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
             <div className="relative w-full max-w-md overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
               <div className="flex items-center justify-between border-b border-slate-200/80 px-5 py-4">

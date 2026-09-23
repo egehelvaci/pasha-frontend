@@ -13,7 +13,8 @@ import {
 
 const SupplierPurchaseHistoryPage = () => {
   const params = useParams();
-  const { isAdmin, isLoading: authLoading } = useAuth();
+  const { isAdmin, isAdminOrEditor, isLoading: authLoading } = useAuth();
+  const canSeePurchasePrices = isAdmin;
   const [transactions, setTransactions] = useState<SupplierPurchaseSummaryItem[]>([]);
   const [cartPurchases, setCartPurchases] = useState<CartPurchaseWithProducts[]>([]);
   const [supplier, setSupplier] = useState<any>(null);
@@ -52,10 +53,10 @@ const SupplierPurchaseHistoryPage = () => {
   }, [supplierId, currentPage]);
 
   useEffect(() => {
-    if (isAdmin && supplierId) {
+    if (isAdminOrEditor && supplierId) {
       loadSupplierPurchaseHistory();
     }
-  }, [isAdmin, loadSupplierPurchaseHistory]);
+  }, [isAdminOrEditor, loadSupplierPurchaseHistory]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('tr-TR', {
@@ -76,7 +77,7 @@ const SupplierPurchaseHistoryPage = () => {
     return cartPurchases.find(cp => cp.transaction_id === transactionId);
   };
 
-  if (!isAdmin) {
+  if (!isAdminOrEditor) {
     return null;
   }
 
@@ -206,14 +207,18 @@ const SupplierPurchaseHistoryPage = () => {
                         </span>
                       </div>
                       <div className="text-right">
-                        <p className={`text-xl font-bold ${
-                          transaction.transaction_type === 'PAYMENT' 
-                            ? 'text-green-600' 
-                            : 'text-red-600'
-                        }`}>
-                          {formatAmount(transaction.amount)}
-                        </p>
-                        <p className="text-sm text-gray-500 mt-1">USD</p>
+                        {canSeePurchasePrices && (
+                          <>
+                            <p className={`text-xl font-bold ${
+                              transaction.transaction_type === 'PAYMENT' 
+                                ? 'text-green-600' 
+                                : 'text-red-600'
+                            }`}>
+                              {formatAmount(transaction.amount)}
+                            </p>
+                            <p className="text-sm text-gray-500 mt-1">USD</p>
+                          </>
+                        )}
                       </div>
                     </div>
 
@@ -242,12 +247,22 @@ const SupplierPurchaseHistoryPage = () => {
                                 <span className="font-medium">{item.urun_ismi}</span>
                                 <span className="text-gray-600 mx-2">•</span>
                                 <span>{item.en}×{item.boy}cm</span>
-                                <span className="text-gray-600 mx-2">•</span>
-                                <span>${item.m2_fiyati}/m²</span>
-                                <span className="text-gray-600 mx-2">x</span>
-                                <span className="font-medium">{item.adet} adet</span>
-                                <span className="text-gray-600 mx-2">=</span>
-                                <span className="font-semibold text-green-600">${item.toplam_tutar}</span>
+                                {canSeePurchasePrices && (
+                                  <>
+                                    <span className="text-gray-600 mx-2">•</span>
+                                    <span>${item.m2_fiyati}/m²</span>
+                                    <span className="text-gray-600 mx-2">x</span>
+                                    <span className="font-medium">{item.adet} adet</span>
+                                    <span className="text-gray-600 mx-2">=</span>
+                                    <span className="font-semibold text-green-600">${item.toplam_tutar}</span>
+                                  </>
+                                )}
+                                {!canSeePurchasePrices && (
+                                  <>
+                                    <span className="text-gray-600 mx-2">•</span>
+                                    <span className="font-medium">{item.adet} adet</span>
+                                  </>
+                                )}
                               </div>
                             ))}
                           </div>

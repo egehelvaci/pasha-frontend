@@ -227,13 +227,13 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {/* En Çok Satan Ürünler */}
+        {/* Çok Satanlar */}
         <section className="mb-8">
           <div className="mb-6 grid grid-cols-[1fr_auto_1fr] items-start gap-2 sm:mb-8">
             <div aria-hidden="true" />
             <div className="flex flex-col items-center text-center">
               <h2 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl sm:tracking-[0.12em]">
-                En Çok Satan Ürünler
+                Çok Satanlar
               </h2>
               <div className="mt-3 h-px w-[min(100%,28rem)] bg-neutral-300 sm:mt-4" />
             </div>
