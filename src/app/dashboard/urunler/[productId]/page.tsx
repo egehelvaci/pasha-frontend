@@ -431,42 +431,110 @@ export default function ProductDetail() {
     };
 
     if (!open) return null;
+
+    const fieldClass =
+      "w-full rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 transition-all duration-200 ease-out placeholder:text-slate-400 hover:border-slate-300 focus:border-slate-300 focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15";
+
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-        <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg relative">
-          <button className="absolute top-2 right-3 text-gray-400 hover:text-gray-700" onClick={onClose}>&times;</button>
-          <h2 className="text-xl font-bold mb-4 text-black">Ürünü Güncelle</h2>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-            <input name="name" value={form.name} onChange={handleChange} placeholder="Ad" className="border rounded px-3 py-2 text-black" />
-            <textarea name="description" value={form.description} onChange={handleChange} placeholder="Açıklama" className="border rounded px-3 py-2 text-black" />
-            {user?.canSeePrice && (
-              <input name="price" type="text" value={form.price} onChange={handleChange} placeholder="Fiyat" className="border rounded px-3 py-2 text-black" />
-            )}
-            <input name="stock" type="text" value={form.stock} onChange={handleChange} placeholder="Stok" className="border rounded px-3 py-2 text-black" />
-            <input name="width" type="text" value={form.width} onChange={handleChange} placeholder="Genişlik" className="border rounded px-3 py-2 text-black" />
-            <input name="height" type="text" value={form.height} onChange={handleChange} placeholder="Yükseklik" className="border rounded px-3 py-2 text-black" />
-            <select name="cut" value={form.cut} onChange={handleChange} className="border rounded px-3 py-2 text-black">
-              <option value="false">Kesim Yok</option>
-              <option value="true">Kesim Var</option>
-            </select>
-            <select name="collectionId" value={form.collectionId} onChange={handleChange} className="border rounded px-3 py-2 text-black">
-              <option value="">Koleksiyon Seç</option>
-              {collections.map(col => (
-                <option key={col.collectionId} value={col.collectionId}>{col.name}</option>
-              ))}
-            </select>
-            {user?.canSeePrice && (
-              <select name="currency" value={form.currency} onChange={handleChange} className="border rounded px-3 py-2 text-black">
-                <option value="TRY">TRY</option>
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
-              </select>
-            )}
-            <input name="productImage" type="file" accept="image/*" onChange={handleChange} className="border rounded px-3 py-2 text-black" />
-            {error && <div className="text-red-500 text-sm">{error}</div>}
-            <button type="submit" disabled={loading} className="bg-blue-900 text-white rounded-full px-6 py-2 font-semibold mt-2">
-              {loading ? "Güncelleniyor..." : "Güncelle"}
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+        <div className="relative flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white">
+          <div className="relative shrink-0 border-b border-slate-200/80 bg-stone-50/90 px-5 py-4">
+            <button
+              type="button"
+              className="absolute right-3 top-3 rounded-lg p-1.5 text-slate-400 transition-all duration-200 ease-out hover:bg-stone-200/70 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20"
+              onClick={onClose}
+              aria-label="Kapat"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
+            <h2 className="pr-10 text-lg font-semibold tracking-tight text-slate-900">Ürünü Güncelle</h2>
+            {product?.name && (
+              <p className="mt-1 truncate text-sm text-slate-500">{product.name}</p>
+            )}
+          </div>
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3.5 overflow-y-auto p-5">
+            <div>
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Ad</label>
+              <input name="name" value={form.name} onChange={handleChange} placeholder="Ürün adı" className={fieldClass} />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Açıklama</label>
+              <textarea name="description" value={form.description} onChange={handleChange} placeholder="Ürün açıklaması" className={`${fieldClass} min-h-[88px] resize-y`} />
+            </div>
+            {user?.canSeePrice && (
+              <div>
+                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Fiyat</label>
+                <input name="price" type="text" value={form.price} onChange={handleChange} placeholder="Fiyat" className={fieldClass} />
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Stok</label>
+                <input name="stock" type="text" value={form.stock} onChange={handleChange} placeholder="Stok" className={fieldClass} />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Kesim</label>
+                <select name="cut" value={form.cut} onChange={handleChange} className={fieldClass}>
+                  <option value="false">Kesim Yok</option>
+                  <option value="true">Kesim Var</option>
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Genişlik</label>
+                <input name="width" type="text" value={form.width} onChange={handleChange} placeholder="Genişlik" className={fieldClass} />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Yükseklik</label>
+                <input name="height" type="text" value={form.height} onChange={handleChange} placeholder="Yükseklik" className={fieldClass} />
+              </div>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Koleksiyon</label>
+              <select name="collectionId" value={form.collectionId} onChange={handleChange} className={fieldClass}>
+                <option value="">Koleksiyon Seç</option>
+                {collections.map(col => (
+                  <option key={col.collectionId} value={col.collectionId}>{col.name}</option>
+                ))}
+              </select>
+            </div>
+            {user?.canSeePrice && (
+              <div>
+                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Para Birimi</label>
+                <select name="currency" value={form.currency} onChange={handleChange} className={fieldClass}>
+                  <option value="TRY">TRY</option>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                </select>
+              </div>
+            )}
+            <div>
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Ürün Görseli</label>
+              <input name="productImage" type="file" accept="image/*" onChange={handleChange} className={`${fieldClass} file:mr-3 file:rounded-md file:border-0 file:bg-stone-100 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-slate-700`} />
+            </div>
+            {error && (
+              <div className="rounded-lg border border-rose-200/60 bg-rose-50/70 px-3 py-2 text-sm text-rose-700/90">{error}</div>
+            )}
+            <div className="mt-1 flex gap-2 border-t border-slate-100 pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 rounded-lg border border-slate-200/80 bg-stone-50 px-4 py-2.5 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98]"
+              >
+                İptal
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {loading ? "Güncelleniyor..." : "Güncelle"}
+              </button>
+            </div>
           </form>
         </div>
       </div>

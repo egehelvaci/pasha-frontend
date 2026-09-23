@@ -1824,23 +1824,23 @@ export default function ProductList() {
     
     if (showDeleteConfirm) {
       return (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg relative">
-            <h2 className="text-xl font-bold mb-4 text-black">Ürünü Sil</h2>
-            <p className="text-gray-600 mb-6">
-              <b>{product.name}</b> ürününü silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-md rounded-xl border border-slate-200/80 bg-white p-6">
+            <h2 className="text-base font-semibold tracking-tight text-slate-900">Ürünü Sil</h2>
+            <p className="mt-3 text-sm text-slate-500">
+              <span className="font-medium text-slate-800">{product.name}</span> ürününü silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
             </p>
             
-            <div className="flex justify-end gap-3">
+            <div className="mt-6 flex justify-end gap-2">
               <button 
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                className="rounded-lg border border-slate-200/80 bg-stone-50 px-4 py-2 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98]"
                 onClick={() => setShowDeleteConfirm(false)}
                 disabled={deleteLoading}
               >
                 İptal
               </button>
               <button 
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                className="rounded-lg bg-rose-700/90 px-4 py-2 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-rose-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/30 active:scale-[0.98] disabled:opacity-50"
                 onClick={handleDelete}
                 disabled={deleteLoading}
               >
@@ -1849,7 +1849,7 @@ export default function ProductList() {
             </div>
             
             {error && (
-              <div className="mt-4 text-red-500 text-sm">{error}</div>
+              <div className="mt-4 text-sm text-rose-600">{error}</div>
             )}
           </div>
         </div>
@@ -1857,30 +1857,37 @@ export default function ProductList() {
     }
     
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl w-full max-w-6xl shadow-lg relative overflow-hidden max-h-[90vh]">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3 sm:p-4 backdrop-blur-sm">
+        <div className="relative flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white">
           {/* Header */}
-          <div className="bg-[#00365a] rounded-t-xl px-6 py-4 relative">
+          <div className="relative shrink-0 border-b border-slate-200/80 bg-stone-50/90 px-5 py-4 sm:px-6">
             <button 
-              className="absolute top-3 right-3 text-white hover:text-gray-200 text-3xl font-bold" 
+              type="button"
+              className="absolute right-3 top-3 rounded-lg p-1.5 text-slate-400 transition-all duration-200 ease-out hover:bg-stone-200/70 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 sm:right-4 sm:top-3.5" 
               onClick={onClose}
+              aria-label="Kapat"
             >
-              &times;
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
             
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white">Ürünü Düzenle</h2>
+            <div className="pr-10">
+              <h2 className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">Ürünü Düzenle</h2>
+              {product?.name && (
+                <p className="mt-1 truncate text-sm text-slate-500">{product.name}</p>
+              )}
             </div>
           </div>
           
           {/* Content */}
-          <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-            <div className="flex gap-6">
+          <div className="overflow-y-auto p-4 sm:p-5 lg:p-6 max-h-[calc(92vh-5.5rem)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
               {/* Sol taraf - Form */}
-              <div className="w-1/2">
+              <div className="w-full lg:w-1/2">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                       Ürün Adı
                     </label>
                     <input 
@@ -1888,42 +1895,42 @@ export default function ProductList() {
                       name="name"
                       value={form.name}
                       onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900"
+                      className="w-full rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 transition-all duration-200 ease-out placeholder:text-slate-400 hover:border-slate-300 focus:border-slate-300 focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       placeholder="Ürün adını girin"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                       Ürün Açıklaması
                     </label>
                     <textarea 
                       name="description"
                       value={form.description}
                       onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900 min-h-[100px]"
+                      className="min-h-[100px] w-full resize-y rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 transition-all duration-200 ease-out placeholder:text-slate-400 hover:border-slate-300 focus:border-slate-300 focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       placeholder="Ürün açıklamasını girin"
                     />
                   </div>
                   
                   <div className="relative dropdown-container">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                       Koleksiyon
                     </label>
                     <div className="relative">
                       <button
                         type="button"
                         onClick={() => setCollectionDropdownOpen(!collectionDropdownOpen)}
-                        className="w-full rounded-lg border border-slate-200/80 bg-white px-3 py-2.5 text-left text-sm transition-all duration-200 ease-out hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20"
+                        className="w-full rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 text-left text-sm transition-all duration-200 ease-out hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       >
-                        <span className={form.collectionId ? "text-gray-900" : "text-gray-500"}>
+                        <span className={form.collectionId ? "text-slate-900" : "text-slate-400"}>
                           {form.collectionId 
                             ? collections.find(col => col.collectionId === form.collectionId)?.name || "Koleksiyon Seçin"
                             : "Koleksiyon Seçin"
                           }
                         </span>
                         <svg 
-                          className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${collectionDropdownOpen ? 'rotate-180' : ''}`}
+                          className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-transform duration-200 ${collectionDropdownOpen ? 'rotate-180' : ''}`}
                           fill="none" 
                           stroke="currentColor" 
                           viewBox="0 0 24 24"
@@ -1933,9 +1940,9 @@ export default function ProductList() {
                       </button>
                       
                       {collectionDropdownOpen && (
-                        <div className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200/80 bg-white py-1 shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
+                        <div className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200/80 bg-white py-1 shadow-sm">
                           <div 
-                            className="px-3 py-2 text-gray-500 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
+                            className="cursor-pointer border-b border-slate-100 px-3 py-2.5 text-sm text-slate-500 transition-colors duration-150 hover:bg-stone-50"
                             onClick={() => {
                               setForm({ ...form, collectionId: "" });
                               setCollectionDropdownOpen(false);
@@ -1946,8 +1953,8 @@ export default function ProductList() {
                       {collections.map(col => (
                             <div
                               key={col.collectionId}
-                              className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                form.collectionId === col.collectionId ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                              className={`cursor-pointer px-3 py-2.5 text-sm transition-colors duration-150 hover:bg-stone-50 ${
+                                form.collectionId === col.collectionId ? 'bg-stone-100 font-medium text-slate-900' : 'text-slate-700'
                               }`}
                               onClick={() => {
                                 setForm({ ...form, collectionId: col.collectionId });
@@ -1963,16 +1970,16 @@ export default function ProductList() {
                   </div>
                   
                   <div className="relative dropdown-container">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                       Kural ID
                     </label>
                     <div className="relative">
                       <button
                         type="button"
                         onClick={() => setRuleDropdownOpen(!ruleDropdownOpen)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left bg-white"
+                        className="w-full rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 text-left text-sm transition-all duration-200 ease-out hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       >
-                        <span className={form.rule_id ? "text-gray-900" : "text-gray-500"}>
+                        <span className={form.rule_id ? "text-slate-900" : "text-slate-400"}>
                           {form.rule_id 
                             ? productRules.find(rule => rule.id.toString() === form.rule_id) 
                                 ? `${productRules.find(rule => rule.id.toString() === form.rule_id)?.id} - ${productRules.find(rule => rule.id.toString() === form.rule_id)?.name}`
@@ -1981,7 +1988,7 @@ export default function ProductList() {
                           }
                         </span>
                         <svg 
-                          className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${ruleDropdownOpen ? 'rotate-180' : ''}`}
+                          className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-transform duration-200 ${ruleDropdownOpen ? 'rotate-180' : ''}`}
                           fill="none" 
                           stroke="currentColor" 
                           viewBox="0 0 24 24"
@@ -1991,9 +1998,9 @@ export default function ProductList() {
                       </button>
                       
                       {ruleDropdownOpen && (
-                        <div className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200/80 bg-white py-1 shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
+                        <div className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200/80 bg-white py-1 shadow-sm">
                           <div 
-                            className="px-3 py-2 text-gray-500 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
+                            className="cursor-pointer border-b border-slate-100 px-3 py-2.5 text-sm text-slate-500 transition-colors duration-150 hover:bg-stone-50"
                             onClick={() => {
                               setForm({ ...form, rule_id: "" });
                               setRuleDropdownOpen(false);
@@ -2006,8 +2013,8 @@ export default function ProductList() {
                             .map(rule => (
                               <div
                                 key={rule.id}
-                                className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                  form.rule_id === rule.id.toString() ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                className={`cursor-pointer px-3 py-2.5 text-sm transition-colors duration-150 hover:bg-stone-50 ${
+                                  form.rule_id === rule.id.toString() ? 'bg-stone-100 font-medium text-slate-900' : 'text-slate-700'
                                 }`}
                                 onClick={() => {
                                   setForm({ ...form, rule_id: rule.id.toString() });
@@ -2023,18 +2030,17 @@ export default function ProductList() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                       Ürün Görseli
                     </label>
                     
-                    {/* Drag & Drop Area */}
                     <div
-                      className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                      className={`relative rounded-xl border-2 border-dashed p-5 text-center transition-colors duration-200 ${
                         dragActive 
-                          ? 'border-blue-500 bg-blue-50' 
+                          ? 'border-[#00365a]/50 bg-slate-50' 
                           : imagePreview 
-                            ? 'border-green-300 bg-green-50' 
-                            : 'border-gray-300 hover:border-gray-400'
+                            ? 'border-emerald-300/70 bg-emerald-50/40' 
+                            : 'border-slate-200 hover:border-slate-300 hover:bg-stone-50/50'
                       }`}
                       onDragEnter={handleDrag}
                       onDragLeave={handleDrag}
@@ -2046,7 +2052,7 @@ export default function ProductList() {
                         name="productImage"
                         onChange={handleChange}
                         accept="image/*"
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                       />
                       
                       {imagePreview ? (
@@ -2057,63 +2063,63 @@ export default function ProductList() {
                               alt="Yeni görsel önizleme" 
                               width={96}
                               height={96}
-                              className="h-24 w-24 object-cover rounded-lg border border-gray-200"
+                              className="h-24 w-24 rounded-lg border border-slate-200/80 object-cover"
                             />
                             <button
                               type="button"
                               onClick={removeImage}
-                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
+                              className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-rose-600 text-white transition-colors duration-150 hover:bg-rose-700"
                             >
                               ×
                             </button>
                           </div>
                           <div>
-                            <p className="text-sm text-green-600 font-medium">✓ Yeni görsel seçildi</p>
-                            <p className="text-xs text-gray-500">Güncellemek için "Güncelle" butonuna tıklayın</p>
+                            <p className="text-sm font-medium text-emerald-700/90">Yeni görsel seçildi</p>
+                            <p className="text-xs text-slate-500">Güncellemek için &quot;Güncelle&quot; butonuna tıklayın</p>
                           </div>
                         </div>
                       ) : (
-                        <div className="space-y-3">
-                          <div className="mx-auto w-12 h-12 text-gray-400">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 48 48">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" />
+                        <div className="space-y-2">
+                          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-stone-100 text-slate-400">
+                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                           </div>
                           <div>
-                            <p className="text-gray-600">
-                              <span className="font-medium text-blue-600">Yeni görsel seçmek için tıklayın</span> ya da sürükleyip bırakın
+                            <p className="text-sm text-slate-600">
+                              <span className="font-medium text-[#00365a]">Yeni görsel seçmek için tıklayın</span>
+                              <span className="text-slate-400"> ya da sürükleyip bırakın</span>
                             </p>
-                            <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF - Max 10MB</p>
+                            <p className="mt-1 text-xs text-slate-400">PNG, JPG, GIF — Max 10MB</p>
                           </div>
                         </div>
                       )}
                     </div>
                     
-                    {/* Mevcut görsel */}
                     {product?.productImage && !imagePreview && (
-                      <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <p className="text-xs font-medium text-gray-700 mb-2">Mevcut görsel:</p>
+                      <div className="mt-3 rounded-lg border border-slate-200/80 bg-stone-50/70 p-3">
+                        <p className="mb-2 text-xs font-medium text-slate-500">Mevcut görsel</p>
                         <Image 
                           src={product.productImage} 
                           alt={product.name} 
                           width={80}
                           height={80}
-                          className="h-20 w-20 object-cover rounded-md border border-gray-300"
+                          className="h-20 w-20 rounded-md border border-slate-200/80 object-cover"
                         />
-                        <p className="text-xs text-gray-500 mt-1">Değiştirmek için yukarıya yeni bir görsel yükleyin</p>
+                        <p className="mt-1.5 text-xs text-slate-400">Değiştirmek için yukarıya yeni bir görsel yükleyin</p>
                       </div>
                     )}
                   </div>
                   
                   {error && (
-                    <div className="text-red-500 text-sm mt-1">{error}</div>
+                    <div className="rounded-lg border border-rose-200/60 bg-rose-50/70 px-3 py-2 text-sm text-rose-700/90">{error}</div>
                   )}
                   
-                  <div className="flex justify-between items-center mt-4">
+                  <div className="mt-2 flex flex-col-reverse gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
                     <button
                       type="button"
                       onClick={() => setShowDeleteConfirm(true)}
-                      className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center gap-2"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-rose-200/70 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-800/90 transition-all duration-200 ease-out hover:bg-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/30 active:scale-[0.98]"
                     >
                       <FaTrash size={14} />
                       Ürünü Sil
@@ -2123,14 +2129,14 @@ export default function ProductList() {
                       <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                        className="rounded-lg border border-slate-200/80 bg-stone-50 px-4 py-2 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98]"
                       >
                         İptal
                       </button>
                       <button
                         type="submit"
                         disabled={loading}
-                        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-70"
+                        className="rounded-lg bg-[#00365a] px-4 py-2 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {loading ? "Güncelleniyor..." : "Güncelle"}
                       </button>
@@ -2140,27 +2146,27 @@ export default function ProductList() {
               </div>
               
               {/* Sağ taraf - Kural Tablosu */}
-              <div className="w-1/2">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Kural ID Açıklamaları</h3>
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className="w-full lg:w-1/2">
+                <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Kural ID Açıklamaları</h3>
+                <div className="overflow-hidden rounded-xl border border-slate-200/80">
                   <div className="max-h-[500px] overflow-y-auto">
                     <table className="w-full text-sm">
-                      <thead className="bg-gray-50 sticky top-0">
+                      <thead className="sticky top-0 bg-stone-50">
                         <tr>
-                          <th className="px-3 py-2 text-left font-medium text-gray-700 border-b">ID</th>
-                          <th className="px-3 py-2 text-left font-medium text-gray-700 border-b">Kural Açıklaması</th>
+                          <th className="border-b border-slate-200/80 px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-500">ID</th>
+                          <th className="border-b border-slate-200/80 px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Kural Açıklaması</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-200">
+                      <tbody className="divide-y divide-slate-100">
                         {productRules.map(rule => (
-                          <tr key={rule.id} className="hover:bg-gray-50">
-                            <td className="px-3 py-3 font-medium text-blue-600">{rule.id}</td>
+                          <tr key={rule.id} className="transition-colors duration-150 hover:bg-stone-50/80">
+                            <td className="px-3 py-3 font-medium tabular-nums text-[#00365a]">{rule.id}</td>
                             <td className="px-3 py-3">
                               <div className="space-y-1">
-                                <div className="font-medium text-gray-900">{rule.name}</div>
-                                <div className="text-xs text-gray-600">• {rule.canHaveFringe ? 'Saçaklı/Saçaksız seçenekler' : 'Saçak yok'}</div>
+                                <div className="font-medium text-slate-900">{rule.name}</div>
+                                <div className="text-xs text-slate-500">• {rule.canHaveFringe ? 'Saçaklı/Saçaksız seçenekler' : 'Saçak yok'}</div>
                                 {rule.sizeOptions && rule.sizeOptions.length > 0 && (
-                                  <div className="text-xs text-gray-600">
+                                  <div className="text-xs text-slate-500">
                                     • {rule.sizeOptions.some(size => size.isOptionalHeight) 
                                       ? 'Standart En + Opsiyonel Boy' 
                                       : rule.sizeOptions.length === 1 
@@ -2169,12 +2175,12 @@ export default function ProductList() {
                                   </div>
                                 )}
                                 {rule.cutTypes && rule.cutTypes.length > 0 && (
-                                  <div className="text-xs text-gray-600">
+                                  <div className="text-xs text-slate-500">
                                     • Kesim: {rule.cutTypes.map(cut => cut.name.charAt(0).toUpperCase() + cut.name.slice(1)).join(', ')}
                                   </div>
                                 )}
                                 {rule.description && (
-                                  <div className="text-xs text-gray-600">• {rule.description}</div>
+                                  <div className="text-xs text-slate-500">• {rule.description}</div>
                                 )}
                               </div>
                             </td>
