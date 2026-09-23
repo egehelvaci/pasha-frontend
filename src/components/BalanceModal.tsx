@@ -148,61 +148,59 @@ export default function BalanceModal({
 
   if (!isOpen || !supplier) return null;
 
+  const inputClass = (hasError?: boolean) =>
+    `w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition-all duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-60 ${
+      hasError
+        ? 'border-red-300 hover:border-red-400'
+        : 'border-slate-200/80 hover:border-slate-300 hover:bg-slate-50'
+    }`;
+
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center min-h-screen p-4">
-      <div 
-        className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden"
+    <div className="fixed inset-0 z-50 flex min-h-screen items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+      <div
+        className="relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.08)]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-[#00365a] to-[#004170]">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center text-white text-lg font-bold">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold text-white">Bakiye Güncelle</h3>
-              <p className="text-sm text-white/80">{supplier.name}</p>
-            </div>
+        <div className="flex items-center justify-between border-b border-slate-200/80 px-5 py-4">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900">Bakiye Güncelle</h3>
+            <p className="mt-0.5 text-xs text-slate-500">{supplier.name}</p>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-full transition-colors text-white"
+            className="rounded-lg p-2 text-slate-400 transition-all duration-200 ease-out hover:bg-slate-50 hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-[#00365a]/20"
             disabled={isLoading}
+            aria-label="Kapat"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
-        
-        {/* Modal Content */}
-        <form onSubmit={handleSubmit} className="p-6 max-h-[calc(90vh-140px)] overflow-y-auto">
-          <div className="space-y-6">
-            {/* Mevcut Bakiye */}
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">Mevcut Bakiye</h4>
+
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5">
+          <div className="space-y-5">
+            <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-4">
+              <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Mevcut Bakiye</h4>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Güncel Bakiye:</span>
-                <span className={`text-lg font-bold ${
-                  supplier.balance < 0 ? 'text-red-600' : 'text-green-600'
+                <span className="text-sm text-slate-600">Güncel Bakiye:</span>
+                <span className={`text-lg font-semibold tabular-nums ${
+                  supplier.balance < 0 ? 'text-red-600' : 'text-emerald-600'
                 }`}>
                   {supplier.balance.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {supplier.currency}
                 </span>
               </div>
             </div>
 
-            {/* İşlem Türü */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                 İşlem Türü <span className="text-red-500">*</span>
               </label>
               <select
                 value={formData.transaction_type}
                 onChange={(e) => handleInputChange('transaction_type', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-transparent"
+                className={inputClass()}
                 disabled={isLoading}
               >
                 <option value="PURCHASE">Alış (Borç Artışı)</option>
@@ -213,10 +211,9 @@ export default function BalanceModal({
               </select>
             </div>
 
-            {/* Tutar ve Dolar Kuru */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                   Tutar (TRY) <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -225,17 +222,15 @@ export default function BalanceModal({
                   value={formData.amount}
                   onChange={(e) => handleInputChange('amount', e.target.value)}
                   onWheel={(e) => e.currentTarget.blur()}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-transparent ${
-                    errors.amount ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={inputClass(!!errors.amount)}
                   placeholder="0.00"
                   disabled={isLoading}
                 />
-                {errors.amount && <p className="mt-1 text-sm text-red-600">{errors.amount}</p>}
+                {errors.amount && <p className="mt-1.5 text-xs text-red-600">{errors.amount}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                   Dolar Kuru <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -244,42 +239,39 @@ export default function BalanceModal({
                   value={formData.exchange_rate}
                   onChange={(e) => handleInputChange('exchange_rate', e.target.value)}
                   onWheel={(e) => e.currentTarget.blur()}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-transparent ${
-                    errors.exchange_rate ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={inputClass(!!errors.exchange_rate)}
                   placeholder="34.50"
                   disabled={isLoading}
                 />
-                {errors.exchange_rate && <p className="mt-1 text-sm text-red-600">{errors.exchange_rate}</p>}
+                {errors.exchange_rate && <p className="mt-1.5 text-xs text-red-600">{errors.exchange_rate}</p>}
               </div>
             </div>
 
-            {/* Hesaplama Önizlemesi */}
             {formData.amount && formData.exchange_rate && !errors.amount && !errors.exchange_rate && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-blue-800 mb-2">Hesaplama Önizlemesi</h4>
+              <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-4">
+                <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Hesaplama Önizlemesi</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-blue-700">TRY Tutarı:</span>
-                    <span className="font-medium text-blue-900">
+                    <span className="text-slate-600">TRY Tutarı:</span>
+                    <span className="font-medium tabular-nums text-slate-900">
                       {parseFloat(formData.amount).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TRY
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-blue-700">Dolar Kuru:</span>
-                    <span className="font-medium text-blue-900">
+                    <span className="text-slate-600">Dolar Kuru:</span>
+                    <span className="font-medium tabular-nums text-slate-900">
                       {parseFloat(formData.exchange_rate).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
-                  <div className="flex justify-between border-t border-blue-200 pt-2">
-                    <span className="text-blue-700">USD Tutarı:</span>
-                    <span className="font-bold text-blue-900">
+                  <div className="flex justify-between border-t border-slate-200 pt-2">
+                    <span className="text-slate-600">USD Tutarı:</span>
+                    <span className="font-semibold tabular-nums text-slate-900">
                       {(parseFloat(formData.amount) / parseFloat(formData.exchange_rate)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-blue-700">İşlem Türü:</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTransactionTypeColor(formData.transaction_type)}`}>
+                    <span className="text-slate-600">İşlem Türü:</span>
+                    <span className={`rounded-md px-2 py-0.5 text-xs font-medium ${getTransactionTypeColor(formData.transaction_type)}`}>
                       {getTransactionTypeLabel(formData.transaction_type)}
                     </span>
                   </div>
@@ -287,47 +279,42 @@ export default function BalanceModal({
               </div>
             )}
 
-            {/* Açıklama */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                 Açıklama <span className="text-red-500">*</span>
               </label>
               <textarea
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
                 rows={3}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-transparent ${
-                  errors.description ? 'border-red-300' : 'border-gray-300'
-                }`}
+                className={inputClass(!!errors.description)}
                 placeholder="İşlem açıklaması (örn: Halı alımı - Fatura No: FA-2024-015)"
                 disabled={isLoading}
               />
-              {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
+              {errors.description && <p className="mt-1.5 text-xs text-red-600">{errors.description}</p>}
             </div>
 
-            {/* Referans Numarası */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                 Referans Numarası
               </label>
               <input
                 type="text"
                 value={formData.reference_number}
                 onChange={(e) => handleInputChange('reference_number', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-transparent"
+                className={inputClass()}
                 placeholder="FA-2024-015"
                 disabled={isLoading}
               />
             </div>
           </div>
         </form>
-        
-        {/* Modal Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end space-x-3">
+
+        <div className="flex justify-end gap-2 border-t border-slate-200/80 bg-slate-50/50 px-5 py-4">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+            className="rounded-lg border border-slate-200/80 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={isLoading}
           >
             İptal
@@ -336,10 +323,10 @@ export default function BalanceModal({
             type="submit"
             onClick={handleSubmit}
             disabled={isLoading}
-            className="px-4 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isLoading && (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
             )}
             <span>Güncelle</span>
           </button>

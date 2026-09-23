@@ -707,24 +707,24 @@ export default function StoresPage() {
                             Finansal Durum
                           </h4>
                           <div className="space-y-1">
-          <div className="text-sm">
-            <span className="font-medium">Bakiye:</span> 
+                            <div className="text-sm">
+                              <span className="font-medium">Bakiye:</span>
                               <span className={`ml-1 font-semibold ${(store.bakiye || 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
                                 {store.bakiye?.toLocaleString('tr-TR') || '0'} {store.currency === 'USD' ? '$' : '₺'}
-            </span>
-          </div>
-          <div className="text-sm">
+                              </span>
+                            </div>
+                            <div className="text-sm">
                               <span className="font-medium">Açık Hesap:</span>
                               <span className="ml-1 text-orange-600 font-semibold">
                                 {store.limitsiz_acik_hesap ? 'Limitsiz' : `${store.acik_hesap_tutari?.toLocaleString('tr-TR') || '0'} ${store.currency === 'USD' ? '$' : '₺'}`}
                               </span>
-          </div>
-          <div className="text-sm">
+                            </div>
+                            <div className="text-sm">
                               <span className="font-medium">Max Taksit:</span>
                               <span className="ml-1 text-purple-600 font-semibold">{store.maksimum_taksit || 1}</span>
                             </div>
-          </div>
-          </div>
+                          </div>
+                        </div>
         </div>
 
                       <div className="flex flex-wrap gap-2">

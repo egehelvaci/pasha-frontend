@@ -138,152 +138,144 @@ export default function SupplierModal({
 
   if (!isOpen) return null;
 
+  const inputClass = (hasError?: boolean) =>
+    `w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition-all duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-60 ${
+      hasError
+        ? 'border-red-300 hover:border-red-400'
+        : 'border-slate-200/80 hover:border-slate-300 hover:bg-slate-50'
+    }`;
+
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center min-h-screen p-4">
-      <div 
-        className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden"
+    <div className="fixed inset-0 z-50 flex min-h-screen items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+      <div
+        className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.08)]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-[#00365a] to-[#004170]">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center text-white text-lg font-bold">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold text-white">
+        <div className="flex items-center justify-between border-b border-slate-200/80 px-5 py-4">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900">
               {supplier ? 'Satıcı Düzenle' : 'Yeni Satıcı'}
             </h3>
+            <p className="mt-0.5 text-xs text-slate-500">
+              {supplier ? 'Satıcı bilgilerini güncelleyin' : 'Yeni satıcı bilgilerini girin'}
+            </p>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-full transition-colors text-white"
+            className="rounded-lg p-2 text-slate-400 transition-all duration-200 ease-out hover:bg-slate-50 hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-[#00365a]/20"
             disabled={isLoading}
+            aria-label="Kapat"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
-        
-        {/* Modal Content */}
-        <form onSubmit={handleSubmit} className="p-6 max-h-[calc(90vh-140px)] overflow-y-auto">
-          <div className="space-y-6">
-            {/* Temel Bilgiler */}
+
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5">
+          <div className="space-y-5">
             <div>
-              <h4 className="text-lg font-medium text-gray-900 mb-4">Temel Bilgiler</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <h4 className="mb-3 text-sm font-semibold text-slate-900">Temel Bilgiler</h4>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                     Satıcı Adı <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-transparent ${
-                      errors.name ? 'border-red-300' : 'border-gray-300'
-                    }`}
+                    className={inputClass(!!errors.name)}
                     placeholder="Satıcı adını giriniz"
                     disabled={isLoading}
                   />
-                  {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+                  {errors.name && <p className="mt-1.5 text-xs text-red-600">{errors.name}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                     Firma Adı <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.company_name}
                     onChange={(e) => handleInputChange('company_name', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-transparent ${
-                      errors.company_name ? 'border-red-300' : 'border-gray-300'
-                    }`}
+                    className={inputClass(!!errors.company_name)}
                     placeholder="Firma adını giriniz"
                     disabled={isLoading}
                   />
-                  {errors.company_name && <p className="mt-1 text-sm text-red-600">{errors.company_name}</p>}
+                  {errors.company_name && <p className="mt-1.5 text-xs text-red-600">{errors.company_name}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                     Telefon
                   </label>
                   <input
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-transparent"
+                    className={inputClass()}
                     placeholder="+90 212 555 0001"
                     disabled={isLoading}
                   />
                 </div>
-
               </div>
 
               <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                   Adres
                 </label>
                 <textarea
                   value={formData.address}
                   onChange={(e) => handleInputChange('address', e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-transparent"
+                  className={inputClass()}
                   placeholder="Tam adres bilgisi"
                   disabled={isLoading}
                 />
               </div>
             </div>
 
-            {/* Bakiye Bilgileri */}
             <div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Bakiye (USD)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.balance}
-                  onChange={(e) => handleInputChange('balance', e.target.value)}
-                  onWheel={(e) => e.currentTarget.blur()}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-transparent ${
-                    errors.balance ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="0.00"
-                  disabled={isLoading}
-                />
-                {errors.balance && <p className="mt-1 text-sm text-red-600">{errors.balance}</p>}
-              </div>
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                Bakiye (USD)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={formData.balance}
+                onChange={(e) => handleInputChange('balance', e.target.value)}
+                onWheel={(e) => e.currentTarget.blur()}
+                className={inputClass(!!errors.balance)}
+                placeholder="0.00"
+                disabled={isLoading}
+              />
+              {errors.balance && <p className="mt-1.5 text-xs text-red-600">{errors.balance}</p>}
             </div>
 
-            {/* Notlar */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                 Notlar
               </label>
               <textarea
                 value={formData.notes}
                 onChange={(e) => handleInputChange('notes', e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-transparent"
+                className={inputClass()}
                 placeholder="Satıcı hakkında notlar..."
                 disabled={isLoading}
               />
             </div>
           </div>
         </form>
-        
-        {/* Modal Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end space-x-3">
+
+        <div className="flex justify-end gap-2 border-t border-slate-200/80 bg-slate-50/50 px-5 py-4">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+            className="rounded-lg border border-slate-200/80 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={isLoading}
           >
             İptal
@@ -292,10 +284,10 @@ export default function SupplierModal({
             type="submit"
             onClick={handleSubmit}
             disabled={isLoading}
-            className="px-4 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isLoading && (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
             )}
             <span>{supplier ? 'Güncelle' : 'Kaydet'}</span>
           </button>

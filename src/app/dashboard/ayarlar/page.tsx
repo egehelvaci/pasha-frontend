@@ -42,6 +42,7 @@ interface UserFormData {
 
 export default function Settings() {
   const { user, isAdmin, isAdminOrEditor, isLoading: authLoading } = useAuth();
+  const canAssignAdmin = isAdmin;
   const token = useToken();
   const router = useRouter();
   
@@ -546,6 +547,17 @@ export default function Settings() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Editörler yeni admin oluşturamaz veya bir kullanıcıyı admin yapamaz
+      if (!canAssignAdmin) {
+        const originalType = selectedUser
+          ? (typeof selectedUser.userType === 'object' ? selectedUser.userType.name : selectedUser.userType)
+          : null;
+        if (formData.userTypeName === 'admin' && originalType !== 'admin') {
+          setError('Admin kullanıcı ekleme veya admin yetkisi verme yetkiniz bulunmamaktadır.');
+          return;
+        }
+      }
+
       const url = selectedUser 
         ? `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/admin/users/${selectedUser.userId}`
         : `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/admin/users`;
@@ -1576,17 +1588,19 @@ export default function Settings() {
                     
                     {userTypeDropdownOpen && (
                       <div className="absolute z-[100] w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
-                        <div
-                          className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                            formData.userTypeName === "admin" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                          }`}
-                          onClick={() => {
-                            setFormData(prev => ({ ...prev, userTypeName: "admin" }));
-                            setUserTypeDropdownOpen(false);
-                          }}
-                        >
-                          Admin
-                        </div>
+                        {canAssignAdmin && (
+                          <div
+                            className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                              formData.userTypeName === "admin" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                            }`}
+                            onClick={() => {
+                              setFormData(prev => ({ ...prev, userTypeName: "admin" }));
+                              setUserTypeDropdownOpen(false);
+                            }}
+                          >
+                            Admin
+                          </div>
+                        )}
                         <div
                           className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
                             formData.userTypeName === "editor" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'

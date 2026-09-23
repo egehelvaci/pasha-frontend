@@ -554,161 +554,161 @@ const Header = ({ title, user, className }: HeaderProps) => {
   ];
 
   return (
-    <header className={`bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40 shadow-sm ${className || ''}`}>
+    <header className={`sticky top-0 z-40 border-b border-slate-200/70 bg-white/90 backdrop-blur-md ${className || ''}`}>
       <div className="container-responsive">
         {/* Ana Header Kısmı */}
-        <div className="flex items-center justify-between py-4">
+        <div className="flex items-center justify-between py-2.5 sm:py-3">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/dashboard" className="flex-shrink-0 group">
-              <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-all duration-200">
-                <Image 
-                  src="/black-logo.svg" 
-                  alt="Paşa Home" 
-                  width={120}
-                  height={48}
-                  className="h-12 w-auto group-hover:scale-105 transition-transform duration-200" 
-                />
-              </div>
+            <Link
+              href="/dashboard"
+              className="flex-shrink-0 rounded-lg p-1.5 outline-none transition-all duration-200 ease-out hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98]"
+            >
+              <Image
+                src="/black-logo.svg"
+                alt="Paşa Home"
+                width={120}
+                height={48}
+                className="h-10 w-auto sm:h-11"
+              />
             </Link>
           </div>
-          
+
           {/* Desktop: Sağ taraf kontrolleri */}
-          <div className="hidden lg:flex items-center space-x-4">
-            {/* Bakiye bilgisi sadece admin tarafında (mağaza yönetimi) gösterilir */}
-            
+          <div className="hidden items-center gap-1 lg:flex">
             {/* Bildirim Dropdown */}
             {authUser?.userId && (
-              <div className="relative group flex flex-col items-center min-w-[70px]">
-                <div className="p-3 hover:bg-gray-50 rounded-xl transition-all duration-200 border border-transparent hover:border-gray-200 shadow-sm hover:shadow-md">
+              <div className="group relative flex min-w-[64px] flex-col items-center">
+                <div className="rounded-lg p-2 transition-all duration-200 ease-out hover:bg-slate-50 active:scale-[0.97] group-hover:bg-slate-50">
                   <NotificationDropdown userId={authUser.userId} />
                 </div>
-                <span className="text-xs text-gray-600 mt-1 group-hover:text-[#00365a] transition-colors">Bildirimler</span>
+                <span className="mt-0.5 text-[11px] font-medium text-slate-500 transition-colors duration-200 ease-out group-hover:text-[#00365a]">
+                  Bildirimler
+                </span>
               </div>
             )}
-            
+
             {/* Sepet ikonu */}
-            <Link href="/dashboard/sepetim" className="relative group flex flex-col items-center min-w-[70px]">
-              <div className="p-3 hover:bg-gray-50 rounded-xl transition-all duration-200 border border-transparent hover:border-gray-200 shadow-sm hover:shadow-md">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-gray-600 group-hover:text-[#00365a] transition-colors">
+            <Link
+              href="/dashboard/sepetim"
+              className="group relative flex min-w-[64px] flex-col items-center rounded-lg outline-none transition-all duration-200 ease-out focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.97]"
+            >
+              <div className="relative rounded-lg p-2 transition-all duration-200 ease-out group-hover:bg-slate-50">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-slate-600 transition-colors duration-200 ease-out group-hover:text-[#00365a]">
                   <path fillRule="evenodd" d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 004.25 22.5h15.5a1.875 1.875 0 001.865-2.071l-1.263-12a1.875 1.875 0 00-1.865-1.679H16.5V6a4.5 4.5 0 10-9 0zM12 3a3 3 0 00-3 3v.75h6V6a3 3 0 00-3-3zm-3 8.25a3 3 0 106 0v-.75a.75.75 0 011.5 0v.75a4.5 4.5 0 11-9 0v-.75a.75.75 0 011.5 0v.75z" clipRule="evenodd" />
                 </svg>
                 {cartItems > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg animate-pulse">
+                  <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#00365a] px-1 text-[10px] font-semibold text-white">
                     {cartItems > 99 ? '99+' : cartItems}
                   </span>
                 )}
               </div>
-              <span className="text-xs text-gray-600 group-hover:text-[#00365a] transition-colors mt-1">Sepetim</span>
+              <span className="mt-0.5 text-[11px] font-medium text-slate-500 transition-colors duration-200 ease-out group-hover:text-[#00365a]">
+                Sepetim
+              </span>
             </Link>
-            
+
             {/* Kullanıcı dropdown */}
-            <div className="relative group">
-              <div className="flex items-center space-x-3 px-4 py-2 rounded-xl hover:bg-gray-50 cursor-pointer transition-all duration-200 border border-transparent hover:border-gray-200 shadow-sm hover:shadow-md">
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#00365a] to-[#004170] flex items-center justify-center text-white text-sm font-bold shadow-lg">
+            <div className="group relative ml-1.5">
+              <div className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-transparent px-2 py-1.5 transition-all duration-200 ease-out hover:border-slate-200/80 hover:bg-slate-50 active:scale-[0.98] group-hover:border-slate-200/80 group-hover:bg-slate-50">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#00365a] text-sm font-semibold text-white">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="hidden xl:block">
-                  <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                  <div className="text-xs text-gray-500">{isAdmin ? 'Admin' : 'Kullanıcı'}</div>
+                  <div className="text-sm font-medium leading-tight text-slate-900">{user.name}</div>
+                  <div className="text-[11px] leading-tight text-slate-500">{isAdmin ? 'Admin' : 'Kullanıcı'}</div>
                 </div>
-                <svg className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4 text-slate-400 transition-all duration-200 ease-out group-hover:rotate-180 group-hover:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
-              
+
               {/* Dropdown menü */}
-              <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              <div className="invisible absolute right-0 top-full z-50 mt-1.5 w-56 origin-top-right translate-y-1 rounded-xl border border-slate-200/80 bg-white py-1.5 opacity-0 shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all duration-200 ease-out group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
                 {!isAdmin ? (
-                  <Link href="/dashboard/ayarlar" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                    <div className="flex items-center space-x-2">
-                      <FaUser size={16} />
-                      <span>Profiliniz</span>
-                    </div>
+                  <Link href="/dashboard/ayarlar" className="mx-1 flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-700 transition-colors duration-150 ease-out hover:bg-slate-50 hover:text-[#00365a] active:bg-slate-100">
+                    <FaUser size={13} className="text-slate-400" />
+                    <span>Profiliniz</span>
                   </Link>
                 ) : (
                   <>
-                    <button 
+                    <button
                       onClick={() => setIsProfileModalOpen(true)}
-                      className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      className="mx-1 flex w-[calc(100%-0.5rem)] items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-slate-700 transition-colors duration-150 ease-out hover:bg-slate-50 hover:text-[#00365a] active:bg-slate-100"
                     >
-                      <div className="flex items-center space-x-2">
-                        <FaUser size={16} />
-                        <span>Profiliniz</span>
-                      </div>
+                      <FaUser size={13} className="text-slate-400" />
+                      <span>Profiliniz</span>
                     </button>
-                    <button 
+                    <button
                       onClick={() => setShowPasswordModal(true)}
-                      className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      className="mx-1 flex w-[calc(100%-0.5rem)] items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-slate-700 transition-colors duration-150 ease-out hover:bg-slate-50 hover:text-[#00365a] active:bg-slate-100"
                     >
-                      <div className="flex items-center space-x-2">
-                        <FaLock size={16} />
-                        <span>Şifre Değiştir</span>
-                      </div>
+                      <FaLock size={13} className="text-slate-400" />
+                      <span>Şifre Değiştir</span>
                     </button>
                   </>
                 )}
-                <hr className="my-1 border-gray-200" />
+                <hr className="my-1.5 border-slate-100" />
                 <button
                   onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  className="mx-1 flex w-[calc(100%-0.5rem)] items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-slate-700 transition-colors duration-150 ease-out hover:bg-red-50 hover:text-red-600 active:bg-red-100"
                 >
-                  <div className="flex items-center space-x-2">
-                    <span className="mr-2">
-                      <FaSignOutAlt size={16} />
-                    </span>
-                    Çıkış Yap
-                  </div>
+                  <FaSignOutAlt size={13} />
+                  Çıkış Yap
                 </button>
               </div>
             </div>
           </div>
-          
+
           {/* Mobil: Sağ taraf kontrolleri */}
-          <div className="flex lg:hidden items-center space-x-2">
-            {/* Bildirim Dropdown */}
+          <div className="flex items-center gap-0.5 lg:hidden">
             {authUser?.userId && (
-              <div className="relative group flex flex-col items-center min-w-[60px]">
-                <div className="p-2 rounded-lg hover:bg-gray-50 transition-colors">
+              <div className="group relative flex min-w-[52px] flex-col items-center">
+                <div className="rounded-lg p-2 transition-all duration-200 ease-out hover:bg-slate-50 active:scale-[0.97]">
                   <NotificationDropdown userId={authUser.userId} />
                 </div>
-                <span className="text-xs text-gray-600 mt-1 group-hover:text-[#00365a] transition-colors">Bildirimler</span>
+                <span className="mt-0.5 text-[10px] font-medium text-slate-500 transition-colors duration-200 group-hover:text-[#00365a]">
+                  Bildirimler
+                </span>
               </div>
             )}
-            
-            {/* Sepet ikonu */}
-            <Link href="/dashboard/sepetim" className="relative flex flex-col items-center min-w-[60px] p-2 rounded-lg hover:bg-gray-50 transition-colors">
+
+            <Link
+              href="/dashboard/sepetim"
+              className="relative flex min-w-[52px] flex-col items-center rounded-lg p-2 outline-none transition-all duration-200 ease-out hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.97]"
+            >
               <div className="relative">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-slate-600">
                   <path fillRule="evenodd" d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 004.25 22.5h15.5a1.875 1.875 0 001.865-2.071l-1.263-12a1.875 1.875 0 00-1.865-1.679H16.5V6a4.5 4.5 0 10-9 0zM12 3a3 3 0 00-3 3v.75h6V6a3 3 0 00-3-3zm-3 8.25a3 3 0 106 0v-.75a.75.75 0 011.5 0v.75a4.5 4.5 0 11-9 0v-.75a.75.75 0 011.5 0v.75z" clipRule="evenodd" />
                 </svg>
                 {cartItems > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
+                  <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-[#00365a] px-1 text-[9px] font-semibold text-white">
                     {cartItems > 99 ? '99+' : cartItems}
                   </span>
                 )}
               </div>
-              <span className="text-xs text-gray-600 mt-1">Sepetim</span>
+              <span className="mt-0.5 text-[10px] font-medium text-slate-500">Sepetim</span>
             </Link>
-            
-            {/* Hamburger menü */}
+
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-3 rounded-lg hover:bg-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#00365a]/20"
+              className={`rounded-lg p-2.5 outline-none transition-all duration-200 ease-out hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.96] ${
+                isMobileMenuOpen ? 'bg-slate-100' : ''
+              }`}
               aria-label="Menüyü aç/kapat"
             >
-              <div className="w-6 h-6 flex flex-col justify-center items-center">
-                <span className={`block w-6 h-0.5 bg-[#00365a] transition-all duration-300 ${isMobileMenuOpen ? 'rotate-45 translate-y-1.5' : 'mb-1'}`}></span>
-                <span className={`block w-6 h-0.5 bg-[#00365a] transition-all duration-300 ${isMobileMenuOpen ? 'opacity-0' : 'mb-1'}`}></span>
-                <span className={`block w-6 h-0.5 bg-[#00365a] transition-all duration-300 ${isMobileMenuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
+              <div className="flex h-5 w-5 flex-col items-center justify-center">
+                <span className={`block h-0.5 w-5 bg-[#00365a] transition-all duration-200 ease-out ${isMobileMenuOpen ? 'translate-y-1.5 rotate-45' : 'mb-1'}`}></span>
+                <span className={`block h-0.5 w-5 bg-[#00365a] transition-all duration-200 ease-out ${isMobileMenuOpen ? 'opacity-0' : 'mb-1'}`}></span>
+                <span className={`block h-0.5 w-5 bg-[#00365a] transition-all duration-200 ease-out ${isMobileMenuOpen ? '-translate-y-1.5 -rotate-45' : ''}`}></span>
               </div>
             </button>
           </div>
         </div>
-        
+
         {/* Desktop navigasyon */}
-        <nav className="hidden lg:block py-2">
-          <div className="flex justify-center gap-1">
+        <nav className="hidden border-t border-slate-100/90 py-1.5 lg:block">
+          <div className="flex justify-center gap-0.5">
             {(() => {
               // Admin, editor ve normal menü öğelerini ayır
               const regularNavItems = navigation
@@ -727,55 +727,60 @@ const Header = ({ title, user, className }: HeaderProps) => {
                   {/* Normal menü öğeleri */}
                   {regularNavItems.map((item) => {
                     // Analizlerim için özel aktif kontrol - hem kullanici-analizleri hem analizler sayfalarında aktif olsun
-                    const isAnalysisPage = item.href === '/dashboard/kullanici-analizleri' && 
+                    const isAnalysisPage = item.href === '/dashboard/kullanici-analizleri' &&
                                          (pathname === '/dashboard/kullanici-analizleri' || pathname === '/dashboard/analizler');
                     const isActive = isAnalysisPage || pathname === item.href;
                     return (
                       <Link
                         key={item.name}
                         href={item.href}
-                        className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors outline-none focus:ring-2 focus:ring-gray-200 ${
+                        className={`relative flex items-center whitespace-nowrap rounded-md px-3.5 py-2 text-sm outline-none transition-all duration-200 ease-out focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98] ${
                           isActive
-                            ? 'bg-[#00365a] text-white'
-                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                            ? 'bg-[#00365a]/[0.08] font-medium text-[#00365a]'
+                            : 'font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                         }`}
                       >
-                        <span className="mr-2">{item.icon}</span>
+                        <span className={`mr-2 transition-opacity duration-200 ${isActive ? 'opacity-100' : 'opacity-70'}`}>{item.icon}</span>
                         {item.name}
+                        {isActive && (
+                          <span className="absolute inset-x-2.5 -bottom-[7px] h-0.5 rounded-full bg-[#00365a]" />
+                        )}
                       </Link>
                     );
                   })}
 
                   {/* Admin Panel Dropdown - Sadece admin kullanıcıları için */}
                   {isAdmin && adminNavItems.length > 0 && (
-                    <div className="relative group">
+                    <div className="group relative">
                       <button
-                        className="flex items-center px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors outline-none focus:ring-2 focus:ring-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                        className="flex items-center whitespace-nowrap rounded-md px-3.5 py-2 text-sm font-medium text-slate-600 outline-none transition-all duration-200 ease-out hover:bg-slate-50 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98] group-hover:bg-slate-50 group-hover:text-[#00365a]"
                       >
-                        <span className="mr-2">
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                        <span className="mr-2 opacity-70 transition-opacity duration-200 group-hover:opacity-100">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
                             <path fillRule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 00-.986.57c-.166.115-.334.126-.45.083L6.3 5.508a1.875 1.875 0 00-2.282.819l-.922 1.597a1.875 1.875 0 00.432 2.385l.84.692c.095.078.17.229.154.43a7.598 7.598 0 000 1.139c.015.2-.059.352-.153.43l-.841.692a1.875 1.875 0 00-.432 2.385l.922 1.597a1.875 1.875 0 002.282.818l1.019-.382c.115-.043.283-.031.45.082.312.214.641.405.985.57.167-.114.335-.125.45-.082l1.02.382a1.875 1.875 0 002.28-.819l.923-1.597a1.875 1.875 0 00-.432-2.385l-.84-.692c-.095-.078-.17-.229-.154-.43a7.614 7.614 0 000-1.139c-.016-.2.059-.352.153-.43l.84-.692c.708-.582.891-1.59.433-2.385l-.922-1.597a1.875 1.875 0 00-2.282-.818l-1.02.382c-.114.043-.282.031-.449-.083a7.49 7.49 0 00-.985-.57c-.183-.087-.277-.227-.297-.348l-.179-1.072a1.875 1.875 0 00-1.85-1.567h-1.843zM12 15.75a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z" clipRule="evenodd" />
                           </svg>
                         </span>
                         {isAdmin ? 'Admin Panel' : 'Yönetim Paneli'}
-                        <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="ml-1 h-4 w-4 transition-transform duration-200 ease-out group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </button>
 
                       {/* Admin Dropdown Menü */}
-                      <div className="absolute left-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                      <div className="invisible absolute left-0 top-full z-50 mt-1.5 w-52 origin-top-left translate-y-1 rounded-xl border border-slate-200/80 bg-white py-1.5 opacity-0 shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all duration-200 ease-out group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
                         {adminNavItems.map((item) => {
                           const isActive = pathname === item.href;
                           return (
                             <Link
                               key={item.name}
                               href={item.href}
-                              className={`flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors ${
-                                isActive ? 'bg-gray-50 text-[#00365a] font-medium' : ''
+                              className={`mx-1 flex items-center rounded-lg px-3 py-2 text-sm transition-colors duration-150 ease-out ${
+                                isActive
+                                  ? 'bg-[#00365a]/[0.08] font-medium text-[#00365a]'
+                                  : 'text-slate-700 hover:bg-slate-50 hover:text-[#00365a]'
                               }`}
                             >
-                              <span className="mr-2">{item.icon}</span>
+                              <span className="mr-2 opacity-70">{item.icon}</span>
                               {item.name}
                             </Link>
                           );
@@ -786,34 +791,36 @@ const Header = ({ title, user, className }: HeaderProps) => {
 
                   {/* Editör Panel Dropdown - Sadece editör kullanıcıları için */}
                   {isEditor && editorNavItems.length > 0 && (
-                    <div className="relative group">
+                    <div className="group relative">
                       <button
-                        className="flex items-center px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors outline-none focus:ring-2 focus:ring-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                        className="flex items-center whitespace-nowrap rounded-md px-3.5 py-2 text-sm font-medium text-slate-600 outline-none transition-all duration-200 ease-out hover:bg-slate-50 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98] group-hover:bg-slate-50 group-hover:text-[#00365a]"
                       >
-                        <span className="mr-2">
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                        <span className="mr-2 opacity-70 transition-opacity duration-200 group-hover:opacity-100">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
                             <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 01.67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 11-.671-1.34l.041-.022zM12 9a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
                           </svg>
                         </span>
                         Editör Panel
-                        <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="ml-1 h-4 w-4 transition-transform duration-200 ease-out group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </button>
 
                       {/* Editör Dropdown Menü */}
-                      <div className="absolute left-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                      <div className="invisible absolute left-0 top-full z-50 mt-1.5 w-52 origin-top-left translate-y-1 rounded-xl border border-slate-200/80 bg-white py-1.5 opacity-0 shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all duration-200 ease-out group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
                         {editorNavItems.map((item) => {
                           const isActive = pathname === item.href;
                           return (
                             <Link
                               key={item.name}
                               href={item.href}
-                              className={`flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors ${
-                                isActive ? 'bg-gray-50 text-[#00365a] font-medium' : ''
+                              className={`mx-1 flex items-center rounded-lg px-3 py-2 text-sm transition-colors duration-150 ease-out ${
+                                isActive
+                                  ? 'bg-[#00365a]/[0.08] font-medium text-[#00365a]'
+                                  : 'text-slate-700 hover:bg-slate-50 hover:text-[#00365a]'
                               }`}
                             >
-                              <span className="mr-2">{item.icon}</span>
+                              <span className="mr-2 opacity-70">{item.icon}</span>
                               {item.name}
                             </Link>
                           );
@@ -827,19 +834,19 @@ const Header = ({ title, user, className }: HeaderProps) => {
           </div>
         </nav>
       </div>
-      
+
       {/* Mobil menü overlay - Full Screen */}
       {isMobileMenuOpen && isMounted && createPortal(
-        <div className="lg:hidden fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] bg-slate-900/40 backdrop-blur-[2px] lg:hidden">
           {/* Backdrop */}
-          <div 
+          <div
             className="absolute inset-0"
             onClick={() => setIsMobileMenuOpen(false)}
           ></div>
-          
+
           {/* Full Screen Menü paneli */}
-          <div 
-            className="relative w-full h-full bg-white overflow-y-auto" 
+          <div
+            className="relative h-full w-full overflow-y-auto bg-white"
             style={{
               zIndex: 10000,
               position: 'relative',
@@ -847,56 +854,51 @@ const Header = ({ title, user, className }: HeaderProps) => {
               maxHeight: '100vh'
             }}
           >
-            <div className="flex flex-col h-full min-h-screen">
-              {/* Menü başlığı - Enhanced Header */}
-              <div className="bg-gradient-to-r from-[#00365a] to-[#004170] p-6 text-white">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="h-14 w-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-xl font-bold shadow-lg">
+            <div className="flex h-full min-h-screen flex-col">
+              {/* Menü başlığı */}
+              <div className="border-b border-slate-100 bg-[#00365a] p-5 text-white sm:p-6">
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3.5">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/15 text-lg font-semibold text-white">
                       {user.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <div className="text-lg font-semibold">{user.name}</div>
-                      <div className="text-sm text-white/80 flex items-center gap-2">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                        </svg>
+                      <div className="text-base font-semibold leading-tight">{user.name}</div>
+                      <div className="mt-0.5 text-sm text-white/75">
                         {isAdmin ? 'Admin' : 'Mağaza Kullanıcısı'}
                       </div>
                     </div>
                   </div>
                   <button
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="p-3 hover:bg-white/10 rounded-full transition-colors"
+                    className="rounded-lg p-2.5 transition-all duration-200 ease-out hover:bg-white/10 active:scale-[0.96]"
                   >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
                 </div>
 
                 {/* Logo */}
-                <div className="flex justify-center mb-4">
-                  <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Image 
-                      src="/logo.svg" 
-                      alt="Paşa Home" 
+                <div className="mb-1 flex justify-center">
+                  <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="rounded-lg p-1 transition-opacity duration-200 hover:opacity-90">
+                    <Image
+                      src="/logo.svg"
+                      alt="Paşa Home"
                       width={120}
                       height={48}
-                      className="h-12 w-auto filter brightness-0 invert opacity-90" 
+                      className="h-10 w-auto opacity-90 brightness-0 invert"
                     />
                   </Link>
                 </div>
               </div>
-              
 
-              
-              {/* Navigasyon menüsü - Enhanced */}
-              <div className="flex-1 flex-shrink-0 overflow-y-auto bg-gray-50" style={{minHeight: '200px'}}>
-                <nav className="p-6 space-y-3">
+              {/* Navigasyon menüsü */}
+              <div className="flex-1 flex-shrink-0 overflow-y-auto bg-[#f7f8fa]" style={{minHeight: '200px'}}>
+                <nav className="space-y-1.5 p-4 sm:p-5">
                   {navigation.map((item) => {
                     // Analizlerim için özel aktif kontrol - hem kullanici-analizleri hem analizler sayfalarında aktif olsun
-                    const isAnalysisPage = item.href === '/dashboard/kullanici-analizleri' && 
+                    const isAnalysisPage = item.href === '/dashboard/kullanici-analizleri' &&
                                          (pathname === '/dashboard/kullanici-analizleri' || pathname === '/dashboard/analizler');
                     const isActive = isAnalysisPage || pathname === item.href;
                     // Admin veya editör olmayan kullanıcılar için admin-only öğeleri gizle
@@ -916,44 +918,44 @@ const Header = ({ title, user, className }: HeaderProps) => {
                         key={item.name}
                         href={item.href}
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className={`flex items-center px-6 py-4 text-base font-medium rounded-xl transition-all duration-200 outline-none focus:ring-2 focus:ring-gray-200 shadow-sm ${
+                        className={`flex items-center rounded-xl px-4 py-3.5 text-base font-medium outline-none transition-all duration-200 ease-out focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.99] ${
                           isActive
-                            ? 'bg-gradient-to-r from-[#00365a] to-[#004170] text-white shadow-lg transform scale-[1.02]'
-                            : 'bg-white text-gray-700 hover:bg-gray-100 hover:shadow-md border border-gray-200'
+                            ? 'bg-[#00365a] text-white shadow-sm'
+                            : 'border border-slate-200/80 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                         }`}
                       >
-                        <span className={`mr-4 ${isActive ? 'text-white' : 'text-gray-500'}`}>{item.icon}</span>
+                        <span className={`mr-3.5 ${isActive ? 'text-white' : 'text-slate-400'}`}>{item.icon}</span>
                         {item.name}
                         {isActive && (
-                          <svg className="w-5 h-5 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="ml-auto h-4 w-4 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>
                         )}
                       </Link>
                     );
                   })}
-                  
+
                   {/* Admin ayarlar */}
                   {isAdmin && (
                     <>
-                      <div className="mt-6 mb-4">
-                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Admin Yönetimi</h3>
+                      <div className="mb-2 mt-5">
+                        <h3 className="px-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Admin Yönetimi</h3>
                       </div>
                       <Link
                         href="/dashboard/ayarlar"
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className={`flex items-center px-6 py-4 text-base font-medium rounded-xl transition-all duration-200 outline-none focus:ring-2 focus:ring-gray-200 shadow-sm ${
+                        className={`flex items-center rounded-xl px-4 py-3.5 text-base font-medium outline-none transition-all duration-200 ease-out focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.99] ${
                           pathname === '/dashboard/ayarlar'
-                            ? 'bg-gradient-to-r from-[#00365a] to-[#004170] text-white shadow-lg transform scale-[1.02]'
-                            : 'bg-white text-gray-700 hover:bg-gray-100 hover:shadow-md border border-gray-200'
+                            ? 'bg-[#00365a] text-white shadow-sm'
+                            : 'border border-slate-200/80 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                         }`}
                       >
-                        <span className={`mr-4 ${pathname === '/dashboard/ayarlar' ? 'text-white' : 'text-gray-500'}`}>
+                        <span className={`mr-3.5 ${pathname === '/dashboard/ayarlar' ? 'text-white' : 'text-slate-400'}`}>
                           <FaCog size={20} />
                         </span>
                         Kullanıcı Yönetimi
                         {pathname === '/dashboard/ayarlar' && (
-                          <svg className="w-5 h-5 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="ml-auto h-4 w-4 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>
                         )}
@@ -964,36 +966,36 @@ const Header = ({ title, user, className }: HeaderProps) => {
                   {/* Editör ayarlar */}
                   {isEditor && (
                     <>
-                      <div className="mt-6 mb-4">
-                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Editör Yönetimi</h3>
+                      <div className="mb-2 mt-5">
+                        <h3 className="px-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Editör Yönetimi</h3>
                       </div>
                       {/* Editör menü öğeleri otomatik olarak yukarıda gösterilecek çünkü navigation.map() içinde zaten filtreleniyor */}
                     </>
                   )}
                 </nav>
               </div>
-              
+
                             {/* Mağaza bilgisi - Bakiye gösterimi kaldırıldı, sadece admin mağaza bakiyelerini görebilir */}
               {authUser?.store && (
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-3 border-b border-gray-200">
+                <div className="border-b border-slate-200 bg-white px-4 py-3">
                   <div className="text-center">
-                    <p className="text-xs text-gray-600">Mağaza</p>
-                    <p className="text-sm font-semibold text-gray-900 truncate">{authUser.store.kurum_adi}</p>
+                    <p className="text-xs text-slate-500">Mağaza</p>
+                    <p className="truncate text-sm font-semibold text-slate-900">{authUser.store.kurum_adi}</p>
                   </div>
                 </div>
               )}
-            
+
             {/* Alt kısım - Enhanced Footer */}
-              <div className="p-6 border-t border-gray-200 bg-white">
+              <div className="border-t border-slate-200 bg-white p-4 sm:p-5">
                 <button
                   onClick={() => {
                     setIsMobileMenuOpen(false);
                     handleLogout();
                   }}
-                  className="w-full flex items-center justify-center px-6 py-4 text-base font-semibold text-red-600 bg-red-50 rounded-xl hover:bg-red-100 transition-all duration-200 border border-red-200 shadow-sm hover:shadow-md"
+                  className="flex w-full items-center justify-center rounded-xl border border-red-200 bg-red-50 px-5 py-3.5 text-base font-semibold text-red-600 transition-all duration-200 ease-out hover:bg-red-100 active:scale-[0.99]"
                 >
-                  <span className="mr-3">
-                    <FaSignOutAlt size={20} />
+                  <span className="mr-2.5">
+                    <FaSignOutAlt size={18} />
                   </span>
                   Çıkış Yap
                 </button>
@@ -1003,7 +1005,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
         </div>,
         document.body
       )}
-      
+
       {/* Profil Modal */}
       {isProfileModalOpen && (
         <div 

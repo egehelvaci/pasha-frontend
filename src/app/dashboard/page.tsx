@@ -4,17 +4,11 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getMyStorePriceList } from '@/services/api';
-import { useToken } from '../hooks/useToken';
-
-interface Collection {
-  collectionId: string;
-  name: string;
-  code: string;
-  description: string;
-  created_at: string;
-  updated_at: string;
-}
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination, Autoplay } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
 
 interface Product {
   productId: string;
@@ -31,42 +25,11 @@ interface Product {
     name: string;
     code: string;
   };
-}
-
-interface PriceListDetail {
-  price_list_detail_id: string;
-  price_list_id: string;
-  collection_id: string;
-  price_per_square_meter: number;
-  created_at: string;
-  updated_at: string;
-  Collection: {
-    collectionId: string;
-    name: string;
-    code: string;
-    description: string;
-  }
-}
-
-interface PriceListData {
-  price_list_id: string;
-  name: string;
-  description: string;
-  is_default: boolean;
-  valid_from: string | null;
-  valid_to: string | null;
-  limit_amount: number | null;
-  currency: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-  PriceListDetail: PriceListDetail[];
-}
-
-interface CollectionsResponse {
-  success: boolean;
-  data: Collection[];
-  message?: string;
+  // UI-only fallback alanları (API'den gelmez)
+  _isFallback?: boolean;
+  _displayCode?: string;
+  _displayPrice?: number;
+  _displaySalePrice?: number | null;
 }
 
 interface ProductsResponse {
@@ -75,148 +38,109 @@ interface ProductsResponse {
   message?: string;
 }
 
-interface PriceListResponse {
-  success: boolean;
-  data: PriceListData;
-  message?: string;
-}
-
-// Currency sembollerini tanımla
 const CURRENCY_SYMBOLS = {
   'TRY': '₺',
   'USD': '$',
   'EUR': '€'
 };
 
+const BANNER_SLIDES = [
+  {
+    id: 1,
+    image: 'https://placehold.co/1600x520/e8eef2/64748b?text=Banner+1',
+  },
+  {
+    id: 2,
+    image: 'https://placehold.co/1600x520/dbe4ea/64748b?text=Banner+2',
+  },
+  {
+    id: 3,
+    image: 'https://placehold.co/1600x520/cfd9e3/64748b?text=Banner+3',
+  },
+];
+
+function buildDisplayProducts(products: Product[]): Product[] {
+  const real = products.slice(0, 10);
+  if (real.length >= 10) return real;
+
+  const fallbacks: Product[] = [];
+  for (let i = real.length; i < 10; i++) {
+    fallbacks.push({
+      productId: `fallback-${i + 1}`,
+      name: `Örnek Ürün ${i + 1}`,
+      description: '',
+      stock: 0,
+      width: 0,
+      height: 0,
+      cut: false,
+      productImage: `https://placehold.co/400x400/f1f5f9/94a3b8?text=Urun+${i + 1}`,
+      collectionId: '',
+      created_at: '',
+      Collection: { name: 'Koleksiyon', code: `SKU-00${i + 1}` },
+      _isFallback: true,
+      _displayCode: `SKU-00${i + 1}`,
+      _displayPrice: 1200 + i * 75,
+      _displaySalePrice: i % 3 === 0 ? 999 + i * 40 : null,
+    });
+  }
+  return [...real, ...fallbacks];
+}
+
 export default function Dashboard() {
   const { user, isLoading, token } = useAuth();
   const router = useRouter();
-  const authToken = useToken();
-  
-  // Ürün detay modalı için state'ler
+
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
 
-  const [collections, setCollections] = useState<Collection[]>([]);
   const [recentProducts, setRecentProducts] = useState<Product[]>([]);
-  const [priceList, setPriceList] = useState<PriceListData | null>(null);
-  const [isLoadingCollections, setIsLoadingCollections] = useState(true);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
-  const [isLoadingPriceList, setIsLoadingPriceList] = useState(true);
-  const [storeId, setStoreId] = useState<string | null>(null);
   const [userCurrency, setUserCurrency] = useState<string>('TRY');
 
-  // localStorage'dan store_id ve currency'yi al
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
-        const userData = localStorage.getItem('user');
-        if (userData) {
-          const parsedUser = JSON.parse(userData);
-          if (parsedUser.Store && parsedUser.Store.store_id) {
-            setStoreId(parsedUser.Store.store_id);
-          } else {
-            // Test için hardcoded store ID
-            setStoreId("f6c2d719-2035-45c4-9dcd-0831dca50452");
-          }
+        const rememberMe = localStorage.getItem('rememberMe') === 'true';
+        let storedCurrency;
+
+        if (rememberMe) {
+          storedCurrency = localStorage.getItem('currency');
         } else {
-          setStoreId("f6c2d719-2035-45c4-9dcd-0831dca50452");
+          storedCurrency = sessionStorage.getItem('currency');
         }
 
-        // Currency bilgisini al
-        const rememberMe = localStorage.getItem("rememberMe") === "true";
-        let storedCurrency;
-        
-        if (rememberMe) {
-          storedCurrency = localStorage.getItem("currency");
-        } else {
-          storedCurrency = sessionStorage.getItem("currency");
-        }
-        
         if (storedCurrency) {
           setUserCurrency(storedCurrency);
-        } else {
-          // User'ın store bilgisinden currency'yi al
-          if (user?.store?.currency) {
-            setUserCurrency(user.store.currency);
-          }
+        } else if (user?.store?.currency) {
+          setUserCurrency(user.store.currency);
         }
       } catch (error) {
         console.error('LocalStorage okuma hatası:', error);
-        setStoreId("f6c2d719-2035-45c4-9dcd-0831dca50452");
       }
     }
   }, [user]);
 
   useEffect(() => {
-    // Auth loading tamamlandığında user yoksa login'e yönlendir
     if (!isLoading && !user) {
       router.push('/');
     }
   }, [user, isLoading, router]);
 
-  // Manuel fiyat listesi yenileme fonksiyonu (buton için)
-  const refreshPriceList = async () => {
-    if (!token) return;
-
-    setIsLoadingPriceList(true);
-    try {
-      const data = await getMyStorePriceList();
-      
-      // Fiyat listesi detaylarını alfabetik sıraya göre düzenle
-      const sortedPriceList = {
-        ...data,
-        PriceListDetail: data.PriceListDetail.sort((a: any, b: any) => 
-          a.Collection.name.localeCompare(b.Collection.name, 'tr')
-        )
-      };
-      setPriceList(sortedPriceList);
-    } catch (error) {
-      console.error('Fiyat listesi yenileme hatası:', error);
-    } finally {
-      setIsLoadingPriceList(false);
-    }
-  };
-
-  // İlk yükleme ve veri çekme - sadece bir kez çalışacak
   useEffect(() => {
     if (!token) return;
 
-    // Koleksiyonları getir
-    const fetchCollections = async () => {
-      setIsLoadingCollections(true);
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/collections`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (response.ok) {
-          const data: CollectionsResponse = await response.json();
-          if (data.success) {
-            // Koleksiyonları alfabetik sıraya göre düzenle
-            const sortedCollections = data.data.sort((a, b) => a.name.localeCompare(b.name, 'tr'));
-            setCollections(sortedCollections);
-          }
-        }
-      } catch (error) {
-        console.error('Koleksiyonlar çekme hatası:', error);
-      } finally {
-        setIsLoadingCollections(false);
-      }
-    };
-
-    // Son ürünleri getir
     const fetchRecentProducts = async () => {
       setIsLoadingProducts(true);
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/products?limit=20&page=1`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/products?limit=20&page=1`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           }
-        });
-        
+        );
+
         if (response.ok) {
           const data: ProductsResponse = await response.json();
           if (data.success) {
@@ -230,309 +154,266 @@ export default function Dashboard() {
       }
     };
 
-    // Fiyat listesini getir (koşullu)
-    const fetchPriceList = async () => {
-      if (!storeId) return;
-      
-      setIsLoadingPriceList(true);
-      try {
-        const data = await getMyStorePriceList();
-        
-        // Fiyat listesi detaylarını alfabetik sıraya göre düzenle
-        const sortedPriceList = {
-          ...data,
-          PriceListDetail: data.PriceListDetail.sort((a: any, b: any) => 
-            a.Collection.name.localeCompare(b.Collection.name, 'tr')
-          )
-        };
-        setPriceList(sortedPriceList);
-      } catch (error) {
-        console.error('Fiyat listesi çekme hatası:', error);
-      } finally {
-        setIsLoadingPriceList(false);
-      }
-    };
-
-    // Paralel olarak veri çek
-    fetchCollections();
     fetchRecentProducts();
-    fetchPriceList();
-  }, [token, storeId]); // Sadece token ve storeId değiştiğinde çalışsın
+  }, [token]);
 
   if (isLoading || !user) {
-    return <div className="min-h-screen flex items-center justify-center">Yükleniyor...</div>;
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#f7f8fa] gap-3">
+        <div className="h-9 w-9 rounded-full border-2 border-slate-200 border-t-[#00365a] animate-spin" />
+        <p className="text-sm text-slate-500 font-medium">Yükleniyor...</p>
+      </div>
+    );
   }
 
+  const currencySymbol =
+    CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency;
+  const displayProducts = buildDisplayProducts(recentProducts);
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6">
-        <hr className="border-gray-200 mb-6" />
-        
-        {/* Kullanıcı bilgileri ve hızlı linkler */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          {/* Kullanıcı bilgileri kartı */}
-          <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center">
-              <div className="h-20 w-20 rounded-full bg-[#00365a] flex items-center justify-center text-white text-2xl font-bold">
-                {user.name[0]}{user.surname[0]}
-              </div>
-              <div className="ml-4">
-                <h2 className="text-xl font-medium text-gray-800">{user.name} {user.surname}</h2>
-                <p className="text-gray-500">{user.username}</p>
-                {user.store && (
-                  <p className="text-gray-600 mt-1">{user.store.kurum_adi}</p>
-                )}
-              </div>
+    <div className="min-h-screen bg-[#f7f8fa]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
+        {/* Banner Slider */}
+        <section className="relative mb-8 sm:mb-10">
+          <div className="home-banner-swiper overflow-hidden rounded-xl border border-slate-200/80 bg-slate-100 shadow-sm">
+            <Swiper
+              modules={[Navigation, Pagination, Autoplay]}
+              slidesPerView={1}
+              loop
+              autoplay={{ delay: 5000, disableOnInteraction: false }}
+              navigation={{
+                nextEl: '.home-banner-next',
+                prevEl: '.home-banner-prev',
+              }}
+              pagination={{
+                el: '.home-banner-pagination',
+                clickable: true,
+              }}
+              className="w-full"
+            >
+              {BANNER_SLIDES.map((slide) => (
+                <SwiperSlide key={slide.id}>
+                  <div className="relative aspect-[16/7] w-full sm:aspect-[21/8]">
+                    <img
+                      src={slide.image}
+                      alt=""
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+
+            <button
+              type="button"
+              className="home-banner-prev absolute left-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-600 shadow-sm transition hover:bg-white hover:text-[#00365a] sm:left-4 sm:h-10 sm:w-10"
+              aria-label="Önceki banner"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="home-banner-next absolute right-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-600 shadow-sm transition hover:bg-white hover:text-[#00365a] sm:right-4 sm:h-10 sm:w-10"
+              aria-label="Sonraki banner"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+
+            <div className="home-banner-pagination absolute bottom-3 left-0 right-0 z-10 flex justify-center gap-1.5" />
+          </div>
+        </section>
+
+        {/* En Çok Satan Ürünler */}
+        <section className="mb-8">
+          <div className="mb-6 grid grid-cols-[1fr_auto_1fr] items-start gap-2 sm:mb-8">
+            <div aria-hidden="true" />
+            <div className="flex flex-col items-center text-center">
+              <h2 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl sm:tracking-[0.12em]">
+                En Çok Satan Ürünler
+              </h2>
+              <div className="mt-3 h-px w-[min(100%,28rem)] bg-neutral-300 sm:mt-4" />
+            </div>
+            <div className="flex items-center justify-end gap-2 self-center">
+              <button
+                type="button"
+                className="home-products-prev inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:text-[#00365a]"
+                aria-label="Önceki ürünler"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                className="home-products-next inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:text-[#00365a]"
+                aria-label="Sonraki ürünler"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
           </div>
 
-        </div>
-
-        {/* Ana içerik - 3 kolonlu layout */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          
-          {/* Sol taraf - Fiyat Listesi - Sadece canSeePrice=true iken göster */}
-          {user.canSeePrice && (
-            <div className="xl:col-span-1">
-              <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 h-[600px] flex flex-col">
-                <div className="flex justify-between items-center mb-6">
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-800">Fiyat Listesi</h2>
-                    <p className="text-gray-500 text-sm mt-1">Güncel fiyatlarınız</p>
-                  </div>
-                </div>
-              
-              {isLoadingPriceList ? (
-                <div className="flex items-center justify-center flex-1">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                </div>
-              ) : priceList && priceList.PriceListDetail && priceList.PriceListDetail.length > 0 ? (
-                <div className="flex-1 overflow-hidden">
-                  <div className="h-full overflow-y-auto space-y-2 pr-2">
-                    {priceList.PriceListDetail.map((detail) => (
-                      <div
-                        key={detail.price_list_detail_id}
-                        className="p-3 border border-gray-200 rounded-lg hover:border-purple-300 hover:shadow-sm transition-all duration-200"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className="h-8 w-8 rounded-lg bg-purple-100 flex items-center justify-center text-purple-800 font-semibold text-xs mr-3">
-                              {detail.Collection.name.charAt(0)}
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-gray-900 text-sm">
-                                {detail.Collection.name}
-                              </h4>
-                              <p className="text-xs text-gray-500">{detail.Collection.code}</p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-sm font-bold text-gray-900">
-                              {typeof detail.price_per_square_meter === 'number' 
-                                ? detail.price_per_square_meter.toFixed(2) 
-                                : Number(detail.price_per_square_meter).toFixed(2)} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}
-                            </span>
-                            <p className="text-xs text-gray-500">m²</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center flex-1">
-                  <div className="text-center">
-                    <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">Fiyat listesi bulunamadı</h3>
-                    <p className="mt-1 text-sm text-gray-500">Henüz fiyat listesi atanmamış.</p>
-                    <button
-                      onClick={refreshPriceList}
-                      className="mt-3 text-purple-600 hover:text-purple-700 text-sm font-medium"
-                    >
-                      Yeniden dene
-                    </button>
-                  </div>
-                </div>
-              )}
+          {isLoadingProducts ? (
+            <div className="flex h-56 items-center justify-center rounded-xl border border-slate-200/80 bg-white">
+              <div className="flex flex-col items-center gap-2">
+                <div className="h-8 w-8 rounded-full border-2 border-slate-200 border-t-[#00365a] animate-spin" />
+                <p className="text-xs text-slate-400">Ürünler yükleniyor</p>
               </div>
             </div>
-          )}
+          ) : (
+            <div className="home-products-swiper">
+              <Swiper
+                modules={[Navigation]}
+                spaceBetween={16}
+                slidesPerView={1.35}
+                navigation={{
+                  nextEl: '.home-products-next',
+                  prevEl: '.home-products-prev',
+                }}
+                breakpoints={{
+                  480: { slidesPerView: 2.1, spaceBetween: 16 },
+                  768: { slidesPerView: 3.1, spaceBetween: 16 },
+                  1024: { slidesPerView: 4.2, spaceBetween: 18 },
+                  1280: { slidesPerView: 5, spaceBetween: 18 },
+                }}
+              >
+                {displayProducts.map((product) => {
+                  const code =
+                    product._displayCode ||
+                    product.Collection?.code ||
+                    product.productId.slice(0, 8).toUpperCase();
+                  const hasSale =
+                    typeof product._displaySalePrice === 'number' &&
+                    product._displaySalePrice !== null;
+                  const price =
+                    typeof product._displayPrice === 'number'
+                      ? product._displayPrice
+                      : null;
 
-          {/* Sağ taraf - Koleksiyonlar ve Son Eklenen Ürünler */}
-          <div className={user.canSeePrice ? "xl:col-span-2" : "xl:col-span-3"}>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              
-              {/* Koleksiyonlar Kartı */}
-              <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 h-[600px] flex flex-col">
-                <div className="flex justify-between items-center mb-6">
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-800">Koleksiyonlar</h2>
-                    <p className="text-gray-500 text-sm mt-1">Mevcut koleksiyonlarınız</p>
-                  </div>
-                  <Link 
-                    href="/dashboard/koleksiyonlar/liste"
-                    className="bg-gradient-to-r from-[#00365a] to-[#00365a] text-white px-3 py-1.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1 font-medium text-xs"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                    Tümü
-                  </Link>
-                </div>
-                
-                {isLoadingCollections ? (
-                  <div className="flex items-center justify-center flex-1">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00365a]"></div>
-                  </div>
-                ) : collections.length > 0 ? (
-                  <div className="flex-1 overflow-hidden">
-                    <div className="h-full overflow-y-auto space-y-3 pr-2">
-                      {collections.map((collection) => (
-                        <Link
-                          key={collection.collectionId}
-                          href={`/dashboard/koleksiyonlar/${collection.collectionId}`}
-                          className="block p-3 border border-gray-200 rounded-lg hover:border-[#00365a] hover:shadow-md transition-all duration-200 group"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                              <div className="h-8 w-8 rounded-lg bg-blue-100 flex items-center justify-center text-[#00365a] font-semibold text-xs mr-3">
-                                {collection.name.charAt(0)}
-                              </div>
-                              <div>
-                                <h3 className="font-semibold text-gray-900 group-hover:text-[#00365a] transition-colors text-sm">
-                                  {collection.name}
-                                </h3>
-                                <p className="text-xs text-gray-500">{collection.code}</p>
-                              </div>
-                            </div>
-                            <svg className="h-4 w-4 text-gray-400 group-hover:text-[#00365a] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center flex-1">
-                    <div className="text-center">
-                      <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                      </svg>
-                      <h3 className="mt-2 text-sm font-medium text-gray-900">Koleksiyon bulunamadı</h3>
-                      <p className="mt-1 text-sm text-gray-500">Henüz hiç koleksiyon eklenmemiş.</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Son Eklenen Ürünler Kartı */}
-              <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 h-[600px] flex flex-col">
-                <div className="flex justify-between items-center mb-6">
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-800">Son Eklenen Ürünler</h2>
-                    <p className="text-gray-500 text-sm mt-1">Yeni eklenen ürünleriniz</p>
-                  </div>
-                  <Link 
-                    href="/dashboard/urunler/liste"
-                    className="bg-gradient-to-r from-green-600 to-green-500 text-white px-3 py-1.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1 font-medium text-xs"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                    Tümü
-                  </Link>
-                </div>
-                
-                {isLoadingProducts ? (
-                  <div className="flex items-center justify-center flex-1">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-                  </div>
-                ) : recentProducts.length > 0 ? (
-                  <div className="flex-1 overflow-hidden">
-                    <div className="h-full overflow-y-auto space-y-3 pr-2">
-                      {recentProducts.map((product) => (
-                        <div
-                          key={product.productId}
-                          className="flex items-center p-3 border border-gray-200 rounded-lg transition-all duration-200 cursor-pointer hover:border-green-300 hover:bg-green-50 group"
-                          onClick={() => {
+                  return (
+                    <SwiperSlide key={product.productId} className="!h-auto">
+                      <article
+                        className={`group flex h-full flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm transition ${
+                          product._isFallback
+                            ? 'cursor-default'
+                            : 'cursor-pointer hover:border-slate-300 hover:shadow-md'
+                        }`}
+                        onClick={() => {
+                          if (product._isFallback) return;
+                          setSelectedProductId(product.productId);
+                          setDetailModalOpen(true);
+                        }}
+                        onKeyDown={(e) => {
+                          if (product._isFallback) return;
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
                             setSelectedProductId(product.productId);
                             setDetailModalOpen(true);
-                          }}
-                        >
-                          <div className="h-10 w-10 rounded-lg bg-gray-200 flex-shrink-0 overflow-hidden">
-                            {product.productImage ? (
-                              <img 
-                                src={product.productImage} 
-                                alt={product.name}
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <div className="h-full w-full bg-gray-300 flex items-center justify-center">
-                                <svg className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                              </div>
-                            )}
-                          </div>
-                          <div className="ml-3 flex-1 min-w-0">
-                            <h3 className="font-semibold text-gray-900 truncate text-sm group-hover:text-green-700">
-                              {product.name}
-                            </h3>
-                          </div>
-                          <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                            </svg>
-                          </div>
+                          }
+                        }}
+                        role={product._isFallback ? undefined : 'button'}
+                        tabIndex={product._isFallback ? undefined : 0}
+                      >
+                        <div className="relative aspect-square overflow-hidden bg-slate-50">
+                          {product.productImage ? (
+                            <img
+                              src={product.productImage}
+                              alt={product.name}
+                              className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center bg-slate-100">
+                              <svg className="h-10 w-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center flex-1">
-                    <div className="text-center">
-                      <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                      </svg>
-                      <h3 className="mt-2 text-sm font-medium text-gray-900">Ürün bulunamadı</h3>
-                      <p className="mt-1 text-sm text-gray-500">Henüz hiç ürün eklenmemiş.</p>
-                    </div>
-                  </div>
-                )}
-              </div>
+                        <div className="flex flex-1 flex-col gap-1.5 p-3.5 sm:p-4">
+                          <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                            {code}
+                          </p>
+                          <h3 className="line-clamp-2 text-sm font-medium leading-snug text-slate-900 transition-colors group-hover:text-[#00365a]">
+                            {product.name}
+                          </h3>
+                          {(price !== null || product._isFallback) && (
+                            <div className="mt-auto pt-2">
+                              {hasSale ? (
+                                <div className="flex items-baseline gap-2">
+                                  <span className="text-sm font-semibold tabular-nums text-slate-900">
+                                    {product._displaySalePrice!.toLocaleString('tr-TR')} {currencySymbol}
+                                  </span>
+                                  <span className="text-xs tabular-nums text-slate-400 line-through">
+                                    {price!.toLocaleString('tr-TR')} {currencySymbol}
+                                  </span>
+                                </div>
+                              ) : price !== null ? (
+                                <span className="text-sm font-semibold tabular-nums text-slate-900">
+                                  {price.toLocaleString('tr-TR')} {currencySymbol}
+                                </span>
+                              ) : null}
+                            </div>
+                          )}
+                        </div>
+                      </article>
+                    </SwiperSlide>
+                  );
+                })}
+              </Swiper>
             </div>
-          </div>
-        </div>
+          )}
+        </section>
       </div>
-      
-      {/* Ürün Detay Modalı */}
-      <ProductDetailModal 
-        open={detailModalOpen} 
-        onClose={() => setDetailModalOpen(false)} 
-        productId={selectedProductId} 
+
+      <ProductDetailModal
+        open={detailModalOpen}
+        onClose={() => setDetailModalOpen(false)}
+        productId={selectedProductId}
       />
+
+      <style jsx global>{`
+        .home-banner-pagination .swiper-pagination-bullet {
+          width: 7px;
+          height: 7px;
+          background: #94a3b8;
+          opacity: 0.55;
+          border-radius: 9999px;
+          margin: 0 3px !important;
+          transition: all 0.2s ease;
+        }
+        .home-banner-pagination .swiper-pagination-bullet-active {
+          width: 18px;
+          opacity: 1;
+          background: #00365a;
+          border-radius: 9999px;
+        }
+        .home-products-swiper .swiper-slide {
+          height: auto;
+        }
+      `}</style>
     </div>
   );
 }
 
-// Basit Ürün Detay Modal Componenti
 function ProductDetailModal({ open, onClose, productId }: { open: boolean, onClose: () => void, productId: string | null }) {
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const { user, token } = useAuth();
-  
-  // Modal açıkken body scroll'unu engelle
+  const [error, setError] = useState('');
+  const { token } = useAuth();
+
   React.useEffect(() => {
     if (open) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
     }
-    
+
     return () => {
       document.body.style.overflow = 'unset';
     };
@@ -549,86 +430,91 @@ function ProductDetailModal({ open, onClose, productId }: { open: boolean, onClo
 
   const fetchProductDetail = async (id: string) => {
     setLoading(true);
-    setError("");
+    setError('');
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/products/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/products/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
-      if (!res.ok) throw new Error("Ürün bulunamadı");
+      );
+      if (!res.ok) throw new Error('Ürün bulunamadı');
       const data = await res.json();
       setProduct(data.data || data);
     } catch (err: any) {
-      setError(err.message || "Bir hata oluştu");
+      setError(err.message || 'Bir hata oluştu');
     } finally {
       setLoading(false);
     }
   };
 
   if (!open) return null;
-  
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl w-full max-w-2xl shadow-lg relative overflow-hidden max-h-[90vh]">
-        {/* Header */}
-        <div className="bg-[#00365a] rounded-t-xl px-6 py-4 relative">
-          <button 
-            className="absolute top-3 right-3 text-white hover:text-gray-200 text-2xl font-bold" 
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-[2px]">
+      <div className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-900">Ürün Detayı</h2>
+            <p className="mt-0.5 text-xs text-slate-500">Ürün bilgilerini inceleyin</p>
+          </div>
+          <button
+            type="button"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
             onClick={onClose}
+            aria-label="Kapat"
           >
-            &times;
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
-          <h2 className="text-xl font-bold text-white">Ürün Detayı</h2>
         </div>
-        
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+
+        <div className="overflow-y-auto p-5 sm:p-6">
           {loading ? (
-            <div className="p-16 flex flex-col items-center justify-center">
-              <div className="w-12 h-12 border-4 border-blue-900 border-t-transparent rounded-full animate-spin"></div>
-              <p className="mt-4 text-gray-600">Ürün detayları yükleniyor...</p>
+            <div className="flex flex-col items-center justify-center gap-3 py-16">
+              <div className="h-9 w-9 rounded-full border-2 border-slate-200 border-t-[#00365a] animate-spin" />
+              <p className="text-sm text-slate-500">Ürün detayları yükleniyor...</p>
             </div>
           ) : error ? (
-            <div className="p-8 text-center">
-              <div className="text-red-500">{error}</div>
+            <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-6 text-center text-sm text-red-600">
+              {error}
             </div>
           ) : product ? (
-            <div className="space-y-6">
-              {/* Ürün Görseli */}
-              <div className="aspect-[4/3] relative overflow-hidden bg-gray-50 rounded-lg border border-gray-200">
-                <img 
-                  src={product.productImage || "https://tebi.io/pashahome/products/ornek-urun.jpg"} 
-                  alt={product.name} 
-                  className="w-full h-full object-contain p-4" 
+            <div className="space-y-5">
+              <div className="relative aspect-[4/3] overflow-hidden rounded-lg border border-slate-100 bg-slate-50">
+                <img
+                  src={product.productImage || 'https://tebi.io/pashahome/products/ornek-urun.jpg'}
+                  alt={product.name}
+                  className="h-full w-full object-contain p-4"
                 />
               </div>
-              
-              {/* Ürün Bilgileri */}
+
               <div className="space-y-4">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">
+                  <h1 className="text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">
                     {product.collection?.name} - {product.name}
                   </h1>
-                  <p className="text-gray-600 mt-2">{product.description}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600">{product.description}</p>
                 </div>
-                
-                
-                {/* Aksiyon Butonları */}
-                <div className="flex gap-3 pt-4">
+
+                <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:gap-3">
                   <Link
                     href={`/dashboard/urunler/${product.productId}`}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-semibold text-center transition-colors flex items-center justify-center gap-2"
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#004170]"
                     onClick={onClose}
                   >
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
                     Sepete Ekle
                   </Link>
                   <button
+                    type="button"
                     onClick={onClose}
-                    className="px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
                   >
                     Kapat
                   </button>
@@ -636,12 +522,10 @@ function ProductDetailModal({ open, onClose, productId }: { open: boolean, onClo
               </div>
             </div>
           ) : (
-            <div className="p-8 text-center">
-              <div className="text-gray-500">Ürün bulunamadı</div>
-            </div>
+            <div className="py-10 text-center text-sm text-slate-500">Ürün bulunamadı</div>
           )}
         </div>
       </div>
     </div>
   );
-} 
+}

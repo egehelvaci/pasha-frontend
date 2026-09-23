@@ -48,11 +48,11 @@ const Pagination = ({ pagination, onPageChange, searchTerm = '', collectionId = 
   }
 
   return (
-    <div className="flex justify-center items-center space-x-2 py-6">
+    <div className="flex items-center justify-center gap-1.5 py-6">
       <button
         onClick={() => handlePageChange(pagination.page - 1)}
         disabled={pagination.page <= 1}
-        className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="rounded-lg border border-slate-200/80 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-slate-50 hover:text-[#00365a] focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white disabled:hover:text-slate-700"
       >
         Önceki
       </button>
@@ -61,12 +61,12 @@ const Pagination = ({ pagination, onPageChange, searchTerm = '', collectionId = 
         <>
           <button
             onClick={() => handlePageChange(1)}
-            className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            className="rounded-lg border border-slate-200/80 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-slate-50 hover:text-[#00365a] focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98]"
           >
             1
           </button>
           {startPage > 2 && (
-            <span className="px-2 text-gray-500">...</span>
+            <span className="px-1.5 text-slate-400">...</span>
           )}
         </>
       )}
@@ -75,10 +75,10 @@ const Pagination = ({ pagination, onPageChange, searchTerm = '', collectionId = 
         <button
           key={page}
           onClick={() => handlePageChange(page)}
-          className={`px-3 py-2 border rounded-md text-sm font-medium ${
+          className={`rounded-lg border px-3 py-2 text-sm font-medium transition-all duration-200 ease-out focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98] ${
             page === pagination.page
-              ? 'bg-blue-600 text-white border-blue-600'
-              : 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50'
+              ? 'border-[#00365a] bg-[#00365a] text-white'
+              : 'border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 hover:text-[#00365a]'
           }`}
         >
           {page}
@@ -88,11 +88,11 @@ const Pagination = ({ pagination, onPageChange, searchTerm = '', collectionId = 
       {endPage < pagination.totalPages && (
         <>
           {endPage < pagination.totalPages - 1 && (
-            <span className="px-2 text-gray-500">...</span>
+            <span className="px-1.5 text-slate-400">...</span>
           )}
           <button
             onClick={() => handlePageChange(pagination.totalPages)}
-            className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            className="rounded-lg border border-slate-200/80 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-slate-50 hover:text-[#00365a] focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98]"
           >
             {pagination.totalPages}
           </button>
@@ -102,7 +102,7 @@ const Pagination = ({ pagination, onPageChange, searchTerm = '', collectionId = 
       <button
         onClick={() => handlePageChange(pagination.page + 1)}
         disabled={pagination.page >= pagination.totalPages}
-        className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="rounded-lg border border-slate-200/80 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-slate-50 hover:text-[#00365a] focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white disabled:hover:text-slate-700"
       >
         Sonraki
       </button>
@@ -112,8 +112,9 @@ const Pagination = ({ pagination, onPageChange, searchTerm = '', collectionId = 
 
 // Loading Spinner Komponenti
 const LoadingSpinner = () => (
-  <div className="flex justify-center items-center py-12">
-    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+  <div className="flex flex-col items-center justify-center gap-3 py-16">
+    <div className="h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]"></div>
+    <p className="text-sm text-slate-500">Yükleniyor...</p>
   </div>
 );
 
@@ -606,7 +607,12 @@ export default function ProductList() {
             &times;
           </button>
           
-          <h2 className="text-xl font-bold mb-6 text-black">Yeni Ürün Ekle</h2>
+          <div className="mb-6 flex flex-col items-center text-center pr-6">
+            <h2 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl sm:tracking-[0.12em]">
+              Yeni Ürün Ekle
+            </h2>
+            <div className="mt-3 h-px w-[min(100%,20rem)] bg-neutral-300 sm:mt-4" />
+          </div>
           
           <div className="flex gap-6">
             {/* Sol taraf - Form */}
@@ -666,9 +672,9 @@ export default function ProductList() {
                     </button>
                     
                     {collectionDropdownOpen && (
-                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                      <div className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200/80 bg-white py-1 shadow-[0_8px_30px_rgb(0,0,0,0.06)] scrollbar-hide">
                         <div
-                          className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                          className={`cursor-pointer px-3.5 py-2.5 text-sm transition-colors duration-150 ease-out hover:bg-slate-50 ${
                             !form.collectionId ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
                           }`}
                           onClick={() => {
@@ -681,7 +687,7 @@ export default function ProductList() {
                   {collections.map(col => (
                           <div
                             key={col.collectionId}
-                            className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                            className={`cursor-pointer px-3.5 py-2.5 text-sm transition-colors duration-150 ease-out hover:bg-slate-50 ${
                               form.collectionId === col.collectionId ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
                             }`}
                             onClick={() => {
@@ -726,9 +732,9 @@ export default function ProductList() {
                     </button>
                     
                     {ruleDropdownOpen && (
-                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                      <div className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200/80 bg-white py-1 shadow-[0_8px_30px_rgb(0,0,0,0.06)] scrollbar-hide">
                         <div
-                          className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                          className={`cursor-pointer px-3.5 py-2.5 text-sm transition-colors duration-150 ease-out hover:bg-slate-50 ${
                             !form.rule_id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
                           }`}
                           onClick={() => {
@@ -743,7 +749,7 @@ export default function ProductList() {
                           .map(rule => (
                             <div
                               key={rule.id}
-                              className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                              className={`cursor-pointer px-3.5 py-2.5 text-sm transition-colors duration-150 ease-out hover:bg-slate-50 ${
                                 form.rule_id === rule.id.toString() ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
                               }`}
                               onClick={() => {
@@ -1148,54 +1154,37 @@ export default function ProductList() {
     if (!open) return null;
     
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl w-full max-w-6xl shadow-lg relative overflow-hidden max-h-[90vh]">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-[2px]">
+        <div className="relative flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
           {/* Header */}
-          <div className={`rounded-t-xl px-6 py-4 relative ${
-            product && (() => {
-              const isOutOfStock = (() => {
-                if ('sizeOptions' in product && product.sizeOptions) {
-                  return !product.sizeOptions.some((opt: any) => 
-                    opt.is_optional_height ? (opt.stockAreaM2 || 0) > 0 : (opt.stockQuantity || 0) > 0
-                  );
-                } else {
-                  return (product.stock || 0) <= 0;
-                }
-              })();
-              return isOutOfStock ? "bg-gray-500" : "bg-[#00365a]";
-            })() || "bg-[#00365a]"
-          }`}>
-          <button 
-              className="absolute top-3 right-3 text-white hover:text-gray-200 text-3xl font-bold" 
-            onClick={onClose}
-          >
-            &times;
-          </button>
-          
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white">
-                {product && (() => {
-                  const isOutOfStock = (() => {
-                    if ('sizeOptions' in product && product.sizeOptions) {
-                      return !product.sizeOptions.some((opt: any) => 
-                        opt.is_optional_height ? (opt.stockAreaM2 || 0) > 0 : (opt.stockQuantity || 0) > 0
-                      );
-                    } else {
-                      return (product.stock || 0) <= 0;
-                    }
-                  })();
-                  return isOutOfStock ? "Ön Sipariş Ver" : "Sepete Ekle";
-                })() || "Sepete Ekle"}
-              </h2>
-            </div>
+          <div className="relative border-b border-slate-100 px-5 py-5 sm:px-6 sm:py-6">
+            <button 
+              type="button"
+              className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-all duration-200 ease-out hover:bg-slate-50 hover:text-slate-700 active:scale-[0.96] sm:right-4 sm:top-4" 
+              onClick={onClose}
+              aria-label="Kapat"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {product && !loading && !error && (
+              <div className="flex flex-col items-center pr-8 text-center">
+                <h1 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl sm:tracking-[0.12em]">
+                  {product.collection?.name} - {product.name}
+                </h1>
+                <div className="mt-3 h-px w-[min(100%,20rem)] bg-neutral-300 sm:mt-4" />
+              </div>
+            )}
           </div>
           
           {/* Content */}
-          <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="overflow-y-auto p-5 sm:p-6 max-h-[calc(90vh-120px)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {loading ? (
-            <div className="p-16 flex flex-col items-center justify-center">
-              <div className="w-12 h-12 border-4 border-blue-900 border-t-transparent rounded-full animate-spin"></div>
-              <p className="mt-4 text-gray-600">Ürün detayları yükleniyor...</p>
+            <div className="flex flex-col items-center justify-center gap-3 py-16">
+              <div className="h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]"></div>
+              <p className="text-sm text-slate-500">Ürün detayları yükleniyor...</p>
             </div>
           ) : error ? (
             <div className="p-8 text-center">
@@ -1203,13 +1192,10 @@ export default function ProductList() {
             </div>
           ) : product ? (
               <div>
-              <div className="flex items-center justify-between mb-6">
-                <h1 className="text-2xl font-bold text-black">{product.collection?.name} - {product.name}</h1>
-              </div>
               
               <div className="flex flex-col md:flex-row gap-8">
                 <div className="w-full md:w-1/2">
-                  <div className="aspect-[4/3] relative overflow-hidden bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
                     <Image 
                       src={product.productImage || "https://tebi.io/pashahome/products/ornek-urun.jpg"} 
                       alt={product.name} 
@@ -1220,8 +1206,8 @@ export default function ProductList() {
                   </div>
                   {/* Stok Durumu */}
                     {product.sizeOptions && product.sizeOptions.length > 0 && (
-                      <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <h3 className="text-sm font-medium text-gray-700 mb-3">Stok Durumu</h3>
+                        <div className="mt-6 rounded-xl border border-slate-200/80 bg-slate-50 p-4">
+                        <h3 className="mb-3 text-sm font-semibold text-slate-900">Stok Durumu</h3>
                         <div className="space-y-2">
                           {product.sizeOptions.map((size: any, index: number) => {
                             const isOptionalHeight = size.is_optional_height;
@@ -1229,15 +1215,21 @@ export default function ProductList() {
                               ? `${(size.stockAreaM2 || 0).toFixed(1)} m²`
                               : `${size.stockQuantity || 0} adet`;
                             const stockColor = (isOptionalHeight ? (size.stockAreaM2 || 0) : (size.stockQuantity || 0)) > 0 
-                              ? 'text-green-600' 
-                              : 'text-red-600';
+                              ? 'text-emerald-600' 
+                              : 'text-orange-600';
                             
                             return (
-                              <div key={size.id || index} className="flex items-center justify-between text-sm">
-                                <span className="text-gray-700">
-                                  {size.width}x{isOptionalHeight ? 'İsteğe Bağlı' : size.height} cm
+                              <div key={size.id || index} className="flex items-center justify-between gap-3 text-sm">
+                                <span className="text-slate-600">
+                                  <span className="text-[10px] uppercase tracking-wide text-slate-400">En</span>{' '}
+                                  <span className="font-medium tabular-nums text-slate-800">{size.width}</span>
+                                  <span className="mx-1 text-slate-300">×</span>
+                                  <span className="text-[10px] uppercase tracking-wide text-slate-400">Boy</span>{' '}
+                                  <span className="font-medium tabular-nums text-slate-800">
+                                    {isOptionalHeight ? 'Özel' : size.height}
+                                  </span>
                                 </span>
-                                <span className={`font-medium ${stockColor}`}>
+                                <span className={`shrink-0 text-xs font-medium ${stockColor}`}>
                                   {stockValue}
                                 </span>
                               </div>
@@ -1250,64 +1242,40 @@ export default function ProductList() {
                 
                 <div className="w-full md:w-1/2">
                   <div className="grid grid-cols-1 gap-5">
-                    <div className="flex flex-col gap-2 dropdown-container bg-blue-50 rounded-lg p-6 border border-blue-200">
-                      <span className="text-sm font-medium text-gray-700">Boyut Seçimi</span>
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() => setSizeDropdownOpen(!sizeDropdownOpen)}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                        >
-                          <span className={selectedSize ? "text-gray-900" : "text-gray-500"}>
-                            {selectedSize 
-                              ? `${selectedSize.width}x${selectedSize.is_optional_height ? 'İsteğe Bağlı' : selectedSize.height} cm (Stok: ${selectedSize.is_optional_height ? `${(selectedSize.stockAreaM2 || 0).toFixed(1)} m²` : `${selectedSize.stockQuantity || 0} adet`})`
-                              : "Boyut Seçin"
-                            }
-                          </span>
-                          <svg 
-                            className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${sizeDropdownOpen ? 'rotate-180' : ''}`}
-                            fill="none" 
-                            stroke="currentColor" 
-                            viewBox="0 0 24 24"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </button>
-                        
-                        {sizeDropdownOpen && (
-                          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                            <div 
-                              className="px-3 py-2 text-gray-500 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
+                    <div className="dropdown-container flex flex-col gap-3">
+                      <span className="text-sm font-medium text-slate-900">Boyut</span>
+
+                      <div className="flex flex-wrap gap-2">
+                        {product.sizeOptions?.map((size: any) => {
+                          const isSelected = selectedSize?.id === size.id;
+                          const label = size.is_optional_height
+                            ? `${size.width} × Özel`
+                            : `${size.width} × ${size.height}`;
+
+                          return (
+                            <button
+                              key={size.id}
+                              type="button"
                               onClick={() => {
-                                setSelectedSize(null);
+                                setSelectedSize(size);
                                 setSizeDropdownOpen(false);
                               }}
+                              className={`rounded-lg border px-3.5 py-2 text-sm tabular-nums transition-all duration-200 ease-out active:scale-[0.98] ${
+                                isSelected
+                                  ? 'border-[#00365a] bg-[#00365a] font-medium text-white'
+                                  : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                              }`}
                             >
-                              Boyut Seçin
-                            </div>
-                        {product.sizeOptions?.map((size: any) => (
-                              <div
-                                key={size.id}
-                                className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                  selectedSize?.id === size.id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                                }`}
-                                onClick={() => {
-                                  setSelectedSize(size);
-                                  setSizeDropdownOpen(false);
-                                }}
-                              >
-                            {size.width}x{size.is_optional_height ? 'İsteğe Bağlı' : size.height} cm 
-                                (Stok: {size.is_optional_height ? `${(size.stockAreaM2 || 0).toFixed(1)} m²` : `${size.stockQuantity || 0} adet`})
-                              </div>
-                        ))}
-                          </div>
-                        )}
+                              {label}
+                            </button>
+                          );
+                        })}
                       </div>
-                      
+
                       {selectedSize && selectedSize.is_optional_height && (
-                        <div className="mt-2">
-                          <label className="text-sm text-gray-500 block mb-1">Özel Boy (cm)</label>
-                          <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2.5">
+                          <label className="shrink-0 text-sm text-slate-500">Boy</label>
+                          <div className="flex h-10 max-w-[140px] items-center overflow-hidden rounded-lg border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-[#00365a]/20">
                             <input
                               type="number"
                               min="10"
@@ -1332,13 +1300,11 @@ export default function ProductList() {
                                   setCustomHeight(100);
                                 }
                               }}
-                              className="border rounded-md p-2 text-black w-24"
+                              className="h-full w-full bg-transparent px-3 text-sm tabular-nums text-slate-900 outline-none"
+                              aria-label="Boy (cm)"
                             />
-                            <span className="text-sm text-gray-500">cm</span>
+                            <span className="pr-3 text-xs text-slate-400">cm</span>
                           </div>
-                          <span className="text-xs text-gray-500 block mt-1">
-                            {selectedSize.width}x{customHeight} cm olarak hesaplanacak
-                          </span>
                         </div>
                       )}
                     </div>
@@ -1349,7 +1315,7 @@ export default function ProductList() {
                         <button
                           type="button"
                           onClick={() => setCutTypeDropdownOpen(!cutTypeDropdownOpen)}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                          className="w-full rounded-lg border border-slate-200/80 bg-white px-3 py-2.5 text-left text-sm transition-all duration-200 ease-out hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20"
                         >
                           <span className={selectedCutType ? "text-gray-900" : "text-gray-500"}>
                             {selectedCutType 
@@ -1368,7 +1334,7 @@ export default function ProductList() {
                         </button>
                         
                         {cutTypeDropdownOpen && (
-                          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                          <div className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200/80 bg-white py-1 shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
                             <div 
                               className="px-3 py-2 text-gray-500 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
                               onClick={() => {
@@ -1382,7 +1348,7 @@ export default function ProductList() {
                               <div
                                 key={cutType.id}
                                 className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                  selectedCutType?.id === cutType.id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                  selectedCutType?.id === cutType.id ? 'bg-[#00365a]/[0.08] font-medium text-[#00365a]' : 'text-slate-700'
                                 }`}
                                 onClick={() => {
                                   setSelectedCutType(cutType);
@@ -1404,7 +1370,7 @@ export default function ProductList() {
                           <button
                             type="button"
                             onClick={() => setFringeDropdownOpen(!fringeDropdownOpen)}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                            className="w-full rounded-lg border border-slate-200/80 bg-white px-3 py-2.5 text-left text-sm transition-all duration-200 ease-out hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20"
                           >
                             <span className={selectedHasFringe !== null ? "text-gray-900" : "text-gray-500"}>
                               {selectedHasFringe === true 
@@ -1425,7 +1391,7 @@ export default function ProductList() {
                           </button>
                           
                           {fringeDropdownOpen && (
-                            <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            <div className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200/80 bg-white py-1 shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
                               <div 
                                 className="px-3 py-2 text-gray-500 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
                                 onClick={() => {
@@ -1437,7 +1403,7 @@ export default function ProductList() {
                               </div>
                               <div
                                 className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                  selectedHasFringe === true ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                  selectedHasFringe === true ? 'bg-[#00365a]/[0.08] font-medium text-[#00365a]' : 'text-slate-700'
                                 }`}
                                 onClick={() => {
                                   setSelectedHasFringe(true);
@@ -1448,7 +1414,7 @@ export default function ProductList() {
                               </div>
                               <div
                                 className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                  selectedHasFringe === false ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                  selectedHasFringe === false ? 'bg-[#00365a]/[0.08] font-medium text-[#00365a]' : 'text-slate-700'
                                 }`}
                                 onClick={() => {
                                   setSelectedHasFringe(false);
@@ -1478,20 +1444,17 @@ export default function ProductList() {
                     )}
                     
                     {user?.canSeePrice && (
-                      <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
+                      <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-4">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium text-blue-900">Toplam Tutar</span>
-                          <span className="text-lg font-bold text-blue-900">
+                          <span className="text-sm font-medium text-slate-700">Toplam Tutar</span>
+                          <span className="text-lg font-semibold tabular-nums text-[#00365a]">
                             {totalPrice.toFixed(2)} {product.pricing?.currency}
                           </span>
                         </div>
                         {selectedSize && (
-                          <div className="text-xs mt-1 text-blue-700">
-                            {selectedSize.width} cm genişlik × 
-                            {selectedSize.is_optional_height 
-                              ? ` ${customHeight} cm boy (özel)` 
-                              : ` ${selectedSize.height} cm boy`} 
-                            × {quantity} adet için hesaplandı
+                          <div className="mt-1 text-xs text-slate-500">
+                            {selectedSize.width} × {selectedSize.is_optional_height ? customHeight : selectedSize.height} cm
+                            {' '}· {quantity} adet
                           </div>
                         )}
                       </div>
@@ -1503,7 +1466,7 @@ export default function ProductList() {
                           <div className="flex">
                             <button 
                               type="button"
-                              className="w-8 h-8 border border-gray-300 flex items-center justify-center rounded-l-md text-gray-500 hover:bg-gray-50"
+                              className="flex h-8 w-8 items-center justify-center rounded-l-lg border border-slate-200/80 text-slate-500 transition-all duration-200 ease-out hover:bg-slate-50 hover:text-[#00365a] active:scale-[0.96]"
                               onClick={() => quantity > 1 && setQuantity(quantity - 1)}
                             >
                               -
@@ -1529,11 +1492,11 @@ export default function ProductList() {
                                   setQuantity(1);
                                 }
                               }}
-                              className="w-16 border-y border-gray-300 py-1 px-2 text-center text-black"
+                              className="w-16 border-y border-slate-200/80 py-1 px-2 text-center text-sm text-slate-900"
                             />
                             <button 
                               type="button"
-                              className="w-8 h-8 border border-gray-300 flex items-center justify-center rounded-r-md text-gray-500 hover:bg-gray-50"
+                              className="flex h-8 w-8 items-center justify-center rounded-r-lg border border-slate-200/80 text-slate-500 transition-all duration-200 ease-out hover:bg-slate-50 hover:text-[#00365a] active:scale-[0.96]"
                               onClick={() => setQuantity(quantity + 1)}
                             >
                               +
@@ -1547,7 +1510,7 @@ export default function ProductList() {
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
                             placeholder="Özel kesim notları veya diğer istekleriniz..."
-                            className="w-full border border-gray-300 rounded-md p-2 text-black text-sm"
+                            className="w-full rounded-lg border border-slate-200/80 p-2.5 text-sm text-slate-900 transition-all duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20"
                             rows={3}
                           />
                         </div>
@@ -1589,7 +1552,7 @@ export default function ProductList() {
                         
                         <button
                           type="button"
-                          className={`mt-2 w-full py-3 text-white rounded-md font-semibold flex items-center justify-center disabled:opacity-70 ${
+                          className={`mt-2 flex w-full items-center justify-center rounded-lg py-2.5 text-sm font-semibold text-white transition-all duration-200 ease-out active:scale-[0.99] disabled:opacity-70 ${
                             (() => {
                               const isOutOfStock = (() => {
                                 if ('sizeOptions' in product && product.sizeOptions) {
@@ -1600,7 +1563,9 @@ export default function ProductList() {
                                   return (product.stock || 0) <= 0;
                                 }
                               })();
-                              return isOutOfStock ? 'bg-orange-500 hover:bg-orange-600' : 'bg-blue-900 hover:bg-blue-800';
+                              return isOutOfStock
+                                ? 'bg-orange-500 hover:bg-orange-600'
+                                : 'bg-[#00365a] hover:bg-[#004170]';
                             })()
                           }`}
                           onClick={addToCart}
@@ -1949,7 +1914,7 @@ export default function ProductList() {
                       <button
                         type="button"
                         onClick={() => setCollectionDropdownOpen(!collectionDropdownOpen)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-3 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                        className="w-full rounded-lg border border-slate-200/80 bg-white px-3 py-2.5 text-left text-sm transition-all duration-200 ease-out hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20"
                       >
                         <span className={form.collectionId ? "text-gray-900" : "text-gray-500"}>
                           {form.collectionId 
@@ -1968,7 +1933,7 @@ export default function ProductList() {
                       </button>
                       
                       {collectionDropdownOpen && (
-                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        <div className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200/80 bg-white py-1 shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
                           <div 
                             className="px-3 py-2 text-gray-500 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
                             onClick={() => {
@@ -2026,7 +1991,7 @@ export default function ProductList() {
                       </button>
                       
                       {ruleDropdownOpen && (
-                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        <div className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200/80 bg-white py-1 shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
                           <div 
                             className="px-3 py-2 text-gray-500 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
                             onClick={() => {
@@ -2228,33 +2193,47 @@ export default function ProductList() {
   }
     
     return (
-    <div className="p-6 bg-white min-h-screen">
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="text-xl font-semibold text-gray-800">Ürün Listesi</h2>
+    <div className="min-h-screen bg-[#f7f8fa]">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 sm:py-8">
+      <div className="mb-6 sm:mb-8">
+        <div className="mb-5 flex flex-col gap-4 sm:mb-6 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
+            <h2 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl sm:tracking-[0.12em]">
+              Ürün Listesi
+            </h2>
+            <div className="mt-3 h-px w-[min(100%,20rem)] bg-neutral-300 sm:mt-4" />
+          </div>
           {isAdminOrEditor && (
             <button
-              className="bg-[#00365a] text-white rounded-full px-4 py-2 flex items-center justify-center shadow-sm hover:bg-[#004170] transition-colors"
+              className="inline-flex items-center justify-center gap-1.5 self-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98] sm:self-auto"
               onClick={() => setModalOpen(true)}
             >
-              <span className="mr-1">+</span> Yeni Ürün
+              <span>+</span> Yeni Ürün
             </button>
           )}
         </div>
         
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200">
+        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold text-slate-900">Filtreler</h3>
+            <p className="mt-0.5 text-xs text-slate-500">Ürünleri sıralayın ve daraltın</p>
+          </div>
           <div className="flex flex-wrap gap-4">
-            <div className="w-full md:w-auto dropdown-container">
-              <label htmlFor="sort-select" className="block text-sm font-medium text-gray-700 mb-1">
+            <div className="dropdown-container w-full md:w-auto">
+              <label htmlFor="sort-select" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                 Sıralama
               </label>
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
-                  className="w-full md:w-80 lg:w-96 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all text-left bg-white text-sm"
+                  className={`w-full rounded-lg border bg-white px-3 py-2.5 text-left text-sm transition-all duration-200 ease-out md:w-80 lg:w-96 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 ${
+                    sortDropdownOpen
+                      ? 'border-[#00365a]/40 bg-slate-50'
+                      : 'border-slate-200/80 hover:border-slate-300 hover:bg-slate-50'
+                  }`}
                 >
-                  <span className={sortBy ? "text-gray-900" : "text-gray-500"}>
+                  <span className={sortBy ? "text-slate-900" : "text-slate-500"}>
                     {sortBy === "name_asc" ? "İsim (A-Z)" :
                      sortBy === "name_desc" ? "İsim (Z-A)" :
                      sortBy === "date_asc" ? "Tarih (Eskiden Yeniye)" :
@@ -2274,10 +2253,10 @@ export default function ProductList() {
                 </button>
                 
                 {sortDropdownOpen && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                  <div className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200/80 bg-white py-1 shadow-[0_8px_30px_rgb(0,0,0,0.06)] scrollbar-hide">
                     <div
-                      className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        sortBy === "name_asc" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      className={`cursor-pointer px-3.5 py-2.5 text-sm transition-colors duration-150 ease-out hover:bg-slate-50 ${
+                        sortBy === "name_asc" ? 'bg-[#00365a]/[0.08] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                       onClick={() => {
                         setSortBy("name_asc");
@@ -2287,8 +2266,8 @@ export default function ProductList() {
                       İsim (A-Z)
                     </div>
                     <div
-                      className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        sortBy === "name_desc" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      className={`cursor-pointer px-3.5 py-2.5 text-sm transition-colors duration-150 ease-out hover:bg-slate-50 ${
+                        sortBy === "name_desc" ? 'bg-[#00365a]/[0.08] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                       onClick={() => {
                         setSortBy("name_desc");
@@ -2298,8 +2277,8 @@ export default function ProductList() {
                       İsim (Z-A)
                     </div>
                     <div
-                      className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        sortBy === "date_asc" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      className={`cursor-pointer px-3.5 py-2.5 text-sm transition-colors duration-150 ease-out hover:bg-slate-50 ${
+                        sortBy === "date_asc" ? 'bg-[#00365a]/[0.08] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                       onClick={() => {
                         setSortBy("date_asc");
@@ -2309,8 +2288,8 @@ export default function ProductList() {
                       Tarih (Eskiden Yeniye)
                     </div>
                     <div
-                      className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        sortBy === "date_desc" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      className={`cursor-pointer px-3.5 py-2.5 text-sm transition-colors duration-150 ease-out hover:bg-slate-50 ${
+                        sortBy === "date_desc" ? 'bg-[#00365a]/[0.08] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                       onClick={() => {
                         setSortBy("date_desc");
@@ -2320,8 +2299,8 @@ export default function ProductList() {
                       Tarih (Yeniden Eskiye)
                     </div>
                     <div
-                      className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        sortBy === "id_asc" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      className={`cursor-pointer px-3.5 py-2.5 text-sm transition-colors duration-150 ease-out hover:bg-slate-50 ${
+                        sortBy === "id_asc" ? 'bg-[#00365a]/[0.08] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                       onClick={() => {
                         setSortBy("id_asc");
@@ -2331,8 +2310,8 @@ export default function ProductList() {
                       ID (Artan)
                     </div>
                     <div
-                      className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        sortBy === "id_desc" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      className={`cursor-pointer px-3.5 py-2.5 text-sm transition-colors duration-150 ease-out hover:bg-slate-50 ${
+                        sortBy === "id_desc" ? 'bg-[#00365a]/[0.08] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                       onClick={() => {
                         setSortBy("id_desc");
@@ -2347,16 +2326,20 @@ export default function ProductList() {
             </div>
             
             <div className="w-full md:w-auto dropdown-container">
-              <label htmlFor="collection-select" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="collection-select" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                 Koleksiyon
               </label>
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setCollectionFilterDropdownOpen(!collectionFilterDropdownOpen)}
-                  className="w-full md:w-80 lg:w-96 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all text-left bg-white text-sm"
+                  className={`w-full rounded-lg border bg-white px-3 py-2.5 text-left text-sm transition-all duration-200 ease-out md:w-80 lg:w-96 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 ${
+                    collectionFilterDropdownOpen
+                      ? 'border-[#00365a]/40 bg-slate-50'
+                      : 'border-slate-200/80 hover:border-slate-300 hover:bg-slate-50'
+                  }`}
                 >
-                  <span className={selectedCollection ? "text-gray-900" : "text-gray-500"}>
+                  <span className={selectedCollection ? "text-slate-900" : "text-slate-500"}>
                     {selectedCollection 
                       ? collections.find(col => col.collectionId === selectedCollection)?.name || "Koleksiyon Seçin"
                       : "Tüm Koleksiyonlar"
@@ -2373,10 +2356,10 @@ export default function ProductList() {
                 </button>
                 
                 {collectionFilterDropdownOpen && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                  <div className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200/80 bg-white py-1 shadow-[0_8px_30px_rgb(0,0,0,0.06)] scrollbar-hide">
                     <div
-                      className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        !selectedCollection ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      className={`cursor-pointer px-3.5 py-2.5 text-sm transition-colors duration-150 ease-out hover:bg-slate-50 ${
+                        !selectedCollection ? 'bg-[#00365a]/[0.08] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                       onClick={() => {
                         setSelectedCollection("");
@@ -2388,8 +2371,8 @@ export default function ProductList() {
                 {collections.map((col) => (
                       <div
                         key={col.collectionId}
-                        className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                          selectedCollection === col.collectionId ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                        className={`cursor-pointer px-3.5 py-2.5 text-sm transition-colors duration-150 ease-out hover:bg-slate-50 ${
+                          selectedCollection === col.collectionId ? 'bg-[#00365a]/[0.08] font-medium text-[#00365a]' : 'text-slate-700'
                         }`}
                         onClick={() => {
                           setSelectedCollection(col.collectionId);
@@ -2405,16 +2388,20 @@ export default function ProductList() {
             </div>
             
             <div className="w-full md:w-auto dropdown-container">
-              <label htmlFor="stock-filter" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="stock-filter" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                 Stok Durumu
               </label>
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setStockFilterDropdownOpen(!stockFilterDropdownOpen)}
-                  className="w-full md:w-80 lg:w-96 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all text-left bg-white text-sm"
+                  className={`w-full rounded-lg border bg-white px-3 py-2.5 text-left text-sm transition-all duration-200 ease-out md:w-80 lg:w-96 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 ${
+                    stockFilterDropdownOpen
+                      ? 'border-[#00365a]/40 bg-slate-50'
+                      : 'border-slate-200/80 hover:border-slate-300 hover:bg-slate-50'
+                  }`}
                 >
-                  <span className={stockFilter !== "all" ? "text-gray-900" : "text-gray-500"}>
+                  <span className={stockFilter !== "all" ? "text-slate-900" : "text-slate-500"}>
                     {stockFilter === "inStock" ? "Stokta Olanlar" :
                      stockFilter === "outOfStock" ? "Stokta Olmayanlar" :
                      "Tüm Ürünler"}
@@ -2430,10 +2417,10 @@ export default function ProductList() {
                 </button>
                 
                 {stockFilterDropdownOpen && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                  <div className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200/80 bg-white py-1 shadow-[0_8px_30px_rgb(0,0,0,0.06)] scrollbar-hide">
                     <div
-                      className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        stockFilter === "all" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      className={`cursor-pointer px-3.5 py-2.5 text-sm transition-colors duration-150 ease-out hover:bg-slate-50 ${
+                        stockFilter === "all" ? 'bg-[#00365a]/[0.08] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                       onClick={() => {
                         setStockFilter("all");
@@ -2443,8 +2430,8 @@ export default function ProductList() {
                       Tüm Ürünler
                     </div>
                     <div
-                      className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        stockFilter === "inStock" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      className={`cursor-pointer px-3.5 py-2.5 text-sm transition-colors duration-150 ease-out hover:bg-slate-50 ${
+                        stockFilter === "inStock" ? 'bg-[#00365a]/[0.08] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                       onClick={() => {
                         setStockFilter("inStock");
@@ -2454,8 +2441,8 @@ export default function ProductList() {
                       Stokta Olanlar
                     </div>
                     <div
-                      className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        stockFilter === "outOfStock" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      className={`cursor-pointer px-3.5 py-2.5 text-sm transition-colors duration-150 ease-out hover:bg-slate-50 ${
+                        stockFilter === "outOfStock" ? 'bg-[#00365a]/[0.08] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                       onClick={() => {
                         setStockFilter("outOfStock");
@@ -2470,14 +2457,14 @@ export default function ProductList() {
             </div>
             
             <div className="w-full md:w-auto">
-              <label htmlFor="search-input" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="search-input" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                 Ara
               </label>
               <div className="relative">
                 <input
                   id="search-input"
                   type="text"
-                  className="w-full md:w-80 lg:w-96 border border-gray-300 rounded-md pl-9 pr-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-900 text-sm"
+                  className="w-full rounded-lg border border-slate-200/80 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 transition-all duration-200 ease-out placeholder:text-slate-400 hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 md:w-80 lg:w-96"
                   placeholder="Ürün adı, açıklama veya ID ara..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -2485,7 +2472,7 @@ export default function ProductList() {
                   spellCheck="false"
                 />
                 <svg
-                  className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
+                  className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -2504,7 +2491,7 @@ export default function ProductList() {
             {(search || selectedCollection || stockFilter !== "all") && (
               <div className="w-full md:w-auto flex items-end">
                 <button
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-600 hover:bg-gray-50"
+                  className="rounded-lg border border-slate-200/80 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition-all duration-200 ease-out hover:bg-slate-50 hover:text-[#00365a] active:scale-[0.98]"
                   onClick={() => {
                     setSearch("");
                     setSelectedCollection("");
@@ -2519,27 +2506,29 @@ export default function ProductList() {
         </div>
       </div>
       
-      <div className="bg-white rounded-lg">
+      <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
         {loading ? (
           <LoadingSpinner />
         ) : filteredProducts.length === 0 ? (
-          <div className="py-16 text-center">
-            <svg 
-              className="mx-auto h-12 w-12 text-gray-400" 
-              xmlns="http://www.w3.org/2000/svg" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-              />
-            </svg>
-            <p className="mt-4 text-lg font-medium text-gray-600">Ürün bulunamadı</p>
-            <p className="mt-2 text-gray-500">
+          <div className="py-16 text-center px-4">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+              <svg 
+                className="h-6 w-6 text-slate-400" 
+                xmlns="http://www.w3.org/2000/svg" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={1.5} 
+                  d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+                />
+              </svg>
+            </div>
+            <p className="mt-4 text-base font-medium text-slate-900">Ürün bulunamadı</p>
+            <p className="mt-1.5 text-sm text-slate-500">
               {searchTerm && 'Arama kriterlerinize uygun ürün bulunamadı. '}
               {selectedCollection && 'Seçtiğiniz koleksiyonda ürün bulunamadı. '}
               Lütfen farklı filtreler deneyin.
@@ -2548,8 +2537,8 @@ export default function ProductList() {
         ) : (
           <>
             {(searchTerm || selectedCollection || stockFilter !== "all") && (
-              <div className="p-4 border-b text-sm text-gray-600">
-                <span className="font-medium">{filteredProducts.length}</span> adet ürün gösteriliyor 
+              <div className="border-b border-slate-100 px-4 py-3 text-sm text-slate-600 sm:px-5">
+                <span className="font-medium text-slate-900">{filteredProducts.length}</span> adet ürün gösteriliyor 
                 {searchTerm && <span> (arama: <span className="italic">"{searchTerm}"</span>)</span>}
                 {selectedCollection && (
                   <span> (koleksiyon: <span className="font-medium">{collections.find(c => c.collectionId === selectedCollection)?.name || selectedCollection}</span>)</span>
@@ -2560,18 +2549,18 @@ export default function ProductList() {
                   </span>)</span>
                 )}
                 {pagination && stockFilter === "all" && (
-                  <span className="ml-2 text-xs text-gray-500">
+                  <span className="ml-2 text-xs text-slate-400">
                     (Toplam {pagination.total} ürün, Sayfa {pagination.page}/{pagination.totalPages})
                   </span>
                 )}
                 {stockFilter !== "all" && (
-                  <span className="ml-2 text-xs text-gray-500">
+                  <span className="ml-2 text-xs text-slate-400">
                     (Tüm ürünler arasından filtrelendi)
                   </span>
                 )}
               </div>
             )}
-            <div className="flex flex-wrap justify-center gap-6 p-6">
+            <div className="flex flex-wrap justify-center gap-5 p-4 sm:gap-6 sm:p-6">
               {filteredProducts.map((product) => {
                 // Ürünün boyut seçeneklerinde is_optional_height true olan varsa kesim ürünü
                 const hasOptionalHeight = product.sizeOptions && product.sizeOptions.some((size: any) => size.is_optional_height === true);
@@ -2593,52 +2582,52 @@ export default function ProductList() {
                 
                 return (
                   <div key={product.productId} 
-                       className={`border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow relative cursor-pointer bg-white ${
-                         isOutOfStock ? 'opacity-60 grayscale-50' : ''
+                       className={`group relative cursor-pointer overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:shadow-md ${
+                         isOutOfStock ? 'opacity-70' : ''
                        }`} 
                        style={{ width: '350px', height: '550px' }}
                        onClick={() => router.push(`/dashboard/urunler/${product.productId}`)}>
                     
                     
                     {/* Koleksiyon adı - sol üst */}
-                    <div className="absolute top-3 left-3 z-10">
-                      <span className="bg-[#00365a] text-white text-xs px-2 py-1 rounded-md font-medium">
+                    <div className="absolute left-3 top-3 z-10">
+                      <span className="rounded-md bg-[#00365a] px-2 py-1 text-[11px] font-medium text-white">
                         {product.collection?.name || collections.find(c => c.collectionId === product.collectionId)?.name || "SERİSİ"}
                       </span>
                     </div>
                     
                     {/* Makas işareti - sağ üst */}
                     {isCustomCut && (
-                      <div className="absolute top-3 right-3 z-10">
-                        <span className="text-gray-600 text-xl">✂️</span>
+                      <div className="absolute right-3 top-3 z-10">
+                        <span className="text-xl text-slate-500">✂️</span>
                       </div>
                     )}
                     
                     {/* Ürün görseli - daha büyük alan */}
-                    <div className="relative overflow-hidden bg-gray-50" style={{ height: '400px' }}>
+                    <div className="relative overflow-hidden bg-slate-50" style={{ height: '400px' }}>
                       {product.productImage ? (
                         <Image 
                           src={product.productImage} 
                           alt={product.name} 
                           width={350}
                           height={400}
-                          className="w-full h-full object-contain p-3"
+                          className="h-full w-full object-contain p-3 transition duration-300 ease-out group-hover:scale-[1.02]"
                         />
                       ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center p-3">
-                          <div className="w-32 h-32 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+                        <div className="flex h-full w-full flex-col items-center justify-center p-3">
+                          <div className="mb-4 flex h-32 w-32 items-center justify-center rounded-xl bg-slate-100">
                             <Image 
                               src="/black-logo.svg" 
                               alt="Paşa Home Logo" 
                               width={80}
                               height={80}
-                              className="w-20 h-20 opacity-80"
+                              className="h-20 w-20 opacity-80"
                               onError={(e) => {
                                 e.currentTarget.src = '/logo.svg';
                               }}
                             />
                           </div>
-                          <p className="text-gray-500 text-sm text-center font-medium">
+                          <p className="text-center text-sm font-medium text-slate-500">
                             Ürün görseli<br />hazırlanıyor
                           </p>
                         </div>
@@ -2646,8 +2635,8 @@ export default function ProductList() {
                       
                       {/* Minimal Stok Yok Badge */}
                       {isOutOfStock && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <div className="bg-gray-500 text-white px-3 py-1 rounded-full text-xs font-medium shadow-md">
+                        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                          <div className="rounded-full bg-slate-600 px-3 py-1 text-xs font-medium text-white shadow-sm">
                             STOK YOK
                           </div>
                         </div>
@@ -2655,22 +2644,22 @@ export default function ProductList() {
                     </div>
                     
                     {/* Ürün bilgileri - kompakt alan */}
-                    <div className="p-4 h-[150px] flex flex-col justify-between">
+                    <div className="flex h-[150px] flex-col justify-between border-t border-slate-100 p-4">
                       <div className="flex-1">
-                        <h3 className="text-black font-medium text-sm mb-2 line-clamp-1">
+                        <h3 className="mb-1.5 line-clamp-1 text-sm font-medium text-slate-900 transition-colors duration-200 group-hover:text-[#00365a]">
                           {statusText} {product.name}
                         </h3>
-                        <p className="text-sm text-gray-500 mb-2 line-clamp-1">
+                        <p className="mb-2 line-clamp-1 text-sm text-slate-500">
                           {product.description}
                         </p>
                       </div>
                       
                       <div className="flex items-center gap-2">
                         <button 
-                          className={`flex-1 px-3 py-2 rounded-md flex items-center justify-center gap-2 text-sm shadow-sm transition-colors font-semibold ${
+                          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-white transition-all duration-200 ease-out active:scale-[0.98] ${
                             isOutOfStock 
-                              ? 'bg-orange-500 hover:bg-orange-600 text-white hover:shadow-md' 
-                              : 'bg-green-600 hover:bg-green-700 text-white hover:shadow-md'
+                              ? 'bg-orange-500 hover:bg-orange-600' 
+                              : 'bg-[#00365a] hover:bg-[#004170]'
                           }`}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -2684,7 +2673,7 @@ export default function ProductList() {
                         </button>
                         {isAdminOrEditor && (
                           <button 
-                            className="w-10 h-10 bg-blue-600 text-white rounded-md flex items-center justify-center text-xs shadow-sm hover:bg-blue-700 transition-colors"
+                            className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200/80 bg-white text-slate-600 transition-all duration-200 ease-out hover:border-slate-300 hover:bg-slate-50 hover:text-[#00365a] active:scale-[0.96]"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedProductForUpdate(product);
@@ -2707,13 +2696,13 @@ export default function ProductList() {
         )}
       </div>
       {confirmOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-lg relative">
-            <h2 className="text-lg font-bold mb-4 text-black">Onay</h2>
-            <div className="mb-6 text-black">Bu ürünü silmek istediğinize emin misiniz?</div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px]">
+          <div className="relative w-full max-w-sm rounded-xl border border-slate-200/80 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+            <h2 className="mb-2 text-base font-semibold text-slate-900">Onay</h2>
+            <div className="mb-6 text-sm text-slate-600">Bu ürünü silmek istediğinize emin misiniz?</div>
             <div className="flex justify-end gap-2">
-              <button className="px-4 py-2 rounded bg-gray-200 text-black" onClick={() => { setConfirmOpen(false); setDeleteId(null); }}>Vazgeç</button>
-              <button className="px-4 py-2 rounded bg-red-600 text-white" onClick={handleDelete} disabled={deleteLoading}>Evet</button>
+              <button className="rounded-lg border border-slate-200/80 px-4 py-2 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-slate-50 active:scale-[0.98]" onClick={() => { setConfirmOpen(false); setDeleteId(null); }}>Vazgeç</button>
+              <button className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-red-700 active:scale-[0.98] disabled:opacity-60" onClick={handleDelete} disabled={deleteLoading}>Evet</button>
             </div>
             {deleteError && <div className="text-red-500 text-sm mt-2">{deleteError}</div>}
           </div>
@@ -2761,26 +2750,26 @@ export default function ProductList() {
       
       {/* Başarı Pop-up */}
       {showSuccessPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-[2px]">
+          <div className="mx-4 w-full max-w-md rounded-xl border border-slate-200/80 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-200 ease-out">
             <div className="p-6 text-center">
               {/* Başarı İkonu */}
-              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
-                <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
+                <svg className="h-7 w-7 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
               
               {/* Başlık */}
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="mb-1 text-lg font-semibold tracking-tight text-slate-900">
                 Ürün sepete eklendi
               </h3>
               
               {/* Butonlar */}
-              <div className="flex flex-col gap-3 mt-6">
+              <div className="mt-6 flex flex-col gap-2.5">
                 <Link
                   href="/dashboard/sepetim"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-semibold transition-colors"
+                  className="w-full rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-[#004170] active:scale-[0.99]"
                   onClick={() => setShowSuccessPopup(false)}
                 >
                   Sepete Git
@@ -2788,7 +2777,7 @@ export default function ProductList() {
                 
                 <button
                   onClick={() => setShowSuccessPopup(false)}
-                  className="w-full bg-red-100 hover:bg-red-200 text-red-700 px-4 py-3 rounded-lg font-semibold transition-colors"
+                  className="w-full rounded-lg border border-slate-200/80 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-all duration-200 ease-out hover:bg-slate-50 active:scale-[0.99]"
                 >
                   Kapat
                 </button>
@@ -2797,6 +2786,7 @@ export default function ProductList() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 } 
