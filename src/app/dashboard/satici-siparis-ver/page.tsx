@@ -477,73 +477,102 @@ const SaticiSiparisVer = () => {
         </div>
 
         {/* Minimal Sepet — başlığın hemen altında */}
-        <div className="mb-5 rounded-xl border border-slate-200/80 bg-white px-3 py-2.5 shadow-sm sm:px-4">
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto">
+        <div className="mb-5 rounded-xl border border-slate-200/80 bg-white shadow-sm">
+          <div className="border-b border-slate-100 px-3 py-2.5 sm:px-4">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Sepet
                 <span className="ml-1 font-medium tabular-nums text-slate-400">({supplierCart.length})</span>
               </span>
-
-              {supplierCart.length === 0 ? (
-                <span className="text-xs text-slate-400">Boş</span>
-              ) : (
-                <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto pb-0.5">
-                  {supplierCart.map((item) => (
-                    <div
-                      key={item.id}
-                      className="inline-flex max-w-[220px] shrink-0 items-center gap-1.5 rounded-md border border-slate-200/80 bg-slate-50 px-2 py-1"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate text-xs font-medium text-slate-800">{item.product.name}</p>
-                        <p className="truncate text-[10px] text-slate-500">
-                          {item.width}x{item.height} · {item.quantity} ad
-                          {canSeePurchasePrices && (
-                            <> · {parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 0 })} $</>
-                          )}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveFromCart(item.id)}
-                        disabled={cartLoading}
-                        className="shrink-0 rounded p-0.5 text-slate-400 transition-colors duration-150 hover:bg-white hover:text-red-600 disabled:opacity-50"
-                        aria-label="Sepetten çıkar"
-                      >
-                        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="ml-auto flex shrink-0 items-center gap-2">
-              {canSeePurchasePrices && supplierCart.length > 0 && (
-                <span className="text-xs font-semibold tabular-nums text-[#00365a]">
-                  {cartTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} $
-                </span>
-              )}
-              {supplierCart.length > 0 && (
+              <div className="ml-auto flex shrink-0 items-center gap-2">
+                {canSeePurchasePrices && supplierCart.length > 0 && (
+                  <span className="text-xs font-semibold tabular-nums text-[#00365a]">
+                    {cartTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} $
+                  </span>
+                )}
+                {supplierCart.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleClearCart}
+                    className="text-[11px] font-medium text-slate-400 transition-colors duration-150 hover:text-rose-600"
+                  >
+                    Temizle
+                  </button>
+                )}
                 <button
                   type="button"
-                  onClick={handleClearCart}
-                  className="text-[11px] font-medium text-slate-400 transition-colors duration-150 hover:text-red-600"
+                  onClick={handleCreateOrder}
+                  disabled={orderLoading || cartLoading || supplierCart.length === 0}
+                  className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-3 py-1.5 text-xs font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Temizle
+                  {orderLoading ? '...' : 'Sipariş Oluştur'}
                 </button>
-              )}
-              <button
-                type="button"
-                onClick={handleCreateOrder}
-                disabled={orderLoading || cartLoading || supplierCart.length === 0}
-                className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-3 py-1.5 text-xs font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {orderLoading ? '...' : 'Sipariş Oluştur'}
-              </button>
+              </div>
             </div>
+
+            {supplierCart.length === 0 ? (
+              <p className="text-xs text-slate-400">Boş</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <div className={canSeePurchasePrices ? 'min-w-[640px]' : 'min-w-[520px]'}>
+                  <div
+                    className={`grid items-center gap-x-3 border-b border-slate-100 pb-1.5 text-[10px] font-medium uppercase tracking-wide text-slate-400 ${
+                      canSeePurchasePrices
+                        ? 'grid-cols-[minmax(0,2fr)_7rem_5.5rem_6.5rem_4rem_2.25rem]'
+                        : 'grid-cols-[minmax(0,2fr)_7rem_5.5rem_4rem_2.25rem]'
+                    }`}
+                  >
+                    <span>Ürün</span>
+                    <span className="text-right">Ölçü</span>
+                    <span className="text-right">m²</span>
+                    {canSeePurchasePrices && <span className="text-right">Fiyat</span>}
+                    <span className="text-center">Adet</span>
+                    <span className="sr-only">Sil</span>
+                  </div>
+                  <ul className="divide-y divide-slate-100">
+                    {supplierCart.map((item) => (
+                      <li
+                        key={item.id}
+                        className={`grid items-center gap-x-3 py-2 ${
+                          canSeePurchasePrices
+                            ? 'grid-cols-[minmax(0,2fr)_7rem_5.5rem_6.5rem_4rem_2.25rem]'
+                            : 'grid-cols-[minmax(0,2fr)_7rem_5.5rem_4rem_2.25rem]'
+                        }`}
+                      >
+                        <span className="min-w-0 truncate text-xs font-medium text-slate-900">
+                          {item.product.name}
+                        </span>
+                        <span className="text-right text-xs tabular-nums text-slate-600">
+                          {item.width}x{item.height}
+                        </span>
+                        <span className="text-right text-xs tabular-nums text-slate-600">
+                          {item.area_m2} m²
+                        </span>
+                        {canSeePurchasePrices && (
+                          <span className="text-right text-xs font-medium tabular-nums text-slate-800">
+                            {parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 0 })} $
+                          </span>
+                        )}
+                        <span className="text-center text-xs font-medium tabular-nums text-slate-800">
+                          {item.quantity}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFromCart(item.id)}
+                          disabled={cartLoading}
+                          className="inline-flex h-8 w-8 items-center justify-center justify-self-end rounded-md border border-slate-200/80 bg-stone-50 text-slate-400 transition-colors duration-150 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
+                          aria-label="Sepetten çıkar"
+                        >
+                          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
