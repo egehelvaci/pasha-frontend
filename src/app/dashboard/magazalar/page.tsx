@@ -6,64 +6,6 @@ import { Store, getStores, deleteStore, PriceList, getPriceLists, assignStorePri
 import { useAuth } from '@/app/context/AuthContext';
 import { StoreType, storeTypeLabels } from '@/components/StoreTypeSelector';
 
-// Custom Tooltip Component
-interface TooltipProps {
-  children: React.ReactNode;
-  content: string;
-  position?: 'top' | 'bottom' | 'left' | 'right';
-}
-
-const Tooltip: React.FC<TooltipProps> = ({ children, content, position = 'top' }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
-
-  const positionClasses = {
-    top: 'bottom-full left-1/2 transform -translate-x-1/2 mb-3',
-    bottom: 'top-full left-1/2 transform -translate-x-1/2 mt-3',
-    left: 'right-full top-1/2 transform -translate-y-1/2 mr-3',
-    right: 'left-full top-1/2 transform -translate-y-1/2 ml-3'
-  };
-
-  const arrowClasses = {
-    top: 'top-full left-1/2 transform -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent border-t-slate-800',
-    bottom: 'bottom-full left-1/2 transform -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-slate-800',
-    left: 'left-full top-1/2 transform -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent border-l-slate-800',
-    right: 'right-full top-1/2 transform -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-slate-800'
-  };
-
-  const handleMouseEnter = () => {
-    setIsVisible(true);
-    setTimeout(() => setShowTooltip(true), 150); // 150ms delay
-  };
-
-  const handleMouseLeave = () => {
-    setIsVisible(false);
-    setShowTooltip(false);
-  };
-
-  return (
-    <div 
-      className="relative inline-block"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      {children}
-      {isVisible && (
-        <div className={`absolute z-50 ${positionClasses[position]} pointer-events-none`}>
-          <div
-            className={`whitespace-nowrap rounded-lg bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm transition-all duration-200 ease-out ${
-              showTooltip ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-0.5'
-            }`}
-          >
-            {content}
-            <div className={`absolute h-0 w-0 border-[5px] ${arrowClasses[position]}`}></div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
 export default function StoresPage() {
   const router = useRouter();
   const { isAdmin, isAdminOrEditor, isLoading: authLoading } = useAuth();
@@ -478,90 +420,60 @@ export default function StoresPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3 align-top">
-                          <div className="flex items-center justify-end gap-1">
-                            <Tooltip content="Mağaza Bilgilerini Düzenle" position="top">
-                              <button
-                                onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/duzenle`)}
-                                aria-label="Mağaza Bilgilerini Düzenle"
-                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
-                              >
-                                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                              </button>
-                            </Tooltip>
-
-                            <Tooltip content="Adres Yönetimi" position="top">
-                              <button
-                                onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/adresler`)}
-                                aria-label="Adres Yönetimi"
-                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
-                              >
-                                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                              </button>
-                            </Tooltip>
-
-                            <Tooltip content="Kullanıcı Yönetimi" position="top">
-                              <button
-                                onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/kullanicilar`)}
-                                aria-label="Kullanıcı Yönetimi"
-                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
-                              >
-                                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
-                                </svg>
-                              </button>
-                            </Tooltip>
-
+                          <div className="flex flex-wrap items-center justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/duzenle`)}
+                              className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                            >
+                              Düzenle
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/adresler`)}
+                              className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                            >
+                              Adresler
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/kullanicilar`)}
+                              className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                            >
+                              Kullanıcılar
+                            </button>
                             {isAdmin && (
-                              <Tooltip content="Mağaza için Sipariş Oluştur" position="top">
-                                <button
-                                  onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/adresler?mode=order`)}
-                                  aria-label="Mağaza için Sipariş Oluştur"
-                                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
-                                >
-                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                                  </svg>
-                                </button>
-                              </Tooltip>
+                              <button
+                                type="button"
+                                onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/adresler?mode=order`)}
+                                className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-3 py-2 text-xs font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25"
+                              >
+                                Sipariş Ver
+                              </button>
                             )}
-
                             {isAdmin && (
-                              <Tooltip content="Fiyat Listesi Atama" position="top">
-                                <button
-                                  onClick={() => {
-                                    setSelectedStore(store);
-                                    setAssignModalVisible(true);
-                                  }}
-                                  aria-label="Fiyat Listesi Atama"
-                                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
-                                >
-                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                                  </svg>
-                                </button>
-                              </Tooltip>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedStore(store);
+                                  setAssignModalVisible(true);
+                                }}
+                                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                              >
+                                Fiyat Listesi
+                              </button>
                             )}
-
                             {isAdmin && (
-                              <Tooltip content="Mağazayı Sil" position="top">
-                                <button
-                                  onClick={() => {
-                                    setStoreToDelete(store);
-                                    setDeleteModalVisible(true);
-                                  }}
-                                  aria-label="Mağazayı Sil"
-                                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-rose-600 transition hover:bg-rose-50 hover:text-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/20"
-                                >
-                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                  </svg>
-                                </button>
-                              </Tooltip>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setStoreToDelete(store);
+                                  setDeleteModalVisible(true);
+                                }}
+                                className="inline-flex items-center justify-center rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-medium text-rose-600 transition hover:bg-rose-50 hover:text-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/25"
+                              >
+                                Sil
+                              </button>
                             )}
                           </div>
                         </td>
@@ -639,7 +551,7 @@ export default function StoresPage() {
                     <div className="mt-4 flex flex-wrap gap-2">
                       <button
                         onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/duzenle`)}
-                        className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-3 py-2 text-xs font-medium text-white transition hover:bg-[#004170]"
+                        className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
                       >
                         Düzenle
                       </button>
@@ -658,7 +570,7 @@ export default function StoresPage() {
                       {isAdmin && (
                         <button
                           onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/adresler?mode=order`)}
-                          className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                          className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-3 py-2 text-xs font-medium text-white transition hover:bg-[#004170]"
                         >
                           Sipariş Ver
                         </button>

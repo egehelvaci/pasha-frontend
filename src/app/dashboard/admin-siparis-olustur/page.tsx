@@ -24,6 +24,7 @@ import {
   createStoreAddress,
   CreateStoreAddressRequest
 } from '@/services/api';
+import { getConsumableAreaM2, getStockWarning, isCommonStockEnabled, isProductOutOfStock, toCanonicalCutType, toNumber } from '@/app/utils/productStock';
 
 interface CartItem {
   productId: string;
@@ -60,6 +61,7 @@ const AdminSiparisOlustur = () => {
     quantity: 1,
     width: 80,
     height: 100 as number | string,
+    selectedSizeId: null as number | null,
     hasFringe: false,
     cutType: '',
     notes: ''
@@ -86,6 +88,11 @@ const AdminSiparisOlustur = () => {
   });
   const [addingAddress, setAddingAddress] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [orderResultModal, setOrderResultModal] = useState({
+    isOpen: false,
+    message: '',
+    isError: false,
+  });
   const [showAddressWarningPopup, setShowAddressWarningPopup] = useState(false);
   const [addressDropdownOpen, setAddressDropdownOpen] = useState(false);
   
@@ -248,10 +255,7 @@ const AdminSiparisOlustur = () => {
     }
   };
 
-  // Stok kontrolü kaldırıldı - artık tüm ürünler stokta varsayılıyor
-  const hasStock = () => {
-    return true; // Her zaman true döndür
-  };
+  const hasStock = (product: AdminOrderProduct | Product) => !isProductOutOfStock(product);
 
   // Filtreleme
   const filteredProducts = (orderData?.products && orderData.products.length > 0)
@@ -266,8 +270,8 @@ const AdminSiparisOlustur = () => {
           product.collectionName === selectedCollection;
         
         const matchesStock = stockFilter === 'all' || 
-          (stockFilter === 'inStock' && hasStock()) ||
-          (stockFilter === 'outOfStock' && !hasStock());
+          (stockFilter === 'inStock' && hasStock(product)) ||
+          (stockFilter === 'outOfStock' && !hasStock(product));
         
         return matchesSearch && matchesCollection && matchesStock;
       })
@@ -282,8 +286,8 @@ const AdminSiparisOlustur = () => {
           product.collection?.name === selectedCollection;
         
         const matchesStock = stockFilter === 'all' || 
-          (stockFilter === 'inStock' && hasStock()) ||
-          (stockFilter === 'outOfStock' && !hasStock());
+          (stockFilter === 'inStock' && hasStock(product)) ||
+          (stockFilter === 'outOfStock' && !hasStock(product));
         
         return matchesSearch && matchesCollection && matchesStock;
       });
@@ -308,7 +312,7 @@ const AdminSiparisOlustur = () => {
           width: productForm.width,
           height: typeof productForm.height === 'string' ? (parseFloat(productForm.height) || 100) : (productForm.height || 100),
           hasFringe: productForm.hasFringe,
-          cutType: productForm.cutType,
+          cutType: toCanonicalCutType(productForm.cutType),
           notes: productForm.notes
         });
       } else {
@@ -321,7 +325,7 @@ const AdminSiparisOlustur = () => {
           width: productForm.width,
           height: typeof productForm.height === 'string' ? (parseFloat(productForm.height) || 100) : (productForm.height || 100),
           hasFringe: productForm.hasFringe,
-          cutType: productForm.cutType,
+          cutType: toCanonicalCutType(productForm.cutType),
           notes: productForm.notes
         });
       }
@@ -342,6 +346,7 @@ const AdminSiparisOlustur = () => {
         quantity: 1,
         width: 80,
         height: '',
+        selectedSizeId: null,
         hasFringe: false,
         cutType: '',
         notes: ''
@@ -359,6 +364,7 @@ const AdminSiparisOlustur = () => {
       quantity: 1,
       width: isAdminProduct ? product.sizeOptions[0]?.width || 80 : product.width || 80,
       height: isAdminProduct ? (product.sizeOptions[0]?.is_optional_height ? '' : product.sizeOptions[0]?.height || 100) : product.height || 100,
+      selectedSizeId: isAdminProduct ? product.sizeOptions[0]?.id ?? null : null,
       hasFringe: isAdminProduct ? product.canHaveFringe : false,
       cutType: isAdminProduct ? product.cutTypes[0]?.name || 'standart' : 'standart',
       notes: ''
@@ -472,16 +478,20 @@ const AdminSiparisOlustur = () => {
         address_id: selectedAddressId
       });
       
-      alert('Sipariş başarıyla oluşturuldu!');
-      router.push('/dashboard/siparisler');
+      setOrderResultModal({
+        isOpen: true,
+        message: 'Sipariş başarıyla oluşturuldu!',
+        isError: false,
+      });
     } catch (error: any) {
-      
-      // Sepet boş hatası için özel mesaj
-      if (error.message && error.message.includes('Sepet bulunamadı veya boş')) {
-        alert('Sepet boş! Lütfen önce ürün ekleyin.');
-      } else {
-        alert(error.message || 'Sipariş oluşturulurken bir hata oluştu');
-      }
+      const message = error.message && error.message.includes('Sepet bulunamadı veya boş')
+        ? 'Sepet boş! Lütfen önce ürün ekleyin.'
+        : (error.message || 'Sipariş oluşturulurken bir hata oluştu');
+      setOrderResultModal({
+        isOpen: true,
+        message,
+        isError: true,
+      });
     } finally {
       setOrderLoading(false);
     }
@@ -944,12 +954,10 @@ const AdminSiparisOlustur = () => {
                         <h3 className="line-clamp-2 text-sm font-medium text-slate-900">{product.name}</h3>
                         <p className="mt-1 line-clamp-2 text-xs text-slate-500">{product.description}</p>
                         <div className="mt-1.5 text-[11px] text-slate-400">
-                          {('sizeOptions' in product) ? (
-                            <span>
-                              Stok: {product.sizeOptions?.some(opt =>
-                                opt.is_optional_height ? (opt.stockAreaM2 || 0) > 0 : (opt.stockQuantity || 0) > 0
-                              ) ? 'Var' : 'Yok'}
-                            </span>
+                          {isCommonStockEnabled(product) ? (
+                            <span>Stok: {getConsumableAreaM2(product).toFixed(2)} m²</span>
+                          ) : ('sizeOptions' in product) ? (
+                            <span>Stok: {isProductOutOfStock(product) ? 'Yok' : 'Var'}</span>
                           ) : (
                             <span>Stok: {product.stock || 0} adet</span>
                           )}
@@ -1015,7 +1023,7 @@ const AdminSiparisOlustur = () => {
                       />
                     </div>
                     {/* Stok Durumu */}
-                    {('sizeOptions' in selectedProduct) && selectedProduct.sizeOptions && selectedProduct.sizeOptions.length > 0 && (
+                    {!isCommonStockEnabled(selectedProduct) && ('sizeOptions' in selectedProduct) && selectedProduct.sizeOptions && selectedProduct.sizeOptions.length > 0 && (
                       <div className="mt-4 rounded-lg border border-slate-200/80 bg-stone-50/70 p-3.5">
                         <h3 className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Stok Durumu</h3>
                         <div className="space-y-2">
@@ -1048,14 +1056,15 @@ const AdminSiparisOlustur = () => {
                     <div className="grid grid-cols-1 gap-5">
                       <div className="flex flex-col gap-2">
                         <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Boyut</span>
+                        {isCommonStockEnabled(selectedProduct) && (
+                          <p className="text-sm text-slate-600">
+                            Mevcut stok: <span className="font-semibold tabular-nums text-slate-900">{getConsumableAreaM2(selectedProduct).toFixed(2)} m²</span>
+                          </p>
+                        )}
                         <div className="flex flex-wrap gap-1.5">
                           {selectedProduct.sizeOptions && selectedProduct.sizeOptions.length > 0 ? (
                             selectedProduct.sizeOptions.map((option: any) => {
-                              const isSelected = option.is_optional_height
-                                ? productForm.width === option.width && (productForm.height === '' || productForm.height === null || productForm.height === undefined)
-                                : productForm.width === option.width && (
-                                    productForm.height === option.height || Number(productForm.height) === option.height
-                                  );
+                              const isSelected = productForm.selectedSizeId === option.id;
                               const label = option.is_optional_height
                                 ? `${option.width} × Özel`
                                 : `${option.width} × ${option.height}`;
@@ -1068,7 +1077,8 @@ const AdminSiparisOlustur = () => {
                                     setProductForm(prev => ({
                                       ...prev,
                                       width: option.width,
-                                      height: option.is_optional_height ? '' : option.height
+                                      height: option.is_optional_height ? '' : option.height,
+                                      selectedSizeId: option.id
                                     }));
                                     setSizeDropdownOpen(false);
                                   }}
@@ -1087,14 +1097,15 @@ const AdminSiparisOlustur = () => {
                           )}
                         </div>
 
-                        {productForm.width && (('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions?.find((s: any) => s.width === productForm.width && s.is_optional_height) : false) && (
-                          <div className="mt-1 flex items-center gap-2">
+                        {('sizeOptions' in selectedProduct) && selectedProduct.sizeOptions?.find((s: any) => s.id === productForm.selectedSizeId)?.is_optional_height && (
+                          <div className="mt-1 flex flex-col gap-1.5">
+                          <div className="flex items-center gap-2">
                             <label className="shrink-0 text-xs text-slate-500">Boy</label>
                             <div className="flex h-9 max-w-[120px] items-center overflow-hidden rounded-lg border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-[#00365a]/20">
                               <input
                                 type="number"
-                                min="10"
-                                max="10000"
+                                min="1"
+                                max={('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions?.find((s: any) => s.width === productForm.width && s.is_optional_height)?.height : undefined}
                                 value={productForm.height}
                                 onChange={(e) => {
                                   const value = e.target.value;
@@ -1102,8 +1113,13 @@ const AdminSiparisOlustur = () => {
                                 }}
                                 onBlur={(e) => {
                                   const value = e.target.value;
-                                  if (value === '' || Number(value) < 10) {
-                                    setProductForm(prev => ({ ...prev, height: '' }));
+                                  const maxHeight = ('sizeOptions' in selectedProduct)
+                                    ? toNumber(selectedProduct.sizeOptions?.find((s: any) => s.width === productForm.width && s.is_optional_height)?.height)
+                                    : 0;
+                                  if (value === '' || Number(value) < 1) {
+                                    setProductForm(prev => ({ ...prev, height: '1' }));
+                                  } else if (maxHeight > 0 && Number(value) > maxHeight) {
+                                    setProductForm(prev => ({ ...prev, height: String(maxHeight) }));
                                   }
                                 }}
                                 className="h-full w-full bg-transparent px-2.5 text-sm tabular-nums text-slate-900 outline-none"
@@ -1111,6 +1127,8 @@ const AdminSiparisOlustur = () => {
                               />
                               <span className="pr-2.5 text-xs text-slate-400">cm</span>
                             </div>
+                          </div>
+                          <p className="text-xs font-medium text-rose-600">Lütfen boy giriniz.</p>
                           </div>
                         )}
                       </div>
@@ -1276,11 +1294,22 @@ const AdminSiparisOlustur = () => {
                             />
                           </div>
                           
+                          {(() => {
+                            const heightValue = typeof productForm.height === 'string' ? toNumber(productForm.height, 1) : toNumber(productForm.height, 1);
+                            const warning = getStockWarning(selectedProduct, toNumber(productForm.width), heightValue, toNumber(productForm.quantity, 1));
+                            if (!warning) return null;
+                            return (
+                              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                                {warning}
+                              </div>
+                            );
+                          })()}
+
                           <button
                             type="button"
                             className="mt-2 flex w-full items-center justify-center rounded-lg bg-[#00365a] py-2.5 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                             onClick={handleAddToAdminCart}
-                            disabled={!productForm.width || (!productForm.height && !(('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions?.find((s: any) => s.width === productForm.width && s.is_optional_height) : false)) || !productForm.cutType || productForm.quantity < 1 || (typeof productForm.height === 'string' && productForm.height !== '' && parseFloat(productForm.height) < 10)}
+                            disabled={!productForm.width || (!productForm.height && !(('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions?.find((s: any) => s.width === productForm.width && s.is_optional_height) : false)) || !productForm.cutType || productForm.quantity < 1 || (typeof productForm.height === 'string' && productForm.height !== '' && parseFloat(productForm.height) < 1)}
                           >
                             Sepete Ekle
                           </button>
@@ -1295,6 +1324,36 @@ const AdminSiparisOlustur = () => {
         </div>
       )}
       
+      {orderResultModal.isOpen && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-md rounded-xl border border-slate-200/80 bg-white">
+            <div className="p-6 text-center">
+              <h3 className="mb-2 text-lg font-semibold text-slate-900">
+                {orderResultModal.isError ? 'Sipariş oluşturulamadı' : 'Sipariş oluşturuldu'}
+              </h3>
+              <p className={`text-sm ${orderResultModal.isError ? 'text-rose-700' : 'text-slate-500'}`}>
+                {orderResultModal.message}
+              </p>
+              <div className="mt-6 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (orderResultModal.isError) {
+                      setOrderResultModal({ isOpen: false, message: '', isError: false });
+                      return;
+                    }
+                    router.push('/dashboard/siparisler');
+                  }}
+                  className="rounded-lg bg-[#00365a] px-5 py-2.5 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98]"
+                >
+                  {orderResultModal.isError ? 'Kapat' : 'Siparişlere Git'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Başarı Pop-up */}
       {showSuccessPopup && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">

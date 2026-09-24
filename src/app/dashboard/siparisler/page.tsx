@@ -340,6 +340,20 @@ const Siparisler = () => {
   const [userCurrency, setUserCurrency] = useState<string>('TRY');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [actionNotice, setActionNotice] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    isError: false,
+  });
+  const showActionNotice = (message: string, isError = false) => {
+    setActionNotice({
+      isOpen: true,
+      title: isError ? 'İşlem tamamlanamadı' : 'İşlem tamamlandı',
+      message,
+      isError,
+    });
+  };
   const [deliverOrderModal, setDeliverOrderModal] = useState({
     isOpen: false,
     orderId: '',
@@ -766,7 +780,7 @@ const Siparisler = () => {
     });
     
     if (pendingOrderIds.length === 0) {
-      alert('Seçilen siparişler arasında onaylanabilecek (PENDING) sipariş bulunmamaktadır!');
+      showActionNotice('Seçilen siparişler arasında onaylanabilecek (PENDING) sipariş bulunmamaktadır!', true);
       return;
     }
     
@@ -856,7 +870,7 @@ const Siparisler = () => {
       }
     } catch (error) {
       console.error('Toplu onaylama hatası:', error);
-      alert('Toplu onaylama işlemi başarısız: ' + (error instanceof Error ? error.message : 'Bilinmeyen hata'));
+      showActionNotice('Toplu onaylama işlemi başarısız: ' + (error instanceof Error ? error.message : 'Bilinmeyen hata'), true);
     } finally {
       setBulkConfirming(false);
     }
@@ -902,7 +916,7 @@ const Siparisler = () => {
       }
     } catch (error: any) {
 
-      alert('Sipariş detayı alınamadı. Lütfen tekrar deneyiniz.');
+      showActionNotice('Sipariş detayı alınamadı. Lütfen tekrar deneyiniz.', true);
     }
   };
 
@@ -983,7 +997,7 @@ const Siparisler = () => {
   // Sipariş bazlı QR kodları yazdırma fonksiyonu
   const printOrderQRCodes = (order: Order) => {
     if (!order.qr_codes || order.qr_codes.length === 0) {
-      alert('Bu sipariş için QR kod bulunamadı!');
+      showActionNotice('Bu sipariş için QR kod bulunamadı!', true);
       return;
     }
 
@@ -1425,7 +1439,7 @@ const Siparisler = () => {
   // Toplu QR etiket yazdırma fonksiyonu
   const printBulkQRLabels = async (orderIds: string[]) => {
     if (orderIds.length === 0) {
-      alert('Yazdırılacak QR etiket bulunamadı!');
+      showActionNotice('Yazdırılacak QR etiket bulunamadı!', true);
       return;
     }
 
@@ -1454,7 +1468,7 @@ const Siparisler = () => {
       }
 
       if (ordersWithQR.length === 0) {
-        alert('Sipariş bilgileri yüklenemedi!');
+        showActionNotice('Sipariş bilgileri yüklenemedi!', true);
         return;
       }
 
@@ -2057,7 +2071,7 @@ const Siparisler = () => {
                 printWindow.print();
               } catch (error) {
                 console.error('❌ Yazdırma hatası:', error);
-                alert('Yazdırma hatası: ' + (error instanceof Error ? error.message : 'Bilinmeyen hata'));
+                showActionNotice('Yazdırma hatası: ' + (error instanceof Error ? error.message : 'Bilinmeyen hata'), true);
               }
               
               // Pencereyi 5 saniye sonra kapat (kullanıcı yazdırma dialog'unu görebilsin)
@@ -2074,14 +2088,14 @@ const Siparisler = () => {
       }
     } catch (error) {
       console.error('Toplu QR etiket yazdırma hatası:', error);
-      alert('QR etiketleri yazdırılırken bir hata oluştu.');
+      showActionNotice('QR etiketleri yazdırılırken bir hata oluştu.', true);
     }
   };
 
   // Belirli siparişler için toplu QR etiket yazdırma (10x15 cm format)
   const printBulkQRCodesForOrders = async (orderIds: string[]) => {
     if (orderIds.length === 0) {
-      alert('Yazdırılacak QR etiket bulunamadı!');
+      showActionNotice('Yazdırılacak QR etiket bulunamadı!', true);
       return;
     }
 
@@ -2092,7 +2106,7 @@ const Siparisler = () => {
   // Toplu QR kod yazdırma fonksiyonu (seçilen siparişler için)
   const printBulkQRCodes = async () => {
     if (selectedOrderIds.length === 0) {
-      alert('Lütfen QR kod yazdırmak için siparişler seçin!');
+      showActionNotice('Lütfen QR kod yazdırmak için siparişler seçin!', true);
       return;
     }
 
@@ -2146,7 +2160,7 @@ const Siparisler = () => {
           }
         }
         
-        alert(message);
+        showActionNotice(message);
         
         // Siparişleri yeniden yükle
         await fetchOrders(currentPage, statusFilter, receiptFilter, storeFilter, showAllOrders);
@@ -2171,7 +2185,7 @@ const Siparisler = () => {
       }
     } catch (error: any) {
       console.error('Sipariş iptal hatası:', error);
-      alert(error.message || 'Sipariş iptal edilirken bir hata oluştu. Lütfen tekrar deneyiniz.');
+      showActionNotice(error.message || 'Sipariş iptal edilirken bir hata oluştu. Lütfen tekrar deneyiniz.', true);
     } finally {
       setCancelOrderModal(prev => ({ ...prev, isLoading: false }));
     }
@@ -2197,7 +2211,7 @@ const Siparisler = () => {
           message = message.replace(/(₺|TL)/g, correctCurrency);
         }
         
-        alert(message);
+        showActionNotice(message);
         
         // Siparişleri yeniden yükle
         await fetchOrders(currentPage, statusFilter, receiptFilter, storeFilter, showAllOrders);
@@ -2223,7 +2237,7 @@ const Siparisler = () => {
       }
     } catch (error: any) {
       console.error('Sipariş iade hatası:', error);
-      alert(error.message || 'Sipariş iade edilirken bir hata oluştu. Lütfen tekrar deneyiniz.');
+      showActionNotice(error.message || 'Sipariş iade edilirken bir hata oluştu. Lütfen tekrar deneyiniz.', true);
     } finally {
       setCancelOrderModal(prev => ({ ...prev, isLoading: false }));
     }
@@ -2308,14 +2322,12 @@ const Siparisler = () => {
           try {
             await generateQRCodes(orderId);
             // QR kodları oluşturulduktan sonra alert mesajını güncelle
-            alert('Sipariş durumu güncellendi ve QR kodları oluşturuldu!');
+            showActionNotice('Sipariş durumu güncellendi ve QR kodları oluşturuldu!');
           } catch (qrError: any) {
-            // QR kod hatası sipariş güncellemeyi engellemez, sadece uyarı verelim
-            alert('Sipariş durumu güncellendi ancak QR kodları oluşturulurken bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
+            showActionNotice('Sipariş durumu güncellendi ancak QR kodları oluşturulurken bir hata oluştu. Lütfen daha sonra tekrar deneyin.', true);
           }
         } else {
-          // Diğer durumlarda normal alert mesajı
-          alert('Sipariş durumu başarıyla güncellendi!');
+          showActionNotice('Sipariş durumu başarıyla güncellendi!');
         }
 
         // Siparişleri yeniden yükle
@@ -2332,7 +2344,7 @@ const Siparisler = () => {
       }
     } catch (error: any) {
       console.error('Sipariş durumu güncellenirken hata:', error);
-      alert('Sipariş durumu güncellenirken bir hata oluştu. Lütfen tekrar deneyiniz.');
+      showActionNotice('Sipariş durumu güncellenirken bir hata oluştu. Lütfen tekrar deneyiniz.', true);
     } finally {
       setUpdatingStatus(false);
     }
@@ -3401,7 +3413,7 @@ const Siparisler = () => {
                             }
                           } catch (error: any) {
                             console.error('Fiş alma hatası:', error);
-                            alert('Fiş bilgileri alınamadı: ' + (error.message || 'Bilinmeyen hata'));
+                            showActionNotice('Fiş bilgileri alınamadı: ' + (error.message || 'Bilinmeyen hata'), true);
                           }
                         }}
                         className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200/70 bg-emerald-700/85 px-3.5 py-2 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600/30 active:scale-[0.98]"
@@ -4437,7 +4449,7 @@ const Siparisler = () => {
                               }
                             } catch (error: any) {
                               console.error('Fiş alma hatası:', error);
-                              alert('Fiş bilgileri alınamadı: ' + (error.message || 'Bilinmeyen hata'));
+                              showActionNotice('Fiş bilgileri alınamadı: ' + (error.message || 'Bilinmeyen hata'), true);
                             }
                           }}
                           className="rounded-lg bg-[#00365a] px-5 py-2.5 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98]"
@@ -4460,10 +4472,9 @@ const Siparisler = () => {
                                 await generateQRCodes(selectedOrder.id);
                                 // QR kodları oluşturulduktan sonra sipariş detayını yenile
                                 await handleViewOrderDetail(selectedOrder.id);
-                                alert('QR kodları başarıyla oluşturuldu!');
+                                showActionNotice('QR kodları başarıyla oluşturuldu!');
                               } catch (error: any) {
-
-                                alert('QR kodları oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.');
+                                showActionNotice('QR kodları oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.', true);
                               } finally {
                                 setUpdatingStatus(false);
                               }
@@ -4755,6 +4766,30 @@ const Siparisler = () => {
                       ? (cancelOrderModal.isRefund ? 'İade Ediliyor...' : 'İptal Ediliyor...') 
                       : (cancelOrderModal.isRefund ? 'Siparişi İade Et' : 'Siparişi İptal Et')
                     }
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {actionNotice.isOpen && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+            <div className="mx-4 w-full max-w-md rounded-xl border border-slate-200/80 bg-white">
+              <div className="p-6">
+                <h3 className="mb-3 text-lg font-semibold tracking-tight text-slate-900">
+                  {actionNotice.title}
+                </h3>
+                <p className={`mb-6 text-sm ${actionNotice.isError ? 'text-rose-700' : 'text-slate-500'}`}>
+                  {actionNotice.message}
+                </p>
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setActionNotice((prev) => ({ ...prev, isOpen: false }))}
+                    className="rounded-lg bg-[#00365a] px-4 py-2 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98]"
+                  >
+                    Tamam
                   </button>
                 </div>
               </div>

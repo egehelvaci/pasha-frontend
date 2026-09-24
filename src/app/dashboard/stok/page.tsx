@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useToken } from '@/app/hooks/useToken';
@@ -146,6 +146,7 @@ export default function StokPage() {
   const router = useRouter();
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [stockOverview, setStockOverview] = useState<Product[]>([]);
   const [pagination, setPagination] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -212,9 +213,49 @@ export default function StokPage() {
     }
   }, [user, isAdminOrEditor, isLoading, router]);
 
+  const productStockValue = (product: Product) => {
+    const commonStock = (product as Product & { stock?: { enabled?: boolean; consumableAreaM2?: number } }).stock;
+    if (commonStock?.enabled === true) {
+      const area = Number(commonStock.consumableAreaM2 ?? 0);
+      return { value: Number.isFinite(area) ? area : 0, label: `${(Number.isFinite(area) ? area : 0).toFixed(2)} m²` };
+    }
+    if (product.sizeOptions?.length) {
+      const lowest = product.sizeOptions.reduce((min, size) => {
+        const amount = size.is_optional_height ? Number(size.stockAreaM2 || 0) : Number(size.stockQuantity || 0);
+        return amount < min.amount
+          ? { amount, label: size.is_optional_height ? `${amount.toFixed(2)} m²` : `${amount} adet` }
+          : min;
+      }, { amount: Number.POSITIVE_INFINITY, label: '0' });
+      return { value: lowest.amount === Number.POSITIVE_INFINITY ? 0 : lowest.amount, label: lowest.label };
+    }
+    return { value: 0, label: '0' };
+  };
+
+  const lowestStockProducts = useMemo(() => {
+    return [...stockOverview]
+      .map((product) => ({ product, stock: productStockValue(product) }))
+      .sort((a, b) => a.stock.value - b.stock.value)
+      .slice(0, 10);
+  }, [stockOverview]);
+
+  const fetchStockOverview = async () => {
+    if (!token) return;
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/products/all`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      setStockOverview(Array.isArray(data?.data) ? data.data : []);
+    } catch (error) {
+      console.error('Düşük stok listesi alınamadı:', error);
+    }
+  };
+
   useEffect(() => {
     if (!token) return;
     fetchProducts();
+    fetchStockOverview();
   }, [token]); // fetchProducts fonksiyonu stable olmadığı için dependency'ye eklenmemiştir
 
   // Arama değiştiğinde debounce ile API çağrısı
@@ -613,6 +654,7 @@ export default function StokPage() {
             );
 
             setSelectedProduct(data.data);
+            fetchStockOverview();
 
             // Seçili boyut seçeneğini de güncelle
             if (selectedSizeOption && data.data.sizeOptions) {
@@ -741,9 +783,46 @@ export default function StokPage() {
               Stok Yönetimi
             </h1>
             <div className="mt-3 h-px w-[min(100%,20rem)] bg-neutral-300 sm:mt-4" />
-            <p className="mt-3 text-sm text-slate-500">Ürün stoklarını görüntüleyin ve güncelleyin</p>
           </div>
         </div>
+
+        {lowestStockProducts.length > 0 && (
+          <section className="mb-6">
+            <h2 className="mb-3 text-sm font-semibold text-slate-900">Stoğu en az olan ürünler</h2>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              {lowestStockProducts.map(({ product, stock }) => (
+                <button
+                  key={product.productId}
+                  type="button"
+                  onClick={() => openStockModal(product)}
+                  className="flex items-center gap-2 rounded-lg border border-slate-200/80 bg-white p-2 text-left shadow-sm transition hover:border-slate-300"
+                >
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-slate-50">
+                    {product.productImage ? (
+                      <img
+                        src={product.productImage}
+                        alt={product.name}
+                        className="h-full w-full object-contain"
+                      />
+                    ) : (
+                      <img
+                        src="/black-logo.svg"
+                        alt="Paşa Home Logo"
+                        className="h-7 w-7 opacity-80"
+                      />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-medium text-slate-900">{product.name}</p>
+                    <p className={`mt-0.5 text-xs font-semibold tabular-nums ${stock.value <= 0 ? 'text-rose-600' : 'text-[#00365a]'}`}>
+                      {stock.label}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Arama ve Filtreler */}
         <div className="mb-6 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">

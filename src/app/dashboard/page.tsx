@@ -6,6 +6,7 @@ import { useSiteSettings } from '../context/SiteSettingsContext';
 import { SiteBanner } from '../../services/api';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
@@ -355,10 +356,22 @@ export default function Dashboard() {
                               className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
                             />
                           ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-slate-100">
-                              <svg className="h-10 w-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
+                            <div className="flex h-full w-full flex-col items-center justify-center p-3">
+                              <div className="mb-3 flex h-20 w-20 items-center justify-center rounded-xl bg-slate-100 sm:mb-4 sm:h-24 sm:w-24">
+                                <Image
+                                  src="/black-logo.svg"
+                                  alt="Paşa Home Logo"
+                                  width={80}
+                                  height={80}
+                                  className="h-12 w-12 opacity-80 sm:h-14 sm:w-14"
+                                  onError={(e) => {
+                                    e.currentTarget.src = '/logo.svg';
+                                  }}
+                                />
+                              </div>
+                              <p className="text-center text-xs font-medium text-slate-500 sm:text-sm">
+                                Ürün görseli<br />hazırlanıyor
+                              </p>
                             </div>
                           )}
                         </div>

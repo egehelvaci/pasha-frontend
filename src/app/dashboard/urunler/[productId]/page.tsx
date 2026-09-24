@@ -10,6 +10,7 @@ import { useSiteSettings } from '@/app/context/SiteSettingsContext';
 import { API_BASE_URL } from '@/services/api';
 import { useToken } from '@/app/hooks/useToken';
 import Image from 'next/image';
+import { getConsumableAreaM2, getStockWarning, isCommonStockEnabled, isLegacySizeOutOfStock, toCanonicalCutType, toNumber } from '@/app/utils/productStock';
 
 export default function ProductDetail() {
   const params = useParams();
@@ -186,13 +187,17 @@ export default function ProductDetail() {
   // Stok durumu kontrolü
   const isOutOfStock = () => {
     if (!product || !selectedSize) return false;
-    
-    if (selectedSize.is_optional_height) {
-      return (selectedSize.stockAreaM2 || 0) <= 0;
-    } else {
-      return (selectedSize.stockQuantity || 0) <= 0;
-    }
+    if (isCommonStockEnabled(product)) return false;
+    return isLegacySizeOutOfStock(selectedSize);
   };
+
+  const stockWarning = (() => {
+    if (!product || !selectedSize) return null;
+    const heightValue = selectedSize.is_optional_height
+      ? toNumber(customHeight, 1)
+      : toNumber(selectedSize.height);
+    return getStockWarning(product, toNumber(selectedSize.width), heightValue, toNumber(quantity, 1));
+  })();
 
   // Ön sipariş fonksiyonu
   const addToPreorder = async () => {
@@ -208,17 +213,7 @@ export default function ProductDetail() {
       return;
     }
     
-    // Kesim türünü API isteğine uygun formata dönüştür
-    let cutTypeValue = "rectangle"; // Varsayılan
-    if (selectedCutType.name === "oval") {
-      cutTypeValue = "oval";
-    } else if (selectedCutType.name === "daire") {
-      cutTypeValue = "round";
-    } else if (selectedCutType.name === "custom") {
-      cutTypeValue = "custom";
-    } else if (selectedCutType.name === "post kesim") {
-      cutTypeValue = "post kesim";
-    }
+    const cutTypeValue = toCanonicalCutType(selectedCutType.name);
     
     setPreorderLoading(true);
     setPreorderError("");
@@ -292,17 +287,7 @@ export default function ProductDetail() {
       return;
     }
     
-    // Kesim türünü API isteğine uygun formata dönüştür
-    let cutTypeValue = "rectangle"; // Varsayılan
-    if (selectedCutType.name === "oval") {
-      cutTypeValue = "oval";
-    } else if (selectedCutType.name === "daire") {
-      cutTypeValue = "round";
-    } else if (selectedCutType.name === "custom") {
-      cutTypeValue = "custom";
-    } else if (selectedCutType.name === "post kesim") {
-      cutTypeValue = "post kesim";
-    }
+    const cutTypeValue = toCanonicalCutType(selectedCutType.name);
     
     setAddToCartLoading(true);
     setAddToCartError("");
@@ -655,6 +640,11 @@ export default function ProductDetail() {
                   {/* Boyut — same simple chips as liste modal */}
                   <div className="dropdown-container flex flex-col gap-3">
                     <span className="text-sm font-medium text-slate-900">Boyut</span>
+                    {siteSettingsLoaded && !hideStock && isCommonStockEnabled(product) && (
+                      <p className="text-sm text-slate-600">
+                        Mevcut stok: <span className="font-semibold tabular-nums text-slate-900">{getConsumableAreaM2(product).toFixed(2)} m²</span>
+                      </p>
+                    )}
                     <div className="flex flex-wrap gap-2">
                       {product.sizeOptions?.map((size: any) => {
                         const isSelected = selectedSize?.id === size.id;
@@ -681,13 +671,14 @@ export default function ProductDetail() {
                       })}
                     </div>
                     {selectedSize && selectedSize.is_optional_height && (
+                      <div className="flex flex-col gap-1.5">
                       <div className="flex items-center gap-2.5">
                         <label className="shrink-0 text-sm text-slate-500">Boy</label>
                         <div className="flex h-10 max-w-[140px] items-center overflow-hidden rounded-lg border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-[#00365a]/20">
                           <input
                             type="number"
-                            min="10"
-                            max="10000"
+                            min="1"
+                            max={selectedSize.height}
                             value={customHeight}
                             onChange={(e) => {
                               const value = e.target.value;
@@ -695,7 +686,7 @@ export default function ProductDetail() {
                                 setCustomHeight('');
                               } else {
                                 const numValue = Number(value);
-                                if (numValue >= 10) {
+                                if (numValue >= 1 && numValue <= toNumber(selectedSize.height)) {
                                   setCustomHeight(numValue);
                                 } else if (value.length <= 1) {
                                   setCustomHeight(value);
@@ -704,8 +695,11 @@ export default function ProductDetail() {
                             }}
                             onBlur={(e) => {
                               const value = e.target.value;
-                              if (value === '' || Number(value) < 10) {
-                                setCustomHeight(10);
+                              const maxHeight = toNumber(selectedSize.height);
+                              if (value === '' || Number(value) < 1) {
+                                setCustomHeight(1);
+                              } else if (Number(value) > maxHeight) {
+                                setCustomHeight(maxHeight);
                               }
                             }}
                             className="h-full w-full bg-transparent px-3 text-sm tabular-nums text-slate-900 outline-none"
@@ -713,6 +707,8 @@ export default function ProductDetail() {
                           />
                           <span className="pr-3 text-xs text-slate-400">cm</span>
                         </div>
+                      </div>
+                      <p className="text-xs font-medium text-rose-600">Lütfen boy giriniz.</p>
                       </div>
                     )}
                   </div>
@@ -936,6 +932,12 @@ export default function ProductDetail() {
                   )}
 
                   <div className="mt-1">
+                    {siteSettingsLoaded && !hideStock && stockWarning && (
+                      <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                        {stockWarning}
+                      </div>
+                    )}
+
                     {siteSettingsLoaded && !hideStock && selectedSize && isOutOfStock() && (
                       <div className="mb-3 rounded-lg border border-orange-200 bg-orange-50 p-3 text-sm text-orange-700">
                         Bu ürün şu anda stokta bulunmamaktadır. Ön sipariş verebilirsiniz.
@@ -1011,7 +1013,7 @@ export default function ProductDetail() {
             </div>
 
             {/* Ürün Stok Durumu - site ayarı stoğu gizliyorsa render edilmez */}
-            {siteSettingsLoaded && !hideStock && (
+            {siteSettingsLoaded && !hideStock && !isCommonStockEnabled(product) && (
             <div className="mt-8 border-t border-slate-100 pt-6">
               <h2 className="mb-4 text-sm font-semibold text-slate-900">Ürün Stok Durumu</h2>
 

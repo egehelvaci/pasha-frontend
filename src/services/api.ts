@@ -463,6 +463,12 @@ export interface AdminOrderProduct {
     id: number;
     name: string;
   }>;
+  stock?: {
+    enabled?: boolean;
+    availableAreaM2?: number;
+    reservedAreaM2?: number;
+    consumableAreaM2?: number;
+  };
   productvariations?: Array<{
     id: number;
     product_id: string;
