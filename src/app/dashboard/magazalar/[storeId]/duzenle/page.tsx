@@ -85,6 +85,21 @@ export default function EditStorePage() {
     
     setLoading(true);
     try {
+      // Editör maddi alanları güncelleyemez
+      const payload = isAdmin
+        ? values
+        : (() => {
+            const {
+              bakiye,
+              currency,
+              acik_hesap_tutari,
+              limitsiz_acik_hesap,
+              maksimum_taksit,
+              ...rest
+            } = values as UpdateStoreData & Record<string, unknown>;
+            return rest;
+          })();
+
       // Admin API endpoint'ini kullan
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/admin/stores/${store.store_id}`, {
         method: 'PUT',
@@ -92,7 +107,7 @@ export default function EditStorePage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -263,6 +278,8 @@ export default function EditStorePage() {
                 <Input.TextArea rows={3} className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors resize-none" />
               </Form.Item>
 
+              {isAdmin && (
+                <>
               {/* 🆕 Para Birimi Alanı */}
               <Form.Item
                 label={<span className="text-sm font-medium text-gray-700">Para Birimi <span className="text-red-500">*</span></span>}
@@ -370,6 +387,9 @@ export default function EditStorePage() {
                 }}
               </Form.Item>
 
+                </>
+              )}
+
               <Form.Item
                 label={<span className="text-sm font-medium text-gray-700">Aktif</span>}
                 name="is_active"
@@ -379,14 +399,15 @@ export default function EditStorePage() {
               </Form.Item>
             </div>
 
-            {/* Bilgilendirme Kartı */}
-            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <h4 className="text-sm font-semibold text-blue-800 mb-2">💡 Ödeme Sistemi Bilgileri:</h4>
-              <ul className="text-xs text-blue-700 space-y-1">
-                <li>• <strong>Bakiye:</strong> Mağazanın kullanabileceği para miktarı. Negatif değer borç anlamına gelir.</li>
-                <li>• <strong>Sipariş:</strong> Sipariş tutarları mağaza bakiyesinden düşülür.</li>
-              </ul>
-            </div>
+            {isAdmin && (
+              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="text-sm font-semibold text-blue-800 mb-2">💡 Ödeme Sistemi Bilgileri:</h4>
+                <ul className="text-xs text-blue-700 space-y-1">
+                  <li>• <strong>Bakiye:</strong> Mağazanın kullanabileceği para miktarı. Negatif değer borç anlamına gelir.</li>
+                  <li>• <strong>Sipariş:</strong> Sipariş tutarları mağaza bakiyesinden düşülür.</li>
+                </ul>
+              </div>
+            )}
 
             <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
               <button

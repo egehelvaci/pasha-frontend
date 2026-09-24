@@ -88,8 +88,8 @@ export default function AddStorePage() {
       newErrors.eposta = 'Geçerli bir e-posta adresi giriniz';
     }
 
-    // Financial validation
-    if (!formData.limitsiz_acik_hesap && (!formData.acik_hesap_tutari || formData.acik_hesap_tutari < 0)) {
+    // Financial validation (yalnızca admin)
+    if (isAdmin && !formData.limitsiz_acik_hesap && (!formData.acik_hesap_tutari || formData.acik_hesap_tutari < 0)) {
       newErrors.acik_hesap_tutari = 'Açık hesap limiti gereklidir';
     }
 
@@ -121,7 +121,29 @@ export default function AddStorePage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(
+          isAdmin
+            ? formData
+            : (() => {
+                const {
+                  bakiye,
+                  currency,
+                  acik_hesap_tutari,
+                  limitsiz_acik_hesap,
+                  maksimum_taksit,
+                  ...rest
+                } = formData;
+                return {
+                  ...rest,
+                  // Backend zorunlu alanlar için güvenli varsayılanlar
+                  bakiye: 0,
+                  currency: 'TRY',
+                  acik_hesap_tutari: 0,
+                  limitsiz_acik_hesap: false,
+                  maksimum_taksit: 1,
+                };
+              })()
+        ),
       });
 
       if (!response.ok) {
@@ -394,6 +416,8 @@ export default function AddStorePage() {
                 </div>
               </div>
 
+              {isAdmin && (
+                <>
               {/* Finansal Bilgiler */}
               <div>
                 <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
@@ -562,9 +586,9 @@ export default function AddStorePage() {
                     )}
                   </div>
                 </div>
-            </div>
+              </div>
 
-            {/* Bilgilendirme Kartı */}
+              {/* Bilgilendirme Kartı */}
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
                 <h4 className="text-sm font-semibold text-blue-800 mb-3 flex items-center">
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -583,6 +607,8 @@ export default function AddStorePage() {
                   </div>
                 </div>
               </div>
+              </>
+              )}
             </div>
 
             {/* Form Footer */}

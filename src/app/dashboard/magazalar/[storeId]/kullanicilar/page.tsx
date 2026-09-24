@@ -21,21 +21,25 @@ export default function StoreUsersPage() {
   const storeId = params.storeId as string;
 
   useEffect(() => {
-    // Sipariş modu (selectedAddressId varsa) - tüm kullanıcılar erişebilir
-    // Normal mod - sadece admin/editör erişebilir
+    // Sipariş oluşturma yalnızca admin; kullanıcı listesi admin/editör
     const isOrderMode = !!selectedAddressId;
     
+    if (!authLoading && isOrderMode && !isAdmin) {
+      router.push('/dashboard/magazalar');
+      return;
+    }
+
     if (!authLoading && !isOrderMode && !isAdminOrEditor) {
       router.push('/dashboard');
       return;
     }
     
     // Kimlik doğrulama yüklemesi tamamlandığında veri çek
-    if (!authLoading && storeId && (isOrderMode || isAdminOrEditor)) {
+    if (!authLoading && storeId && (isAdmin || isAdminOrEditor)) {
       fetchStoreUsers();
       fetchStoreInfo();
     }
-  }, [isAdminOrEditor, authLoading, router, storeId, selectedAddressId]);
+  }, [isAdmin, isAdminOrEditor, authLoading, router, storeId, selectedAddressId]);
 
   const fetchStoreUsers = async () => {
     setLoading(true);
@@ -112,8 +116,11 @@ export default function StoreUsersPage() {
     );
   }
 
-  // Yetki kontrolü - sipariş modunda tüm kullanıcılar, normal modda sadece admin/editör
+  // Yetki kontrolü
   const isOrderMode = !!selectedAddressId;
+  if (isOrderMode && !isAdmin) {
+    return null;
+  }
   if (!isOrderMode && !isAdminOrEditor) {
     return (
       <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
@@ -219,21 +226,11 @@ export default function StoreUsersPage() {
                     {filteredUsers.map((user) => (
                       <tr 
                         key={user.user_id} 
-                        className="hover:bg-gray-50 transition-colors cursor-pointer"
+                        className={`hover:bg-gray-50 transition-colors ${isAdmin ? 'cursor-pointer' : ''}`}
                         onClick={() => {
-                          // Kullanıcı seçimi - admin-siparis-olustur sayfasına yönlendir
-                          console.log('Kullanıcı verisi (desktop):', user);
-                          console.log('Kullanıcı ID alanları (desktop):', {
-                            user_id: user.user_id,
-                            id: (user as any).id,
-                            userId: (user as any).userId
-                          });
-                          
-                          // Farklı ID alanlarını kontrol et
+                          if (!isAdmin) return;
                           const userId = user.user_id || (user as any).id || (user as any).userId;
-                          
                           const url = `/dashboard/admin-siparis-olustur?storeId=${storeId}&userId=${userId}&userName=${encodeURIComponent(`${user.name} ${user.surname}`)}`;
-                          console.log('Oluşturulan URL (desktop):', url);
                           router.push(url);
                         }}
                       >
@@ -252,11 +249,15 @@ export default function StoreUsersPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center justify-center">
-                            <button className="px-3 py-1 bg-[#00365a] text-white text-sm rounded-lg hover:bg-[#004170] transition-colors">
-                              Sipariş Ver
-                            </button>
-                          </div>
+                          {isAdmin ? (
+                            <div className="flex items-center justify-center">
+                              <button className="px-3 py-1 bg-[#00365a] text-white text-sm rounded-lg hover:bg-[#004170] transition-colors">
+                                Sipariş Ver
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-gray-400">—</span>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -270,21 +271,11 @@ export default function StoreUsersPage() {
                   {filteredUsers.map((user) => (
                     <div 
                       key={user.user_id} 
-                      className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer" 
+                      className={`bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow ${isAdmin ? 'cursor-pointer' : ''}`}
                       onClick={() => {
-                        // Kullanıcı seçimi - admin-siparis-olustur sayfasına yönlendir
-                        console.log('Kullanıcı verisi (mobil):', user);
-                        console.log('Kullanıcı ID alanları (mobil):', {
-                          user_id: user.user_id,
-                          id: (user as any).id,
-                          userId: (user as any).userId
-                        });
-                        
-                        // Farklı ID alanlarını kontrol et
+                        if (!isAdmin) return;
                         const userId = user.user_id || (user as any).id || (user as any).userId;
-                        
                         const url = `/dashboard/admin-siparis-olustur?storeId=${storeId}&userId=${userId}&userName=${encodeURIComponent(`${user.name} ${user.surname}`)}`;
-                        console.log('Oluşturulan URL (mobil):', url);
                         router.push(url);
                       }}>
                       <div className="flex justify-between items-start mb-4">
@@ -306,18 +297,20 @@ export default function StoreUsersPage() {
                           {user.phone_number && <p className="text-sm text-gray-500">{user.phone_number}</p>}
                         </div>
 
-                        <div className="bg-blue-50 rounded-lg p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <button className="w-full px-4 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors flex items-center justify-center gap-2">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5-5M17 13v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
-                                </svg>
-                                Sipariş Ver
-                              </button>
+                        {isAdmin && (
+                          <div className="bg-blue-50 rounded-lg p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <button className="w-full px-4 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors flex items-center justify-center gap-2">
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5-5M17 13v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
+                                  </svg>
+                                  Sipariş Ver
+                                </button>
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     </div>
                   ))}

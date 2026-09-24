@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { useAuth } from '../../context/AuthContext';
 import { useToken } from '@/app/hooks/useToken';
 import { StoreType, storeTypeLabels } from '@/components/StoreTypeSelector';
-import { bulkConfirmOrders, BulkConfirmOrdersResponse, getStores, Store, adminCancelOrder, cancelOrder } from '@/services/api';
+import { bulkConfirmOrders, BulkConfirmOrdersResponse, getStores, Store, adminCancelOrder, cancelOrder, getAdminOrdersV2, getAdminOrdersLegacy, getAdminOrderStatusCounts, AdminOrderStatusV2 } from '@/services/api';
 import CargoReceipt from '@/app/components/CargoReceipt';
 import QRLabel from '@/app/components/QRLabel';
 import QRCode from 'qrcode';
@@ -261,6 +261,7 @@ interface OrdersResponse {
   filters: {
     status?: string;
     search?: string;
+    userId?: string | null;
   };
 }
 
@@ -269,9 +270,20 @@ interface OrderStats {
   pending: number;
   confirmed: number;
   ready: number;
+  shipped: number;
   delivered: number;
   canceled: number;
 }
+
+const PAGE_LIMIT = 20;
+const ADMIN_ORDER_STATUSES: AdminOrderStatusV2[] = [
+  'PENDING',
+  'CONFIRMED',
+  'READY',
+  'SHIPPED',
+  'DELIVERED',
+  'CANCELED',
+];
 
 interface CancelOrderModal {
   isOpen: boolean;
@@ -286,6 +298,7 @@ const statusLabels: { [key: string]: string } = {
   'PENDING': 'Beklemede',
   'CONFIRMED': 'Onaylandı',
   'READY': 'Hazır',
+  'SHIPPED': 'Gönderildi',
   'DELIVERED': 'Teslim Edildi',
   'CANCELED': 'İptal Edildi'
 };
@@ -294,6 +307,7 @@ const statusColors: { [key: string]: string } = {
   'PENDING': 'bg-amber-50 text-amber-800/90 border border-amber-200/70',
   'CONFIRMED': 'bg-slate-100 text-slate-700 border border-slate-200/80',
   'READY': 'bg-stone-100 text-stone-700 border border-stone-200/80',
+  'SHIPPED': 'bg-sky-50 text-sky-800/80 border border-sky-200/60',
   'DELIVERED': 'bg-emerald-50 text-emerald-800/80 border border-emerald-200/60',
   'CANCELED': 'bg-rose-50 text-rose-800/80 border border-rose-200/60'
 };
@@ -320,6 +334,7 @@ const Siparisler = () => {
   const [ordersData, setOrdersData] = useState<OrdersResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const ordersAbortRef = useRef<AbortController | null>(null);
   
   // Currency state
   const [userCurrency, setUserCurrency] = useState<string>('TRY');
@@ -332,6 +347,7 @@ const Siparisler = () => {
   // Filtreleme ve sayfalama
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
+  const [showAllOrders, setShowAllOrders] = useState(false); // Toplam / tüm siparişler
   const [storeFilter, setStoreFilter] = useState(''); // Mağaza ID'si ile filtreleme
   const [receiptFilter, setReceiptFilter] = useState(''); // '', 'printed', 'not_printed'
   
@@ -419,42 +435,31 @@ const Siparisler = () => {
     };
   }, [selectedOrder]);
 
-  // Sipariş istatistiklerini hesapla
-  const calculateOrderStats = useCallback((orders: Order[], totalCount: number = 0, isInitialLoad: boolean = false): OrderStats => {
-    const stats = {
-      total: totalCount, // Toplam değeri sabit kalmalı
-      pending: 0,
-      confirmed: 0,
-      ready: 0,
-      delivered: 0,
-      canceled: 0
-    };
-
-    // Sadece ilk yüklemede tüm siparişlerin durumlarını say
-    if (isInitialLoad) {
-      orders.forEach(order => {
-        switch (order.status) {
-          case 'PENDING':
-            stats.pending++;
-            break;
-          case 'CONFIRMED':
-            stats.confirmed++;
-            break;
-          case 'READY':
-            stats.ready++;
-            break;
-          case 'DELIVERED':
-            stats.delivered++;
-            break;
-          case 'CANCELED':
-            stats.canceled++;
-            break;
-        }
-      });
+  // Statü adetlerini statuses endpoint'inden al (admin/editor)
+  const fetchOrderStatusCounts = useCallback(async () => {
+    if (authLoading || !isAdminOrEditor) {
+      return;
     }
 
-    return stats;
-  }, []);
+    try {
+      const counts = await getAdminOrderStatusCounts();
+      const byStatus = Object.fromEntries(counts.map((item) => [item.status, item.count])) as Record<string, number>;
+      const stats: OrderStats = {
+        pending: byStatus.PENDING ?? 0,
+        confirmed: byStatus.CONFIRMED ?? 0,
+        ready: byStatus.READY ?? 0,
+        shipped: byStatus.SHIPPED ?? 0,
+        delivered: byStatus.DELIVERED ?? 0,
+        canceled: byStatus.CANCELED ?? 0,
+        total: counts.reduce((sum, item) => sum + (item.count || 0), 0),
+      };
+      setFixedStats(stats);
+      setOrderStats(stats);
+      setTotalOrdersCount(stats.total);
+    } catch (error) {
+      console.error('Statü adetleri alınırken hata:', error);
+    }
+  }, [authLoading, isAdminOrEditor]);
 
   // Mağaza listesini getir (sadece admin/editor için)
   const fetchStores = useCallback(async () => {
@@ -472,136 +477,179 @@ const Siparisler = () => {
   }, [isAdminOrEditor]);
 
   // Siparişleri getir
-  const fetchOrders = useCallback(async (page: number = 1, status: string = '', receiptPrinted: string = '') => {
+  const fetchOrders = useCallback(async (
+    page: number = 1,
+    status: string = '',
+    receiptPrinted: string = '',
+    storeId: string = '',
+    loadAll: boolean = false,
+  ) => {
     // AuthContext yüklemesi tamamlanmadıysa fetch yapma
     if (authLoading) {
       return;
     }
 
-    try {
-      setLoading(true);
-      setError(''); // Clear previous errors
-      const authToken = token;
-      if (!authToken) {
-        router.push('/');
-        return;
-      }
-
-      // Admin kontrolü yaparak farklı endpoint'ler kullan
-      let endpoint: string;
-      let queryParams = new URLSearchParams();
-
-      if (status) queryParams.append('status', status);
-      // receiptPrinted filtresi sadece admin için
-      if (receiptPrinted && isAdminOrEditor) queryParams.append('receiptPrinted', receiptPrinted === 'printed' ? 'true' : 'false');
-
-
-      // Admin veya Editör ise sadece admin/orders endpoint'ini kullan, my-orders asla kullanma
-      if (isAdminOrEditor) {
-        endpoint = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/admin/orders?${queryParams.toString()}`;
-      } else {
-        // Admin değilse my-orders endpoint'ini kullan - kesinlikle admin endpoint kullanma
-                  endpoint = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/orders/my-orders?${queryParams.toString()}`;
-        
-        // Güvenlik kontrolü: Admin olmayan kullanıcılar asla admin endpoint'i kullanmamalı
-        if (endpoint.includes('/admin/')) {
-          throw new Error('Yetkisiz erişim: Admin endpoint\'i kullanılamaz');
-        }
-      }
-
-      const response = await fetch(endpoint, {
-        headers: {
-          'Authorization': `Bearer ${authToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Siparişler alınamadı');
-      }
-
-      const data = await response.json();
-      
-      if (data.success) {
-        // Geçici çözüm: Frontend'de fiş filtrelemesi yapın (backend API henüz desteklemiyor)
-        let filteredOrders = data.data.orders;
-        
-        if (receiptPrinted && isAdminOrEditor) {
-          if (receiptPrinted === 'printed') {
-            // Yazdırılan fişler: receipt_printed = true olan siparişler
-            filteredOrders = data.data.orders.filter((order: any) => order.receipt_printed === true);
-          } else if (receiptPrinted === 'not_printed') {
-            // Yazdırılmayan fişler: Sadece DELIVERED (teslim edilen) durumunda ve receipt_printed = false
-            filteredOrders = data.data.orders.filter((order: any) => 
-              order.status === 'DELIVERED' && 
-              order.receipt_printed === false
-            );
-          }
-        }
-        
-        const processedData = {
-          ...data.data,
-          orders: filteredOrders
-        };
-        
-        setOrdersData(processedData);
-      } else {
-        throw new Error(data.message || 'Siparişler alınamadı');
-      }
-    } catch (error: any) {
-
-      setError('Siparişler alınamadı. Lütfen tekrar deneyiniz.');
-    } finally {
-      setLoading(false);
-    }
-  }, [router, isAdminOrEditor, authLoading, token]);
-
-  // Tüm siparişleri getir (istatistikler için)
-  const fetchAllOrdersForStats = useCallback(async () => {
-    if (authLoading || !isAdminOrEditor) {
+    const authToken = token;
+    if (!authToken) {
+      router.push('/');
       return;
     }
 
+    // Admin/editor: statü, toplam veya mağaza yoksa liste çağrılmaz
+    if (isAdminOrEditor && !status && !loadAll && !storeId) {
+      ordersAbortRef.current?.abort();
+      setOrdersData(null);
+      setLoading(false);
+      setError('');
+      return;
+    }
+
+    ordersAbortRef.current?.abort();
+    const controller = new AbortController();
+    ordersAbortRef.current = controller;
+
     try {
-      const authToken = token;
-      if (!authToken) {
+      setLoading(true);
+      setError('');
+
+      if (isAdminOrEditor) {
+        const receiptPrintedBool =
+          receiptPrinted === 'printed' ? true :
+          receiptPrinted === 'not_printed' ? false :
+          undefined;
+
+        const useV2 = Boolean(status) && ADMIN_ORDER_STATUSES.includes(status as AdminOrderStatusV2) && !storeId;
+
+        if (useV2) {
+          const data = await getAdminOrdersV2({
+            status: status as AdminOrderStatusV2,
+            page,
+            limit: PAGE_LIMIT,
+            signal: controller.signal,
+          });
+
+          let filteredOrders = data.orders;
+          if (receiptPrinted === 'printed') {
+            filteredOrders = data.orders.filter((order: any) => order.receipt_printed === true);
+          } else if (receiptPrinted === 'not_printed') {
+            filteredOrders = data.orders.filter((order: any) =>
+              order.status === 'DELIVERED' &&
+              order.receipt_printed === false
+            );
+          }
+
+          setOrdersData({
+            orders: filteredOrders,
+            filters: {
+              status: data.filters?.status,
+              userId: data.filters?.userId ?? null,
+            },
+            pagination: {
+              page: data.pagination.page,
+              limit: data.pagination.limit,
+              total: data.pagination.totalCount,
+              totalPages: data.pagination.totalPages,
+              hasNext: data.pagination.hasNext,
+              hasPrev: data.pagination.hasPrev,
+            },
+          });
+        } else {
+          // Toplam, mağaza filtresi veya mağaza+statü: eski endpoint (status zorunlu değil)
+          const data = await getAdminOrdersLegacy({
+            page,
+            limit: PAGE_LIMIT,
+            status: status && ADMIN_ORDER_STATUSES.includes(status as AdminOrderStatusV2) ? status : undefined,
+            storeId: storeId || undefined,
+            receiptPrinted: receiptPrintedBool,
+            signal: controller.signal,
+          });
+
+          let filteredOrders = data.orders;
+
+          // Backend storeId desteklemiyorsa istemci tarafında daralt
+          if (storeId) {
+            filteredOrders = filteredOrders.filter((order: any) =>
+              order.user?.Store?.store_id === storeId ||
+              order.store_info?.store_id === storeId ||
+              order.store_info?.id === storeId ||
+              order.store_id === storeId
+            );
+          }
+
+          if (receiptPrinted === 'printed') {
+            filteredOrders = filteredOrders.filter((order: any) => order.receipt_printed === true);
+          } else if (receiptPrinted === 'not_printed') {
+            filteredOrders = filteredOrders.filter((order: any) =>
+              order.status === 'DELIVERED' &&
+              order.receipt_printed === false
+            );
+          }
+
+          setOrdersData({
+            orders: filteredOrders,
+            filters: {
+              status: status || undefined,
+            },
+            pagination: data.pagination,
+          });
+        }
+      } else {
+        // Admin değilse my-orders endpoint'ini kullan
+        const queryParams = new URLSearchParams();
+        if (status) queryParams.append('status', status);
+
+        const endpoint = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/orders/my-orders?${queryParams.toString()}`;
+
+        if (endpoint.includes('/admin/')) {
+          throw new Error('Yetkisiz erişim: Admin endpoint\'i kullanılamaz');
+        }
+
+        const response = await fetch(endpoint, {
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json'
+          },
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error('Siparişler alınamadı');
+        }
+
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.message || 'Siparişler alınamadı');
+        }
+
+        setOrdersData(result.data);
+      }
+    } catch (error: any) {
+      if (error?.name === 'AbortError') {
         return;
       }
-
-      const endpoint = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/admin/orders`;
-      
-      const response = await fetch(endpoint, {
-        headers: {
-          'Authorization': `Bearer ${authToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Tüm siparişler alınamadı');
+      setError('Siparişler alınamadı. Lütfen tekrar deneyiniz.');
+    } finally {
+      if (!controller.signal.aborted) {
+        setLoading(false);
       }
-
-      const data = await response.json();
-      if (data.success && data.data.orders) {
-        // Tüm siparişlerden istatistikleri hesapla
-        const totalCount = data.data.pagination?.total || data.data.orders.length;
-        const allStats = calculateOrderStats(data.data.orders, totalCount, true);
-        setFixedStats(allStats);
-        setTotalOrdersCount(totalCount);
-      }
-    } catch (error) {
-      console.error('Tüm siparişler alınırken hata:', error);
     }
-  }, [authLoading, isAdminOrEditor, token, calculateOrderStats]);
+  }, [router, isAdminOrEditor, authLoading, token]);
 
   useEffect(() => {
     // AuthContext yüklemesi tamamlanana kadar bekle
     if (authLoading) {
       return;
     }
-    
-    fetchOrders(currentPage, statusFilter, receiptFilter);
-  }, [currentPage, statusFilter, receiptFilter, authLoading, fetchOrders]);
+
+    if (isAdminOrEditor && !statusFilter && !showAllOrders && !storeFilter) {
+      setOrdersData(null);
+      setLoading(false);
+      return;
+    }
+
+    fetchOrders(currentPage, statusFilter, receiptFilter, storeFilter, showAllOrders);
+  }, [currentPage, statusFilter, receiptFilter, storeFilter, showAllOrders, authLoading, isAdminOrEditor, fetchOrders]);
 
   // Mağaza listesini yükle
   useEffect(() => {
@@ -641,7 +689,9 @@ const Siparisler = () => {
     // Mağaza filtresi uygula (sadece admin/editor için)
     if (storeFilter && isAdminOrEditor) {
       filtered = filtered.filter(order => 
-        order.user?.Store?.store_id === storeFilter
+        order.user?.Store?.store_id === storeFilter ||
+        (order as any).store_info?.store_id === storeFilter ||
+        (order as any).store_info?.id === storeFilter
       );
     }
 
@@ -662,12 +712,18 @@ const Siparisler = () => {
     );
   }, [stores, storeSearchQuery]);
 
-  // Sadece bir kez tüm siparişleri getir (istatistikler için)
+  // Statü adetlerini yükle
   useEffect(() => {
-    if (!authLoading && isAdminOrEditor && !fixedStats) {
-      fetchAllOrdersForStats();
+    if (!authLoading && isAdminOrEditor) {
+      fetchOrderStatusCounts();
     }
-  }, [authLoading, isAdminOrEditor, fixedStats, fetchAllOrdersForStats]);
+  }, [authLoading, isAdminOrEditor, fetchOrderStatusCounts]);
+
+  useEffect(() => {
+    return () => {
+      ordersAbortRef.current?.abort();
+    };
+  }, []);
 
   // Toplu onaylama fonksiyonları
   const handleSelectOrder = (orderId: string, isChecked: boolean) => {
@@ -785,8 +841,9 @@ const Siparisler = () => {
         const successfulIds = results.success.map(order => order.orderId);
         setSelectedOrderIds(prev => prev.filter(id => !successfulIds.includes(id)));
         
-        // Siparişleri yeniden yükle
-        await fetchOrders(currentPage, statusFilter, receiptFilter);
+        // Siparişleri ve statü adetlerini yeniden yükle
+        await fetchOrders(currentPage, statusFilter, receiptFilter, storeFilter, showAllOrders);
+        await fetchOrderStatusCounts();
       }
     } catch (error) {
       console.error('Toplu onaylama hatası:', error);
@@ -2083,7 +2140,10 @@ const Siparisler = () => {
         alert(message);
         
         // Siparişleri yeniden yükle
-        await fetchOrders(currentPage, statusFilter, receiptFilter);
+        await fetchOrders(currentPage, statusFilter, receiptFilter, storeFilter, showAllOrders);
+        if (isAdminOrEditor) {
+          await fetchOrderStatusCounts();
+        }
         
         // Modal'ı kapat
         setCancelOrderModal({
@@ -2131,7 +2191,10 @@ const Siparisler = () => {
         alert(message);
         
         // Siparişleri yeniden yükle
-        await fetchOrders(currentPage, statusFilter, receiptFilter);
+        await fetchOrders(currentPage, statusFilter, receiptFilter, storeFilter, showAllOrders);
+        if (isAdminOrEditor) {
+          await fetchOrderStatusCounts();
+        }
         
         // Modal'ı kapat
         setCancelOrderModal({
@@ -2197,7 +2260,10 @@ const Siparisler = () => {
         }
 
         // Siparişleri yeniden yükle
-        await fetchOrders(currentPage, statusFilter, receiptFilter);
+        await fetchOrders(currentPage, statusFilter, receiptFilter, storeFilter, showAllOrders);
+        if (isAdminOrEditor) {
+          await fetchOrderStatusCounts();
+        }
         // Modal'daki sipariş detayını da güncelle
         if (selectedOrder && selectedOrder.id === orderId) {
           await handleViewOrderDetail(orderId);
@@ -2216,21 +2282,23 @@ const Siparisler = () => {
   // Filtreleme fonksiyonları
   const handleStatusFilter = (status: string) => {
     setStatusFilter(status);
+    setShowAllOrders(!status); // '' = Tüm Durumlar → eski API ile tümü
     setIsStatusDropdownOpen(false);
+    setCurrentPage(1);
+  };
+
+  const handleShowAllOrders = () => {
+    setStatusFilter('');
+    setShowAllOrders(true);
     setCurrentPage(1);
   };
 
   const handleStoreFilter = (storeId: string) => {
     setStoreFilter(storeId);
     setIsStoreDropdownOpen(false);
-    // Seçilen mağaza adını search query'ye set et
-    if (storeId) {
-      const selectedStore = stores.find(store => store.store_id === storeId);
-      setStoreSearchQuery(selectedStore?.kurum_adi || '');
-    } else {
-      setStoreSearchQuery('');
-    }
-    // Frontend filtreleme yaptığımız için sayfa resetlemeye gerek yok
+    setCurrentPage(1);
+    // Arama metnini temizle; aksi halde dropdown yalnızca seçili mağazayı gösterir
+    setStoreSearchQuery('');
   };
   
   // Fiş filtresi
@@ -2301,31 +2369,12 @@ const Siparisler = () => {
     }
   };
 
-  if (loading || authLoading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-[#f7f8fa]">
         <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
           <div className="flex h-64 items-center justify-center">
             <div className="h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]/70" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-[#f7f8fa]">
-        <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-md rounded-xl border border-slate-200/80 bg-white px-6 py-10 text-center">
-            <h2 className="text-lg font-semibold tracking-tight text-slate-900">Hata Oluştu</h2>
-            <p className="mt-2 text-sm text-slate-500">{error}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-6 inline-flex items-center justify-center rounded-lg bg-[#00365a] px-5 py-2.5 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98]"
-            >
-              Tekrar Dene
-            </button>
           </div>
         </div>
       </div>
@@ -2350,13 +2399,14 @@ const Siparisler = () => {
           </div>
         </div>
 
-        {/* Admin/Editor İstatistikleri */}
+        {/* Admin/Editor Statü Rozetleri — tıklanınca ilgili siparişler yüklenir */}
         {isAdminOrEditor && fixedStats && (
-          <div className="mb-6 grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-6 sm:mb-8">
+          <div className="mb-6 grid grid-cols-2 gap-2.5 sm:mb-8 sm:gap-3 md:grid-cols-3 lg:grid-cols-7">
             <button
-              onClick={() => handleStatusFilter('')}
+              type="button"
+              onClick={handleShowAllOrders}
               className={`rounded-xl border p-3.5 text-left transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.99] sm:p-4 ${
-                statusFilter === ''
+                showAllOrders && !statusFilter
                   ? 'border-slate-300/90 bg-stone-100/90'
                   : 'border-slate-200/80 bg-white hover:bg-stone-50/80'
               }`}
@@ -2365,6 +2415,7 @@ const Siparisler = () => {
               <div className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-500">Toplam</div>
             </button>
             <button
+              type="button"
               onClick={() => handleStatusFilter('PENDING')}
               className={`rounded-xl border p-3.5 text-left transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/30 active:scale-[0.99] sm:p-4 ${
                 statusFilter === 'PENDING'
@@ -2376,6 +2427,7 @@ const Siparisler = () => {
               <div className="mt-1 text-xs font-medium uppercase tracking-wide text-amber-700/70">Beklemede</div>
             </button>
             <button
+              type="button"
               onClick={() => handleStatusFilter('CONFIRMED')}
               className={`rounded-xl border p-3.5 text-left transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/30 active:scale-[0.99] sm:p-4 ${
                 statusFilter === 'CONFIRMED'
@@ -2387,6 +2439,7 @@ const Siparisler = () => {
               <div className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-500">Onaylandı</div>
             </button>
             <button
+              type="button"
               onClick={() => handleStatusFilter('READY')}
               className={`rounded-xl border p-3.5 text-left transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-400/30 active:scale-[0.99] sm:p-4 ${
                 statusFilter === 'READY'
@@ -2398,6 +2451,19 @@ const Siparisler = () => {
               <div className="mt-1 text-xs font-medium uppercase tracking-wide text-stone-500">Hazır</div>
             </button>
             <button
+              type="button"
+              onClick={() => handleStatusFilter('SHIPPED')}
+              className={`rounded-xl border p-3.5 text-left transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/30 active:scale-[0.99] sm:p-4 ${
+                statusFilter === 'SHIPPED'
+                  ? 'border-sky-300/70 bg-sky-50'
+                  : 'border-sky-200/50 bg-sky-50/40 hover:bg-sky-50/80'
+              }`}
+            >
+              <div className="text-xl font-semibold tabular-nums text-sky-900/80 sm:text-2xl">{fixedStats.shipped}</div>
+              <div className="mt-1 text-xs font-medium uppercase tracking-wide text-sky-700/70">Gönderildi</div>
+            </button>
+            <button
+              type="button"
               onClick={() => handleStatusFilter('DELIVERED')}
               className={`rounded-xl border p-3.5 text-left transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/25 active:scale-[0.99] sm:p-4 ${
                 statusFilter === 'DELIVERED'
@@ -2409,6 +2475,7 @@ const Siparisler = () => {
               <div className="mt-1 text-xs font-medium uppercase tracking-wide text-emerald-700/70">Teslim</div>
             </button>
             <button
+              type="button"
               onClick={() => handleStatusFilter('CANCELED')}
               className={`rounded-xl border p-3.5 text-left transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/25 active:scale-[0.99] sm:p-4 ${
                 statusFilter === 'CANCELED'
@@ -2426,7 +2493,11 @@ const Siparisler = () => {
         <div className="mb-6 rounded-xl border border-slate-200/80 bg-white p-4 sm:p-5">
           <div className="mb-4">
             <h3 className="text-sm font-semibold text-slate-900">Filtreler</h3>
-            <p className="mt-0.5 text-xs text-slate-500">Siparişleri mağaza, durum ve fiş bilgisine göre daraltın</p>
+            <p className="mt-0.5 text-xs text-slate-500">
+              {isAdminOrEditor
+                ? 'Liste için önce bir durum seçin; ardından mağaza ve fiş ile daraltabilirsiniz.'
+                : 'Siparişleri mağaza, durum ve fiş bilgisine göre daraltın'}
+            </p>
           </div>
           <div className="flex flex-col gap-4 md:flex-row">
             {/* Mağaza Filtresi (Sadece Admin/Editor için) */}
@@ -2438,17 +2509,32 @@ const Siparisler = () => {
                 <div className="relative">
                   <div
                     className="w-full cursor-pointer rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 transition-all duration-200 ease-out hover:border-slate-300 focus-within:border-slate-300 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#00365a]/15"
-                    onClick={() => setIsStoreDropdownOpen(!isStoreDropdownOpen)}
+                    onClick={() => {
+                      if (!isStoreDropdownOpen) {
+                        setStoreSearchQuery('');
+                      }
+                      setIsStoreDropdownOpen(!isStoreDropdownOpen);
+                    }}
                   >
                     <div className="flex items-center justify-between">
                       <input
                         type="text"
-                        value={storeSearchQuery}
+                        value={
+                          isStoreDropdownOpen
+                            ? storeSearchQuery
+                            : (storeFilter
+                                ? (stores.find((s) => s.store_id === storeFilter)?.kurum_adi || '')
+                                : storeSearchQuery)
+                        }
                         onChange={(e) => {
                           setStoreSearchQuery(e.target.value);
                           setIsStoreDropdownOpen(true);
                         }}
-                        placeholder={storeFilter ? (stores.find(s => s.store_id === storeFilter)?.kurum_adi || "Mağaza seç...") : "Mağaza ara..."}
+                        onFocus={() => {
+                          setStoreSearchQuery('');
+                          setIsStoreDropdownOpen(true);
+                        }}
+                        placeholder="Mağaza ara..."
                         className="flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
                         disabled={loadingStores}
                       />
@@ -2550,6 +2636,7 @@ const Siparisler = () => {
                           status === 'PENDING' ? 'bg-amber-400/80' :
                           status === 'CONFIRMED' ? 'bg-slate-400' :
                           status === 'READY' ? 'bg-stone-400' :
+                          status === 'SHIPPED' ? 'bg-sky-400/80' :
                           status === 'DELIVERED' ? 'bg-emerald-400/80' :
                           status === 'CANCELED' ? 'bg-rose-400/80' : 'bg-slate-300'
                         }`}></span>
@@ -2730,8 +2817,27 @@ const Siparisler = () => {
           </div>
         )}
 
+        {error && (
+          <div className="mb-4 rounded-xl border border-rose-200/60 bg-rose-50/70 px-4 py-3 text-sm text-rose-700/90">
+            {error}
+            <button
+              type="button"
+              onClick={() => fetchOrders(currentPage, statusFilter, receiptFilter, storeFilter, showAllOrders)}
+              className="ml-3 font-medium underline underline-offset-2"
+            >
+              Tekrar dene
+            </button>
+          </div>
+        )}
+
+        {loading && (
+          <div className="mb-6 flex h-40 items-center justify-center rounded-xl border border-slate-200/80 bg-white">
+            <div className="h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]/70" />
+          </div>
+        )}
+
         {/* Siparişler Listesi */}
-        {!filteredOrders || filteredOrders.orders.length === 0 ? (
+        {!loading && (!filteredOrders || filteredOrders.orders.length === 0) ? (
           <div className="rounded-xl border border-slate-200/80 bg-white px-6 py-14 text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-stone-100 text-slate-400">
               <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2739,15 +2845,20 @@ const Siparisler = () => {
               </svg>
             </div>
             <h3 className="text-base font-semibold text-slate-900">
-              {statusFilter || storeFilter || receiptFilter ? 'Filtreye uygun sipariş bulunamadı' : 'Henüz sipariş yok'}
+              {isAdminOrEditor && !statusFilter && !showAllOrders && !storeFilter
+                ? 'Sipariş durumu veya mağaza seçin'
+                : statusFilter || storeFilter || receiptFilter || showAllOrders
+                  ? 'Filtreye uygun sipariş bulunamadı'
+                  : 'Henüz sipariş yok'}
             </h3>
             <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
-              {statusFilter || storeFilter || receiptFilter 
-                ? 'Farklı filtreler deneyin veya filtreleri temizleyin.'
-                : isAdminOrEditor 
-                ? 'Henüz sisteme hiç sipariş girilmemiş.'
-                : 'Henüz bir sipariş vermemişsiniz.'
-              }
+              {isAdminOrEditor && !statusFilter && !showAllOrders && !storeFilter
+                ? 'Toplam / bir statü butonuna veya mağaza filtresine tıklayarak siparişleri görüntüleyin.'
+                : statusFilter || storeFilter || receiptFilter || showAllOrders
+                  ? 'Farklı filtreler deneyin veya filtreleri temizleyin.'
+                  : isAdminOrEditor
+                    ? 'Henüz sisteme hiç sipariş girilmemiş.'
+                    : 'Henüz bir sipariş vermemişsiniz.'}
             </p>
             {!isAdminOrEditor && !statusFilter && !storeFilter && !receiptFilter && (
               <Link
@@ -2758,7 +2869,7 @@ const Siparisler = () => {
               </Link>
             )}
           </div>
-        ) : (
+        ) : !loading ? (
           <div className="space-y-3">
             {filteredOrders.orders.map((order) => (
               <div
@@ -3215,7 +3326,10 @@ const Siparisler = () => {
                                     try {
                                       await markReceiptAsPrinted(order.id);
                                       // Siparişleri yenile
-                                      await fetchOrders(currentPage, statusFilter, receiptFilter);
+                                      await fetchOrders(currentPage, statusFilter, receiptFilter, storeFilter, showAllOrders);
+                                      if (isAdminOrEditor) {
+                                        await fetchOrderStatusCounts();
+                                      }
                                     } catch (error) {
                                       console.error('Fiş durumu güncelleme hatası:', error);
                                     }
@@ -3358,10 +3472,10 @@ const Siparisler = () => {
               </div>
             ))}
           </div>
-        )}
+        ) : null}
 
         {/* Sayfalama - Mağaza filtresi aktif değilken göster */}
-        {ordersData && ordersData.pagination && ordersData.pagination.totalPages > 1 && !storeFilter && (
+        {!loading && ordersData && ordersData.pagination && ordersData.pagination.totalPages > 1 && (
           <div className="mt-6 flex justify-center sm:mt-8">
             <div className="flex flex-wrap items-center justify-center gap-2">
               <button
@@ -3373,23 +3487,31 @@ const Siparisler = () => {
               </button>
 
               <div className="flex items-center gap-1">
-                {Array.from({ length: Math.min(5, ordersData.pagination.totalPages) }, (_, i) => {
-                  const page = i + 1;
-                  const isActive = page === ordersData.pagination.page;
-                  return (
-                    <button
-                      key={page}
-                      onClick={() => handlePageChange(page)}
-                      className={`min-w-[2.25rem] rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98] ${
-                        isActive
-                          ? 'bg-[#00365a] text-white'
-                          : 'border border-slate-200/80 bg-white text-slate-700 hover:bg-stone-50'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  );
-                })}
+                {(() => {
+                  const totalPages = ordersData.pagination.totalPages;
+                  const current = ordersData.pagination.page;
+                  const windowSize = 5;
+                  let start = Math.max(1, current - Math.floor(windowSize / 2));
+                  let end = Math.min(totalPages, start + windowSize - 1);
+                  start = Math.max(1, end - windowSize + 1);
+                  return Array.from({ length: end - start + 1 }, (_, i) => {
+                    const page = start + i;
+                    const isActive = page === current;
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={`min-w-[2.25rem] rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98] ${
+                          isActive
+                            ? 'bg-[#00365a] text-white'
+                            : 'border border-slate-200/80 bg-white text-slate-700 hover:bg-stone-50'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  });
+                })()}
               </div>
 
               <button

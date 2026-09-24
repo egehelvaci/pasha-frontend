@@ -476,9 +476,11 @@ export default function StoresPage() {
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                         İletişim
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Finansal Durum
-                      </th>
+                      {isAdmin && (
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                          Finansal Durum
+                        </th>
+                      )}
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                         Durum
                       </th>
@@ -527,26 +529,28 @@ export default function StoresPage() {
                             <div className="text-xs text-gray-400 mt-1">{store.adres}</div>
                           </div>
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="space-y-1">
-                            <div className="text-sm">
-                              <span className="font-medium text-gray-700">Bakiye:</span>
-                              <span className={`ml-1 font-semibold ${(store.bakiye || 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                {store.bakiye?.toLocaleString('tr-TR') || '0'} {store.currency === 'USD' ? '$' : '₺'}
-                              </span>
+                        {isAdmin && (
+                          <td className="px-6 py-4">
+                            <div className="space-y-1">
+                              <div className="text-sm">
+                                <span className="font-medium text-gray-700">Bakiye:</span>
+                                <span className={`ml-1 font-semibold ${(store.bakiye || 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                  {store.bakiye?.toLocaleString('tr-TR') || '0'} {store.currency === 'USD' ? '$' : '₺'}
+                                </span>
+                              </div>
+                              <div className="text-sm">
+                                <span className="font-medium text-gray-700">Açık Hesap:</span>
+                                <span className="ml-1 text-[#00365a] font-semibold">
+                                  {store.limitsiz_acik_hesap ? 'Limitsiz' : `${store.acik_hesap_tutari?.toLocaleString('tr-TR') || '0'} ${store.currency === 'USD' ? '$' : '₺'}`}
+                                </span>
+                              </div>
+                              <div className="text-sm">
+                                <span className="font-medium text-gray-700">Max Taksit:</span>
+                                <span className="ml-1 text-orange-600 font-semibold">{store.maksimum_taksit || 1}</span>
+                              </div>
                             </div>
-                            <div className="text-sm">
-                              <span className="font-medium text-gray-700">Açık Hesap:</span>
-                              <span className="ml-1 text-[#00365a] font-semibold">
-                                {store.limitsiz_acik_hesap ? 'Limitsiz' : `${store.acik_hesap_tutari?.toLocaleString('tr-TR') || '0'} ${store.currency === 'USD' ? '$' : '₺'}`}
-                              </span>
-                            </div>
-                            <div className="text-sm">
-                              <span className="font-medium text-gray-700">Max Taksit:</span>
-                              <span className="ml-1 text-orange-600 font-semibold">{store.maksimum_taksit || 1}</span>
-                            </div>
-                          </div>
-                        </td>
+                          </td>
+                        )}
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
                             store.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -590,30 +594,34 @@ export default function StoresPage() {
                               </button>
                             </Tooltip>
                             
-                            <Tooltip content="Mağaza için Sipariş Oluştur" position="top">
-                              <button
-                                onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/adresler?mode=order`)}
-                                className="text-purple-600 hover:text-purple-700 p-2 rounded-lg hover:bg-purple-50 transition-all shadow-sm hover:shadow-md group"
-                              >
-                                <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                                </svg>
-                              </button>
-                            </Tooltip>
+                            {isAdmin && (
+                              <Tooltip content="Mağaza için Sipariş Oluştur" position="top">
+                                <button
+                                  onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/adresler?mode=order`)}
+                                  className="text-purple-600 hover:text-purple-700 p-2 rounded-lg hover:bg-purple-50 transition-all shadow-sm hover:shadow-md group"
+                                >
+                                  <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                                  </svg>
+                                </button>
+                              </Tooltip>
+                            )}
                             
-                            <Tooltip content="Fiyat Listesi Atama" position="top">
-                              <button
-                                onClick={() => {
-                                  setSelectedStore(store);
-                                  setAssignModalVisible(true);
-                                }}
-                                className="text-blue-600 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition-all shadow-sm hover:shadow-md group"
-                              >
-                                <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                                </svg>
-                              </button>
-                            </Tooltip>
+                            {isAdmin && (
+                              <Tooltip content="Fiyat Listesi Atama" position="top">
+                                <button
+                                  onClick={() => {
+                                    setSelectedStore(store);
+                                    setAssignModalVisible(true);
+                                  }}
+                                  className="text-blue-600 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition-all shadow-sm hover:shadow-md group"
+                                >
+                                  <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                  </svg>
+                                </button>
+                              </Tooltip>
+                            )}
 
                             {isAdmin && (
                               <Tooltip content="Mağazayı Sil" position="top">
@@ -699,32 +707,34 @@ export default function StoresPage() {
                           <p className="text-sm text-gray-500">{store.vergi_dairesi}</p>
                         </div>
 
-                        <div className="bg-orange-50 rounded-lg p-4">
-                          <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                            <svg className="w-4 h-4 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                            </svg>
-                            Finansal Durum
-                          </h4>
-                          <div className="space-y-1">
-                            <div className="text-sm">
-                              <span className="font-medium">Bakiye:</span>
-                              <span className={`ml-1 font-semibold ${(store.bakiye || 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                {store.bakiye?.toLocaleString('tr-TR') || '0'} {store.currency === 'USD' ? '$' : '₺'}
-                              </span>
-                            </div>
-                            <div className="text-sm">
-                              <span className="font-medium">Açık Hesap:</span>
-                              <span className="ml-1 text-orange-600 font-semibold">
-                                {store.limitsiz_acik_hesap ? 'Limitsiz' : `${store.acik_hesap_tutari?.toLocaleString('tr-TR') || '0'} ${store.currency === 'USD' ? '$' : '₺'}`}
-                              </span>
-                            </div>
-                            <div className="text-sm">
-                              <span className="font-medium">Max Taksit:</span>
-                              <span className="ml-1 text-purple-600 font-semibold">{store.maksimum_taksit || 1}</span>
+                        {isAdmin && (
+                          <div className="bg-orange-50 rounded-lg p-4">
+                            <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                              <svg className="w-4 h-4 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                              </svg>
+                              Finansal Durum
+                            </h4>
+                            <div className="space-y-1">
+                              <div className="text-sm">
+                                <span className="font-medium">Bakiye:</span>
+                                <span className={`ml-1 font-semibold ${(store.bakiye || 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                  {store.bakiye?.toLocaleString('tr-TR') || '0'} {store.currency === 'USD' ? '$' : '₺'}
+                                </span>
+                              </div>
+                              <div className="text-sm">
+                                <span className="font-medium">Açık Hesap:</span>
+                                <span className="ml-1 text-orange-600 font-semibold">
+                                  {store.limitsiz_acik_hesap ? 'Limitsiz' : `${store.acik_hesap_tutari?.toLocaleString('tr-TR') || '0'} ${store.currency === 'USD' ? '$' : '₺'}`}
+                                </span>
+                              </div>
+                              <div className="text-sm">
+                                <span className="font-medium">Max Taksit:</span>
+                                <span className="ml-1 text-purple-600 font-semibold">{store.maksimum_taksit || 1}</span>
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        )}
         </div>
 
                       <div className="flex flex-wrap gap-2">
@@ -756,15 +766,17 @@ export default function StoresPage() {
                           </svg>
                           Kullanıcılar
                         </button>
-                        <button
-                          onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/adresler?mode=order`)}
-                          className="flex items-center gap-2 px-5 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                          </svg>
-                          Sipariş Ver
-                        </button>
+                        {isAdmin && (
+                          <button
+                            onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/adresler?mode=order`)}
+                            className="flex items-center gap-2 px-5 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                            </svg>
+                            Sipariş Ver
+                          </button>
+                        )}
                         <button
                           onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/adresler`)}
                           className="flex items-center gap-2 px-5 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md"
@@ -775,18 +787,20 @@ export default function StoresPage() {
                           </svg>
                           Adresler
                         </button>
-                        <button
-            onClick={() => {
-                            setSelectedStore(store);
-              setAssignModalVisible(true);
-            }}
-                          className="flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md"
-          >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                          </svg>
-            Fiyat Listesi
-                        </button>
+                        {isAdmin && (
+                          <button
+                            onClick={() => {
+                              setSelectedStore(store);
+                              setAssignModalVisible(true);
+                            }}
+                            className="flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                            </svg>
+                            Fiyat Listesi
+                          </button>
+                        )}
                         
                         {isAdmin && (
                           <button
