@@ -38,8 +38,8 @@ export default function CollectionSlider() {
       <div className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Koleksiyonlar yükleniyor...</p>
+            <div className="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
+            <p className="mt-3 text-sm text-slate-500">Koleksiyonlar yükleniyor...</p>
           </div>
         </div>
       </div>
@@ -51,7 +51,7 @@ export default function CollectionSlider() {
       <div className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <p className="text-red-600">{error}</p>
+            <p className="text-sm text-rose-700">{error}</p>
           </div>
         </div>
       </div>
@@ -63,7 +63,7 @@ export default function CollectionSlider() {
       <div className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <p className="text-gray-600">Henüz koleksiyon bulunmuyor.</p>
+            <p className="text-sm text-slate-500">Henüz koleksiyon bulunmuyor.</p>
           </div>
         </div>
       </div>
@@ -80,7 +80,7 @@ export default function CollectionSlider() {
       <div className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <p className="text-gray-600">Henüz ürün bulunan koleksiyon yok.</p>
+            <p className="text-sm text-slate-500">Henüz ürün bulunan koleksiyon yok.</p>
           </div>
         </div>
       </div>
@@ -88,18 +88,15 @@ export default function CollectionSlider() {
   }
 
   return (
-    <section className="py-12 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-        {/* Her koleksiyon için ayrı slider - sadece ürünü olan koleksiyonları göster */}
-        {collectionsWithProducts.map((collection) => (
-          <div key={collection.id} className="mb-20">
-            {/* Koleksiyon Başlığı - Temiz Tasarım */}
-            <div className="mb-8 text-center">
-                <h3 className="text-3xl font-bold text-gray-900 mb-2 relative">
-                  {collection.name}
-                  <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-gradient-to-r from-slate-800 to-slate-900 rounded-full"></div>
-                </h3>
+    <section className="py-8 sm:py-10">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
+        {collectionsWithProducts.map((collection, index) => (
+          <div key={collection.id} className="mb-12">
+            <div className="mb-6 flex flex-col items-center text-center">
+              <h3 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl sm:tracking-[0.12em]">
+                {collection.name}
+              </h3>
+              <div className="mt-3 h-px w-[min(100%,16rem)] bg-neutral-300" />
             </div>
 
             {/* Swiper Slider */}
@@ -109,12 +106,12 @@ export default function CollectionSlider() {
                 spaceBetween={30}
                 slidesPerView={2}
                 navigation={{
-                  nextEl: '.swiper-button-next',
-                  prevEl: '.swiper-button-prev',
+                  nextEl: `.public-products-next-${index}`,
+                  prevEl: `.public-products-prev-${index}`,
                 }}
                 pagination={{
                   clickable: true,
-                  el: '.swiper-pagination',
+                  el: `.public-products-pagination-${index}`,
                 }}
                 autoplay={{
                   delay: 4000,
@@ -138,40 +135,32 @@ export default function CollectionSlider() {
               >
                 {collection.products.map((product) => (
                   <SwiperSlide key={product.id}>
-                    <div className="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-gray-100">
-                      {/* Ürün Görseli - 1:2 Oran */}
-                      <div className="relative aspect-[1/2] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+                    <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+                      <div className="flex aspect-square items-center justify-center bg-slate-50">
                         {product.image ? (
                           <Image
                             src={product.image}
                             alt={product.name}
                             width={300}
-                            height={600}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                            height={300}
+                            className="h-full w-full object-contain p-4"
                           />
                         ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                            <div className="text-center">
-                              <svg className="w-16 h-16 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                              <span className="text-gray-400 text-sm">Görsel Yok</span>
-                            </div>
-                          </div>
+                          <Image
+                            src="/black-logo.svg"
+                            alt="Paşa Home Logo"
+                            width={80}
+                            height={80}
+                            className="h-16 w-16 opacity-80"
+                          />
                         )}
-                        
-                        {/* Hover Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       </div>
-
-                      {/* Ürün Bilgileri */}
-                      <div className="p-6">
-                        <h4 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-slate-800 transition-colors duration-300">
+                      <div className="border-t border-slate-100 p-4">
+                        <h4 className="line-clamp-2 text-sm font-medium text-slate-900">
                           {product.name}
                         </h4>
-                        
                         {product.description && (
-                          <p className="text-gray-600 text-sm line-clamp-3 leading-relaxed">
+                          <p className="mt-1.5 line-clamp-3 text-sm leading-relaxed text-slate-500">
                             {product.description}
                           </p>
                         )}
@@ -182,63 +171,45 @@ export default function CollectionSlider() {
               </Swiper>
 
               {/* Navigation Buttons - Temiz */}
-              <div className="swiper-button-prev !text-gray-400 !w-12 !h-12 !mt-[-24px] !bg-transparent hover:!text-slate-800 transition-all duration-300"></div>
-              <div className="swiper-button-next !text-gray-400 !w-12 !h-12 !mt-[-24px] !bg-transparent hover:!text-slate-800 transition-all duration-300"></div>
-
-              {/* Pagination - Daha Şık */}
-              <div className="swiper-pagination !bottom-[-50px]"></div>
+              <div className="mt-4 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  className={`public-products-prev-${index} inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:text-[#00365a]`}
+                  aria-label="Önceki ürünler"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  className={`public-products-next-${index} inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:text-[#00365a]`}
+                  aria-label="Sonraki ürünler"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+              <div className={`public-products-pagination-${index} mt-3 flex justify-center gap-1.5`} />
             </div>
           </div>
         ))}
       </div>
 
       <style jsx global>{`
-        .product-swiper .swiper-button-prev:after,
-        .product-swiper .swiper-button-next:after {
-          font-size: 20px;
-          font-weight: bold;
-        }
-        
-        .product-swiper .swiper-button-prev,
-        .product-swiper .swiper-button-next {
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .product-swiper .swiper-button-prev:hover,
-        .product-swiper .swiper-button-next:hover {
-          transform: scale(1.1);
-        }
-        
         .product-swiper .swiper-pagination-bullet {
-          background: #d1d5db;
-          opacity: 0.6;
-          width: 12px;
-          height: 12px;
-          transition: all 0.3s ease;
+          width: 7px;
+          height: 7px;
+          background: #94a3b8;
+          opacity: 0.55;
+          border-radius: 9999px;
+          margin: 0 3px !important;
         }
-        
         .product-swiper .swiper-pagination-bullet-active {
-          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+          width: 18px;
           opacity: 1;
-          transform: scale(1.2);
-        }
-        
-        .product-swiper .swiper-pagination-bullet:hover {
-          background: #3b82f6;
-          opacity: 0.8;
-        }
-        
-        /* Smooth scrollbar for webkit browsers */
-        .product-swiper::-webkit-scrollbar {
-          display: none;
-        }
-        
-        /* Custom gradient text for collection titles */
-        .collection-title {
-          background: linear-gradient(135deg, #1f2937, #374151);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
+          background: #00365a;
         }
       `}</style>
     </section>

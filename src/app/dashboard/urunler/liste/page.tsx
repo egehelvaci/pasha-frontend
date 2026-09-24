@@ -457,7 +457,18 @@ export default function ProductList() {
     
     // Custom dropdown state'leri
     const [collectionDropdownOpen, setCollectionDropdownOpen] = useState(false);
+    const [collectionSearch, setCollectionSearch] = useState('');
     const [ruleDropdownOpen, setRuleDropdownOpen] = useState(false);
+    const [ruleSearch, setRuleSearch] = useState('');
+    const filteredCollections = collections.filter((col) =>
+      col.name.toLocaleLowerCase('tr').includes(collectionSearch.trim().toLocaleLowerCase('tr'))
+    );
+    const ruleQuery = ruleSearch.trim().toLocaleLowerCase('tr');
+    const filteredRules = [...productRules]
+      .sort((a, b) => a.id - b.id)
+      .filter((rule) =>
+        `${rule.id} ${rule.name}`.toLocaleLowerCase('tr').includes(ruleQuery)
+      );
     
     // Modal açıkken body scroll'unu engelle
     useEffect(() => {
@@ -655,7 +666,10 @@ export default function ProductList() {
                   <div className="relative">
                     <button
                       type="button"
-                      onClick={() => setCollectionDropdownOpen(!collectionDropdownOpen)}
+                      onClick={() => {
+                        setCollectionDropdownOpen(!collectionDropdownOpen);
+                        setCollectionSearch('');
+                      }}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors text-left bg-white"
                     >
                       <span className={form.collectionId ? "text-gray-900" : "text-gray-500"}>
@@ -675,32 +689,55 @@ export default function ProductList() {
                     </button>
                     
                     {collectionDropdownOpen && (
-                      <div className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200/80 bg-white py-1 shadow-[0_8px_30px_rgb(0,0,0,0.06)] scrollbar-hide">
-                        <div
-                          className={`cursor-pointer px-3.5 py-2.5 text-sm transition-colors duration-150 ease-out hover:bg-slate-50 ${
-                            !form.collectionId ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                          }`}
-                          onClick={() => {
-                            setForm({ ...form, collectionId: "" });
-                            setCollectionDropdownOpen(false);
-                          }}
-                        >
-                          Koleksiyon Seçin
-                        </div>
-                  {collections.map(col => (
-                          <div
-                            key={col.collectionId}
-                            className={`cursor-pointer px-3.5 py-2.5 text-sm transition-colors duration-150 ease-out hover:bg-slate-50 ${
-                              form.collectionId === col.collectionId ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                            }`}
-                            onClick={() => {
-                              setForm({ ...form, collectionId: col.collectionId });
-                              setCollectionDropdownOpen(false);
+                      <div className="absolute z-50 mt-1.5 w-full overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
+                        <div className="border-b border-slate-200/80 p-2">
+                          <input
+                            type="text"
+                            value={collectionSearch}
+                            onChange={(e) => setCollectionSearch(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') e.preventDefault();
                             }}
-                          >
-                        {col.name}
-                          </div>
-                  ))}
+                            placeholder="Koleksiyon ara"
+                            className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25"
+                            autoFocus
+                          />
+                        </div>
+                        <div className="max-h-60 overflow-y-auto py-1 scrollbar-hide">
+                          {!collectionSearch.trim() && (
+                            <div
+                              className={`cursor-pointer px-3.5 py-2.5 text-sm transition-colors duration-150 ease-out hover:bg-slate-50 ${
+                                !form.collectionId ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                              }`}
+                              onClick={() => {
+                                setForm({ ...form, collectionId: "" });
+                                setCollectionSearch('');
+                                setCollectionDropdownOpen(false);
+                              }}
+                            >
+                              Koleksiyon Seçin
+                            </div>
+                          )}
+                          {filteredCollections.map(col => (
+                            <div
+                              key={col.collectionId}
+                              className={`cursor-pointer px-3.5 py-2.5 text-sm transition-colors duration-150 ease-out hover:bg-slate-50 ${
+                                form.collectionId === col.collectionId ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                              }`}
+                              onClick={() => {
+                                setForm({ ...form, collectionId: col.collectionId });
+                                setCollectionSearch('');
+                                setCollectionDropdownOpen(false);
+                              }}
+                            >
+                              {col.name}
+                            </div>
+                          ))}
+                          {filteredCollections.length === 0 && (
+                            <p className="px-3.5 py-2.5 text-sm text-slate-500">Koleksiyon bulunamadı</p>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -713,7 +750,10 @@ export default function ProductList() {
                   <div className="relative">
                     <button
                       type="button"
-                      onClick={() => setRuleDropdownOpen(!ruleDropdownOpen)}
+                      onClick={() => {
+                        setRuleDropdownOpen(!ruleDropdownOpen);
+                        setRuleSearch('');
+                      }}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors text-left bg-white"
                     >
                       <span className={form.rule_id ? "text-gray-900" : "text-gray-500"}>
@@ -735,21 +775,37 @@ export default function ProductList() {
                     </button>
                     
                     {ruleDropdownOpen && (
-                      <div className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200/80 bg-white py-1 shadow-[0_8px_30px_rgb(0,0,0,0.06)] scrollbar-hide">
-                        <div
-                          className={`cursor-pointer px-3.5 py-2.5 text-sm transition-colors duration-150 ease-out hover:bg-slate-50 ${
-                            !form.rule_id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
-                          }`}
-                          onClick={() => {
-                            setForm({ ...form, rule_id: "" });
-                            setRuleDropdownOpen(false);
-                          }}
-                        >
-                          Kural Seçin
+                      <div className="absolute z-50 mt-1.5 w-full overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
+                        <div className="border-b border-slate-200/80 p-2">
+                          <input
+                            type="text"
+                            value={ruleSearch}
+                            onChange={(e) => setRuleSearch(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') e.preventDefault();
+                            }}
+                            placeholder="Kural ara"
+                            className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25"
+                            autoFocus
+                          />
                         </div>
-                        {productRules
-                          .sort((a, b) => a.id - b.id) // ID'ye göre sırala
-                          .map(rule => (
+                        <div className="max-h-60 overflow-y-auto py-1 scrollbar-hide">
+                          {!ruleSearch.trim() && (
+                            <div
+                              className={`cursor-pointer px-3.5 py-2.5 text-sm transition-colors duration-150 ease-out hover:bg-slate-50 ${
+                                !form.rule_id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                              }`}
+                              onClick={() => {
+                                setForm({ ...form, rule_id: "" });
+                                setRuleSearch('');
+                                setRuleDropdownOpen(false);
+                              }}
+                            >
+                              Kural Seçin
+                            </div>
+                          )}
+                          {filteredRules.map(rule => (
                             <div
                               key={rule.id}
                               className={`cursor-pointer px-3.5 py-2.5 text-sm transition-colors duration-150 ease-out hover:bg-slate-50 ${
@@ -757,12 +813,17 @@ export default function ProductList() {
                               }`}
                               onClick={() => {
                                 setForm({ ...form, rule_id: rule.id.toString() });
+                                setRuleSearch('');
                                 setRuleDropdownOpen(false);
                               }}
                             >
-                        {rule.id} - {rule.name}
+                              {rule.id} - {rule.name}
                             </div>
-                    ))}
+                          ))}
+                          {filteredRules.length === 0 && (
+                            <p className="px-3.5 py-2.5 text-sm text-slate-500">Kural bulunamadı</p>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>

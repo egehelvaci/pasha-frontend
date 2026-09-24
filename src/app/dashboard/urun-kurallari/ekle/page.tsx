@@ -64,8 +64,8 @@ export default function AddProductRulePage() {
       errors.description = 'Açıklama zorunludur';
     }
 
-    // Boyut seçenekleri kontrolü
-    const validSizeOptions = sizeOptions.filter(option => option.width > 0 && option.height > 0);
+    // Boyut seçenekleri kontrolü. İsteğe bağlı boyda yükseklik boş kalabilir.
+    const validSizeOptions = sizeOptions.filter(option => option.width > 0 && (option.isOptionalHeight || option.height > 0));
     if (validSizeOptions.length === 0) {
       errors.sizeOptions = 'En az bir geçerli boyut seçeneği eklemelisiniz';
     }
@@ -77,11 +77,11 @@ export default function AddProductRulePage() {
 
     // Boyut seçenekleri validasyonu
     sizeOptions.forEach((option, index) => {
-      if (option.width > 0 || option.height > 0) {
+      if (option.isOptionalHeight || option.width > 0 || option.height > 0) {
         if (option.width <= 0) {
           errors[`sizeOption_width_${index}`] = 'Genişlik 0\'dan büyük olmalı';
         }
-        if (option.height <= 0) {
+        if (!option.isOptionalHeight && option.height <= 0) {
           errors[`sizeOption_height_${index}`] = 'Boy 0\'dan büyük olmalı';
         }
       }
@@ -102,7 +102,7 @@ export default function AddProductRulePage() {
       setLoading(true);
       setError('');
 
-      const validSizeOptions = sizeOptions.filter(option => option.width > 0 && option.height > 0);
+      const validSizeOptions = sizeOptions.filter(option => option.width > 0 && (option.isOptionalHeight || option.height > 0));
 
       const createData: CreateProductRuleData = {
         name: formData.name.trim(),
@@ -331,7 +331,7 @@ export default function AddProductRulePage() {
 
                     <div>
                       <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
-                        Boy (cm) <span className="text-rose-500">*</span>
+                        Boy (cm) {!option.isOptionalHeight && <span className="text-rose-500">*</span>}
                       </label>
                       <input
                         type="number"

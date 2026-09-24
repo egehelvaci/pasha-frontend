@@ -82,8 +82,12 @@ export default function ProductRuleDetailPage() {
 
   // Add size option
   const handleAddSizeOption = async () => {
-    if (newSizeOption.width <= 0 || newSizeOption.height <= 0) {
-      setAddSizeError('Genişlik ve boy 0\'dan büyük olmalı');
+    if (newSizeOption.width <= 0) {
+      setAddSizeError('Genişlik 0\'dan büyük olmalı');
+      return;
+    }
+    if (!newSizeOption.isOptionalHeight && (newSizeOption.height == null || newSizeOption.height <= 0)) {
+      setAddSizeError('Boy 0\'dan büyük olmalı');
       return;
     }
 
@@ -105,8 +109,12 @@ export default function ProductRuleDetailPage() {
   const handleEditSizeOption = async () => {
     if (!editingSizeOption) return;
     
-    if (editingSizeOption.data.width <= 0 || editingSizeOption.data.height <= 0) {
-      setEditSizeError('Genişlik ve boy 0\'dan büyük olmalı');
+    if (editingSizeOption.data.width <= 0) {
+      setEditSizeError('Genişlik 0\'dan büyük olmalı');
+      return;
+    }
+    if (!editingSizeOption.data.isOptionalHeight && (editingSizeOption.data.height == null || editingSizeOption.data.height <= 0)) {
+      setEditSizeError('Boy 0\'dan büyük olmalı');
       return;
     }
 
@@ -369,7 +377,7 @@ export default function ProductRuleDetailPage() {
                       {rule.sizeOptions.map((option) => (
                         <tr key={option.id} className="transition-colors hover:bg-slate-50/70">
                           <td className="px-4 py-3 text-sm font-medium text-slate-900">
-                            {option.width}cm × {option.height}cm
+                            {option.width}cm × {option.isOptionalHeight && (option.height == null || option.height <= 0) ? 'İsteğe bağlı' : `${option.height}cm`}
                           </td>
                           <td className="px-4 py-3 text-sm text-slate-700">
                             {option.isOptionalHeight ? (
@@ -509,15 +517,15 @@ export default function ProductRuleDetailPage() {
                   </div>
                   <div>
                     <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
-                      Boy (cm) <span className="text-rose-500">*</span>
+                      Boy (cm) {!newSizeOption.isOptionalHeight && <span className="text-rose-500">*</span>}
                     </label>
                     <input
                       type="number"
-                      min="1"
+                      min={newSizeOption.isOptionalHeight ? undefined : 1}
                       value={newSizeOption.height || ''}
-                      onChange={(e) => setNewSizeOption({...newSizeOption, height: parseInt(e.target.value) || 0})}
+                      onChange={(e) => setNewSizeOption({...newSizeOption, height: e.target.value === '' ? 0 : parseInt(e.target.value) || 0})}
                       className={inputBaseClass}
-                      placeholder="150"
+                      placeholder={newSizeOption.isOptionalHeight ? 'Boş bırakılabilir' : '150'}
                     />
                   </div>
                   <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 bg-slate-50/60 p-3">
@@ -599,17 +607,18 @@ export default function ProductRuleDetailPage() {
                   </div>
                   <div>
                     <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
-                      Boy (cm) <span className="text-rose-500">*</span>
+                      Boy (cm) {!editingSizeOption.data.isOptionalHeight && <span className="text-rose-500">*</span>}
                     </label>
                     <input
                       type="number"
-                      min="1"
+                      min={editingSizeOption.data.isOptionalHeight ? undefined : 1}
                       value={editingSizeOption.data.height || ''}
                       onChange={(e) => setEditingSizeOption({
                         ...editingSizeOption,
-                        data: {...editingSizeOption.data, height: parseInt(e.target.value) || 0}
+                        data: {...editingSizeOption.data, height: e.target.value === '' ? 0 : parseInt(e.target.value) || 0}
                       })}
                       className={inputBaseClass}
+                      placeholder={editingSizeOption.data.isOptionalHeight ? 'Boş bırakılabilir' : '150'}
                     />
                   </div>
                   <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 bg-slate-50/60 p-3">

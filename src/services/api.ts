@@ -1621,7 +1621,7 @@ export interface CreateProductRuleData {
   canHaveFringe: boolean;
   sizeOptions: Array<{
     width: number;
-    height: number;
+    height: number | null;
     isOptionalHeight: boolean;
   }>;
   cutTypeIds: number[];
@@ -1636,7 +1636,7 @@ export interface UpdateProductRuleData {
 
 export interface CreateSizeOptionData {
   width: number;
-  height: number;
+  height: number | null;
   isOptionalHeight: boolean;
 }
 
@@ -1708,10 +1708,13 @@ export const createProductRule = async (data: CreateProductRuleData): Promise<Pr
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify({
+        ...data,
+        sizeOptions: data.sizeOptions.map(toSizeOptionPayload)
+      })
     });
 
-    if (!response.ok) throw new Error('Ürün kuralı oluşturulamadı');
+    if (!response.ok) throw new Error(await readApiError(response, 'Ürün kuralı oluşturulamadı'));
 
     const result = await response.json();
     return result.data;
@@ -1768,6 +1771,24 @@ export const deleteProductRule = async (ruleId: number): Promise<void> => {
   }
 };
 
+const toSizeOptionPayload = (data: { width: number; height: number | null; isOptionalHeight: boolean }) => ({
+  width: data.width,
+  isOptionalHeight: data.isOptionalHeight,
+  ...(data.isOptionalHeight && (data.height == null || data.height <= 0) ? {} : { height: data.height })
+});
+
+const readApiError = async (response: Response, fallback: string) => {
+  try {
+    const result = await response.json();
+    const message = result?.message;
+    if (Array.isArray(message)) return message.join(', ');
+    if (typeof message === 'string' && message.trim()) return message;
+  } catch {
+    // Yanıt gövdesi JSON değilse genel mesaj kullanılır.
+  }
+  return fallback;
+};
+
 // Boyut Seçenekleri API Fonksiyonları
 export const addSizeOption = async (ruleId: number, data: CreateSizeOptionData): Promise<SizeOption> => {
   try {
@@ -1780,10 +1801,10 @@ export const addSizeOption = async (ruleId: number, data: CreateSizeOptionData):
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify(toSizeOptionPayload(data))
     });
 
-    if (!response.ok) throw new Error('Boyut seçeneği eklenemedi');
+    if (!response.ok) throw new Error(await readApiError(response, 'Boyut seçeneği eklenemedi'));
 
     const result = await response.json();
     return result.data;
@@ -1804,10 +1825,10 @@ export const updateSizeOption = async (ruleId: number, sizeId: number, data: Cre
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify(toSizeOptionPayload(data))
     });
 
-    if (!response.ok) throw new Error('Boyut seçeneği güncellenemedi');
+    if (!response.ok) throw new Error(await readApiError(response, 'Boyut seçeneği güncellenemedi'));
 
     const result = await response.json();
     return result.data;
