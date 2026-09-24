@@ -1615,7 +1615,7 @@ export interface CreateProductRuleData {
   canHaveFringe: boolean;
   sizeOptions: Array<{
     width: number;
-    height: number;
+    height?: number;
     isOptionalHeight: boolean;
   }>;
   cutTypeIds: number[];
@@ -1630,7 +1630,7 @@ export interface UpdateProductRuleData {
 
 export interface CreateSizeOptionData {
   width: number;
-  height: number;
+  height?: number;
   isOptionalHeight: boolean;
 }
 

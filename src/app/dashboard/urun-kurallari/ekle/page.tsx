@@ -65,7 +65,7 @@ export default function AddProductRulePage() {
     }
 
     // Boyut seçenekleri kontrolü
-    const validSizeOptions = sizeOptions.filter(option => option.width > 0 && option.height > 0);
+    const validSizeOptions = sizeOptions.filter(option => option.width > 0 && (option.isOptionalHeight || option.height > 0));
     if (validSizeOptions.length === 0) {
       errors.sizeOptions = 'En az bir geçerli boyut seçeneği eklemelisiniz';
     }
@@ -81,7 +81,7 @@ export default function AddProductRulePage() {
         if (option.width <= 0) {
           errors[`sizeOption_width_${index}`] = 'Genişlik 0\'dan büyük olmalı';
         }
-        if (option.height <= 0) {
+        if (!option.isOptionalHeight && option.height <= 0) {
           errors[`sizeOption_height_${index}`] = 'Boy 0\'dan büyük olmalı';
         }
       }
@@ -102,13 +102,15 @@ export default function AddProductRulePage() {
       setLoading(true);
       setError('');
 
-      const validSizeOptions = sizeOptions.filter(option => option.width > 0 && option.height > 0);
+      const validSizeOptions = sizeOptions.filter(option => option.width > 0 && (option.isOptionalHeight || option.height > 0));
 
       const createData: CreateProductRuleData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
         canHaveFringe: formData.canHaveFringe,
-        sizeOptions: validSizeOptions,
+        sizeOptions: validSizeOptions.map(option => option.isOptionalHeight
+          ? { width: option.width, isOptionalHeight: true }
+          : option),
         cutTypeIds: selectedCutTypeIds
       };
 
@@ -329,7 +331,7 @@ export default function AddProductRulePage() {
                       )}
                     </div>
 
-                    <div>
+                    {!option.isOptionalHeight && <div>
                       <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                         Boy (cm) <span className="text-rose-500">*</span>
                       </label>
@@ -344,7 +346,7 @@ export default function AddProductRulePage() {
                       {formErrors[`sizeOption_height_${index}`] && (
                         <p className="mt-1.5 text-xs text-rose-600">{formErrors[`sizeOption_height_${index}`]}</p>
                       )}
-                    </div>
+                    </div>}
 
                     <div className="sm:col-span-2">
                       <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 bg-slate-50/60 p-3">
@@ -356,6 +358,7 @@ export default function AddProductRulePage() {
                         />
                         <div>
                           <span className="text-sm font-medium text-slate-900">Boy İsteğe Bağlı</span>
+                          <p className="text-xs text-slate-500">Boy sipariş sırasında girilir; bu kuralda boy veya üst sınır tanımlanmaz.</p>
                         </div>
                       </label>
                     </div>
@@ -432,4 +435,4 @@ export default function AddProductRulePage() {
       </div>
     </div>
   );
-} 
+}

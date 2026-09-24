@@ -82,7 +82,7 @@ export default function ProductRuleDetailPage() {
 
   // Add size option
   const handleAddSizeOption = async () => {
-    if (newSizeOption.width <= 0 || newSizeOption.height <= 0) {
+    if (newSizeOption.width <= 0 || (!newSizeOption.isOptionalHeight && (newSizeOption.height ?? 0) <= 0)) {
       setAddSizeError('Genişlik ve boy 0\'dan büyük olmalı');
       return;
     }
@@ -90,7 +90,9 @@ export default function ProductRuleDetailPage() {
     try {
       setAddSizeLoading(true);
       setAddSizeError('');
-      await addSizeOption(ruleId, newSizeOption);
+      await addSizeOption(ruleId, newSizeOption.isOptionalHeight
+        ? { width: newSizeOption.width, isOptionalHeight: true }
+        : newSizeOption);
       await fetchData();
       setAddSizeModalOpen(false);
       setNewSizeOption({ width: 0, height: 0, isOptionalHeight: false });
@@ -105,7 +107,7 @@ export default function ProductRuleDetailPage() {
   const handleEditSizeOption = async () => {
     if (!editingSizeOption) return;
     
-    if (editingSizeOption.data.width <= 0 || editingSizeOption.data.height <= 0) {
+    if (editingSizeOption.data.width <= 0 || (!editingSizeOption.data.isOptionalHeight && (editingSizeOption.data.height ?? 0) <= 0)) {
       setEditSizeError('Genişlik ve boy 0\'dan büyük olmalı');
       return;
     }
@@ -113,7 +115,9 @@ export default function ProductRuleDetailPage() {
     try {
       setEditSizeLoading(true);
       setEditSizeError('');
-      await updateSizeOption(ruleId, editingSizeOption.id, editingSizeOption.data);
+      await updateSizeOption(ruleId, editingSizeOption.id, editingSizeOption.data.isOptionalHeight
+        ? { width: editingSizeOption.data.width, isOptionalHeight: true }
+        : editingSizeOption.data);
       await fetchData();
       setEditSizeModalOpen(false);
       setEditingSizeOption(null);
@@ -507,7 +511,7 @@ export default function ProductRuleDetailPage() {
                       placeholder="100"
                     />
                   </div>
-                  <div>
+                  {!newSizeOption.isOptionalHeight && <div>
                     <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                       Boy (cm) <span className="text-rose-500">*</span>
                     </label>
@@ -519,7 +523,7 @@ export default function ProductRuleDetailPage() {
                       className={inputBaseClass}
                       placeholder="150"
                     />
-                  </div>
+                  </div>}
                   <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 bg-slate-50/60 p-3">
                     <input
                       type="checkbox"
@@ -597,7 +601,7 @@ export default function ProductRuleDetailPage() {
                       className={inputBaseClass}
                     />
                   </div>
-                  <div>
+                  {!editingSizeOption.data.isOptionalHeight && <div>
                     <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                       Boy (cm) <span className="text-rose-500">*</span>
                     </label>
@@ -611,7 +615,7 @@ export default function ProductRuleDetailPage() {
                       })}
                       className={inputBaseClass}
                     />
-                  </div>
+                  </div>}
                   <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 bg-slate-50/60 p-3">
                     <input
                       type="checkbox"
@@ -741,4 +745,4 @@ export default function ProductRuleDetailPage() {
       </div>
     </div>
   );
-} 
+}
