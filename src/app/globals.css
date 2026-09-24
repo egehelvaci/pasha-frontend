@@ -145,6 +145,17 @@ input, textarea, select {
   background: none;
 }
 
+/* Checkbox ve radio yukaridaki background/border sifirlamasindan muaf tutulur.
+   Aksi halde tarayici isaretli durumu cizemez ve kutu hep bos gorunur. */
+input[type="checkbox"],
+input[type="radio"] {
+  -webkit-appearance: auto;
+  appearance: auto;
+  background: initial;
+  accent-color: #00365a;
+  cursor: pointer;
+}
+
 /* Number input spinner'larını gizle */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {

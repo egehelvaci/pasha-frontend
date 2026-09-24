@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
+import { useSiteSettings } from '../context/SiteSettingsContext';
 import { useCart } from '../context/CartContext';
 import { useToken } from '../hooks/useToken';
 import { FaUser, FaSignOutAlt, FaCog, FaShoppingCart, FaLock } from 'react-icons/fa';
@@ -47,6 +48,7 @@ const Header = ({ title, user, className }: HeaderProps) => {
   const pathname = usePathname();
   const router = useRouter();
   const { logout, isAdmin, isEditor, isAdminOrEditor, user: authUser } = useAuth(); // AuthContext'teki user'ı al
+  const { hideBalance, isLoaded: siteSettingsLoaded } = useSiteSettings();
   const { cartItems } = useCart(); // CartContext'ten sepet verilerini al
   const token = useToken(); // Token hook'unu kullan
   const [isMounted, setIsMounted] = useState(false);
@@ -293,6 +295,14 @@ const Header = ({ title, user, className }: HeaderProps) => {
   };
 
   const financialInfo = getFinancialInfo();
+
+  // Header bakiye alani: site ayari gizlemediyse ve kullanicinin magazasi ile
+  // fiyat gorme yetkisi varsa gosterilir. Ayarlar yuklenene kadar render edilmez.
+  const showHeaderBalance =
+    siteSettingsLoaded && !hideBalance && Boolean(authUser?.store) && Boolean(authUser?.canSeePrice);
+  const headerBalanceText = `${financialInfo.bakiye.toLocaleString('tr-TR', {
+    minimumFractionDigits: 2,
+  })} ${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}`;
   
   const navigation: NavigationItem[] = [
     {
@@ -487,6 +497,18 @@ const Header = ({ title, user, className }: HeaderProps) => {
       adminOnly: true,
     },
     {
+      name: 'Site Yönetimi',
+      href: '/dashboard/site-yonetimi',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+          <path fillRule="evenodd" d="M2.25 5.25A3 3 0 015.25 2.25h13.5a3 3 0 013 3v10.5a3 3 0 01-3 3H5.25a3 3 0 01-3-3V5.25zm3-1.5a1.5 1.5 0 00-1.5 1.5v1.5h16.5v-1.5a1.5 1.5 0 00-1.5-1.5H5.25zm15 4.5H3.75v7.5a1.5 1.5 0 001.5 1.5h13.5a1.5 1.5 0 001.5-1.5v-7.5z" clipRule="evenodd" />
+          <path d="M8.25 21a.75.75 0 000 1.5h7.5a.75.75 0 000-1.5h-7.5z" />
+        </svg>
+      ),
+      adminOnly: true,
+      hideFromEditor: true,
+    },
+    {
       name: 'Sepetim',
       href: '/dashboard/sepetim',
       icon: (
@@ -587,6 +609,28 @@ const Header = ({ title, user, className }: HeaderProps) => {
 
           {/* Desktop: Sağ taraf kontrolleri */}
           <div className="hidden items-center gap-1 lg:flex">
+            {/* Bakiye */}
+            {showHeaderBalance && (
+              <button
+                type="button"
+                onClick={refreshBalance}
+                disabled={isLoadingBalance}
+                title="Bakiye bilgilerini yenile"
+                className="mr-2 flex items-center gap-2.5 rounded-lg border border-slate-200/80 bg-white px-3 py-2 transition-all duration-200 ease-out hover:border-slate-300 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-[#00365a]/15 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                  Bakiye
+                </span>
+                <span
+                  className={`text-sm font-semibold tabular-nums ${
+                    financialInfo.bakiye < 0 ? 'text-rose-600' : 'text-slate-900'
+                  }`}
+                >
+                  {isLoadingBalance ? '...' : headerBalanceText}
+                </span>
+              </button>
+            )}
+
             {/* Bildirim Dropdown */}
             {authUser?.userId && (
               <div className="group relative flex min-w-[64px] flex-col items-center">
@@ -673,6 +717,27 @@ const Header = ({ title, user, className }: HeaderProps) => {
 
           {/* Mobil: Sağ taraf kontrolleri */}
           <div className="flex items-center gap-0.5 lg:hidden">
+            {showHeaderBalance && (
+              <button
+                type="button"
+                onClick={refreshBalance}
+                disabled={isLoadingBalance}
+                title="Bakiye bilgilerini yenile"
+                className="mr-1 rounded-lg border border-slate-200/80 bg-white px-2 py-1.5 transition-all duration-200 ease-out hover:bg-slate-50 active:scale-[0.98] disabled:opacity-60"
+              >
+                <span className="block text-[9px] font-medium uppercase tracking-wide text-slate-500">
+                  Bakiye
+                </span>
+                <span
+                  className={`block text-xs font-semibold tabular-nums ${
+                    financialInfo.bakiye < 0 ? 'text-rose-600' : 'text-slate-900'
+                  }`}
+                >
+                  {isLoadingBalance ? '...' : headerBalanceText}
+                </span>
+              </button>
+            )}
+
             {authUser?.userId && (
               <div className="group relative flex min-w-[52px] flex-col items-center">
                 <div className="rounded-lg p-2 transition-all duration-200 ease-out hover:bg-slate-50 active:scale-[0.97]">

@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useSiteSettings } from '../context/SiteSettingsContext';
+import { SiteBanner } from '../../services/api';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -44,20 +46,43 @@ const CURRENCY_SYMBOLS = {
   'EUR': '€'
 };
 
-const BANNER_SLIDES = [
-  {
-    id: 1,
-    image: 'https://placehold.co/1600x520/e8eef2/64748b?text=Banner+1',
-  },
-  {
-    id: 2,
-    image: 'https://placehold.co/1600x520/dbe4ea/64748b?text=Banner+2',
-  },
-  {
-    id: 3,
-    image: 'https://placehold.co/1600x520/cfd9e3/64748b?text=Banner+3',
-  },
-];
+function BannerImage({ banner }: { banner: SiteBanner }) {
+  return (
+    <div className="relative aspect-[16/7] w-full sm:aspect-[21/8]">
+      <picture>
+        {banner.mobileImageUrl && (
+          <source media="(max-width: 639px)" srcSet={banner.mobileImageUrl} />
+        )}
+        <img
+          src={banner.imageUrl}
+          alt={banner.altText || banner.title}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      </picture>
+    </div>
+  );
+}
+
+function BannerSlide({ banner }: { banner: SiteBanner }) {
+  const image = <BannerImage banner={banner} />;
+
+  if (!banner.linkUrl) return image;
+
+  // Site ici yollar Next yonlendirmesiyle, dis baglantilar yeni sekmede acilir.
+  if (banner.linkUrl.startsWith('/')) {
+    return (
+      <Link href={banner.linkUrl} className="block">
+        {image}
+      </Link>
+    );
+  }
+
+  return (
+    <a href={banner.linkUrl} target="_blank" rel="noopener noreferrer" className="block">
+      {image}
+    </a>
+  );
+}
 
 function buildDisplayProducts(products: Product[]): Product[] {
   const real = products.slice(0, 10);
@@ -88,6 +113,7 @@ function buildDisplayProducts(products: Product[]): Product[] {
 
 export default function Dashboard() {
   const { user, isLoading, token } = useAuth();
+  const { banners } = useSiteSettings();
   const router = useRouter();
 
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
@@ -169,63 +195,64 @@ export default function Dashboard() {
   const currencySymbol =
     CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency;
   const displayProducts = buildDisplayProducts(recentProducts);
+  const hasMultipleBanners = banners.length > 1;
 
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
-        {/* Banner Slider */}
-        <section className="relative mb-8 sm:mb-10">
-          <div className="home-banner-swiper overflow-hidden rounded-xl border border-slate-200/80 bg-slate-100 shadow-sm">
-            <Swiper
-              modules={[Navigation, Pagination, Autoplay]}
-              slidesPerView={1}
-              loop
-              autoplay={{ delay: 5000, disableOnInteraction: false }}
-              navigation={{
-                nextEl: '.home-banner-next',
-                prevEl: '.home-banner-prev',
-              }}
-              pagination={{
-                el: '.home-banner-pagination',
-                clickable: true,
-              }}
-              className="w-full"
-            >
-              {BANNER_SLIDES.map((slide) => (
-                <SwiperSlide key={slide.id}>
-                  <div className="relative aspect-[16/7] w-full sm:aspect-[21/8]">
-                    <img
-                      src={slide.image}
-                      alt=""
-                      className="absolute inset-0 h-full w-full object-cover"
-                    />
-                  </div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
+        {/* Banner Slider - icerik site yonetimindeki aktif bannerlardan gelir */}
+        {banners.length > 0 && (
+          <section className="relative mb-8 sm:mb-10">
+            <div className="home-banner-swiper overflow-hidden rounded-xl border border-slate-200/80 bg-slate-100 shadow-sm">
+              <Swiper
+                modules={[Navigation, Pagination, Autoplay]}
+                slidesPerView={1}
+                loop={hasMultipleBanners}
+                autoplay={hasMultipleBanners ? { delay: 5000, disableOnInteraction: false } : false}
+                navigation={{
+                  nextEl: '.home-banner-next',
+                  prevEl: '.home-banner-prev',
+                }}
+                pagination={{
+                  el: '.home-banner-pagination',
+                  clickable: true,
+                }}
+                className="w-full"
+              >
+                {banners.map((banner) => (
+                  <SwiperSlide key={banner.id}>
+                    <BannerSlide banner={banner} />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
 
-            <button
-              type="button"
-              className="home-banner-prev absolute left-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-600 shadow-sm transition hover:bg-white hover:text-[#00365a] sm:left-4 sm:h-10 sm:w-10"
-              aria-label="Önceki banner"
-            >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              className="home-banner-next absolute right-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-600 shadow-sm transition hover:bg-white hover:text-[#00365a] sm:right-4 sm:h-10 sm:w-10"
-              aria-label="Sonraki banner"
-            >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
+              {hasMultipleBanners && (
+                <>
+                  <button
+                    type="button"
+                    className="home-banner-prev absolute left-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-600 shadow-sm transition hover:bg-white hover:text-[#00365a] sm:left-4 sm:h-10 sm:w-10"
+                    aria-label="Önceki banner"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    className="home-banner-next absolute right-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-600 shadow-sm transition hover:bg-white hover:text-[#00365a] sm:right-4 sm:h-10 sm:w-10"
+                    aria-label="Sonraki banner"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
 
-            <div className="home-banner-pagination absolute bottom-3 left-0 right-0 z-10 flex justify-center gap-1.5" />
-          </div>
-        </section>
+                  <div className="home-banner-pagination absolute bottom-3 left-0 right-0 z-10 flex justify-center gap-1.5" />
+                </>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* Çok Satanlar */}
         <section className="mb-8">

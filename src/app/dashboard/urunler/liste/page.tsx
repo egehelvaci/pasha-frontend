@@ -6,6 +6,7 @@ import Image from "next/image";
 import { FaTrash } from "react-icons/fa";
 import { useAuth } from '@/app/context/AuthContext';
 import { useCart } from '@/app/context/CartContext';
+import { useSiteSettings } from '@/app/context/SiteSettingsContext';
 import { getProductRules, ProductRule } from '@/services/api';
 import { useToken } from '@/app/hooks/useToken';
 
@@ -135,6 +136,7 @@ export default function ProductList() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
+  const { hideStock, isLoaded: siteSettingsLoaded } = useSiteSettings();
   const { refreshCart } = useCart();
   
   // URL'den parametreleri al
@@ -1204,8 +1206,8 @@ export default function ProductList() {
                       className="w-full h-full object-contain p-4" 
                     />
                   </div>
-                  {/* Stok Durumu */}
-                    {product.sizeOptions && product.sizeOptions.length > 0 && (
+                  {/* Stok Durumu - site ayari stogu gizliyorsa render edilmez */}
+                    {siteSettingsLoaded && !hideStock && product.sizeOptions && product.sizeOptions.length > 0 && (
                         <div className="mt-6 rounded-xl border border-slate-200/80 bg-slate-50 p-4">
                         <h3 className="mb-3 text-sm font-semibold text-slate-900">Stok Durumu</h3>
                         <div className="space-y-2">
@@ -2393,6 +2395,7 @@ export default function ProductList() {
               </div>
             </div>
             
+            {siteSettingsLoaded && !hideStock && (
             <div className="w-full md:w-auto dropdown-container">
               <label htmlFor="stock-filter" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                 Stok Durumu
@@ -2461,7 +2464,8 @@ export default function ProductList() {
                 )}
               </div>
             </div>
-            
+            )}
+
             <div className="w-full md:w-auto">
               <label htmlFor="search-input" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                 Ara
@@ -2589,7 +2593,7 @@ export default function ProductList() {
                 return (
                   <div key={product.productId} 
                        className={`group relative cursor-pointer overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:shadow-md ${
-                         isOutOfStock ? 'opacity-70' : ''
+                         siteSettingsLoaded && !hideStock && isOutOfStock ? 'opacity-70' : ''
                        }`} 
                        style={{ width: '350px', height: '550px' }}
                        onClick={() => router.push(`/dashboard/urunler/${product.productId}`)}>
@@ -2640,7 +2644,7 @@ export default function ProductList() {
                       )}
                       
                       {/* Minimal Stok Yok Badge */}
-                      {isOutOfStock && (
+                      {siteSettingsLoaded && !hideStock && isOutOfStock && (
                         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                           <div className="rounded-full bg-slate-600 px-3 py-1 text-xs font-medium text-white shadow-sm">
                             STOK YOK

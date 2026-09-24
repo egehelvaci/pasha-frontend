@@ -5012,3 +5012,214 @@ export async function getSupplierPurchaseSummary(
 
   return await response.json();
 } 
+// ==================== SİTE YÖNETİMİ API'LERİ ====================
+
+export interface SiteBanner {
+  id: string;
+  title: string;
+  imageUrl: string;
+  mobileImageUrl: string | null;
+  linkUrl: string | null;
+  altText: string;
+  sortOrder: number;
+}
+
+export interface AdminSiteBanner extends SiteBanner {
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PublicSiteSettings {
+  hideBalance: boolean;
+  hideStock: boolean;
+  banners: SiteBanner[];
+}
+
+export interface AdminSiteSettings {
+  id: number;
+  hideBalance: boolean;
+  hideStock: boolean;
+  updatedAt: string | null;
+}
+
+export interface UpdateSiteSettingsData {
+  hideBalance?: boolean;
+  hideStock?: boolean;
+}
+
+export interface CreateBannerData {
+  title: string;
+  imageUrl: string;
+  mobileImageUrl?: string | null;
+  linkUrl?: string | null;
+  altText?: string;
+  sortOrder?: number;
+  isActive?: boolean;
+}
+
+export type UpdateBannerData = Partial<CreateBannerData>;
+
+// Token gerektirmez. Ayarlar arayüz görünürlüğü içindir, veri erişim yetkisi değildir.
+export async function getSiteSettings(): Promise<PublicSiteSettings> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/site-settings`, {
+      method: 'GET',
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      throw new Error('Site ayarları alınamadı');
+    }
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Site ayarları getirme hatası:', error);
+    throw error;
+  }
+}
+
+export async function getAdminSiteSettings(): Promise<AdminSiteSettings> {
+  try {
+    const response = await apiRequest(`${API_BASE_URL}/api/admin/site-settings`, {
+      method: 'GET',
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Site ayarları alınamadı');
+    }
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Admin site ayarları getirme hatası:', error);
+    throw error;
+  }
+}
+
+export async function updateAdminSiteSettings(data: UpdateSiteSettingsData): Promise<AdminSiteSettings> {
+  try {
+    const response = await apiRequest(`${API_BASE_URL}/api/admin/site-settings`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Site ayarları güncellenemedi');
+    }
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Site ayarları güncelleme hatası:', error);
+    throw error;
+  }
+}
+
+export async function getAdminBanners(): Promise<AdminSiteBanner[]> {
+  try {
+    const response = await apiRequest(`${API_BASE_URL}/api/admin/site-settings/banners`, {
+      method: 'GET',
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Bannerlar alınamadı');
+    }
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Banner listesi getirme hatası:', error);
+    throw error;
+  }
+}
+
+// Content-Type elle verilmez; multipart boundary'yi tarayıcı ekler.
+export async function uploadBannerImage(file: File): Promise<string> {
+  try {
+    const token = getAuthToken();
+    const body = new FormData();
+    body.append('image', file);
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/site-settings/banner-image`, {
+      method: 'POST',
+      headers: {
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+      },
+      body,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Banner görseli yüklenemedi');
+    }
+
+    const result = await response.json();
+    return result.data.imageUrl;
+  } catch (error) {
+    console.error('Banner görseli yükleme hatası:', error);
+    throw error;
+  }
+}
+
+export async function createBanner(data: CreateBannerData): Promise<AdminSiteBanner> {
+  try {
+    const response = await apiRequest(`${API_BASE_URL}/api/admin/site-settings/banners`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Banner oluşturulamadı');
+    }
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Banner oluşturma hatası:', error);
+    throw error;
+  }
+}
+
+export async function updateBanner(id: string, data: UpdateBannerData): Promise<AdminSiteBanner> {
+  try {
+    const response = await apiRequest(`${API_BASE_URL}/api/admin/site-settings/banners/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Banner güncellenemedi');
+    }
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Banner güncelleme hatası:', error);
+    throw error;
+  }
+}
+
+export async function deleteBanner(id: string): Promise<void> {
+  try {
+    const response = await apiRequest(`${API_BASE_URL}/api/admin/site-settings/banners/${id}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Banner silinemedi');
+    }
+  } catch (error) {
+    console.error('Banner silme hatası:', error);
+    throw error;
+  }
+}

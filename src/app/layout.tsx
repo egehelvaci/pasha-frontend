@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import { CartProvider } from "./context/CartContext";
+import { SiteSettingsProvider } from "./context/SiteSettingsContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -72,11 +73,13 @@ export default function RootLayout({
       </head>
       <body className="antialiased font-smoothing text-rendering-optimize touch-manipulation">
         <AuthProvider>
-          <CartProvider>
-            <NotificationProvider>
-              {children}
-            </NotificationProvider>
-          </CartProvider>
+          <SiteSettingsProvider>
+            <CartProvider>
+              <NotificationProvider>
+                {children}
+              </NotificationProvider>
+            </CartProvider>
+          </SiteSettingsProvider>
         </AuthProvider>
       </body>
     </html>

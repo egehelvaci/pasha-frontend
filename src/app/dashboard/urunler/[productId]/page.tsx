@@ -6,6 +6,7 @@ import { FaTrash } from "react-icons/fa";
 import { FaArrowLeft } from "react-icons/fa";
 import { useAuth } from '@/app/context/AuthContext';
 import { useCart } from '@/app/context/CartContext';
+import { useSiteSettings } from '@/app/context/SiteSettingsContext';
 import { API_BASE_URL } from '@/services/api';
 import { useToken } from '@/app/hooks/useToken';
 import Image from 'next/image';
@@ -26,6 +27,7 @@ export default function ProductDetail() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const { isAdmin, user } = useAuth();
+  const { hideStock, isLoaded: siteSettingsLoaded } = useSiteSettings();
   
   // Sepete ekleme için state'ler
   const [addToCartLoading, setAddToCartLoading] = useState(false);
@@ -934,7 +936,7 @@ export default function ProductDetail() {
                   )}
 
                   <div className="mt-1">
-                    {selectedSize && isOutOfStock() && (
+                    {siteSettingsLoaded && !hideStock && selectedSize && isOutOfStock() && (
                       <div className="mb-3 rounded-lg border border-orange-200 bg-orange-50 p-3 text-sm text-orange-700">
                         Bu ürün şu anda stokta bulunmamaktadır. Ön sipariş verebilirsiniz.
                       </div>
@@ -1008,7 +1010,8 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* Ürün Stok Durumu */}
+            {/* Ürün Stok Durumu - site ayarı stoğu gizliyorsa render edilmez */}
+            {siteSettingsLoaded && !hideStock && (
             <div className="mt-8 border-t border-slate-100 pt-6">
               <h2 className="mb-4 text-sm font-semibold text-slate-900">Ürün Stok Durumu</h2>
 
@@ -1043,6 +1046,7 @@ export default function ProductDetail() {
                 <div className="text-sm text-slate-500">Bu ürün için boyut seçeneği bulunmamaktadır.</div>
               )}
             </div>
+            )}
 
             {isAdmin && (
               <div className="mt-6 flex justify-end border-t border-slate-100 pt-4">
