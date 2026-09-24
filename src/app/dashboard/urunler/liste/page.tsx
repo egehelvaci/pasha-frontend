@@ -1895,7 +1895,7 @@ export default function ProductList() {
                       name="name"
                       value={form.name}
                       onChange={handleChange}
-                      className="w-full rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 transition-all duration-200 ease-out placeholder:text-slate-400 hover:border-slate-300 focus:border-slate-300 focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                      className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 transition-all duration-200 ease-out placeholder:text-slate-400 hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       placeholder="Ürün adını girin"
                     />
                   </div>
@@ -1908,7 +1908,7 @@ export default function ProductList() {
                       name="description"
                       value={form.description}
                       onChange={handleChange}
-                      className="min-h-[100px] w-full resize-y rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 transition-all duration-200 ease-out placeholder:text-slate-400 hover:border-slate-300 focus:border-slate-300 focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                      className="min-h-[100px] w-full resize-y rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 transition-all duration-200 ease-out placeholder:text-slate-400 hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       placeholder="Ürün açıklamasını girin"
                     />
                   </div>
@@ -1921,7 +1921,7 @@ export default function ProductList() {
                       <button
                         type="button"
                         onClick={() => setCollectionDropdownOpen(!collectionDropdownOpen)}
-                        className="w-full rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 text-left text-sm transition-all duration-200 ease-out hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                        className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-left text-sm transition-all duration-200 ease-out hover:border-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       >
                         <span className={form.collectionId ? "text-slate-900" : "text-slate-400"}>
                           {form.collectionId 
@@ -1977,7 +1977,7 @@ export default function ProductList() {
                       <button
                         type="button"
                         onClick={() => setRuleDropdownOpen(!ruleDropdownOpen)}
-                        className="w-full rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 text-left text-sm transition-all duration-200 ease-out hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                        className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-left text-sm transition-all duration-200 ease-out hover:border-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       >
                         <span className={form.rule_id ? "text-slate-900" : "text-slate-400"}>
                           {form.rule_id 
@@ -2470,7 +2470,7 @@ export default function ProductList() {
                 <input
                   id="search-input"
                   type="text"
-                  className="w-full rounded-lg border border-slate-200/80 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 transition-all duration-200 ease-out placeholder:text-slate-400 hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 md:w-80 lg:w-96"
+                  className="w-full rounded-lg border border-slate-300 bg-slate-50 py-2.5 pl-9 pr-3 text-sm text-slate-900 transition-all duration-200 ease-out placeholder:text-slate-400 hover:border-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 md:w-80 lg:w-96"
                   placeholder="Ürün adı, açıklama veya ID ara..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}

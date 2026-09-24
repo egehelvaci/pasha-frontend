@@ -88,10 +88,12 @@ export default function AlisFiyatListesiPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Alış fiyat listesi yükleniyor...</p>
+      <div className="min-h-screen bg-[#f7f8fa]">
+        <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+          <div className="flex flex-col items-center justify-center gap-3 py-16">
+            <div className="h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
+            <p className="text-sm text-slate-500">Alış fiyat listesi yükleniyor...</p>
+          </div>
         </div>
       </div>
     );
@@ -99,10 +101,11 @@ export default function AlisFiyatListesiPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-500 text-xl mb-4">⚠️</div>
-          <p className="text-red-600">{error}</p>
+      <div className="min-h-screen bg-[#f7f8fa]">
+        <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+          <div className="rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-3 text-sm text-rose-700">
+            {error}
+          </div>
         </div>
       </div>
     );
@@ -110,9 +113,11 @@ export default function AlisFiyatListesiPage() {
 
   if (!priceList) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600">Alış fiyat listesi bulunamadı</p>
+      <div className="min-h-screen bg-[#f7f8fa]">
+        <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+          <div className="rounded-xl border border-slate-200/80 bg-white px-6 py-16 text-center shadow-sm">
+            <p className="text-sm font-medium text-slate-900">Alış fiyat listesi bulunamadı</p>
+          </div>
         </div>
       </div>
     );
@@ -122,93 +127,101 @@ export default function AlisFiyatListesiPage() {
     a.collection.name.localeCompare(b.collection.name, 'tr-TR')
   );
 
+  const inputClassName =
+    'w-full rounded-lg border-2 border-[#00365a] bg-slate-50 px-3 py-2.5 pr-12 text-right text-base font-semibold tabular-nums text-slate-900 placeholder:font-normal placeholder:text-slate-400 transition hover:bg-white focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25';
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Alış Fiyat Listesi</h1>
-            </div>
-            <button 
-              onClick={() => router.push('/dashboard/satin-alim-islemleri')}
-              className="px-4 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors"
-            >
-              <div className="flex items-center space-x-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-                <span>Satıcılar</span>
-              </div>
-            </button>
+    <div className="min-h-screen bg-[#f7f8fa]">
+      <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+        <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl sm:tracking-[0.12em]">
+              Alış Fiyat Listesi
+            </h1>
+            <div className="mt-3 h-px w-[min(100%,20rem)] bg-neutral-300 sm:mt-4" />
           </div>
+          <button
+            type="button"
+            onClick={() => router.push('/dashboard/satin-alim-islemleri')}
+            className="inline-flex shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+          >
+            Satıcılar
+          </button>
         </div>
 
-        {/* Price List Info */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="mb-6 overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/60 px-4 py-3 sm:px-5">
+            <h2 className="text-sm font-semibold text-slate-900">Liste Bilgileri</h2>
+          </div>
+          <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-3 sm:p-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Para Birimi</label>
-              <p className="mt-1 text-lg font-semibold text-gray-900">{priceList.currency}</p>
+              <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                Para Birimi
+              </span>
+              <p className="text-sm font-medium text-slate-900">{priceList.currency}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Durum</label>
-              <span className={`mt-1 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                priceList.is_active 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-red-100 text-red-800'
-              }`}>
+              <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                Durum
+              </span>
+              <span
+                className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${
+                  priceList.is_active
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                    : 'border-rose-200 bg-rose-50 text-rose-700'
+                }`}
+              >
                 {priceList.is_active ? 'Aktif' : 'Pasif'}
               </span>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Toplam Koleksiyon</label>
-              <p className="mt-1 text-lg font-semibold text-gray-900">{details.length}</p>
+              <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                Toplam Koleksiyon
+              </span>
+              <p className="text-sm font-medium tabular-nums text-slate-900">{details.length}</p>
             </div>
           </div>
         </div>
 
-        {/* Collections List */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Koleksiyon Fiyatları</h2>
-            <p className="text-sm text-gray-600">Metrekare başına alış fiyatları</p>
+        <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/60 px-4 py-3 sm:px-5">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">Koleksiyon Fiyatları</h2>
+              <p className="mt-0.5 text-xs text-slate-500">Metrekare başına alış fiyatları</p>
+            </div>
           </div>
-          
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+
+          <div className="w-full overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50/60">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                     Koleksiyon Kodu
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                     Koleksiyon Adı
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Metrekare Fiyatı
+                  <th className="w-[13rem] px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-700">
+                    Metrekare Fiyatı ({priceList.currency})
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                     Son Güncelleme
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-slate-100">
                 {details.map((detail) => (
-                  <tr key={detail.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <tr key={detail.id} className="transition-colors hover:bg-slate-50/70">
+                    <td className="px-4 py-3">
+                      <span className="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700">
                         {detail.collection.code}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {detail.collection.name}
-                      </div>
+                    <td className="px-4 py-3 text-sm font-medium text-slate-900">
+                      {detail.collection.name}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-2">
+                    <td className="px-4 py-3">
+                      <div className="relative ml-auto w-36">
                         <input
                           type="number"
                           step="0.01"
@@ -216,13 +229,16 @@ export default function AlisFiyatListesiPage() {
                           value={collectionPrices[detail.collection_id] || ''}
                           onChange={(e) => handlePriceChange(detail.collection_id, e.target.value)}
                           onWheel={(e) => e.currentTarget.blur()}
-                          className="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className={inputClassName}
                           placeholder="0.00"
+                          aria-label={`${detail.collection.name} metrekare fiyatı`}
                         />
-                        <span className="text-xs text-gray-500">{priceList.currency}</span>
+                        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-500">
+                          {priceList.currency}
+                        </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700">
                       {new Date(priceList.updated_at).toLocaleDateString('tr-TR', {
                         year: 'numeric',
                         month: 'short',
@@ -236,48 +252,25 @@ export default function AlisFiyatListesiPage() {
               </tbody>
             </table>
           </div>
-          
-          {/* Update Button */}
-          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-            <div className="flex justify-end">
-              <button
-                onClick={handleUpdatePrices}
-                disabled={saving}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg font-semibold transition-colors flex items-center space-x-2"
-              >
-                {saving ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                    <span>Güncelleniyor...</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    <span>Fiyatları Güncelle</span>
-                  </>
-                )}
-              </button>
-            </div>
+
+          <div className="mt-6 flex flex-col-reverse gap-2 border-t border-slate-200/80 px-4 pt-5 pb-4 sm:flex-row sm:justify-end sm:px-5 sm:pb-5">
+            <button
+              type="button"
+              onClick={handleUpdatePrices}
+              disabled={saving}
+              className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {saving ? 'Güncelleniyor...' : 'Fiyatları Güncelle'}
+            </button>
           </div>
         </div>
 
-        {/* Summary */}
-        <div className="mt-6 bg-blue-50 rounded-lg p-4">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-blue-700">
-                <strong>Toplam {details.length} koleksiyon</strong> için alış fiyat listesi tanımlanmıştır. 
-                Tüm fiyatlar {priceList.currency} cinsinden metrekare başına belirtilmiştir.
-              </p>
-            </div>
-          </div>
+        <div className="mt-6 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+          <p className="text-sm text-slate-700">
+            <span className="font-medium text-slate-900">Toplam {details.length} koleksiyon</span>{' '}
+            için alış fiyat listesi tanımlanmıştır. Tüm fiyatlar {priceList.currency} cinsinden metrekare
+            başına belirtilmiştir.
+          </p>
         </div>
       </div>
     </div>

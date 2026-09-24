@@ -92,8 +92,9 @@ export default function AnalyticsPage() {
   // Auth yüklenirken loading göster
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00365a]"></div>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#f7f8fa]">
+        <div className="h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
+        <p className="text-sm text-slate-500">Yetkilendirme kontrol ediliyor...</p>
       </div>
     );
   }
@@ -101,21 +102,16 @@ export default function AnalyticsPage() {
   // Admin kontrolü
   if (!isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <svg className="mx-auto h-12 w-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">Erişim Reddedildi</h3>
-          <p className="mt-1 text-sm text-gray-500">Bu sayfaya erişim yetkiniz bulunmamaktadır.</p>
-          <div className="mt-6">
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#00365a] hover:bg-[#004170] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00365a]"
-            >
-              Dashboard'a Dön
-            </button>
-          </div>
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f8fa] px-4">
+        <div className="w-full max-w-md rounded-xl border border-slate-200/80 bg-white px-6 py-10 text-center shadow-sm">
+          <h3 className="text-base font-semibold text-slate-900">Erişim Reddedildi</h3>
+          <p className="mt-2 text-sm text-slate-500">Bu sayfaya erişim yetkiniz bulunmamaktadır.</p>
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="mt-6 inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25"
+          >
+            Dashboard&apos;a Dön
+          </button>
         </div>
       </div>
     );
@@ -300,24 +296,22 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex items-center space-x-2">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00365a]"></div>
-          <span className="text-gray-600">Analiz verileri yükleniyor...</span>
-        </div>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#f7f8fa]">
+        <div className="h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
+        <p className="text-sm text-slate-500">Analiz verileri yükleniyor...</p>
       </div>
     );
   }
 
   if (!analyticsData) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-500 text-lg font-medium mb-2">Veri Yüklenemedi</div>
-          <div className="text-gray-600 mb-4">{error}</div>
-          <button 
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f8fa] px-4">
+        <div className="w-full max-w-md rounded-xl border border-slate-200/80 bg-white p-6 text-center shadow-sm">
+          <h3 className="text-sm font-medium text-slate-900">Veri Yüklenemedi</h3>
+          <p className="mx-auto mt-1.5 max-w-md text-sm text-slate-500">{error}</p>
+          <button
             onClick={fetchAnalyticsData}
-                            className="px-4 py-2 bg-[#00365a] text-white rounded-md hover:bg-[#004170]"
+            className="mt-6 inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25"
           >
             Tekrar Dene
           </button>
@@ -502,32 +496,39 @@ export default function AnalyticsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Analiz Paneli</h1>
-          <p className="mt-2 text-gray-600">Sipariş ve mağaza analizlerinizi görüntüleyin</p>
+    <div className="min-h-screen bg-[#f7f8fa]">
+      <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+        <div className="mb-6 sm:mb-8">
+          <div>
+            <h1 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl sm:tracking-[0.12em]">
+              Analiz Paneli
+            </h1>
+            <div className="mt-3 h-px w-[min(100%,20rem)] bg-neutral-300 sm:mt-4" />
+            <p className="mt-3 text-sm text-slate-500">Sipariş ve mağaza analizlerinizi görüntüleyin</p>
+          </div>
         </div>
 
-        {/* Period Selector */}
-        <div className="mb-8">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Zaman Aralığı Seçin</h2>
-            <div className="flex flex-wrap gap-3">
+        <div className="mb-6 overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/60 px-4 py-3 sm:px-5">
+            <h3 className="text-sm font-semibold text-slate-900">Zaman Aralığı Seçin</h3>
+            <span className="text-xs text-slate-500">{getPeriodLabel(selectedPeriod)}</span>
+          </div>
+          <div className="border-b border-slate-200/80 px-4 sm:px-5">
+            <div className="flex flex-wrap">
               {[
                 { value: '1_month', label: 'Son 1 Ay' },
-                { value: '3_months', label: 'Son 3 Ay' }, 
+                { value: '3_months', label: 'Son 3 Ay' },
                 { value: '1_year', label: 'Son 1 Yıl' }
               ].map((period) => (
                 <button
                   key={period.value}
-                  onClick={() => setSelectedPeriod(period.value as any)}
-                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                  type="button"
+                  onClick={() => setSelectedPeriod(period.value as '1_month' | '3_months' | '1_year')}
+                  className={
                     selectedPeriod === period.value
-                      ? 'bg-[#00365a] text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+                      ? '-mb-px border-b-2 border-[#00365a] px-4 py-2.5 text-sm font-medium text-[#00365a]'
+                      : 'px-4 py-2.5 text-sm text-slate-500 transition hover:text-slate-900'
+                  }
                 >
                   {period.label}
                 </button>
@@ -536,116 +537,123 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Toplam İstatistikler Kartları */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Toplam Siparişler</h3>
-            <p className="text-3xl font-bold text-[#00365a]">
+        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Toplam Siparişler</p>
+            <p className="mt-2 text-2xl font-light text-slate-900 tabular-nums">
               {analyticsData.totalStats.total_orders}
             </p>
-            <p className="text-sm text-gray-500 mt-1">{getPeriodLabel(selectedPeriod)}</p>
+            <p className="mt-1 text-xs text-slate-500">{getPeriodLabel(selectedPeriod)}</p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Toplam Ciro</h3>
-            <p className="text-3xl font-bold text-green-600">
+          <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Toplam Ciro</p>
+            <p className="mt-2 text-2xl font-light text-slate-900 tabular-nums">
               {analyticsData.totalStats.total_amount.toLocaleString('tr-TR', {
                 style: 'currency',
                 currency: 'TRY'
               })}
             </p>
-            <p className="text-sm text-gray-500 mt-1">{getPeriodLabel(selectedPeriod)}</p>
+            <p className="mt-1 text-xs text-slate-500">{getPeriodLabel(selectedPeriod)}</p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Toplam Ürün Adedi</h3>
-            <p className="text-3xl font-bold text-purple-600">
+          <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Toplam Ürün Adedi</p>
+            <p className="mt-2 text-2xl font-light text-slate-900 tabular-nums">
               {analyticsData.totalStats.total_product_quantity}
             </p>
-            <p className="text-sm text-gray-500 mt-1">{getPeriodLabel(selectedPeriod)}</p>
+            <p className="mt-1 text-xs text-slate-500">{getPeriodLabel(selectedPeriod)}</p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Toplam Metrekare</h3>
-            <p className="text-3xl font-bold text-orange-600">
+          <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Toplam Metrekare</p>
+            <p className="mt-2 text-2xl font-light text-slate-900 tabular-nums">
               {analyticsData.totalStats.total_area_m2.toFixed(1)} m²
             </p>
-            <p className="text-sm text-gray-500 mt-1">{getPeriodLabel(selectedPeriod)}</p>
+            <p className="mt-1 text-xs text-slate-500">{getPeriodLabel(selectedPeriod)}</p>
           </div>
         </div>
 
-        {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* En Çok Sipariş Veren Mağazalar */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">En Çok Sipariş Veren Mağazalar (TOP 5)</h2>
-            <div style={{ height: '350px', marginBottom: '20px' }}>
-              <Bar data={topStoresChartData} options={simpleChartOptions} />
+        <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/60 px-4 py-3 sm:px-5">
+              <h3 className="text-sm font-semibold text-slate-900">En Çok Sipariş Veren Mağazalar (TOP 5)</h3>
             </div>
-            <div className="mt-4 space-y-2">
-              {analyticsData.topStores.map((store, index) => (
-                <div key={store.store_id} className="flex justify-between items-center text-sm">
-                  <span className="font-medium" title={store.store_name}>
-                    {index + 1}. {truncateText(store.store_name, 30)}
-                  </span>
-                  <div className="text-right">
-                    <div className="text-gray-900">{store.order_count} sipariş</div>
-                    <div className="text-gray-500">{store.total_amount.toLocaleString('tr-TR', {
-                      style: 'currency',
-                      currency: 'TRY'
-                    })}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* En Çok Sipariş Edilen Ürünler */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">En Çok Sipariş Edilen Ürünler (TOP 5)</h2>
-            <div style={{ height: '350px', marginBottom: '20px' }}>
-              <Bar data={topProductsChartData} options={simpleChartOptions} />
-            </div>
-            <div className="mt-4 space-y-2">
-              {analyticsData.topProducts.map((product, index) => (
-                <div key={product.product_id} className="flex justify-between items-center text-sm">
-                  <div>
-                    <div className="font-medium">{index + 1}. {product.product_name}</div>
-                    <div className="text-gray-500">{product.collection_name}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-gray-900">{product.total_quantity} adet</div>
-                    <div className="text-gray-500">{product.total_amount.toLocaleString('tr-TR', {
-                      style: 'currency',
-                      currency: 'TRY'
-                    })}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Zaman Bazlı Analiz */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Zaman Bazlı Sipariş Analizi</h2>
-          <div style={{ height: '400px' }}>
-            <Line data={ordersOverTimeChartData} options={chartOptions} />
-          </div>
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-            {analyticsData.ordersOverTime.map((item, index) => (
-              <div key={index} className="text-center p-4 bg-gray-50 rounded-lg">
-                <div className="text-lg font-semibold text-gray-900">{item.time_period}</div>
-                <div className="text-sm text-gray-600 mt-1">
-                  <div>{item.order_count} sipariş</div>
-                  <div>{item.total_area_m2.toFixed(1)} m²</div>
-                  <div>{item.total_amount.toLocaleString('tr-TR', {
-                    style: 'currency',
-                    currency: 'TRY'
-                  })}</div>
-                </div>
+            <div className="p-4 sm:p-5">
+              <div style={{ height: '350px', marginBottom: '20px' }}>
+                <Bar data={topStoresChartData} options={simpleChartOptions} />
               </div>
-            ))}
+              <div className="mt-4 space-y-2">
+                {analyticsData.topStores.map((store, index) => (
+                  <div key={store.store_id} className="flex items-center justify-between text-sm">
+                    <span className="font-medium text-slate-900" title={store.store_name}>
+                      {index + 1}. {truncateText(store.store_name, 30)}
+                    </span>
+                    <div className="text-right">
+                      <div className="text-slate-900">{store.order_count} sipariş</div>
+                      <div className="text-slate-500 tabular-nums">{store.total_amount.toLocaleString('tr-TR', {
+                        style: 'currency',
+                        currency: 'TRY'
+                      })}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/60 px-4 py-3 sm:px-5">
+              <h3 className="text-sm font-semibold text-slate-900">En Çok Sipariş Edilen Ürünler (TOP 5)</h3>
+            </div>
+            <div className="p-4 sm:p-5">
+              <div style={{ height: '350px', marginBottom: '20px' }}>
+                <Bar data={topProductsChartData} options={simpleChartOptions} />
+              </div>
+              <div className="mt-4 space-y-2">
+                {analyticsData.topProducts.map((product, index) => (
+                  <div key={product.product_id} className="flex items-center justify-between text-sm">
+                    <div>
+                      <div className="font-medium text-slate-900">{index + 1}. {product.product_name}</div>
+                      <div className="text-slate-500">{product.collection_name}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-slate-900">{product.total_quantity} adet</div>
+                      <div className="text-slate-500 tabular-nums">{product.total_amount.toLocaleString('tr-TR', {
+                        style: 'currency',
+                        currency: 'TRY'
+                      })}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/60 px-4 py-3 sm:px-5">
+            <h3 className="text-sm font-semibold text-slate-900">Zaman Bazlı Sipariş Analizi</h3>
+          </div>
+          <div className="p-4 sm:p-5">
+            <div style={{ height: '400px' }}>
+              <Line data={ordersOverTimeChartData} options={chartOptions} />
+            </div>
+            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+              {analyticsData.ordersOverTime.map((item, index) => (
+                <div key={index} className="rounded-lg border border-slate-200/80 bg-slate-50/60 p-4 text-center">
+                  <div className="text-sm font-medium text-slate-900">{item.time_period}</div>
+                  <div className="mt-1 text-sm text-slate-700">
+                    <div>{item.order_count} sipariş</div>
+                    <div>{item.total_area_m2.toFixed(1)} m²</div>
+                    <div className="tabular-nums">{item.total_amount.toLocaleString('tr-TR', {
+                      style: 'currency',
+                      currency: 'TRY'
+                    })}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

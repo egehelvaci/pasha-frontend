@@ -167,23 +167,9 @@ export default function PriceListsPage() {
   // Loading state
   if (authLoading) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="relative">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[#00365a]"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <svg className="w-6 h-6 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
-              </div>
-            </div>
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-900">Yetkilendirme Kontrol Ediliyor</h3>
-              <p className="text-sm text-gray-500 mt-1">Lütfen bekleyiniz...</p>
-            </div>
-          </div>
-        </div>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#f7f8fa]">
+        <div className="h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
+        <p className="text-sm text-slate-500">Yetkilendirme kontrol ediliyor...</p>
       </div>
     );
   }
@@ -191,23 +177,18 @@ export default function PriceListsPage() {
   // Admin kontrolü
   if (!isAdmin) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center max-w-md">
-          <div className="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
-            <svg className="h-10 w-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-3">Erişim Reddedildi</h3>
-          <p className="text-gray-600 mb-8 leading-relaxed">Bu sayfaya erişim yetkiniz bulunmamaktadır. Fiyat listesi yönetimi sadece admin kullanıcılar tarafından kullanılabilir.</p>
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f8fa] px-4">
+        <div className="w-full max-w-md rounded-xl border border-slate-200/80 bg-white shadow-sm px-6 py-10 text-center">
+          <h3 className="text-base font-semibold text-slate-900">Erişim Reddedildi</h3>
+          <p className="mt-2 text-sm text-slate-500">
+            Bu sayfaya erişim yetkiniz bulunmamaktadır. Fiyat listesi yönetimi sadece admin kullanıcılar
+            tarafından kullanılabilir.
+          </p>
           <button
             onClick={() => router.push('/dashboard')}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
+            className="mt-6 inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
-            </svg>
-            Dashboard'a Dön
+            Dashboard&apos;a Dön
           </button>
         </div>
       </div>
@@ -215,86 +196,74 @@ export default function PriceListsPage() {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-[#f7f8fa]">
+      <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
         {/* Page Header */}
-        <div className="mb-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-[#00365a] flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
-                Fiyat Listeleri
-              </h1>
-              <p className="text-gray-600 mt-2">Fiyat listelerini görüntüleyin ve yönetin</p>
-            </div>
-            <button
-              onClick={() => router.push('/dashboard/fiyat-listeleri/ekle')}
-              className="bg-[#00365a] hover:bg-[#004170] text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              <span>Yeni Fiyat Listesi</span>
-            </button>
+        <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl sm:tracking-[0.12em]">
+              Fiyat Listeleri
+            </h1>
+            <div className="mt-3 h-px w-[min(100%,20rem)] bg-neutral-300 sm:mt-4" />
+            <p className="mt-3 text-sm text-slate-500">Fiyat listelerini görüntüleyin ve yönetin</p>
           </div>
+          <button
+            type="button"
+            onClick={() => router.push('/dashboard/fiyat-listeleri/ekle')}
+            className="inline-flex shrink-0 items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Yeni Fiyat Listesi
+          </button>
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex items-center mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#00365a]" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.553.894l-2 1A1 1 0 018 16v-4.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
-            </svg>
-            <h3 className="text-lg font-semibold text-[#00365a]">Filtreler</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="mb-6 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Arama</label>
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Arama</label>
               <div className="relative">
                 <input
                   type="text"
                   placeholder="Liste adı, açıklama..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all"
+                  className="w-full rounded-lg border border-slate-300 bg-slate-50 py-2.5 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                 />
-                <svg className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <circle cx="11" cy="11" r="8"/>
-                  <path d="M21 21l-4.35-4.35"/>
+                <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
                 </svg>
               </div>
             </div>
             <div className="dropdown-container">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Durum</label>
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Durum</label>
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all text-left bg-white"
+                  className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 pr-9 text-left text-sm text-slate-900 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                 >
-                  <span className="text-gray-900">
-                    {statusFilter === "all" && "Tüm Durumlar"}
-                    {statusFilter === "active" && "Aktif"}
-                    {statusFilter === "inactive" && "Pasif"}
-                    {statusFilter === "default" && "Varsayılan"}
-                  </span>
-                  <svg 
-                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${statusDropdownOpen ? 'rotate-180' : ''}`}
-                    fill="none" 
-                    stroke="currentColor" 
+                  {statusFilter === "all" && "Tüm Durumlar"}
+                  {statusFilter === "active" && "Aktif"}
+                  {statusFilter === "inactive" && "Pasif"}
+                  {statusFilter === "default" && "Varsayılan"}
+                  <svg
+                    className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-transform ${statusDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.8}
                     viewBox="0 0 24 24"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
-                
+
                 {statusDropdownOpen && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    <div
-                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        statusFilter === "all" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                  <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+                    <button
+                      type="button"
+                      className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                        statusFilter === "all" ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                       onClick={() => {
                         setStatusFilter("all");
@@ -302,10 +271,11 @@ export default function PriceListsPage() {
                       }}
                     >
                       Tüm Durumlar
-                    </div>
-                    <div
-                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        statusFilter === "active" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                    </button>
+                    <button
+                      type="button"
+                      className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                        statusFilter === "active" ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                       onClick={() => {
                         setStatusFilter("active");
@@ -313,10 +283,11 @@ export default function PriceListsPage() {
                       }}
                     >
                       Aktif
-                    </div>
-                    <div
-                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        statusFilter === "inactive" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                    </button>
+                    <button
+                      type="button"
+                      className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                        statusFilter === "inactive" ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                       onClick={() => {
                         setStatusFilter("inactive");
@@ -324,10 +295,11 @@ export default function PriceListsPage() {
                       }}
                     >
                       Pasif
-                    </div>
-                    <div
-                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        statusFilter === "default" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                    </button>
+                    <button
+                      type="button"
+                      className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                        statusFilter === "default" ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                       onClick={() => {
                         setStatusFilter("default");
@@ -335,18 +307,19 @@ export default function PriceListsPage() {
                       }}
                     >
                       Varsayılan
-                    </div>
+                    </button>
                   </div>
                 )}
               </div>
             </div>
             <div className="flex items-end">
               <button
+                type="button"
                 onClick={() => {
                   setSearchTerm("");
                   setStatusFilter("all");
                 }}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors w-full font-medium"
+                className="inline-flex w-full items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15 md:w-auto"
               >
                 Temizle
               </button>
@@ -355,118 +328,105 @@ export default function PriceListsPage() {
         </div>
 
         {/* Main Content */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 bg-[#00365a]">
-            <div className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-              </svg>
-              <h3 className="text-lg font-semibold text-white">Fiyat Listesi</h3>
-              <span className="ml-4 text-blue-100 text-sm">({filteredPriceLists.length} liste)</span>
-            </div>
+        <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/60 px-4 py-3 sm:px-5">
+            <h3 className="text-sm font-semibold text-slate-900">Fiyat Listesi</h3>
+            <span className="text-xs text-slate-500">{filteredPriceLists.length} liste</span>
           </div>
 
           {loading ? (
-            <div className="flex flex-col items-center justify-center h-48 p-6">
-              <div className="relative">
-                <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[#00365a]"></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                  </svg>
-                </div>
-              </div>
-              <div className="text-center mt-4">
-                <h3 className="text-lg font-semibold text-gray-900">Fiyat Listeleri Yükleniyor</h3>
-                <p className="text-sm text-gray-500 mt-1">Lütfen bekleyiniz...</p>
-              </div>
+            <div className="flex flex-col items-center justify-center gap-3 py-16">
+              <div className="h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
+              <p className="text-sm text-slate-500">Fiyat listeleri yükleniyor...</p>
             </div>
           ) : filteredPriceLists.length > 0 ? (
             <>
               {/* Desktop Table View */}
-              <div className="hidden lg:block overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+              <div className="hidden w-full overflow-x-auto lg:block">
+                <table className="w-full min-w-full">
+                  <thead className="bg-slate-50/60">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                         Liste Bilgileri
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                         Geçerlilik
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                         Limit & Para Birimi
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                         Durum
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-slate-500">
                         Ürün Sayısı
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-slate-500">
                         İşlemler
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="divide-y divide-slate-100">
                     {filteredPriceLists.map((priceList) => {
                       const status = getPriceListStatus(priceList);
                       return (
-                        <tr key={priceList.price_list_id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-6 py-4">
+                        <tr key={priceList.price_list_id} className="transition-colors hover:bg-slate-50/70">
+                          <td className="px-4 py-3">
                             <div>
-                              <div className="flex items-center">
-                                <div className="text-sm font-semibold text-gray-900">{priceList.name}</div>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <div className="text-sm font-medium text-slate-900">{priceList.name}</div>
                                 {priceList.is_default && (
-                                  <span className="ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                                  <span className="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700">
                                     Varsayılan
                                   </span>
                                 )}
                               </div>
-                              <div className="text-sm text-gray-500">{priceList.description}</div>
+                              <div className="mt-0.5 text-sm text-slate-500">{priceList.description}</div>
                             </div>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-4 py-3">
                             <div>
                               {priceList.valid_from || priceList.valid_to ? (
                                 <>
-                                  <div className="text-sm text-gray-900">
+                                  <div className="text-sm text-slate-900">
                                     {priceList.valid_from ? new Date(priceList.valid_from).toLocaleDateString('tr-TR') : 'Başlangıç: -'}
                                   </div>
-                                  <div className="text-sm text-gray-500">
+                                  <div className="text-sm text-slate-500">
                                     {priceList.valid_to ? new Date(priceList.valid_to).toLocaleDateString('tr-TR') : 'Bitiş: -'}
                                   </div>
                                 </>
                               ) : (
-                                <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-600">
                                   Süresiz
                                 </span>
                               )}
                             </div>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-4 py-3">
                             <div>
-                              <div className="text-sm text-gray-900">
+                              <div className="text-sm text-slate-900">
                                 {priceList.limit_amount ? (
                                   `${priceList.limit_amount.toLocaleString('tr-TR')} ${priceList.currency}`
                                 ) : (
-                                  <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                  <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-600">
                                     Limitsiz
                                   </span>
                                 )}
                               </div>
-                              <div className="text-sm text-gray-500">Para birimi: {priceList.currency}</div>
+                              <div className="mt-0.5 text-sm text-slate-500">Para birimi: {priceList.currency}</div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="whitespace-nowrap px-4 py-3">
                             <div>
-                              <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                                status.statusColor === 'green' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                              <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${
+                                status.statusColor === 'green'
+                                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                                  : 'border-rose-200 bg-rose-50 text-rose-700'
                               }`}>
                                 {status.statusText}
                               </span>
                               {(status.isExpired || status.isLimitLow) && !priceList.is_default && (
-                                <div className="text-xs text-gray-500 mt-1">
+                                <div className="mt-1 text-xs text-slate-500">
                                   {status.isExpired && (priceList.valid_to && new Date(priceList.valid_to) < new Date() ? 'Süresi dolmuş' : 'Henüz başlamamış')}
                                   {status.isLimitLow && 'Limit yetersiz (≤1000 TL)'}
                                   {status.isExpired && status.isLimitLow && ' & '}
@@ -474,32 +434,34 @@ export default function PriceListsPage() {
                               )}
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{priceList.PriceListDetail?.length || 0}</div>
+                          <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-slate-900">
+                            {priceList.PriceListDetail?.length || 0}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex gap-2">
+                          <td className="whitespace-nowrap px-4 py-3">
+                            <div className="flex items-center justify-end gap-1">
                               <button
+                                type="button"
                                 onClick={() => router.push(`/dashboard/fiyat-listeleri/${priceList.price_list_id}/duzenle`)}
-                                className="text-[#00365a] hover:text-[#004170] flex items-center gap-1 px-3 py-1 rounded-lg hover:bg-blue-50 transition-all"
+                                aria-label="Güncelle"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                               >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
-                                Güncelle
                               </button>
                               {!priceList.is_default && (
                                 <button
+                                  type="button"
                                   onClick={() => {
                                     setPriceListToDelete(priceList);
                                     setDeleteModalVisible(true);
                                   }}
-                                  className="text-red-600 hover:text-red-700 flex items-center gap-1 px-3 py-1 rounded-lg hover:bg-red-50 transition-all"
+                                  aria-label="Sil"
+                                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-rose-600 transition hover:bg-rose-50 hover:text-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/20"
                                 >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                   </svg>
-                                  Sil
                                 </button>
                               )}
                             </div>
@@ -512,155 +474,125 @@ export default function PriceListsPage() {
               </div>
 
               {/* Mobile/Tablet Card View */}
-              <div className="lg:hidden p-6">
-                <div className="space-y-6">
-                  {filteredPriceLists.map((priceList) => {
-                    const status = getPriceListStatus(priceList);
-                    return (
-                      <div key={priceList.price_list_id} className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="flex-1">
-                            <div className="flex items-center mb-2">
-                              <h3 className="text-lg font-semibold text-gray-900">{priceList.name}</h3>
-                              {priceList.is_default && (
-                                <span className="ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
-                                  Varsayılan
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-sm text-gray-500 mb-3">{priceList.description}</p>
-                            <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                              status.statusColor === 'green' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                            }`}>
-                              {status.statusText}
-                            </span>
-                            {(status.isExpired || status.isLimitLow) && !priceList.is_default && (
-                              <div className="text-xs text-gray-500 mt-1">
-                                {status.isExpired && (priceList.valid_to && new Date(priceList.valid_to) < new Date() ? 'Süresi dolmuş' : 'Henüz başlamamış')}
-                                {status.isLimitLow && 'Limit yetersiz (≤1000 TL)'}
-                                {status.isExpired && status.isLimitLow && ' & '}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                          <div className="bg-blue-50 rounded-lg p-4">
-                            <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                              <svg className="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                              Geçerlilik Tarihi
-                            </h4>
-                            {priceList.valid_from || priceList.valid_to ? (
-                              <>
-                                <p className="text-sm text-gray-900">
-                                  Başlangıç: {priceList.valid_from ? new Date(priceList.valid_from).toLocaleDateString('tr-TR') : '-'}
-                                </p>
-                                <p className="text-sm text-gray-900">
-                                  Bitiş: {priceList.valid_to ? new Date(priceList.valid_to).toLocaleDateString('tr-TR') : '-'}
-                                </p>
-                              </>
-                            ) : (
-                              <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                                Süresiz
+              <div className="divide-y divide-slate-100 lg:hidden">
+                {filteredPriceLists.map((priceList) => {
+                  const status = getPriceListStatus(priceList);
+                  return (
+                    <div key={priceList.price_list_id} className="p-4 sm:p-5">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="text-base font-medium text-slate-900">{priceList.name}</h3>
+                            {priceList.is_default && (
+                              <span className="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700">
+                                Varsayılan
                               </span>
                             )}
                           </div>
-
-                          <div className="bg-green-50 rounded-lg p-4">
-                            <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                              <svg className="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                              </svg>
-                              Finansal Bilgiler
-                            </h4>
-                            <p className="text-sm text-gray-900">
-                              Limit: {priceList.limit_amount ? 
-                                `${priceList.limit_amount.toLocaleString('tr-TR')} ${priceList.currency}` : 
-                                'Limitsiz'
-                              }
-                            </p>
-                            <p className="text-sm text-gray-500">Para birimi: {priceList.currency}</p>
-                          </div>
-
-                          <div className="bg-purple-50 rounded-lg p-4">
-                            <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                              <svg className="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                              </svg>
-                              Ürün Sayısı
-                            </h4>
-                            <p className="text-sm text-gray-900 font-semibold">{priceList.PriceListDetail?.length || 0} ürün</p>
-                          </div>
+                          <p className="mt-0.5 text-sm text-slate-500">{priceList.description}</p>
                         </div>
-
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            onClick={() => router.push(`/dashboard/fiyat-listeleri/${priceList.price_list_id}/duzenle`)}
-                            className="flex items-center gap-2 px-4 py-2 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                            Güncelle
-                          </button>
-                          {!priceList.is_default && (
-                            <button
-                              onClick={() => {
-                                setPriceListToDelete(priceList);
-                                setDeleteModalVisible(true);
-                              }}
-                              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                              Sil
-                            </button>
+                        <div>
+                          <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${
+                            status.statusColor === 'green'
+                              ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                              : 'border-rose-200 bg-rose-50 text-rose-700'
+                          }`}>
+                            {status.statusText}
+                          </span>
+                          {(status.isExpired || status.isLimitLow) && !priceList.is_default && (
+                            <div className="mt-1 text-xs text-slate-500">
+                              {status.isExpired && (priceList.valid_to && new Date(priceList.valid_to) < new Date() ? 'Süresi dolmuş' : 'Henüz başlamamış')}
+                              {status.isLimitLow && 'Limit yetersiz (≤1000 TL)'}
+                              {status.isExpired && status.isLimitLow && ' & '}
+                            </div>
                           )}
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+
+                      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div className="rounded-lg border border-slate-200/80 bg-slate-50/60 p-3">
+                          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Geçerlilik Tarihi</p>
+                          {priceList.valid_from || priceList.valid_to ? (
+                            <div className="mt-1.5 text-sm text-slate-700">
+                              <p>Başlangıç: {priceList.valid_from ? new Date(priceList.valid_from).toLocaleDateString('tr-TR') : '-'}</p>
+                              <p>Bitiş: {priceList.valid_to ? new Date(priceList.valid_to).toLocaleDateString('tr-TR') : '-'}</p>
+                            </div>
+                          ) : (
+                            <span className="mt-1.5 inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-600">
+                              Süresiz
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="rounded-lg border border-slate-200/80 bg-slate-50/60 p-3">
+                          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Finansal Bilgiler</p>
+                          <p className="mt-1.5 text-sm text-slate-900">
+                            Limit: {priceList.limit_amount ?
+                              `${priceList.limit_amount.toLocaleString('tr-TR')} ${priceList.currency}` :
+                              'Limitsiz'
+                            }
+                          </p>
+                          <p className="text-sm text-slate-500">Para birimi: {priceList.currency}</p>
+                        </div>
+
+                        <div className="rounded-lg border border-slate-200/80 bg-slate-50/60 p-3 sm:col-span-2">
+                          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Ürün Sayısı</p>
+                          <p className="mt-1.5 text-sm font-medium text-slate-900">{priceList.PriceListDetail?.length || 0} ürün</p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => router.push(`/dashboard/fiyat-listeleri/${priceList.price_list_id}/duzenle`)}
+                          className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-3 py-2 text-xs font-medium text-white transition hover:bg-[#004170]"
+                        >
+                          Güncelle
+                        </button>
+                        {!priceList.is_default && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPriceListToDelete(priceList);
+                              setDeleteModalVisible(true);
+                            }}
+                            className="inline-flex items-center justify-center rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-medium text-rose-600 transition hover:bg-rose-50 hover:text-rose-700"
+                          >
+                            Sil
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </>
           ) : (
-            <div className="text-center py-16 p-6">
-              <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
-                <svg className="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Fiyat Listesi Bulunamadı</h3>
-              <p className="text-gray-600 mb-6 max-w-md mx-auto leading-relaxed">
-                {searchTerm || statusFilter !== 'all' 
+            <div className="px-6 py-16 text-center">
+              <h3 className="text-sm font-medium text-slate-900">Fiyat Listesi Bulunamadı</h3>
+              <p className="mx-auto mt-1.5 max-w-md text-sm text-slate-500">
+                {searchTerm || statusFilter !== 'all'
                   ? 'Arama kriterlerinize uygun fiyat listesi bulunamadı. Filtreleri temizleyerek tekrar deneyin.'
                   : 'Henüz hiç fiyat listesi eklenmemiş. İlk fiyat listesini ekleyerek başlayın.'
                 }
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="mt-6 flex flex-col justify-center gap-2 sm:flex-row">
                 <button
+                  type="button"
                   onClick={() => router.push('/dashboard/fiyat-listeleri/ekle')}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
+                  className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
                   İlk Fiyat Listesini Ekle
                 </button>
                 {(searchTerm || statusFilter !== 'all') && (
                   <button
+                    type="button"
                     onClick={() => {
                       setSearchTerm("");
                       setStatusFilter("all");
                     }}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-white hover:bg-gray-50 text-[#00365a] border-2 border-[#00365a] rounded-lg font-semibold transition-all hover:shadow-md"
+                    className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
                     Filtreleri Temizle
                   </button>
                 )}
@@ -671,61 +603,41 @@ export default function PriceListsPage() {
 
         {/* Delete Confirmation Modal */}
         {deleteModalVisible && priceListToDelete && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl">
-              {/* Header */}
-              <div className="bg-red-600 text-white rounded-t-2xl p-6">
-                <div className="flex items-center">
-                  <div className="bg-white bg-opacity-20 rounded-xl p-2 mr-3">
-                    <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold">Fiyat Listesi Sil</h3>
-                </div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+            <div className="w-full max-w-md overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-lg">
+              <div className="border-b border-slate-200/80 px-5 py-4">
+                <h3 className="text-base font-semibold text-slate-900">Fiyat Listesi Sil</h3>
               </div>
 
-              {/* Content */}
-              <div className="p-6">
-                <p className="text-gray-900 mb-4">
-                  <strong>{priceListToDelete.name}</strong> fiyat listesini silmek istediğinize emin misiniz?
+              <div className="px-5 py-5">
+                <p className="text-sm text-slate-700">
+                  <span className="font-medium text-slate-900">{priceListToDelete.name}</span> fiyat listesini silmek istediğinize emin misiniz?
                 </p>
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="text-red-700 text-sm">
+                <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-3">
+                  <p className="text-sm text-rose-700">
                     ⚠️ Bu işlem geri alınamaz ve fiyat listesine bağlı tüm fiyatlar silinecektir.
                   </p>
                 </div>
               </div>
 
-              {/* Footer */}
-              <div className="bg-gray-50 px-6 py-4 rounded-b-2xl flex justify-end gap-3">
+              <div className="flex justify-end gap-2 border-t border-slate-200/80 bg-slate-50/60 px-5 py-3.5">
                 <button
+                  type="button"
                   onClick={() => {
                     setDeleteModalVisible(false);
                     setPriceListToDelete(null);
                   }}
-                  className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition-all"
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                 >
                   İptal
                 </button>
                 <button
+                  type="button"
                   onClick={handleDelete}
                   disabled={deleteLoading}
-                  className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="inline-flex items-center justify-center rounded-lg bg-rose-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/25 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {deleteLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                      Siliniyor...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                      Sil
-                    </>
-                  )}
+                  {deleteLoading ? 'Siliniyor...' : 'Sil'}
                 </button>
               </div>
             </div>

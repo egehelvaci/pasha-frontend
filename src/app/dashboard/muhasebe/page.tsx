@@ -890,23 +890,16 @@ const MuhasebePage = () => {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full mx-4">
-          <div className="text-center">
-            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
-              <svg className="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-            </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Yetkisiz Erişim</h2>
-            <p className="text-gray-600 mb-6">Bu sayfaya erişim için admin yetkisi gereklidir.</p>
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors"
-            >
-              Dashboard'a Dön
-            </button>
-          </div>
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f8fa] px-4">
+        <div className="w-full max-w-md rounded-xl border border-slate-200/80 bg-white px-6 py-10 text-center shadow-sm">
+          <h3 className="text-base font-semibold text-slate-900">Yetkisiz Erişim</h3>
+          <p className="mt-2 text-sm text-slate-500">Bu sayfaya erişim için admin yetkisi gereklidir.</p>
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Dashboard&apos;a Dön
+          </button>
         </div>
       </div>
     );
@@ -914,73 +907,25 @@ const MuhasebePage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        {/* Header Skeleton */}
-        <div className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded-lg w-64 mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded w-96"></div>
-            </div>
-          </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="animate-pulse">
-            {/* Stats Cards Skeleton */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="bg-white rounded-xl shadow-sm p-6">
-                  <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
-                  <div className="h-8 bg-gray-200 rounded w-16"></div>
-                </div>
-              ))}
-            </div>
-
-            {/* Content Skeleton */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <div className="h-6 bg-gray-200 rounded w-48 mb-6"></div>
-              <div className="space-y-4">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="h-16 bg-gray-200 rounded-lg"></div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Loading Indicator */}
-        <div className="fixed bottom-8 right-8">
-          <div className="bg-white rounded-full shadow-lg p-4">
-            <div className="flex items-center space-x-3">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-              <span className="text-sm font-medium text-gray-700">Muhasebe verileri yükleniyor...</span>
-            </div>
-          </div>
-        </div>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#f7f8fa]">
+        <div className="h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
+        <p className="text-sm text-slate-500">Muhasebe verileri yükleniyor...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full mx-4">
-          <div className="text-center">
-            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
-              <svg className="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Veri Yükleme Hatası</h2>
-            <p className="text-gray-600 mb-6">{error}</p>
-            <button
-              onClick={() => fetchAccountingData(true)}
-              className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors"
-            >
-              Tekrar Dene
-            </button>
-          </div>
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f8fa] px-4">
+        <div className="w-full max-w-md rounded-xl border border-slate-200/80 bg-white px-6 py-10 text-center shadow-sm">
+          <h3 className="text-base font-semibold text-slate-900">Veri Yükleme Hatası</h3>
+          <p className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-3 text-sm text-rose-700">{error}</p>
+          <button
+            onClick={() => fetchAccountingData(true)}
+            className="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Tekrar Dene
+          </button>
         </div>
       </div>
     );
@@ -1043,157 +988,130 @@ const MuhasebePage = () => {
   const filteredData = getFilteredData();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Modern Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center justify-center w-12 h-12 rounded-xl" style={{ backgroundColor: '#00365a' }}>
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Muhasebe Yönetimi</h1>
-                <p className="text-gray-600">Mali işlemler ve mağaza bakiyelerini yönetin</p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-3">
+    <div className="min-h-screen bg-[#f7f8fa]">
+      <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+        <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl sm:tracking-[0.12em]">
+              Muhasebe Yönetimi
+            </h1>
+            <div className="mt-3 h-px w-[min(100%,20rem)] bg-neutral-300 sm:mt-4" />
+            <p className="mt-3 text-sm text-slate-500">Mali işlemler ve mağaza bakiyelerini yönetin</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+            <button
+              onClick={openModal}
+              className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Yeni Hareket
+            </button>
+            <button
+              onClick={() => fetchDataByCurrency(true)}
+              className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+            >
+              Yenile
+            </button>
+            <div className="relative dropdown-container">
               <button
-                onClick={openModal}
-                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all duration-200 shadow-sm hover:shadow-md"
+                type="button"
+                onClick={() => setCurrencyDropdownOpen(!currencyDropdownOpen)}
+                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
               >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Yeni Hareket
-              </button>
-              <button
-                onClick={() => fetchDataByCurrency(true)}
-                className="flex items-center px-4 py-2 text-white rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
-                style={{ backgroundColor: '#00365a' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#002847'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#00365a'}
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Yenile
-              </button>
-              
-              {/* Currency Dropdown */}
-              <div className="relative dropdown-container">
-                <button
-                  onClick={() => setCurrencyDropdownOpen(!currencyDropdownOpen)}
-                  className="flex items-center px-4 py-2 text-white rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
-                  style={{ backgroundColor: '#00365a' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#002847'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#00365a'}
+                {selectedCurrency}
+                <svg
+                  className={`ml-2 h-4 w-4 text-slate-400 transition-transform ${currencyDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.8}
+                  viewBox="0 0 24 24"
                 >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                  </svg>
-                  {selectedCurrency}
-                  <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
 
-                {currencyDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                    <div className="py-1">
-                      <button
-                        onClick={() => {
-                          setSelectedCurrency('TRY');
-                          setCurrencyDropdownOpen(false);
-                          // Filtreleri temizle
-                          setSelectedStoreFilter('');
-                          setStartDate('');
-                          setEndDate('');
-                          setTransactionTypeFilter('');
-                        }}
-                        className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors ${
-                          selectedCurrency === 'TRY' ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
-                        }`}
-                      >
-                        <div className="flex items-center">
-                          <span className="mr-2">₺</span>
-                          <span>TRY</span>
-                        </div>
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedCurrency('USD');
-                          setCurrencyDropdownOpen(false);
-                          // Filtreleri temizle
-                          setSelectedStoreFilter('');
-                          setStartDate('');
-                          setEndDate('');
-                          setTransactionTypeFilter('');
-                        }}
-                        className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors ${
-                          selectedCurrency === 'USD' ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
-                        }`}
-                      >
-                        <div className="flex items-center">
-                          <span className="mr-2">$</span>
-                          <span>USD</span>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+              {currencyDropdownOpen && (
+                <div className="absolute right-0 z-50 mt-1 w-48 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCurrency('TRY');
+                      setCurrencyDropdownOpen(false);
+                      setSelectedStoreFilter('');
+                      setStartDate('');
+                      setEndDate('');
+                      setTransactionTypeFilter('');
+                    }}
+                    className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                      selectedCurrency === 'TRY' ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
+                    }`}
+                  >
+                    <span className="mr-2">₺</span>
+                    TRY
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCurrency('USD');
+                      setCurrencyDropdownOpen(false);
+                      setSelectedStoreFilter('');
+                      setStartDate('');
+                      setEndDate('');
+                      setTransactionTypeFilter('');
+                    }}
+                    className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                      selectedCurrency === 'USD' ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
+                    }`}
+                  >
+                    <span className="mr-2">$</span>
+                    USD
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Filtreleme Bölümü */}
-        <div className="bg-white rounded-xl shadow-sm border p-6 mb-8">
-          <div className="flex items-center space-x-3 mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Gelişmiş Filtreleme</h2>
+        <div className="mb-6 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+          <div className="mb-4 flex items-center justify-between gap-3 border-b border-slate-200/80 pb-3">
+            <h2 className="text-sm font-semibold text-slate-900">Gelişmiş Filtreleme</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 items-end">
             {/* Mağaza Filtresi */}
             <div className="dropdown-container">
-              <label className="block text-sm font-medium text-gray-700 mb-2">             
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                 Mağaza
               </label>
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setStoreFilterDropdownOpen(!storeFilterDropdownOpen)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-left bg-white"
+                  className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 pr-9 text-left text-sm text-slate-900 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                 >
-                  <span className="text-gray-900">
+                  <span>
                     {selectedStoreFilter ?
                       stores?.find(m => m.store_id === selectedStoreFilter)?.kurum_adi || 'Seçili Mağaza' :
                       'Tüm Mağazalar'
                     }
                   </span>
                   <svg
-                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${storeFilterDropdownOpen ? 'rotate-180' : ''}`}
+                    className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-transform ${storeFilterDropdownOpen ? 'rotate-180' : ''}`}
                     fill="none"
                     stroke="currentColor"
+                    strokeWidth={1.8}
                     viewBox="0 0 24 24"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
 
                 {storeFilterDropdownOpen && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
-                    {/* Arama Kutusu */}
-                    <div className="sticky top-0 bg-white p-2 border-b">
+                  <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg scrollbar-hide">
+                    <div className="sticky top-0 border-b border-slate-200 bg-white p-2">
                       <input
                         type="text"
                         placeholder="Mağaza ara..."
-                        className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                         onChange={(e) => {
                           const searchValue = e.target.value.toLowerCase();
                           if (searchValue === '') {
@@ -1209,8 +1127,9 @@ const MuhasebePage = () => {
                       />
                     </div>
 
-                    <div
-                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${!selectedStoreFilter ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                    <button
+                      type="button"
+                      className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${!selectedStoreFilter ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                         }`}
                       onClick={() => {
                         setSelectedStoreFilter('');
@@ -1219,11 +1138,12 @@ const MuhasebePage = () => {
                       }}
                     >
                       Tüm Mağazalar
-                    </div>
+                    </button>
                     {filteredStores?.map((magaza) => (
-                      <div
+                      <button
+                        type="button"
                         key={magaza.store_id}
-                        className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${selectedStoreFilter === magaza.store_id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                        className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${selectedStoreFilter === magaza.store_id ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                           }`}
                         onClick={() => {
                           setSelectedStoreFilter(magaza.store_id);
@@ -1232,10 +1152,10 @@ const MuhasebePage = () => {
                         }}
                       >
                         {magaza.kurum_adi}
-                      </div>
+                      </button>
                     ))}
                     {filteredStores?.length === 0 && (
-                      <div className="px-3 py-4 text-sm text-gray-500 text-center">
+                      <div className="px-3 py-4 text-center text-sm text-slate-500">
                         Mağaza bulunamadı
                       </div>
                     )}
@@ -1246,60 +1166,62 @@ const MuhasebePage = () => {
 
             {/* Başlangıç Tarihi */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                 Başlangıç Tarihi
               </label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
               />
             </div>
 
             {/* Bitiş Tarihi */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                 Bitiş Tarihi
               </label>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
               />
             </div>
 
             {/* İşlem Türü Filtresi */}
             <div className="dropdown-container">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                 İşlem Türü
               </label>
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setTransactionTypeFilterDropdownOpen(!transactionTypeFilterDropdownOpen)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-left bg-white"
+                  className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 pr-9 text-left text-sm text-slate-900 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                 >
-                  <span className="text-gray-900">
+                  <span>
                     {transactionTypeFilter === "gelir" && "Sadece Gelir"}
                     {transactionTypeFilter === "gider" && "Sadece Gider"}
                     {!transactionTypeFilter && "Tüm İşlemler"}
                   </span>
                   <svg
-                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${transactionTypeFilterDropdownOpen ? 'rotate-180' : ''}`}
+                    className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-transform ${transactionTypeFilterDropdownOpen ? 'rotate-180' : ''}`}
                     fill="none"
                     stroke="currentColor"
+                    strokeWidth={1.8}
                     viewBox="0 0 24 24"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
 
                 {transactionTypeFilterDropdownOpen && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
-                    <div
-                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${!transactionTypeFilter ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                  <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg scrollbar-hide">
+                    <button
+                      type="button"
+                      className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${!transactionTypeFilter ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                         }`}
                       onClick={() => {
                         setTransactionTypeFilter('');
@@ -1307,9 +1229,10 @@ const MuhasebePage = () => {
                       }}
                     >
                       Tüm İşlemler
-                    </div>
-                    <div
-                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${transactionTypeFilter === "gelir" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                    </button>
+                    <button
+                      type="button"
+                      className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${transactionTypeFilter === "gelir" ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                         }`}
                       onClick={() => {
                         setTransactionTypeFilter("gelir");
@@ -1317,9 +1240,10 @@ const MuhasebePage = () => {
                       }}
                     >
                       Sadece Gelir
-                    </div>
-                    <div
-                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${transactionTypeFilter === "gider" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                    </button>
+                    <button
+                      type="button"
+                      className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${transactionTypeFilter === "gider" ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                         }`}
                       onClick={() => {
                         setTransactionTypeFilter("gider");
@@ -1327,7 +1251,7 @@ const MuhasebePage = () => {
                       }}
                     >
                       Sadece Gider
-                    </div>
+                    </button>
                   </div>
                 )}
               </div>
@@ -1337,13 +1261,14 @@ const MuhasebePage = () => {
             <div>
               {(selectedStoreFilter || startDate || endDate || transactionTypeFilter) && (
                 <button
+                  type="button"
                   onClick={() => {
                     setSelectedStoreFilter('');
                     setStartDate('');
                     setEndDate('');
                     setTransactionTypeFilter('');
                   }}
-                  className="w-full px-3 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                  className="inline-flex w-full items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                 >
                   Filtreleri Temizle
                 </button>
@@ -1353,26 +1278,26 @@ const MuhasebePage = () => {
 
           {/* Aktif Filtreler Gösterimi */}
           {(selectedStoreFilter || startDate || endDate || transactionTypeFilter) && (
-            <div className="mt-6 pt-4 border-t border-gray-200">
-              <div className="flex flex-wrap gap-2 items-center">
-                <span className="text-sm font-medium text-gray-600">🏷️ Aktif Filtreler:</span>
+            <div className="mt-4 border-t border-slate-200/80 pt-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs text-slate-500">Aktif Filtreler:</span>
                 {selectedStoreFilter && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <span className="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700">
                     Mağaza: {responseData?.magazaBakiyeleri?.find(m => m.store_id === selectedStoreFilter)?.kurum_adi}
                   </span>
                 )}
                 {startDate && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-600">
                     Başlangıç: {new Date(startDate).toLocaleDateString('tr-TR')}
                   </span>
                 )}
                 {endDate && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-600">
                     Bitiş: {new Date(endDate).toLocaleDateString('tr-TR')}
                   </span>
                 )}
                 {transactionTypeFilter && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                  <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-600">
                     Tür: {transactionTypeFilter === 'gelir' ? 'Gelir' : 'Gider'}
                   </span>
                 )}
@@ -1383,45 +1308,40 @@ const MuhasebePage = () => {
 
         {/* Mağaza Bazlı Özet Kartı - Filtreleme aktifken göster */}
         {responseData && selectedStoreFilter && responseData.magazaBilgi && (
-          <div className="bg-white rounded-xl shadow-sm border p-6 mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-4">
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">{responseData.magazaBilgi.kurum_adi}</h2>
-                  <p className="text-sm text-gray-600">Mağaza Detay Bilgileri</p>
-                </div>
+          <div className="mb-6 overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/60 px-4 py-3 sm:px-5">
+              <div>
+                <h2 className="text-sm font-semibold text-slate-900">{responseData.magazaBilgi.kurum_adi}</h2>
+                <p className="mt-0.5 text-xs text-slate-500">Mağaza Detay Bilgileri</p>
               </div>
-              <div className={`px-4 py-2 rounded-lg text-sm font-medium ${(responseData.magazaBilgi.bakiyeDurumu?.durum || responseData.magazaBilgi.durum) === 'BORCLU'
-                ? 'bg-red-100 text-red-800'
+              <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${(responseData.magazaBilgi.bakiyeDurumu?.durum || responseData.magazaBilgi.durum) === 'BORCLU'
+                ? 'border-rose-200 bg-rose-50 text-rose-700'
                 : (responseData.magazaBilgi.bakiyeDurumu?.durum || responseData.magazaBilgi.durum) === 'ALACAKLI'
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-gray-100 text-gray-800'
+                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                  : 'border-slate-200 bg-slate-50 text-slate-600'
                 }`}>
                 {responseData.magazaBilgi.bakiyeDurumu?.durum || responseData.magazaBilgi.durum || 'DENGEDE'}
-              </div>
+              </span>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Bakiye */}
-              <div className="text-center p-6 bg-gray-50 rounded-lg">
-                <div className={`text-3xl font-bold ${(responseData.magazaBilgi.bakiyeDurumu?.bakiye || responseData.magazaBilgi.bakiye) >= 0 ? 'text-green-600' : 'text-red-600'
+            <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5">
+              <div className="rounded-xl border border-slate-200/80 bg-white p-4 sm:p-5">
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Bakiye</p>
+                <p className={`mt-2 text-2xl font-light tabular-nums ${(responseData.magazaBilgi.bakiyeDurumu?.bakiye || responseData.magazaBilgi.bakiye) >= 0 ? 'text-emerald-600' : 'text-rose-600'
                   }`}>
                   {formatCurrency(responseData.magazaBilgi.bakiyeDurumu?.bakiye || responseData.magazaBilgi.bakiye || 0)}
-                </div>
-                <div className="text-sm text-gray-600 mt-2">
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
                   {(responseData.magazaBilgi.bakiyeDurumu?.bakiye || responseData.magazaBilgi.bakiye || 0) >= 0 ? 'Alacaklı' : 'Borçlu'}
-                </div>
+                </p>
               </div>
-
-              {/* Açık Hesap Limiti */}
-              <div className="text-center p-6 bg-blue-50 rounded-lg">
-                <div className="text-3xl font-bold text-blue-600">
+              <div className="rounded-xl border border-slate-200/80 bg-white p-4 sm:p-5">
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Açık Hesap Limiti</p>
+                <p className="mt-2 text-2xl font-light tabular-nums text-slate-900">
                   {(responseData.magazaBilgi.bakiyeDurumu?.limitsizAcikHesap || responseData.magazaBilgi.limitsiz_acik_hesap)
                     ? 'Limitsiz'
                     : formatCurrency(responseData.magazaBilgi.bakiyeDurumu?.acikHesapLimiti || responseData.magazaBilgi.acik_hesap_tutari || 0)
                   }
-                </div>
-                <div className="text-sm text-gray-600 mt-2">Açık Hesap Limiti</div>
+                </p>
               </div>
             </div>
           </div>
@@ -1429,105 +1349,72 @@ const MuhasebePage = () => {
 
         {/* Modern Özet Kartları - Responsive Grid - Sadece genel veriler için göster */}
         {responseData && !selectedStoreFilter && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4 lg:gap-6 mb-8">
-            {/* Toplam Mağaza */}
-            <div className="bg-white rounded-xl shadow-sm border p-3 lg:p-4 hover:shadow-md transition-shadow min-w-0">
-              <div className="flex items-center space-x-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium text-gray-600 truncate">Toplam Mağaza</p>
-                  <p className="text-xl font-bold text-gray-900">{responseData.magazaBakiyeleri?.length || 0}</p>
-                </div>
-              </div>
+          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+            <div className="min-w-0 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+              <p className="truncate text-xs font-medium uppercase tracking-wide text-slate-500">Toplam Mağaza</p>
+              <p className="mt-2 text-2xl font-light text-slate-900">{responseData.magazaBakiyeleri?.length || 0}</p>
             </div>
-
-            {/* Kasa Bakiyesi */}
-            <div className="bg-white rounded-xl shadow-sm border p-3 lg:p-4 hover:shadow-md transition-shadow min-w-0">
-              <div className="flex items-center space-x-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium text-gray-600 truncate">Kasa Bakiyesi</p>
-                  <p className="text-sm xl:text-base font-bold text-blue-600 truncate leading-tight" title={formatCurrency(parseFloat(responseData.adminKasaBakiyesi || '0'))}>
-                    {formatCurrency(parseFloat(responseData.adminKasaBakiyesi || '0'))}
-                  </p>
-                </div>
-              </div>
+            <div className="min-w-0 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+              <p className="truncate text-xs font-medium uppercase tracking-wide text-slate-500">Kasa Bakiyesi</p>
+              <p className="mt-2 truncate text-2xl font-light tabular-nums text-slate-900" title={formatCurrency(parseFloat(responseData.adminKasaBakiyesi || '0'))}>
+                {formatCurrency(parseFloat(responseData.adminKasaBakiyesi || '0'))}
+              </p>
             </div>
-
-            {/* Toplam Alacak */}
-            <div className="bg-white rounded-xl shadow-sm border p-3 lg:p-4 hover:shadow-md transition-shadow min-w-0">
-              <div className="flex items-center space-x-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium text-gray-600 truncate">Toplam Alacak</p>
-                  <p className="text-sm xl:text-base font-bold text-red-600 truncate leading-tight" title={formatCurrency(
-                    responseData.magazaBakiyeleri?.filter(m => m.durum === 'BORCLU')
-                      .reduce((sum, m) => sum + Math.abs(m.bakiye), 0) || 0
-                  )}>
-                    {formatCurrency(
-                      responseData.magazaBakiyeleri?.filter(m => m.durum === 'BORCLU')
-                        .reduce((sum, m) => sum + Math.abs(m.bakiye), 0) || 0
-                    )}
-                  </p>
-                </div>
-              </div>
+            <div className="min-w-0 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+              <p className="truncate text-xs font-medium uppercase tracking-wide text-slate-500">Toplam Alacak</p>
+              <p className="mt-2 truncate text-2xl font-light tabular-nums text-rose-600" title={formatCurrency(
+                responseData.magazaBakiyeleri?.filter(m => m.durum === 'BORCLU')
+                  .reduce((sum, m) => sum + Math.abs(m.bakiye), 0) || 0
+              )}>
+                {formatCurrency(
+                  responseData.magazaBakiyeleri?.filter(m => m.durum === 'BORCLU')
+                    .reduce((sum, m) => sum + Math.abs(m.bakiye), 0) || 0
+                )}
+              </p>
             </div>
-
-            {/* Borçlu Mağazalar */}
-            <div className="bg-white rounded-xl shadow-sm border p-3 lg:p-4 hover:shadow-md transition-shadow min-w-0">
-              <div className="flex items-center space-x-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium text-gray-600 truncate">Borçlu Mağazalar</p>
-                  <p className="text-xl font-bold text-red-600">
-                    {responseData.magazaBakiyeleri?.filter(m => m.durum === 'BORCLU').length || 0}
-                  </p>
-                </div>
-              </div>
+            <div className="min-w-0 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+              <p className="truncate text-xs font-medium uppercase tracking-wide text-slate-500">Borçlu Mağazalar</p>
+              <p className="mt-2 text-2xl font-light text-rose-600">
+                {responseData.magazaBakiyeleri?.filter(m => m.durum === 'BORCLU').length || 0}
+              </p>
             </div>
-
-            {/* Alacaklı Mağazalar */}
-            <div className="bg-white rounded-xl shadow-sm border p-3 lg:p-4 hover:shadow-md transition-shadow min-w-0">
-              <div className="flex items-center space-x-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium text-gray-600 truncate">Alacaklı Mağazalar</p>
-                  <p className="text-xl font-bold text-green-600">
-                    {responseData.magazaBakiyeleri?.filter(m => m.durum === 'ALACAKLI').length || 0}
-                  </p>
-                </div>
-              </div>
+            <div className="min-w-0 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+              <p className="truncate text-xs font-medium uppercase tracking-wide text-slate-500">Alacaklı Mağazalar</p>
+              <p className="mt-2 text-2xl font-light text-emerald-600">
+                {responseData.magazaBakiyeleri?.filter(m => m.durum === 'ALACAKLI').length || 0}
+              </p>
             </div>
-
-            {/* Toplam Verecek */}
-            <div className="bg-white rounded-xl shadow-sm border p-3 lg:p-4 hover:shadow-md transition-shadow min-w-0">
-              <div className="flex items-center space-x-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium text-gray-600 truncate">Toplam Verecek</p>
-                  <p className="text-sm xl:text-base font-bold text-blue-600 truncate leading-tight" title={formatCurrency(
-                    responseData.magazaBakiyeleri?.filter(m => m.durum === 'ALACAKLI')
-                      .reduce((sum, m) => sum + m.bakiye, 0) || 0
-                  )}>
-                    {formatCurrency(
-                      responseData.magazaBakiyeleri?.filter(m => m.durum === 'ALACAKLI')
-                        .reduce((sum, m) => sum + m.bakiye, 0) || 0
-                    )}
-                  </p>
-                </div>
-              </div>
+            <div className="min-w-0 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+              <p className="truncate text-xs font-medium uppercase tracking-wide text-slate-500">Toplam Verecek</p>
+              <p className="mt-2 truncate text-2xl font-light tabular-nums text-emerald-600" title={formatCurrency(
+                responseData.magazaBakiyeleri?.filter(m => m.durum === 'ALACAKLI')
+                  .reduce((sum, m) => sum + m.bakiye, 0) || 0
+              )}>
+                {formatCurrency(
+                  responseData.magazaBakiyeleri?.filter(m => m.durum === 'ALACAKLI')
+                    .reduce((sum, m) => sum + m.bakiye, 0) || 0
+                )}
+              </p>
             </div>
           </div>
         )}
 
         {/* Mağaza Detayları - Modern Kartlar - Sadece genel veriler için göster */}
         {responseData && responseData.magazaBakiyeleri && responseData.magazaBakiyeleri.length > 0 && !selectedStoreFilter && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-            {/* Borçlu Mağazalar */}
+          <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
             {responseData.magazaBakiyeleri?.filter(m => m.durum === 'BORCLU').length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm border p-6">
-                <div className="flex items-center space-x-3 mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Borçlu Mağazalar</h3>
+              <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+                <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/60 px-4 py-3 sm:px-5">
+                  <h3 className="text-sm font-semibold text-slate-900">Borçlu Mağazalar</h3>
+                  <span className="text-xs text-slate-500">
+                    {responseData.magazaBakiyeleri?.filter(m => m.durum === 'BORCLU').length}
+                  </span>
                 </div>
-                <div className="space-y-3">
+                <div className="divide-y divide-slate-100 p-2 sm:p-3">
                   {responseData.magazaBakiyeleri?.filter(m => m.durum === 'BORCLU').map((magaza: MagazaBakiye) => (
                     <div
                       key={magaza.store_id}
-                      className="flex justify-between items-center p-4 bg-red-50 rounded-xl border border-red-100 hover:bg-red-100 transition-colors cursor-pointer"
+                      className="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 transition-colors hover:bg-slate-50/70"
                       onClick={() => {
                         setSelectedStoreFilter(magaza.store_id);
                         if (selectedCurrency === 'USD') {
@@ -1537,8 +1424,8 @@ const MuhasebePage = () => {
                         }
                       }}
                     >
-                      <span className="text-sm font-medium text-gray-900">{magaza.kurum_adi}</span>
-                      <span className="text-sm font-bold text-red-600">
+                      <span className="text-sm font-medium text-slate-900">{magaza.kurum_adi}</span>
+                      <span className="text-sm font-medium tabular-nums text-rose-600">
                         {formatCurrency(magaza.tutar)}
                       </span>
                     </div>
@@ -1547,17 +1434,19 @@ const MuhasebePage = () => {
               </div>
             )}
 
-            {/* Alacaklı Mağazalar */}
             {responseData.magazaBakiyeleri?.filter(m => m.durum === 'ALACAKLI').length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm border p-6">
-                <div className="flex items-center space-x-3 mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Alacaklı Mağazalar</h3>
+              <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+                <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/60 px-4 py-3 sm:px-5">
+                  <h3 className="text-sm font-semibold text-slate-900">Alacaklı Mağazalar</h3>
+                  <span className="text-xs text-slate-500">
+                    {responseData.magazaBakiyeleri?.filter(m => m.durum === 'ALACAKLI').length}
+                  </span>
                 </div>
-                <div className="space-y-3">
+                <div className="divide-y divide-slate-100 p-2 sm:p-3">
                   {responseData.magazaBakiyeleri?.filter(m => m.durum === 'ALACAKLI').map((magaza: MagazaBakiye) => (
                     <div
                       key={magaza.store_id}
-                      className="flex justify-between items-center p-4 bg-green-50 rounded-xl border border-green-100 hover:bg-green-100 transition-colors cursor-pointer"
+                      className="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 transition-colors hover:bg-slate-50/70"
                       onClick={() => {
                         setSelectedStoreFilter(magaza.store_id);
                         if (selectedCurrency === 'USD') {
@@ -1567,8 +1456,8 @@ const MuhasebePage = () => {
                         }
                       }}
                     >
-                      <span className="text-sm font-medium text-gray-900">{magaza.kurum_adi}</span>
-                      <span className="text-sm font-bold text-green-600">
+                      <span className="text-sm font-medium text-slate-900">{magaza.kurum_adi}</span>
+                      <span className="text-sm font-medium tabular-nums text-emerald-600">
                         {formatCurrency(magaza.tutar)}
                       </span>
                     </div>
@@ -1577,17 +1466,19 @@ const MuhasebePage = () => {
               </div>
             )}
 
-            {/* Dengede Mağazalar */}
             {responseData.magazaBakiyeleri?.filter(m => m.durum === 'DENGEDE').length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm border p-6">
-                <div className="flex items-center space-x-3 mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Dengede Mağazalar</h3>
+              <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+                <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/60 px-4 py-3 sm:px-5">
+                  <h3 className="text-sm font-semibold text-slate-900">Dengede Mağazalar</h3>
+                  <span className="text-xs text-slate-500">
+                    {responseData.magazaBakiyeleri?.filter(m => m.durum === 'DENGEDE').length}
+                  </span>
                 </div>
-                <div className="space-y-3">
+                <div className="divide-y divide-slate-100 p-2 sm:p-3">
                   {responseData.magazaBakiyeleri?.filter(m => m.durum === 'DENGEDE').map((magaza: MagazaBakiye) => (
                     <div
                       key={magaza.store_id}
-                      className="flex justify-between items-center p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors cursor-pointer"
+                      className="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 transition-colors hover:bg-slate-50/70"
                       onClick={() => {
                         setSelectedStoreFilter(magaza.store_id);
                         if (selectedCurrency === 'USD') {
@@ -1597,8 +1488,8 @@ const MuhasebePage = () => {
                         }
                       }}
                     >
-                      <span className="text-sm font-medium text-gray-900">{magaza.kurum_adi}</span>
-                      <span className="text-sm font-medium text-gray-600">
+                      <span className="text-sm font-medium text-slate-900">{magaza.kurum_adi}</span>
+                      <span className="text-sm text-slate-500 tabular-nums">
                         Bakiye: {formatCurrency(magaza.bakiye)}
                       </span>
                     </div>
@@ -1610,30 +1501,23 @@ const MuhasebePage = () => {
         )}
 
 
-        {/* Modern İşlem Geçmişi Tablosu */}
-        <div className="bg-white rounded-xl shadow-sm border" id="son-islemler">
-          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100">
-                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Son İşlemler
-                  {filteredData && filteredData.hareketler.length !== responseData?.hareketler.length && (
-                    <span className="ml-2 text-sm text-gray-500">
-                      ({filteredData.hareketler.length} / {responseData?.hareketler.length} kayıt)
-                    </span>
-                  )}
-                </h2>
-                {filteredData && filteredData.hareketler.length === 0 && (selectedStoreFilter || startDate || endDate || transactionTypeFilter) && (
-                  <p className="text-sm text-gray-500 mt-1">Filtreye uygun kayıt bulunamadı</p>
+        <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm" id="son-islemler">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/60 px-4 py-3 sm:px-5">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">
+                Son İşlemler
+                {filteredData && filteredData.hareketler.length !== responseData?.hareketler.length && (
+                  <span className="ml-2 text-xs font-normal text-slate-500">
+                    ({filteredData.hareketler.length} / {responseData?.hareketler.length} kayıt)
+                  </span>
                 )}
-              </div>
+              </h2>
+              {filteredData && filteredData.hareketler.length === 0 && (selectedStoreFilter || startDate || endDate || transactionTypeFilter) && (
+                <p className="mt-0.5 text-xs text-slate-500">Filtreye uygun kayıt bulunamadı</p>
+              )}
             </div>
             <button
+              type="button"
               onClick={() => {
                 // Filtrelenmiş verileri al
                 const currentData = getFilteredData();
@@ -1991,56 +1875,53 @@ const MuhasebePage = () => {
                   if (contentElement) contentElement.remove();
                 }, 1000);
               }}
-              className="flex items-center px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
             >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-              </svg>
               Yazdır
             </button>
           </div>
-          <div className="overflow-x-auto max-h-96 overflow-y-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+          <div className="max-h-96 w-full overflow-x-auto overflow-y-auto">
+            <table className="min-w-full">
+              <thead className="bg-slate-50/60">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                     Tarih
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                     Mağaza
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                     İşlem Türü
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-slate-500">
                     Tutar
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                     Açıklama
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-slate-100">
                 {filteredData?.hareketler.map((transaction: Transaction) => (
-                  <tr key={transaction.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-4 text-sm text-gray-900">
+                  <tr key={transaction.id} className="transition-colors hover:bg-slate-50/70">
+                    <td className="px-4 py-3 text-sm text-slate-700">
                       {new Date(transaction.tarih).toLocaleDateString('tr-TR')}
                     </td>
-                    <td className="px-4 py-4">
-                      <div className="text-sm font-medium text-gray-900 truncate max-w-32">
+                    <td className="px-4 py-3">
+                      <div className="max-w-32 truncate text-sm font-medium text-slate-900">
                         {selectedStoreFilter ? responseData?.magazaBilgi?.kurum_adi : (transaction.store?.kurum_adi || 'Bilinmeyen Mağaza')}
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-900">
-                      <span className="truncate block max-w-28">{transaction.islemTuru}</span>
+                    <td className="px-4 py-3 text-sm text-slate-700">
+                      <span className="block max-w-28 truncate">{transaction.islemTuru}</span>
                     </td>
-                    <td className="px-4 py-4">
-                      <div className={`text-sm font-medium ${transaction.harcama ? 'text-red-600' : 'text-green-600'}`}>
+                    <td className="px-4 py-3 text-right">
+                      <div className={`text-sm font-medium tabular-nums ${transaction.harcama ? 'text-rose-600' : 'text-emerald-600'}`}>
                         {transaction.harcama ? '-' : '+'}{formatCurrency(parseFloat(transaction.tutar))}
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-900">
-                      <div className="whitespace-pre-line max-w-xs font-mono">
+                    <td className="px-4 py-3 text-sm text-slate-700">
+                      <div className="max-w-xs whitespace-pre-line font-mono">
                         {formatAciklama(transaction)}
                       </div>
                     </td>
@@ -2050,35 +1931,36 @@ const MuhasebePage = () => {
             </table>
           </div>
 
-          {/* Pagination - Mağaza bazlı API'da varsa göster */}
           {responseData?.pagination && (
-            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-              <div className="flex items-center text-sm text-gray-700">
+            <div className="flex items-center justify-between border-t border-slate-200/80 px-4 py-3 sm:px-5">
+              <div className="text-sm text-slate-700">
                 <span>
                   Toplam {responseData.pagination.total} kayıt bulundu
                   ({responseData.pagination.totalPages} sayfa)
                 </span>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 {responseData.pagination.page > 1 && (
                   <button
+                    type="button"
                     onClick={() => {
                       // Sayfa değiştirme fonksiyonu - API'ye page parametresi ekle
                     }}
-                    className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
+                    className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
                   >
                     Önceki
                   </button>
                 )}
-                <span className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded">
+                <span className="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700">
                   Sayfa {responseData.pagination.page}
                 </span>
                 {responseData.pagination.page < responseData.pagination.totalPages && (
                   <button
+                    type="button"
                     onClick={() => {
                       // Sayfa değiştirme fonksiyonu - API'ye page parametresi ekle
                     }}
-                    className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
+                    className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
                   >
                     Sonraki
                   </button>
@@ -2088,35 +1970,31 @@ const MuhasebePage = () => {
           )}
         </div>
 
-        {/* Modern Mali Kayıt Ekleme Modal */}
         {isModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              {/* Modal Header */}
-              <div className="bg-[#00365a] text-white rounded-t-2xl p-6">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="text-xl font-bold">Yeni Mali Hareket</h3>
-                    <p className="text-blue-100 text-sm mt-1">Gelir veya gider kaydı oluşturun</p>
-                  </div>
-                  <button
-                    onClick={closeModal}
-                    className="text-blue-100 hover:text-white transition-colors p-2 hover:bg-white hover:bg-opacity-20 rounded-xl"
-                    disabled={formLoading}
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+            <div className="max-h-[92vh] w-full max-w-2xl overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-lg" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              <div className="flex items-start justify-between gap-3 border-b border-slate-200/80 px-5 py-4">
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900">Yeni Mali Hareket</h3>
+                  <p className="mt-0.5 text-xs text-slate-500">Gelir veya gider kaydı oluşturun</p>
                 </div>
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                  disabled={formLoading}
+                >
+                  <span className="sr-only">Kapat</span>
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
 
-              {/* Modal Content */}
-              <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                {/* Müşteri Seçimi */}
+              <form id="muhasebe-transaction-form" onSubmit={handleSubmit} className="max-h-[calc(92vh-8rem)] space-y-6 overflow-y-auto px-5 py-5">
                 <div className="dropdown-container">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Müşteri <span className="text-red-500">*</span>
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Müşteri <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -2125,30 +2003,33 @@ const MuhasebePage = () => {
                       onChange={(e) => handleCustomerSearch(e.target.value)}
                       onFocus={() => setCustomerDropdownOpen(true)}
                       placeholder="Müşteri ara..."
-                      className={`w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors ${formLoading ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
+                      className={`w-full rounded-lg border border-slate-300 bg-slate-50 py-2.5 pl-3 pr-9 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15 ${formLoading ? 'cursor-not-allowed bg-slate-50' : ''
                         }`}
                       disabled={formLoading}
                     />
                     <svg
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
+                      className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
                       fill="none"
                       stroke="currentColor"
+                      strokeWidth={1.8}
                       viewBox="0 0 24 24"
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      <circle cx="11" cy="11" r="8" />
+                      <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
                     </svg>
 
                     {customerDropdownOpen && !formLoading && (
-                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                      <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg scrollbar-hide">
                         {filteredStores.length === 0 ? (
-                          <div className="px-3 py-2 text-gray-500 text-center">
+                          <div className="px-3 py-2 text-center text-sm text-slate-500">
                             Müşteri bulunamadı
                           </div>
                         ) : (
                           filteredStores.map((store) => (
-                            <div
+                            <button
+                              type="button"
                               key={store.store_id}
-                              className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${selectedCustomer === store.store_id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                              className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${selectedCustomer === store.store_id ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                                 }`}
                               onClick={() => {
                                 handleCustomerChange(store.store_id);
@@ -2156,7 +2037,7 @@ const MuhasebePage = () => {
                               }}
                             >
                               {store.kurum_adi}
-                            </div>
+                            </button>
                           ))
                         )}
                       </div>
@@ -2164,25 +2045,24 @@ const MuhasebePage = () => {
                   </div>
                 </div>
 
-                {/* Otomatik Tutar Hesaplama */}
-                <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">
+                <div className="rounded-lg border border-slate-200/80 bg-slate-50/60 p-4">
+                  <h4 className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-500">
                     Otomatik Tutar Hesaplama (İsteğe Bağlı)
                   </h4>
 
                   <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                     {/* Ürün Seçimi */}
                     <div className="md:col-span-2 dropdown-container">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Ürün</label>
+                      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Ürün</label>
                       <div className="relative">
                         <button
                           type="button"
                           onClick={() => setCollectionDropdownOpen(!collectionDropdownOpen)}
-                          className={`w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors text-left ${!selectedCustomer || formLoading || collections.length === 0 ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
+                          className={`w-full rounded-lg border border-slate-300 px-3 py-2.5 pr-9 text-left text-sm text-slate-900 transition hover:border-slate-400 focus:border-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15 ${!selectedCustomer || formLoading || collections.length === 0 ? 'cursor-not-allowed bg-slate-100' : 'bg-white'
                             }`}
                           disabled={!selectedCustomer || formLoading || collections.length === 0}
                         >
-                          <span className="text-gray-900">
+                          <span>
                             {!selectedCustomer ? 'Önce müşteri seçin...' :
                               collections.length === 0 ? 'Ürün bulunamadı...' :
                                 selectedCollection ?
@@ -2192,21 +2072,23 @@ const MuhasebePage = () => {
                             }
                           </span>
                           <svg
-                            className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${collectionDropdownOpen ? 'rotate-180' : ''}`}
+                            className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-transform ${collectionDropdownOpen ? 'rotate-180' : ''}`}
                             fill="none"
                             stroke="currentColor"
+                            strokeWidth={1.8}
                             viewBox="0 0 24 24"
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                           </svg>
                         </button>
 
                         {collectionDropdownOpen && selectedCustomer && !formLoading && collections.length > 0 && (
-                          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                          <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg scrollbar-hide">
                             {collections.map((collection) => (
-                              <div
+                              <button
+                                type="button"
                                 key={collection.id}
-                                className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${selectedCollection === collection.id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${selectedCollection === collection.id ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                                   }`}
                                 onClick={() => {
                                   setSelectedCollection(collection.id);
@@ -2215,35 +2097,33 @@ const MuhasebePage = () => {
                                 }}
                               >
                                 {collection.name} ({formatCurrency(collection.price_per_square_meter)}/m²)
-                              </div>
+                              </button>
                             ))}
                           </div>
                         )}
                       </div>
                     </div>
 
-                    {/* Metrekare */}
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Metrekare</label>
+                      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Metrekare</label>
                       <input
                         type="number"
                         step="0.01"
                         min="0"
                         value={formData.square_meters || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, square_meters: parseFloat(e.target.value) || 0 }))}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors"
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                         placeholder="0.00"
                         disabled={formLoading}
                       />
                     </div>
 
-                    {/* Hesapla Butonu */}
                     <div className="flex items-end">
                       <button
                         type="button"
                         onClick={calculateAmount}
                         disabled={!formData.collection_id || !formData.square_meters || formLoading}
-                        className="w-full px-4 py-3 bg-[#00365a] text-white rounded-lg hover:bg-[#002847] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        className="inline-flex w-full items-center justify-center rounded-lg bg-[#00365a] px-3 py-2 text-xs font-medium text-white transition hover:bg-[#004170] disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         Hesapla
                       </button>
@@ -2251,51 +2131,50 @@ const MuhasebePage = () => {
                   </div>
                 </div>
 
-                {/* İşlem Detayları */}
                 <div className="space-y-4">
-                  <h4 className="text-sm font-medium text-gray-700 border-b border-gray-200 pb-2">
+                  <h4 className="border-b border-slate-200/80 pb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
                     İşlem Detayları
                   </h4>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* İşlem Türü */}
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="dropdown-container">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        İşlem Türü <span className="text-red-500">*</span>
+                      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                        İşlem Türü <span className="text-rose-500">*</span>
                       </label>
                       <div className="relative">
                         <button
                           type="button"
                           onClick={() => setTransactionTypeDropdownOpen(!transactionTypeDropdownOpen)}
-                          className={`w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors text-left ${formLoading ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
+                          className={`w-full rounded-lg border border-slate-300 px-3 py-2.5 pr-9 text-left text-sm text-slate-900 transition hover:border-slate-400 focus:border-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15 ${formLoading ? 'cursor-not-allowed bg-slate-100' : 'bg-slate-50'
                             }`}
                           disabled={formLoading}
                         >
-                          <span className="text-gray-900">
+                          <span>
                             {formData.islemTuru || 'İşlem türü seçin...'}
                           </span>
                           <svg
-                            className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${transactionTypeDropdownOpen ? 'rotate-180' : ''}`}
+                            className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-transform ${transactionTypeDropdownOpen ? 'rotate-180' : ''}`}
                             fill="none"
                             stroke="currentColor"
+                            strokeWidth={1.8}
                             viewBox="0 0 24 24"
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                           </svg>
                         </button>
 
                         {transactionTypeDropdownOpen && !formLoading && (
-                          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
-                            {/* Gelir Türleri */}
+                          <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg scrollbar-hide">
                             {incomeTypes.length > 0 && (
                               <>
-                                <div className="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b border-gray-200">
+                                <div className="border-b border-slate-200/80 bg-slate-50/60 px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-500">
                                   Gelir Türleri
                                 </div>
                                 {incomeTypes.map((type) => (
-                                  <div
+                                  <button
+                                    type="button"
                                     key={type}
-                                    className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${formData.islemTuru === type ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                    className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${formData.islemTuru === type ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                                       }`}
                                     onClick={() => {
                                       setFormData(prev => ({
@@ -2306,21 +2185,21 @@ const MuhasebePage = () => {
                                     }}
                                   >
                                     {type}
-                                  </div>
+                                  </button>
                                 ))}
                               </>
                             )}
 
-                            {/* Gider Türleri */}
                             {expenseTypes.length > 0 && (
                               <>
-                                <div className="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b border-gray-200">
+                                <div className="border-b border-slate-200/80 bg-slate-50/60 px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-500">
                                   Gider Türleri
                                 </div>
                                 {expenseTypes.map((type) => (
-                                  <div
+                                  <button
+                                    type="button"
                                     key={type}
-                                    className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${formData.islemTuru === type ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                    className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${formData.islemTuru === type ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                                       }`}
                                     onClick={() => {
                                       setFormData(prev => ({
@@ -2331,7 +2210,7 @@ const MuhasebePage = () => {
                                     }}
                                   >
                                     {type}
-                                  </div>
+                                  </button>
                                 ))}
                               </>
                             )}
@@ -2340,10 +2219,9 @@ const MuhasebePage = () => {
                       </div>
                     </div>
 
-                    {/* Tutar */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Tutar <span className="text-red-500">*</span>
+                      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                        Tutar <span className="text-rose-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -2353,7 +2231,7 @@ const MuhasebePage = () => {
                           const value = e.target.value.replace(/[^0-9.-]/g, '');
                           setFormData(prev => ({ ...prev, tutar: value === '' ? 0 : parseFloat(value) || 0 }));
                         }}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors"
+                        className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                         placeholder="0.00"
                         required
                         disabled={formLoading}
@@ -2361,30 +2239,28 @@ const MuhasebePage = () => {
                     </div>
                   </div>
 
-                  {/* Tarih */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      İşlem Tarihi <span className="text-red-500">*</span>
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                      İşlem Tarihi <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="datetime-local"
                       value={formData.tarih}
                       onChange={(e) => setFormData(prev => ({ ...prev, tarih: e.target.value }))}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors"
+                      className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       required
                       disabled={formLoading}
                     />
                   </div>
 
-                  {/* Açıklama */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Açıklama <span className="text-red-500">*</span>
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Açıklama <span className="text-rose-500">*</span>
                     </label>
                     <textarea
                       value={formData.aciklama}
                       onChange={(e) => setFormData(prev => ({ ...prev, aciklama: e.target.value }))}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a] transition-colors"
+                      className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       rows={3}
                       placeholder="İşlem açıklaması... Fiş no, Fatura no, Nakliye, Kargo, vb."
                       required
@@ -2392,33 +2268,26 @@ const MuhasebePage = () => {
                     />
                   </div>
                 </div>
-
-                {/* Butonlar */}
-                <div className="flex gap-3 pt-4 border-t border-gray-200">
-                  <button
-                    type="button"
-                    onClick={closeModal}
-                    className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                    disabled={formLoading}
-                  >
-                    İptal
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={formLoading}
-                    className="flex-1 px-4 py-3 bg-[#00365a] text-white rounded-lg hover:bg-[#002847] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
-                  >
-                    {formLoading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Kaydediliyor...
-                      </>
-                    ) : (
-                      'Kaydet'
-                    )}
-                  </button>
-                </div>
               </form>
+
+              <div className="flex justify-end gap-2 border-t border-slate-200/80 bg-slate-50/60 px-5 py-3.5">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                  disabled={formLoading}
+                >
+                  İptal
+                </button>
+                <button
+                  type="submit"
+                  form="muhasebe-transaction-form"
+                  disabled={formLoading}
+                  className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {formLoading ? 'Kaydediliyor...' : 'Kaydet'}
+                </button>
+              </div>
             </div>
           </div>
         )}

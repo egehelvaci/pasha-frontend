@@ -23,8 +23,8 @@ export default function DashboardLayout({
   // Auth yüklenirken gösterilecek loading ekranı
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#f7f8fa]">
+        <div className="h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]"></div>
       </div>
     );
   }
@@ -32,8 +32,8 @@ export default function DashboardLayout({
   // Kullanıcı giriş yapmamışsa loading göster (yönlendirme sırasında)
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#f7f8fa]">
+        <div className="h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]"></div>
       </div>
     );
   }
@@ -74,7 +74,7 @@ export default function DashboardLayout({
           }
         }
       `}</style>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#f7f8fa]">
         <Header 
           title="Dashboard"
           user={userInfo}

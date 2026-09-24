@@ -142,10 +142,10 @@ export default function SupplierModal({
   if (!isOpen) return null;
 
   const inputClass = (hasError?: boolean) =>
-    `w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition-all duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-60 ${
+    `w-full rounded-lg border bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition-all duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:opacity-60 ${
       hasError
         ? 'border-red-300 hover:border-red-400'
-        : 'border-slate-200/80 hover:border-slate-300 hover:bg-slate-50'
+        : 'border-slate-300 hover:border-slate-400'
     }`;
 
   return (

@@ -433,7 +433,7 @@ export default function ProductDetail() {
     if (!open) return null;
 
     const fieldClass =
-      "w-full rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 transition-all duration-200 ease-out placeholder:text-slate-400 hover:border-slate-300 focus:border-slate-300 focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15";
+      "w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 transition-all duration-200 ease-out placeholder:text-slate-400 hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15";
 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
@@ -912,7 +912,7 @@ export default function ProductDetail() {
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder="Ürün için özel notlarınızı yazabilirsiniz..."
-                      className="h-24 resize-none rounded-lg border border-slate-200/80 p-3 text-sm text-slate-900 transition-all duration-200 ease-out placeholder:text-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20"
+                      className="h-24 resize-none rounded-lg border border-slate-300 bg-slate-50 p-3 text-sm text-slate-900 transition-all duration-200 ease-out placeholder:text-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20"
                     />
                   </div>
 

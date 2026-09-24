@@ -95,8 +95,8 @@ const statusLabels = {
 };
 
 const statusColors = {
-  COMPLETED: 'bg-green-100 text-green-800',
-  FAILED: 'bg-red-100 text-red-800'
+  COMPLETED: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+  FAILED: 'border-rose-200 bg-rose-50 text-rose-700'
 };
 
 export default function PaymentsPage() {
@@ -654,194 +654,123 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
 
   if (loading) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="relative">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[#00365a]"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <svg className="w-6 h-6 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
-              </div>
-            </div>
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-900">Ödeme Verileri Yükleniyor</h3>
-              <p className="text-sm text-gray-500 mt-1">Lütfen bekleyiniz...</p>
-            </div>
-          </div>
-        </div>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#f7f8fa]">
+        <div className="h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
+        <p className="text-sm text-slate-500">Ödeme verileri yükleniyor...</p>
       </div>
     );
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="w-full mx-auto" style={{ maxWidth: '100%' }}>
-        {/* Page Header */}
-        <div className="mb-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-[#00365a] flex items-center">
-                Ödeme Geçmişi
-              </h1>
-              <p className="text-gray-600 mt-1">Geçmiş ödeme işlemlerini görüntüleyin ve takip edin</p>
-            </div>
-            <button
-              onClick={() => setPaymentModalOpen(true)}
-              className="bg-[#00365a] hover:bg-[#004170] text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              <span>Yeni Ödeme</span>
-            </button>
+    <div className="min-h-screen bg-[#f7f8fa]">
+      <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+        <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl sm:tracking-[0.12em]">
+              Ödeme Geçmişi
+            </h1>
+            <div className="mt-3 h-px w-[min(100%,20rem)] bg-neutral-300 sm:mt-4" />
+            <p className="mt-3 text-sm text-slate-500">Geçmiş ödeme işlemlerini görüntüleyin ve takip edin</p>
           </div>
+          <button
+            type="button"
+            onClick={() => setPaymentModalOpen(true)}
+            className="inline-flex shrink-0 items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Yeni Ödeme
+          </button>
         </div>
 
-        {/* Summary Cards */}
         {summary && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-center">
-                <div className="p-3 bg-green-100 rounded-xl">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Başarılı Ödemeler</p>
-                  <p className="text-2xl font-bold text-gray-900">{summary.completedCount}</p>
-                </div>
-              </div>
+          <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Başarılı Ödemeler</p>
+              <p className="mt-2 text-2xl font-light text-slate-900 tabular-nums">{summary.completedCount}</p>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-center">
-                <div className="p-3 bg-red-100 rounded-xl">
-                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Başarısız Ödemeler</p>
-                  <p className="text-2xl font-bold text-gray-900">{summary.failedCount}</p>
-                </div>
-              </div>
+            <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Başarısız Ödemeler</p>
+              <p className="mt-2 text-2xl font-light text-slate-900 tabular-nums">{summary.failedCount}</p>
             </div>
 
-{userCurrency === 'USD' && (summary.tryPayments || summary.usdPayments) ? (
+            {userCurrency === 'USD' && (summary.tryPayments || summary.usdPayments) ? (
               <>
-                {/* TRY Ödemeler */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                  <div className="flex items-center">
-                    <div className="p-3 bg-green-100 rounded-xl">
-                      <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                      </svg>
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600">TRY Ödemeler</p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {summary.tryPayments?.totalAmount?.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) || '0,00'} ₺
-                      </p>
-                      <p className="text-xs text-gray-500">{summary.tryPayments?.count || 0} adet</p>
-                    </div>
-                  </div>
+                <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">TRY Ödemeler</p>
+                  <p className="mt-2 text-2xl font-light text-slate-900 tabular-nums">
+                    {summary.tryPayments?.totalAmount?.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) || '0,00'} ₺
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">{summary.tryPayments?.count || 0} adet</p>
                 </div>
 
-                {/* USD Ödemeler */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                  <div className="flex items-center">
-                    <div className="p-3 bg-blue-100 rounded-xl">
-                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                      </svg>
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600">USD Ödemeler</p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        ${summary.usdPayments?.totalAmount?.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) || '0.00'}
-                      </p>
-                      <p className="text-xs text-gray-500">{summary.usdPayments?.count || 0} adet</p>
-                    </div>
-                  </div>
+                <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">USD Ödemeler</p>
+                  <p className="mt-2 text-2xl font-light text-slate-900 tabular-nums">
+                    ${summary.usdPayments?.totalAmount?.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) || '0.00'}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">{summary.usdPayments?.count || 0} adet</p>
                 </div>
               </>
             ) : (
-              /* Tek Currency için Toplam Tutar */
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-center">
-                  <div className="p-3 bg-blue-100 rounded-xl">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Toplam Tutar</p>
-                    <p className="text-2xl font-bold text-gray-900">{summary.totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}</p>
-                  </div>
-                </div>
+              <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Toplam Tutar</p>
+                <p className="mt-2 text-2xl font-light text-slate-900 tabular-nums">
+                  {summary.totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}{' '}
+                  {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}
+                </p>
               </div>
             )}
-
-
           </div>
         )}
 
-        {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex items-center mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#00365a]" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.553.894l-2 1A1 1 0 018 16v-4.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
-            </svg>
-            <h3 className="text-lg font-semibold text-[#00365a]">Filtreler</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+        <div className="mb-6 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Arama</label>
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Arama</label>
               <div className="relative">
                 <input
                   type="text"
                   placeholder="Referans, mağaza..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all"
+                  className="w-full rounded-lg border border-slate-300 bg-slate-50 py-2.5 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                 />
-                <svg className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
                   <circle cx="11" cy="11" r="8"/>
-                  <path d="M21 21l-4.35-4.35"/>
+                  <path d="M21 21l-4.35-4.35" strokeLinecap="round"/>
                 </svg>
               </div>
             </div>
             <div className="dropdown-container">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Durum</label>
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Durum</label>
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all text-left bg-white"
+                  className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 pr-9 text-left text-sm text-slate-900 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                 >
-                  <span className={statusFilter ? "text-gray-900" : "text-gray-500"}>
+                  <span className={statusFilter ? 'text-slate-900' : 'text-slate-500'}>
                     {statusFilter === "COMPLETED" && "Başarılı"}
                     {statusFilter === "FAILED" && "Başarısız"}
                     {!statusFilter && "Tüm Durumlar"}
                   </span>
-                  <svg 
-                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${statusDropdownOpen ? 'rotate-180' : ''}`}
-                    fill="none" 
-                    stroke="currentColor" 
+                  <svg
+                    className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-transform ${statusDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.8}
                     viewBox="0 0 24 24"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
                 
                 {statusDropdownOpen && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    <div
-                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        !statusFilter ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                  <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+                    <button
+                      type="button"
+                      className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                        !statusFilter ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                       onClick={() => {
                         setStatusFilter("");
@@ -850,10 +779,11 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
                       }}
                     >
                       Tüm Durumlar
-                    </div>
-                    <div
-                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        statusFilter === "COMPLETED" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                    </button>
+                    <button
+                      type="button"
+                      className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                        statusFilter === "COMPLETED" ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                       onClick={() => {
                         setStatusFilter("COMPLETED");
@@ -862,10 +792,11 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
                       }}
                     >
                       Başarılı
-                    </div>
-                    <div
-                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        statusFilter === "FAILED" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                    </button>
+                    <button
+                      type="button"
+                      className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                        statusFilter === "FAILED" ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                       onClick={() => {
                         setStatusFilter("FAILED");
@@ -874,41 +805,43 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
                       }}
                     >
                       Başarısız
-                    </div>
+                    </button>
                   </div>
                 )}
               </div>
             </div>
             {isAdminOrEditor && (
               <div className="dropdown-container">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mağaza</label>
+                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Mağaza</label>
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => setStoreDropdownOpen(!storeDropdownOpen)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all text-left bg-white"
+                    className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 pr-9 text-left text-sm text-slate-900 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                   >
-                    <span className={selectedStoreFilter ? "text-gray-900" : "text-gray-500"}>
+                    <span className={selectedStoreFilter ? 'text-slate-900' : 'text-slate-500'}>
                       {selectedStoreFilter 
                         ? stores.find(store => store.store_id === selectedStoreFilter)?.kurum_adi || "Mağaza Seçin"
                         : "Tüm Mağazalar"
                       }
                     </span>
-                    <svg 
-                      className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${storeDropdownOpen ? 'rotate-180' : ''}`}
-                      fill="none" 
-                      stroke="currentColor" 
+                    <svg
+                      className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-transform ${storeDropdownOpen ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={1.8}
                       viewBox="0 0 24 24"
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
                   
                   {storeDropdownOpen && (
-                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                      <div
-                        className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                          !selectedStoreFilter ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                    <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+                      <button
+                        type="button"
+                        className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                          !selectedStoreFilter ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                         }`}
                         onClick={() => {
                           setSelectedStoreFilter("");
@@ -917,12 +850,13 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
                         }}
                       >
                         Tüm Mağazalar
-                      </div>
+                      </button>
                       {[...stores].sort((a, b) => a.kurum_adi.localeCompare(b.kurum_adi, 'tr', { sensitivity: 'base' })).map((store) => (
-                        <div
+                        <button
                           key={store.store_id}
-                          className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                            selectedStoreFilter === store.store_id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                          type="button"
+                          className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                            selectedStoreFilter === store.store_id ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                           }`}
                           onClick={() => {
                             setSelectedStoreFilter(store.store_id);
@@ -931,7 +865,7 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
                           }}
                         >
                           {store.kurum_adi}
-                        </div>
+                        </button>
                       ))}
                     </div>
                   )}
@@ -939,7 +873,7 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
               </div>
             )}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Başlangıç</label>
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Başlangıç</label>
               <input
                 type="date"
                 value={startDate}
@@ -947,11 +881,11 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
                   setStartDate(e.target.value);
                   handleFilterChange();
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all"
+                className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Bitiş</label>
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Bitiş</label>
               <input
                 type="date"
                 value={endDate}
@@ -959,11 +893,12 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
                   setEndDate(e.target.value);
                   handleFilterChange();
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all"
+                className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
               />
             </div>
             <div className="flex items-end">
               <button
+                type="button"
                 onClick={() => {
                   setSearchTerm("");
                   setStatusFilter("");
@@ -972,7 +907,7 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
                   setEndDate("");
                   setCurrentPage(1);
                 }}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors w-full font-medium"
+                className="inline-flex w-full items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15 md:w-auto"
               >
                 Temizle
               </button>
@@ -980,126 +915,105 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
           </div>
         </div>
 
-        {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-6">
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                <div className="bg-red-100 rounded-full p-2">
-                  <svg className="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
-                </div>
-              </div>
-              <div className="ml-4">
-                <h3 className="text-base font-semibold text-red-800">
-                  Hata Oluştu
-                </h3>
-                <div className="mt-2 text-sm text-red-700">
-                  <p>{error}</p>
-                </div>
-              </div>
-            </div>
+          <div className="mb-6 rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-3 text-sm text-rose-700">
+            <p className="font-medium text-rose-800">Hata Oluştu</p>
+            <p className="mt-1">{error}</p>
           </div>
         )}
 
-        {/* Payments Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-12 py-6 border-b border-gray-200 bg-[#00365a]">
-            <div className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <h3 className="text-lg font-semibold text-white">Ödeme Listesi</h3>
-            </div>
+        <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/60 px-4 py-3 sm:px-5">
+            <h3 className="text-sm font-semibold text-slate-900">Ödeme Listesi</h3>
+            {pagination ? (
+              <span className="text-xs text-slate-500">{pagination.totalCount} kayıt</span>
+            ) : null}
           </div>
-          <div style={{ width: '100%' }}>
-            <table className="w-full divide-y divide-gray-200" style={{ fontSize: '16px' }}>
-                <thead className="bg-gray-50">
+          <div className="w-full overflow-x-auto">
+            <table className="w-full">
+                <thead className="bg-slate-50/60">
                   <tr>
-                    <th className="px-6 py-6 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                       Referans No
                     </th>
-                    <th className="px-6 py-6 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                       Durum
                     </th>
-                    <th className="px-6 py-6 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-slate-500">
                       Tutar
                     </th>
-                    <th className="px-6 py-6 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                       Mağaza
                     </th>
-                    <th className="px-6 py-6 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                       Açıklama
                     </th>
-                    <th className="px-6 py-6 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                       Tarih
                     </th>
-                    <th className="px-6 py-6 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-slate-500">
                       İşlemler
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="divide-y divide-slate-100">
                   {payments.map((payment) => (
-                    <tr key={payment.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-6 whitespace-nowrap">
-                        <div className="text-base font-bold text-gray-900">{payment.sellerReference}</div>
-                        <div className="text-sm text-gray-500 font-mono mt-1">{payment.apiReferenceNumber}</div>
+                    <tr key={payment.id} className="transition-colors hover:bg-slate-50/70">
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <div className="text-sm font-medium text-slate-900">{payment.sellerReference}</div>
+                        <div className="mt-0.5 font-mono text-xs text-slate-500">{payment.apiReferenceNumber}</div>
                       </td>
-                      <td className="px-6 py-6 whitespace-nowrap">
-                        <span className={`inline-flex px-4 py-2 text-sm font-bold rounded-full ${statusColors[payment.status]}`}>
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${statusColors[payment.status]}`}>
                           {statusLabels[payment.status]}
                         </span>
                       </td>
-                      <td className="px-6 py-6 whitespace-nowrap">
-                        <div className="text-base font-bold text-gray-900">
-                          {payment.original_amount && payment.payment_currency 
-                            ? `${payment.original_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${payment.payment_currency}`
-                            : `${payment.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}`
-                          }
-                        </div>
+                      <td className="whitespace-nowrap px-4 py-3 text-right text-sm font-medium tabular-nums text-slate-900">
+                        {payment.original_amount && payment.payment_currency 
+                          ? `${payment.original_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${payment.payment_currency}`
+                          : `${payment.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}`
+                        }
                       </td>
-                      <td className="px-6 py-6 whitespace-nowrap">
-                        <div className="text-base font-semibold text-gray-900">{payment.store.kurum_adi}</div>
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <div className="text-sm font-medium text-slate-900">{payment.store.kurum_adi}</div>
                         {isAdminOrEditor && payment.store.vergi_numarasi && (
-                          <div className="text-sm text-gray-500 mt-1">{payment.store.vergi_numarasi}</div>
+                          <div className="mt-0.5 text-xs text-slate-500">{payment.store.vergi_numarasi}</div>
                         )}
                       </td>
-                      <td className="px-6 py-6">
-                        <div className="text-base text-gray-900 truncate" style={{ maxWidth: '250px' }} title={payment.description}>
+                      <td className="px-4 py-3">
+                        <div className="truncate text-sm text-slate-700" style={{ maxWidth: '250px' }} title={payment.description}>
                           {payment.description}
                         </div>
                       </td>
-                      <td className="px-6 py-6 whitespace-nowrap">
-                        <div className="text-base text-gray-900">
-                          {new Date(payment.paymentDate || payment.createdAt).toLocaleDateString('tr-TR', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </div>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700">
+                        {new Date(payment.paymentDate || payment.createdAt).toLocaleDateString('tr-TR', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
                       </td>
-                      <td className="px-6 py-6 whitespace-nowrap">
-                        <div className="flex gap-2 items-center">
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <div className="flex items-center justify-end gap-1">
                           <button
+                            type="button"
                             onClick={() => handleViewDetails(payment)}
-                            className="text-[#00365a] hover:text-[#004170] flex items-center gap-1 px-4 py-2 rounded-lg hover:bg-blue-50 transition-all whitespace-nowrap text-base font-semibold"
+                            className="inline-flex items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                           >
-                            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
                             <span>Detay</span>
                           </button>
                           <button
+                            type="button"
                             onClick={() => handlePrintPayment(payment)}
-                            className="text-gray-600 hover:text-gray-900 flex items-center gap-1 px-4 py-2 rounded-lg hover:bg-gray-50 transition-all whitespace-nowrap text-base font-semibold"
+                            className="inline-flex items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                           >
-                            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                            <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                             </svg>
                             <span>Yazdır</span>
                           </button>
@@ -1111,300 +1025,225 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
               </table>
           </div>
 
-          {/* Pagination */}
           {pagination && pagination.totalPages > 1 && (
-            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="text-sm text-gray-600">
-                  Toplam <span className="font-semibold text-gray-900">{pagination.totalCount}</span> kayıt,{' '}
-                  <span className="font-semibold text-gray-900">{((pagination.page - 1) * pagination.limit) + 1}</span> -{' '}
-                  <span className="font-semibold text-gray-900">{Math.min(pagination.page * pagination.limit, pagination.totalCount)}</span> arası gösteriliyor
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handlePageChange(Math.max(1, pagination.page - 1))}
-                    disabled={!pagination.hasPrev}
-                    className="px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  >
-                    Önceki
-                  </button>
-                  <span className="px-4 py-2 text-sm bg-[#00365a] text-white rounded-lg font-medium">
-                    {pagination.page} / {pagination.totalPages}
-                  </span>
-                  <button
-                    onClick={() => handlePageChange(Math.min(pagination.totalPages, pagination.page + 1))}
-                    disabled={!pagination.hasNext}
-                    className="px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  >
-                    Sonraki
-                  </button>
-                </div>
+            <div className="flex flex-col gap-4 border-t border-slate-200/80 bg-slate-50/60 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+              <span className="text-sm text-slate-500">
+                Toplam {pagination.totalCount} kayıt, {((pagination.page - 1) * pagination.limit) + 1} -{' '}
+                {Math.min(pagination.page * pagination.limit, pagination.totalCount)} arası gösteriliyor
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handlePageChange(Math.max(1, pagination.page - 1))}
+                  disabled={!pagination.hasPrev}
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Önceki
+                </button>
+                <span className="text-sm text-slate-500">
+                  {pagination.page} / {pagination.totalPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handlePageChange(Math.min(pagination.totalPages, pagination.page + 1))}
+                  disabled={!pagination.hasNext}
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Sonraki
+                </button>
               </div>
             </div>
           )}
         </div>
 
-        {/* Empty State */}
         {payments.length === 0 && !loading && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-            <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-              <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Ödeme Bulunamadı</h3>
-            <p className="text-gray-500 mb-4">Arama kriterlerinize uygun ödeme kaydı bulunmamaktadır.</p>
+          <div className="mt-6 overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm px-6 py-16 text-center">
+            <h3 className="text-sm font-medium text-slate-900">Ödeme Bulunamadı</h3>
+            <p className="mx-auto mt-1.5 max-w-md text-sm text-slate-500">Arama kriterlerinize uygun ödeme kaydı bulunmamaktadır.</p>
           </div>
         )}
 
-        {/* Detail Modal */}
         {modalOpen && selectedPayment && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-              {/* Header */}
-              <div className="bg-[#00365a] text-white rounded-t-2xl p-6">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-white bg-opacity-20 rounded-xl p-3">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-bold">Ödeme Detayları</h3>
-                      <p className="text-blue-100 text-sm">{selectedPayment.sellerReference}</p>
-                    </div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+            <div className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-lg">
+              <div className="flex items-start justify-between gap-3 border-b border-slate-200/80 px-5 py-4">
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900">Ödeme Detayları</h3>
+                  <p className="mt-0.5 text-xs text-slate-500">{selectedPayment.sellerReference}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setModalOpen(false)}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                  aria-label="Kapat"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="overflow-y-auto px-5 py-5">
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-900">İşlem Bilgileri</h4>
+                    <dl className="mt-3 space-y-3 text-sm">
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-slate-500">Durum</dt>
+                        <dd>
+                          <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${statusColors[selectedPayment.status]}`}>
+                            {statusLabels[selectedPayment.status]}
+                          </span>
+                        </dd>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-slate-500">Tutar</dt>
+                        <dd className="font-medium tabular-nums text-slate-900">
+                          {selectedPayment.original_amount && selectedPayment.payment_currency 
+                            ? `${selectedPayment.original_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${selectedPayment.payment_currency}`
+                            : `${selectedPayment.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}`
+                          }
+                        </dd>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-slate-500">API Referansı</dt>
+                        <dd className="font-mono text-xs text-slate-900">{selectedPayment.apiReferenceNumber}</dd>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-slate-500">Octet Ödeme ID</dt>
+                        <dd className="font-mono text-xs text-slate-900">{selectedPayment.octetPaymentId}</dd>
+                      </div>
+                    </dl>
                   </div>
+
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-900">Mağaza Bilgileri</h4>
+                    <dl className="mt-3 space-y-3 text-sm">
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-slate-500">Mağaza</dt>
+                        <dd className="font-medium text-slate-900">{selectedPayment.store.kurum_adi}</dd>
+                      </div>
+                      {selectedPayment.store.vergi_numarasi && (
+                        <div className="flex justify-between gap-4">
+                          <dt className="text-slate-500">Vergi No</dt>
+                          <dd className="text-slate-700">{selectedPayment.store.vergi_numarasi}</dd>
+                        </div>
+                      )}
+                      {selectedPayment.store.telefon && (
+                        <div className="flex justify-between gap-4">
+                          <dt className="text-slate-500">Telefon</dt>
+                          <dd className="text-slate-700">{selectedPayment.store.telefon}</dd>
+                        </div>
+                      )}
+                      {selectedPayment.store.eposta && (
+                        <div className="flex justify-between gap-4">
+                          <dt className="text-slate-500">E-posta</dt>
+                          <dd className="text-slate-700">{selectedPayment.store.eposta}</dd>
+                        </div>
+                      )}
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-slate-500">Tarih</dt>
+                        <dd className="text-slate-700">
+                          {new Date(selectedPayment.paymentDate || selectedPayment.createdAt).toLocaleDateString('tr-TR', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <h4 className="text-sm font-semibold text-slate-900">Açıklama</h4>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-700">{selectedPayment.description}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 border-t border-slate-200/80 bg-slate-50/60 px-5 py-3.5 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xs text-slate-500">
+                  Ödeme ID: <span className="font-mono">{selectedPayment.id}</span>
+                </p>
+                <div className="flex justify-end gap-2">
                   <button
-                    onClick={() => setModalOpen(false)}
-                    className="text-blue-100 hover:text-white transition-colors p-2 hover:bg-white hover:bg-opacity-20 rounded-xl"
+                    type="button"
+                    onClick={() => handlePrintPayment(selectedPayment)}
+                    className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25"
                   >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    Yazdır
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setModalOpen(false)}
+                    className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                  >
+                    Kapat
                   </button>
                 </div>
               </div>
-
-              {/* Content */}
-              <div className="p-6">
-                <div className="space-y-6">
-                  {/* Status and Amount */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
-                      <div className="flex items-center mb-4">
-                        <div className="bg-blue-100 rounded-full p-2 mr-3">
-                          <svg className="w-5 h-5 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </div>
-                        <h4 className="text-lg font-semibold text-gray-900">İşlem Bilgileri</h4>
-                      </div>
-                      <div className="space-y-4">
-                        <div className="bg-white rounded-lg p-4 border border-gray-100">
-                          <div className="flex justify-between items-center">
-                            <span className="text-gray-600 font-medium">Durum:</span>
-                            <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${statusColors[selectedPayment.status]}`}>
-                              {statusLabels[selectedPayment.status]}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="bg-white rounded-lg p-4 border border-gray-100">
-                          <div className="flex justify-between items-center">
-                            <span className="text-gray-600 font-medium">Tutar:</span>
-                            <span className="text-2xl font-bold text-green-600">
-                              {selectedPayment.original_amount && selectedPayment.payment_currency 
-                                ? `${selectedPayment.original_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${selectedPayment.payment_currency}`
-                                : `${selectedPayment.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}`
-                              }
-                            </span>
-                          </div>
-                        </div>
-                        <div className="bg-white rounded-lg p-4 border border-gray-100">
-                          <div className="flex justify-between items-center">
-                            <span className="text-gray-600 font-medium">API Referansı:</span>
-                            <span className="text-gray-900 font-mono text-sm bg-gray-50 px-2 py-1 rounded">{selectedPayment.apiReferenceNumber}</span>
-                          </div>
-                        </div>
-                        <div className="bg-white rounded-lg p-4 border border-gray-100">
-                          <div className="flex justify-between items-center">
-                            <span className="text-gray-600 font-medium">Octet Ödeme ID:</span>
-                            <span className="text-gray-900 font-mono text-sm bg-gray-50 px-2 py-1 rounded">{selectedPayment.octetPaymentId}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-100">
-                      <div className="flex items-center mb-4">
-                        <div className="bg-green-100 rounded-full p-2 mr-3">
-                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                          </svg>
-                        </div>
-                        <h4 className="text-lg font-semibold text-gray-900">Mağaza Bilgileri</h4>
-                      </div>
-                      <div className="space-y-4">
-                        <div className="bg-white rounded-lg p-4 border border-gray-100">
-                          <div className="flex justify-between items-center">
-                            <span className="text-gray-600 font-medium">Mağaza:</span>
-                            <span className="text-gray-900 font-semibold">{selectedPayment.store.kurum_adi}</span>
-                          </div>
-                        </div>
-                        {selectedPayment.store.vergi_numarasi && (
-                          <div className="bg-white rounded-lg p-4 border border-gray-100">
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-600 font-medium">Vergi No:</span>
-                              <span className="text-gray-900 font-semibold">{selectedPayment.store.vergi_numarasi}</span>
-                            </div>
-                          </div>
-                        )}
-                        {selectedPayment.store.telefon && (
-                          <div className="bg-white rounded-lg p-4 border border-gray-100">
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-600 font-medium">Telefon:</span>
-                              <span className="text-gray-900 font-semibold">{selectedPayment.store.telefon}</span>
-                            </div>
-                          </div>
-                        )}
-                        {selectedPayment.store.eposta && (
-                          <div className="bg-white rounded-lg p-4 border border-gray-100">
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-600 font-medium">E-posta:</span>
-                              <span className="text-gray-900 font-semibold">{selectedPayment.store.eposta}</span>
-                            </div>
-                          </div>
-                        )}
-                        <div className="bg-white rounded-lg p-4 border border-gray-100">
-                          <div className="flex justify-between items-center">
-                            <span className="text-gray-600 font-medium">Tarih:</span>
-                            <span className="text-gray-900 font-semibold">
-                              {new Date(selectedPayment.paymentDate || selectedPayment.createdAt).toLocaleDateString('tr-TR', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Description */}
-                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-100">
-                    <div className="flex items-center mb-4">
-                      <div className="bg-amber-100 rounded-full p-2 mr-3">
-                        <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                      </div>
-                      <h4 className="text-lg font-semibold text-gray-900">Açıklama</h4>
-                    </div>
-                    <div className="bg-white rounded-lg p-4 border border-gray-100">
-                      <p className="text-gray-700 leading-relaxed">{selectedPayment.description}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div className="bg-gray-50 px-6 py-4 rounded-b-2xl flex justify-between items-center mt-6">
-                  <div className="text-sm text-gray-500">
-                    Ödeme ID: <span className="font-mono">{selectedPayment.id}</span>
-                  </div>
-                  <div className="flex space-x-3">
-                    <button
-                      onClick={() => handlePrintPayment(selectedPayment)}
-                      className="flex items-center px-4 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors shadow-md hover:shadow-lg"
-                    >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                      </svg>
-                      Yazdır
-                    </button>
-                    <button
-                      onClick={() => setModalOpen(false)}
-                      className="flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                    >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                      Kapat
-                    </button>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         )}
 
-        {/* Payment Modal */}
         {paymentModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-              {/* Header */}
-              <div className="bg-[#00365a] text-white rounded-t-2xl p-6 relative">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+            <div className="flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-lg">
+              <div className="flex items-start justify-between gap-4 border-b border-slate-200/80 px-5 py-4">
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900">Yeni Ödeme</h3>
+                  <p className="mt-0.5 text-xs text-slate-500">Ödeme bilgilerini girin</p>
+                </div>
                 <button
+                  type="button"
                   onClick={() => setPaymentModalOpen(false)}
-                  className="absolute top-4 right-4 text-blue-100 hover:text-white transition-colors p-2 hover:bg-white hover:bg-opacity-20 rounded-xl"
+                  aria-label="Kapat"
+                  className="-mr-1 inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
-                
-                <div className="text-center pr-12">
-                  <div className="w-16 h-16 bg-white bg-opacity-20 rounded-xl mx-auto mb-4 flex items-center justify-center">
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-3a2 2 0 00-2-2H9a2 2 0 00-2 2v3a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                  </div>
-                  <h2 className="text-xl font-bold">Yeni Ödeme</h2>
-                  <p className="text-blue-100 text-sm mt-1">Ödeme bilgilerini girin</p>
-                </div>
               </div>
 
-              {/* Form Content */}
-              <div className="p-6">
-                <form onSubmit={handlePaymentSubmit} className="space-y-6">
-                  {/* Mağaza Seçimi - Admin ve Editör için göster */}
+              <div className="overflow-y-auto px-5 py-5">
+                <form id="payment-form" onSubmit={handlePaymentSubmit} className="space-y-5">
                   {isAdminOrEditor && (
                     <div className="dropdown-container">
-                      <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                        <svg className="w-4 h-4 mr-2 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
-                        <span className="text-red-500">*</span> Mağaza
+                      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                        <span className="text-rose-500">*</span> Mağaza
                       </label>
                       <div className="relative">
                         <button
                           type="button"
                           onClick={() => setPaymentStoreDropdownOpen(!paymentStoreDropdownOpen)}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all text-left bg-white"
+                          className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 pr-9 text-left text-sm text-slate-900 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                         >
-                          <span className={paymentForm.storeId ? "text-gray-900" : "text-gray-500"}>
+                          <span className={paymentForm.storeId ? 'text-slate-900' : 'text-slate-500'}>
                             {paymentForm.storeId 
                               ? stores.find(store => store.store_id === paymentForm.storeId)?.kurum_adi + " - " + stores.find(store => store.store_id === paymentForm.storeId)?.vergi_numarasi
                               : "Mağaza Seçiniz"
                             }
                           </span>
-                          <svg 
-                            className={`absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${paymentStoreDropdownOpen ? 'rotate-180' : ''}`}
-                            fill="none" 
-                            stroke="currentColor" 
+                          <svg
+                            className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-transform ${paymentStoreDropdownOpen ? 'rotate-180' : ''}`}
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={1.8}
                             viewBox="0 0 24 24"
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                           </svg>
                         </button>
                         
                         {paymentStoreDropdownOpen && (
-                          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                            <div
-                              className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                !paymentForm.storeId ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                          <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+                            <button
+                              type="button"
+                              className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                                !paymentForm.storeId ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                               }`}
                               onClick={() => {
                                 setPaymentForm(prev => ({ ...prev, storeId: "" }));
@@ -1412,12 +1251,13 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
                               }}
                             >
                               Mağaza Seçiniz
-                            </div>
+                            </button>
                             {[...stores].sort((a, b) => a.kurum_adi.localeCompare(b.kurum_adi, 'tr', { sensitivity: 'base' })).map((store) => (
-                              <div
+                              <button
                                 key={store.store_id}
-                                className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                  paymentForm.storeId === store.store_id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                type="button"
+                                className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                                  paymentForm.storeId === store.store_id ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                                 }`}
                                 onClick={() => {
                                   setPaymentForm(prev => ({ ...prev, storeId: store.store_id }));
@@ -1425,7 +1265,7 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
                                 }}
                               >
                                 {store.kurum_adi} - {store.vergi_numarasi}
-                              </div>
+                              </button>
                             ))}
                           </div>
                         )}
@@ -1433,29 +1273,23 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
                     </div>
                   )}
 
-                  {/* Admin/Editör değilse mağaza bilgisini göster */}
                   {!isAdminOrEditor && stores.length > 0 && (
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                        <svg className="w-4 h-4 mr-2 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
+                      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                         Mağaza Bilgisi
                       </label>
-                      <div className="w-full px-4 py-3 border border-gray-200 rounded-lg shadow-sm bg-gray-50 text-gray-700 font-medium">
+                      <div className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-medium text-slate-700">
                         {stores[0].kurum_adi}
                       </div>
                     </div>
                   )}
 
-                  {/* Ödenecek tutar */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                      <span className="text-red-500">*</span>Ödenecek Tutar
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                      <span className="text-rose-500">*</span> Ödenecek Tutar
                     </label>
                     <div className="flex gap-3">
-                      {/* Tutar Input */}
-                      <div className="flex-1 relative">
+                      <div className="relative flex-1">
                         <input
                           type="number"
                           step="0.01"
@@ -1473,48 +1307,44 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
                             }
                           }}
                           required
-                          className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all"
+                          className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                         />
                       </div>
                       
-                      {/* Currency Dropdown - Sadece TL değilse göster */}
                       {userCurrency !== 'TRY' && (
-                        <div className="relative dropdown-container" style={{minWidth: '120px'}}>
+                        <div className="dropdown-container relative" style={{minWidth: '120px'}}>
                           <button
                             type="button"
                             onClick={() => setPaymentCurrencyDropdownOpen(!paymentCurrencyDropdownOpen)}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all bg-white flex items-center justify-between"
+                            className="flex w-full items-center justify-between rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-left text-sm text-slate-900 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                           >
-                            <span className="text-gray-900 font-medium">
-                              {paymentForm.currency}
-                            </span>
-                            <svg 
-                              className={`w-4 h-4 text-gray-400 transition-transform ${paymentCurrencyDropdownOpen ? 'rotate-180' : ''}`}
-                              fill="none" 
-                              stroke="currentColor" 
+                            <span className="font-medium">{paymentForm.currency}</span>
+                            <svg
+                              className={`h-4 w-4 text-slate-400 transition-transform ${paymentCurrencyDropdownOpen ? 'rotate-180' : ''}`}
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth={1.8}
                               viewBox="0 0 24 24"
                             >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                             </svg>
                           </button>
                           
                           {paymentCurrencyDropdownOpen && (
-                            <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                            <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
                               {AVAILABLE_CURRENCIES.map((currency) => (
                                 <button
                                   key={currency.value}
                                   type="button"
-                                  className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${
-                                    paymentForm.currency === currency.value ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                                  className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                                    paymentForm.currency === currency.value ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                                   }`}
                                   onClick={() => {
                                     setPaymentForm(prev => ({ ...prev, currency: currency.value }));
                                     setPaymentCurrencyDropdownOpen(false);
                                   }}
                                 >
-                                  <div className="flex items-center">
-                                    <span className="font-medium">{currency.value}</span>
-                                  </div>
+                                  {currency.value}
                                 </button>
                               ))}
                             </div>
@@ -1522,52 +1352,44 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
                         </div>
                       )}
                       
-                      {/* TL kullanıcıları için sadece sembol göster */}
                       {userCurrency === 'TRY' && (
-                        <div className="flex items-center px-4 py-3 border border-gray-200 rounded-lg bg-gray-50">
-                          <span className="text-gray-700 font-medium">₺</span>
+                        <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
+                          <span className="text-sm font-medium text-slate-700">₺</span>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Ödeme Açıklaması */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                      <svg className="w-4 h-4 mr-2 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      Ödeme Açıklaması <span className="text-gray-500 font-normal">(Opsiyonel)</span>
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Ödeme Açıklaması <span className="normal-case tracking-normal text-slate-400">(Opsiyonel)</span>
                     </label>
                     <textarea
                       placeholder="Ödeme açıklamasını giriniz... (Boş bırakılabilir)"
                       value={paymentForm.description}
                       onChange={(e) => setPaymentForm(prev => ({ ...prev, description: e.target.value }))}
                       rows={4}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all resize-none"
+                      className="w-full resize-none rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                     />
                   </div>
-
-                  {/* Buttons */}
-                  <div className="flex gap-3 pt-4">
-                    <button
-                      type="submit"
-                      className="flex-1 bg-[#00365a] hover:bg-[#004170] text-white py-3 px-6 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                      </svg>
-                      Ödeme Yap
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentModalOpen(false)}
-                      className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold transition-all"
-                    >
-                      İptal
-                    </button>
-                  </div>
                 </form>
+              </div>
+
+              <div className="flex justify-end gap-2 border-t border-slate-200/80 bg-slate-50/60 px-5 py-3.5">
+                <button
+                  type="button"
+                  onClick={() => setPaymentModalOpen(false)}
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                >
+                  İptal
+                </button>
+                <button
+                  type="submit"
+                  form="payment-form"
+                  className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Ödeme Yap
+                </button>
               </div>
             </div>
           </div>

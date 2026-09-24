@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Store, getStores, deleteStore, PriceList, getPriceLists, assignStorePriceList } from '@/services/api';
 import { useAuth } from '@/app/context/AuthContext';
-import { StoreType, storeTypeLabels, storeTypeColors, storeTypeIcons } from '@/components/StoreTypeSelector';
+import { StoreType, storeTypeLabels } from '@/components/StoreTypeSelector';
 
 // Custom Tooltip Component
 interface TooltipProps {
@@ -25,10 +25,10 @@ const Tooltip: React.FC<TooltipProps> = ({ children, content, position = 'top' }
   };
 
   const arrowClasses = {
-    top: 'top-full left-1/2 transform -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent border-t-gray-900',
-    bottom: 'bottom-full left-1/2 transform -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-gray-900',
-    left: 'left-full top-1/2 transform -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent border-l-gray-900',
-    right: 'right-full top-1/2 transform -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-gray-900'
+    top: 'top-full left-1/2 transform -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent border-t-slate-800',
+    bottom: 'bottom-full left-1/2 transform -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-slate-800',
+    left: 'left-full top-1/2 transform -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent border-l-slate-800',
+    right: 'right-full top-1/2 transform -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-slate-800'
   };
 
   const handleMouseEnter = () => {
@@ -50,20 +50,13 @@ const Tooltip: React.FC<TooltipProps> = ({ children, content, position = 'top' }
       {children}
       {isVisible && (
         <div className={`absolute z-50 ${positionClasses[position]} pointer-events-none`}>
-          <div className={`
-            bg-gradient-to-br from-gray-900 to-gray-800 text-white text-sm px-4 py-2.5 
-            rounded-xl shadow-2xl max-w-xs whitespace-nowrap
-            transition-all duration-300 ease-out border border-gray-700
-            ${showTooltip 
-              ? 'opacity-100 scale-100 translate-y-0' 
-              : 'opacity-0 scale-95 translate-y-1'
-            }
-          `}>
-            <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
-              <span className="font-medium tracking-wide">{content}</span>
-            </div>
-            <div className={`absolute w-0 h-0 border-[6px] ${arrowClasses[position]}`}></div>
+          <div
+            className={`whitespace-nowrap rounded-lg bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm transition-all duration-200 ease-out ${
+              showTooltip ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-0.5'
+            }`}
+          >
+            {content}
+            <div className={`absolute h-0 w-0 border-[5px] ${arrowClasses[position]}`}></div>
           </div>
         </div>
       )}
@@ -255,23 +248,9 @@ export default function StoresPage() {
   // Loading state
   if (authLoading) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="relative">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[#00365a]"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <svg className="w-6 h-6 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </div>
-            </div>
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-900">Yetkilendirme Kontrol Ediliyor</h3>
-              <p className="text-sm text-gray-500 mt-1">Lütfen bekleyiniz...</p>
-            </div>
-          </div>
-        </div>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#f7f8fa]">
+        <div className="h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
+        <p className="text-sm text-slate-500">Yetkilendirme kontrol ediliyor...</p>
       </div>
     );
   }
@@ -279,23 +258,15 @@ export default function StoresPage() {
   // Admin ve Editör kontrolü
   if (!isAdminOrEditor) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center max-w-md">
-          <div className="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
-            <svg className="h-10 w-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-3">Erişim Reddedildi</h3>
-          <p className="text-gray-600 mb-8 leading-relaxed">Bu sayfaya erişim yetkiniz bulunmamaktadır. Mağaza yönetimi sadece admin ve editör kullanıcılar tarafından kullanılabilir.</p>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
-            </svg>
-            Dashboard'a Dön
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f8fa] px-4">
+        <div className="w-full max-w-md rounded-xl border border-slate-200/80 bg-white shadow-sm px-6 py-10 text-center">
+          <h3 className="text-base font-semibold text-slate-900">Erişim Reddedildi</h3>
+          <p className="mt-2 text-sm text-slate-500">
+            Bu sayfaya erişim yetkiniz bulunmamaktadır. Mağaza yönetimi sadece admin ve editör kullanıcılar
+            tarafından kullanılabilir.
+          </p>
+          <button onClick={() => router.push('/dashboard')} className="mt-6 inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50">
+            Dashboard&apos;a Dön
           </button>
         </div>
       </div>
@@ -303,85 +274,70 @@ export default function StoresPage() {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="max-w-[1600px] mx-auto">
+    <div className="min-h-screen bg-[#f7f8fa]">
+      <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
         {/* Page Header */}
-        <div className="mb-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-              <h1 className="text-3xl font-bold text-[#00365a] flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 1h6v4H7V5zm8 8v2a1 1 0 01-1 1H6a1 1 0 01-1-1v-2h10z" clipRule="evenodd" />
-                </svg>
-                Mağazalar
-              </h1>
-              <p className="text-gray-600 mt-2">Mağaza bilgilerini görüntüleyin ve yönetin</p>
-            </div>
-            <button
-              onClick={() => router.push('/dashboard/magazalar/ekle')}
-              className="bg-[#00365a] hover:bg-[#004170] text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              <span>Yeni Mağaza</span>
-            </button>
+        <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl sm:tracking-[0.12em]">
+              Mağazalar
+            </h1>
+            <div className="mt-3 h-px w-[min(100%,20rem)] bg-neutral-300 sm:mt-4" />
+            <p className="mt-3 text-sm text-slate-500">Mağaza bilgilerini görüntüleyin ve yönetin</p>
           </div>
+          <button onClick={() => router.push('/dashboard/magazalar/ekle')} className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50 shrink-0">
+            Yeni Mağaza
+          </button>
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex items-center mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#00365a]" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.553.894l-2 1A1 1 0 018 16v-4.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
-            </svg>
-            <h3 className="text-lg font-semibold text-[#00365a]">Filtreler</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="mb-6 rounded-xl border border-slate-200/80 bg-white shadow-sm p-4 sm:p-5">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Arama</label>
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Arama</label>
               <div className="relative">
                 <input
                   type="text"
                   placeholder="Mağaza, yetkili adı, e-posta..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all"
+                  className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15 pl-10"
                 />
-                <svg className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <circle cx="11" cy="11" r="8"/>
-                  <path d="M21 21l-4.35-4.35"/>
+                <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
                 </svg>
               </div>
             </div>
-        <div className="dropdown-container">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Durum</label>
+
+            <div className="dropdown-container">
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Durum</label>
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all text-left bg-white"
+                  className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15 pr-9 text-left"
                 >
-                  <span className="text-gray-900">
-                    {statusFilter === "all" && "Tüm Durumlar"}
-                    {statusFilter === "active" && "Aktif"}
-                    {statusFilter === "inactive" && "Pasif"}
-                  </span>
-                  <svg 
-                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${statusDropdownOpen ? 'rotate-180' : ''}`}
-                    fill="none" 
-                    stroke="currentColor" 
+                  {statusFilter === "all" && "Tüm Durumlar"}
+                  {statusFilter === "active" && "Aktif"}
+                  {statusFilter === "inactive" && "Pasif"}
+                  <svg
+                    className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-transform ${statusDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.8}
                     viewBox="0 0 24 24"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
-                
+
                 {statusDropdownOpen && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    <div
-                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        statusFilter === "all" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                  <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+                    <button
+                      type="button"
+                      className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                        statusFilter === "all" ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                       onClick={() => {
                         setStatusFilter("all");
@@ -389,10 +345,11 @@ export default function StoresPage() {
                       }}
                     >
                       Tüm Durumlar
-                    </div>
-                    <div
-                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        statusFilter === "active" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                    </button>
+                    <button
+                      type="button"
+                      className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                        statusFilter === "active" ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                       onClick={() => {
                         setStatusFilter("active");
@@ -400,10 +357,11 @@ export default function StoresPage() {
                       }}
                     >
                       Aktif
-                    </div>
-                    <div
-                      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        statusFilter === "inactive" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                    </button>
+                    <button
+                      type="button"
+                      className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                        statusFilter === "inactive" ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                       onClick={() => {
                         setStatusFilter("inactive");
@@ -411,18 +369,19 @@ export default function StoresPage() {
                       }}
                     >
                       Pasif
-                    </div>
+                    </button>
                   </div>
                 )}
               </div>
             </div>
+
             <div className="flex items-end">
               <button
                 onClick={() => {
                   setSearchTerm("");
                   setStatusFilter("all");
                 }}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors w-full font-medium"
+                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15 w-full md:w-auto"
               >
                 Temizle
               </button>
@@ -431,182 +390,146 @@ export default function StoresPage() {
         </div>
 
         {/* Main Content */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 bg-[#00365a]">
-            <div className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-              <h3 className="text-lg font-semibold text-white">Mağaza Listesi</h3>
-              <span className="ml-4 text-blue-100 text-sm">({filteredStores.length} mağaza)</span>
-            </div>
+        <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/60 px-4 py-3 sm:px-5">
+            <h3 className="text-sm font-semibold text-slate-900">Mağaza Listesi</h3>
+            <span className="text-xs text-slate-500">{filteredStores.length} mağaza</span>
           </div>
 
           {loading ? (
-            <div className="flex flex-col items-center justify-center h-48 p-6">
-              <div className="relative">
-                <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[#00365a]"></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                </div>
-              </div>
-              <div className="text-center mt-4">
-                <h3 className="text-lg font-semibold text-gray-900">Mağazalar Yükleniyor</h3>
-                <p className="text-sm text-gray-500 mt-1">Lütfen bekleyiniz...</p>
-              </div>
+            <div className="flex flex-col items-center justify-center gap-3 py-16">
+              <div className="h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
+              <p className="text-sm text-slate-500">Mağazalar yükleniyor...</p>
             </div>
           ) : filteredStores.length > 0 ? (
             <>
               {/* Desktop Table View */}
-              <div className="hidden xl:block overflow-x-auto">
-                <table className="w-full min-w-[1400px] divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+              <div className="hidden overflow-x-auto xl:block">
+                <table className="w-full min-w-[1240px]">
+                  <thead className="bg-slate-50/60">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Mağaza Bilgileri
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Mağaza Türü
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Yetkili
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        İletişim
-                      </th>
-                      {isAdmin && (
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                          Finansal Durum
-                        </th>
-                      )}
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Durum
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-96">
-                        İşlemler
-                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Mağaza Bilgileri</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Mağaza Türü</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Yetkili</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">İletişim</th>
+                      {isAdmin && <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Finansal Durum</th>}
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Durum</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500 text-right">İşlemler</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="divide-y divide-slate-100">
                     {filteredStores.map((store) => (
-                      <tr key={store.store_id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4">
-                          <div>
-                            <div className="text-sm font-semibold text-gray-900">{store.kurum_adi}</div>
-                            <div className="text-sm text-gray-500">{store.aciklama}</div>
-                            <div className="text-xs text-gray-400 mt-1">
-                              VN: {store.vergi_numarasi} • {store.vergi_dairesi}
-                            </div>
+                      <tr key={store.store_id} className="transition-colors hover:bg-slate-50/70">
+                        <td className="px-4 py-3 align-top">
+                          <div className="text-sm font-medium text-slate-900">{store.kurum_adi}</div>
+                          {store.aciklama ? <div className="mt-0.5 text-xs text-slate-500">{store.aciklama}</div> : null}
+                          <div className="mt-1 text-xs text-slate-400">
+                            VN: {store.vergi_numarasi} • {store.vergi_dairesi}
                           </div>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-4 py-3 align-top">
                           {store.store_type ? (
-                            <div className={`inline-flex items-center gap-2 px-3 py-1 text-xs rounded-full border ${storeTypeColors[store.store_type as StoreType]}`}>
-                              {storeTypeIcons[store.store_type as StoreType]}
-                              {storeTypeLabels[store.store_type as StoreType]}
-                            </div>
+                            <span className="text-sm text-slate-700">{storeTypeLabels[store.store_type as StoreType]}</span>
                           ) : (
-                            <span className="text-xs text-gray-400">Belirtilmemiş</span>
+                            <span className="text-sm text-slate-400">Belirtilmemiş</span>
                           )}
                         </td>
-                        <td className="px-6 py-4">
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {store.yetkili_adi} {store.yetkili_soyadi}
-                            </div>
-                            <div className="text-sm text-gray-500">{store.eposta}</div>
-                            <div className="text-xs text-gray-400 mt-1">TCKN: {store.tckn}</div>
+                        <td className="px-4 py-3 align-top">
+                          <div className="text-sm font-medium text-slate-900">
+                            {store.yetkili_adi} {store.yetkili_soyadi}
                           </div>
+                          <div className="mt-0.5 text-xs text-slate-500">{store.eposta}</div>
+                          <div className="mt-1 text-xs text-slate-400">TCKN: {store.tckn}</div>
                         </td>
-                        <td className="px-6 py-4">
-        <div>
-                            <div className="text-sm text-gray-900">{store.telefon}</div>
-                            {store.faks_numarasi && (
-                              <div className="text-sm text-gray-500">Faks: {store.faks_numarasi}</div>
-                            )}
-                            <div className="text-xs text-gray-400 mt-1">{store.adres}</div>
-                          </div>
+                        <td className="px-4 py-3 align-top">
+                          <div className="text-sm text-slate-700">{store.telefon}</div>
+                          {store.faks_numarasi && (
+                            <div className="mt-0.5 text-xs text-slate-500">Faks: {store.faks_numarasi}</div>
+                          )}
+                          <div className="mt-1 text-xs text-slate-400">{store.adres}</div>
                         </td>
                         {isAdmin && (
-                          <td className="px-6 py-4">
-                            <div className="space-y-1">
-                              <div className="text-sm">
-                                <span className="font-medium text-gray-700">Bakiye:</span>
-                                <span className={`ml-1 font-semibold ${(store.bakiye || 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                          <td className="px-4 py-3 align-top">
+                            <dl className="space-y-1">
+                              <div className="flex items-baseline justify-between gap-4">
+                                <dt className="text-xs text-slate-500">Bakiye</dt>
+                                <dd className={`text-sm tabular-nums ${(store.bakiye || 0) < 0 ? 'font-medium text-rose-600' : 'text-slate-900'}`}>
                                   {store.bakiye?.toLocaleString('tr-TR') || '0'} {store.currency === 'USD' ? '$' : '₺'}
-                                </span>
+                                </dd>
                               </div>
-                              <div className="text-sm">
-                                <span className="font-medium text-gray-700">Açık Hesap:</span>
-                                <span className="ml-1 text-[#00365a] font-semibold">
+                              <div className="flex items-baseline justify-between gap-4">
+                                <dt className="text-xs text-slate-500">Açık Hesap</dt>
+                                <dd className="text-sm tabular-nums text-slate-900">
                                   {store.limitsiz_acik_hesap ? 'Limitsiz' : `${store.acik_hesap_tutari?.toLocaleString('tr-TR') || '0'} ${store.currency === 'USD' ? '$' : '₺'}`}
-                                </span>
+                                </dd>
                               </div>
-                              <div className="text-sm">
-                                <span className="font-medium text-gray-700">Max Taksit:</span>
-                                <span className="ml-1 text-orange-600 font-semibold">{store.maksimum_taksit || 1}</span>
+                              <div className="flex items-baseline justify-between gap-4">
+                                <dt className="text-xs text-slate-500">Max Taksit</dt>
+                                <dd className="text-sm tabular-nums text-slate-900">{store.maksimum_taksit || 1}</dd>
                               </div>
-                            </div>
+                            </dl>
                           </td>
                         )}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                            store.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        <td className="whitespace-nowrap px-4 py-3 align-top">
+                          <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${
+                            store.is_active ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700'
                           }`}>
                             {store.is_active ? 'Aktif' : 'Pasif'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 w-96">
-                          <div className="flex gap-1 items-center justify-start">
+                        <td className="px-4 py-3 align-top">
+                          <div className="flex items-center justify-end gap-1">
                             <Tooltip content="Mağaza Bilgilerini Düzenle" position="top">
                               <button
                                 onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/duzenle`)}
-                                className="text-[#00365a] hover:text-[#004170] p-2 rounded-lg hover:bg-blue-50 transition-all shadow-sm hover:shadow-md group"
+                                aria-label="Mağaza Bilgilerini Düzenle"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                               >
-                                <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
                               </button>
                             </Tooltip>
-                            
+
                             <Tooltip content="Adres Yönetimi" position="top">
                               <button
                                 onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/adresler`)}
-                                className="text-green-600 hover:text-green-700 p-2 rounded-lg hover:bg-green-50 transition-all shadow-sm hover:shadow-md group"
+                                aria-label="Adres Yönetimi"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                               >
-                                <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
                               </button>
                             </Tooltip>
-                            
+
                             <Tooltip content="Kullanıcı Yönetimi" position="top">
                               <button
                                 onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/kullanicilar`)}
-                                className="text-orange-600 hover:text-orange-700 p-2 rounded-lg hover:bg-orange-50 transition-all shadow-sm hover:shadow-md group"
+                                aria-label="Kullanıcı Yönetimi"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                               >
-                                <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
                                 </svg>
                               </button>
                             </Tooltip>
-                            
+
                             {isAdmin && (
                               <Tooltip content="Mağaza için Sipariş Oluştur" position="top">
                                 <button
                                   onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/adresler?mode=order`)}
-                                  className="text-purple-600 hover:text-purple-700 p-2 rounded-lg hover:bg-purple-50 transition-all shadow-sm hover:shadow-md group"
+                                  aria-label="Mağaza için Sipariş Oluştur"
+                                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                                 >
-                                  <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                                   </svg>
                                 </button>
                               </Tooltip>
                             )}
-                            
+
                             {isAdmin && (
                               <Tooltip content="Fiyat Listesi Atama" position="top">
                                 <button
@@ -614,10 +537,11 @@ export default function StoresPage() {
                                     setSelectedStore(store);
                                     setAssignModalVisible(true);
                                   }}
-                                  className="text-blue-600 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition-all shadow-sm hover:shadow-md group"
+                                  aria-label="Fiyat Listesi Atama"
+                                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                                 >
-                                  <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                                   </svg>
                                 </button>
                               </Tooltip>
@@ -630,10 +554,11 @@ export default function StoresPage() {
                                     setStoreToDelete(store);
                                     setDeleteModalVisible(true);
                                   }}
-                                  className="text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-all shadow-sm hover:shadow-md group"
+                                  aria-label="Mağazayı Sil"
+                                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-rose-600 transition hover:bg-rose-50 hover:text-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/20"
                                 >
-                                  <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                   </svg>
                                 </button>
                               </Tooltip>
@@ -647,203 +572,136 @@ export default function StoresPage() {
               </div>
 
               {/* Mobile/Tablet Card View */}
-              <div className="xl:hidden p-6">
-                <div className="space-y-6">
-                  {filteredStores.map((store) => (
-                    <div key={store.store_id} className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-semibold text-gray-900">{store.kurum_adi}</h3>
-                            {store.store_type && (
-                              <div className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full border ${storeTypeColors[store.store_type as StoreType]}`}>
-                                {storeTypeIcons[store.store_type as StoreType]}
-                                {storeTypeLabels[store.store_type as StoreType]}
-                              </div>
-                            )}
-                          </div>
-                          <p className="text-sm text-gray-500">{store.aciklama}</p>
-                          <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full mt-2 ${
-                            store.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {store.is_active ? 'Aktif' : 'Pasif'}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div className="bg-blue-50 rounded-lg p-4">
-                          <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                            <svg className="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            Yetkili
-                          </h4>
-                          <p className="text-sm font-medium text-gray-900">{store.yetkili_adi} {store.yetkili_soyadi}</p>
-                          <p className="text-sm text-gray-500">{store.eposta}</p>
-                          <p className="text-xs text-gray-400">TCKN: {store.tckn}</p>
-                        </div>
-
-                        <div className="bg-green-50 rounded-lg p-4">
-                          <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                            <svg className="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                            </svg>
-                            İletişim
-                          </h4>
-                          <p className="text-sm text-gray-900">{store.telefon}</p>
-                          {store.faks_numarasi && <p className="text-sm text-gray-500">Faks: {store.faks_numarasi}</p>}
-                          <p className="text-xs text-gray-400">{store.adres}</p>
-                        </div>
-
-                        <div className="bg-purple-50 rounded-lg p-4">
-                          <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                            <svg className="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Vergi Bilgileri
-                          </h4>
-                          <p className="text-sm text-gray-900">{store.vergi_numarasi}</p>
-                          <p className="text-sm text-gray-500">{store.vergi_dairesi}</p>
-                        </div>
-
-                        {isAdmin && (
-                          <div className="bg-orange-50 rounded-lg p-4">
-                            <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                              <svg className="w-4 h-4 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                              </svg>
-                              Finansal Durum
-                            </h4>
-                            <div className="space-y-1">
-                              <div className="text-sm">
-                                <span className="font-medium">Bakiye:</span>
-                                <span className={`ml-1 font-semibold ${(store.bakiye || 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                  {store.bakiye?.toLocaleString('tr-TR') || '0'} {store.currency === 'USD' ? '$' : '₺'}
-                                </span>
-                              </div>
-                              <div className="text-sm">
-                                <span className="font-medium">Açık Hesap:</span>
-                                <span className="ml-1 text-orange-600 font-semibold">
-                                  {store.limitsiz_acik_hesap ? 'Limitsiz' : `${store.acik_hesap_tutari?.toLocaleString('tr-TR') || '0'} ${store.currency === 'USD' ? '$' : '₺'}`}
-                                </span>
-                              </div>
-                              <div className="text-sm">
-                                <span className="font-medium">Max Taksit:</span>
-                                <span className="ml-1 text-purple-600 font-semibold">{store.maksimum_taksit || 1}</span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-        </div>
-
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/duzenle`)}
-                          className="flex items-center gap-2 px-4 py-2 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-            Düzenle
-                        </button>
-                        <button
-                          onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/adresler`)}
-                          className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          Adresler
-                        </button>
-                        <button
-                          onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/kullanicilar`)}
-                          className="flex items-center gap-2 px-5 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
-                          </svg>
-                          Kullanıcılar
-                        </button>
-                        {isAdmin && (
-                          <button
-                            onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/adresler?mode=order`)}
-                            className="flex items-center gap-2 px-5 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                            </svg>
-                            Sipariş Ver
-                          </button>
-                        )}
-                        <button
-                          onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/adresler`)}
-                          className="flex items-center gap-2 px-5 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          Adresler
-                        </button>
-                        {isAdmin && (
-                          <button
-                            onClick={() => {
-                              setSelectedStore(store);
-                              setAssignModalVisible(true);
-                            }}
-                            className="flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                            </svg>
-                            Fiyat Listesi
-                          </button>
-                        )}
-                        
-                        {isAdmin && (
-                          <button
-                            onClick={() => {
-                              setStoreToDelete(store);
-                              setDeleteModalVisible(true);
-                            }}
-                            className="flex items-center gap-2 px-5 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                            Sil
-                          </button>
+              <div className="divide-y divide-slate-100 xl:hidden">
+                {filteredStores.map((store) => (
+                  <div key={store.store_id} className="p-4 sm:p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="text-base font-medium text-slate-900">{store.kurum_adi}</h3>
+                        {store.aciklama ? <p className="mt-0.5 text-xs text-slate-500">{store.aciklama}</p> : null}
+                        {store.store_type && (
+                          <p className="mt-1 text-xs text-slate-500">{storeTypeLabels[store.store_type as StoreType]}</p>
                         )}
                       </div>
+                      <span className={`inline-flex shrink-0 items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${
+                        store.is_active ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700'
+                      }`}>
+                        {store.is_active ? 'Aktif' : 'Pasif'}
+                      </span>
                     </div>
-                  ))}
-                </div>
+
+                    <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Yetkili</p>
+                        <p className="mt-1 text-sm font-medium text-slate-900">{store.yetkili_adi} {store.yetkili_soyadi}</p>
+                        <p className="text-xs text-slate-500">{store.eposta}</p>
+                        <p className="mt-0.5 text-xs text-slate-400">TCKN: {store.tckn}</p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">İletişim</p>
+                        <p className="mt-1 text-sm text-slate-900">{store.telefon}</p>
+                        {store.faks_numarasi && <p className="text-xs text-slate-500">Faks: {store.faks_numarasi}</p>}
+                        <p className="mt-0.5 text-xs text-slate-400">{store.adres}</p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Vergi Bilgileri</p>
+                        <p className="mt-1 text-sm text-slate-900">{store.vergi_numarasi}</p>
+                        <p className="text-xs text-slate-500">{store.vergi_dairesi}</p>
+                      </div>
+
+                      {isAdmin && (
+                        <div>
+                          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Finansal Durum</p>
+                          <dl className="mt-1 space-y-1">
+                            <div className="flex items-baseline justify-between gap-4">
+                              <dt className="text-xs text-slate-500">Bakiye</dt>
+                              <dd className={`text-sm tabular-nums ${(store.bakiye || 0) < 0 ? 'font-medium text-rose-600' : 'text-slate-900'}`}>
+                                {store.bakiye?.toLocaleString('tr-TR') || '0'} {store.currency === 'USD' ? '$' : '₺'}
+                              </dd>
+                            </div>
+                            <div className="flex items-baseline justify-between gap-4">
+                              <dt className="text-xs text-slate-500">Açık Hesap</dt>
+                              <dd className="text-sm tabular-nums text-slate-900">
+                                {store.limitsiz_acik_hesap ? 'Limitsiz' : `${store.acik_hesap_tutari?.toLocaleString('tr-TR') || '0'} ${store.currency === 'USD' ? '$' : '₺'}`}
+                              </dd>
+                            </div>
+                            <div className="flex items-baseline justify-between gap-4">
+                              <dt className="text-xs text-slate-500">Max Taksit</dt>
+                              <dd className="text-sm tabular-nums text-slate-900">{store.maksimum_taksit || 1}</dd>
+                            </div>
+                          </dl>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <button
+                        onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/duzenle`)}
+                        className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-3 py-2 text-xs font-medium text-white transition hover:bg-[#004170]"
+                      >
+                        Düzenle
+                      </button>
+                      <button
+                        onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/adresler`)}
+                        className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                      >
+                        Adresler
+                      </button>
+                      <button
+                        onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/kullanicilar`)}
+                        className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                      >
+                        Kullanıcılar
+                      </button>
+                      {isAdmin && (
+                        <button
+                          onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/adresler?mode=order`)}
+                          className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                        >
+                          Sipariş Ver
+                        </button>
+                      )}
+                      {isAdmin && (
+                        <button
+                          onClick={() => {
+                            setSelectedStore(store);
+                            setAssignModalVisible(true);
+                          }}
+                          className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                        >
+                          Fiyat Listesi
+                        </button>
+                      )}
+
+                      {isAdmin && (
+                        <button
+                          onClick={() => {
+                            setStoreToDelete(store);
+                            setDeleteModalVisible(true);
+                          }}
+                          className="inline-flex items-center justify-center rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-medium text-rose-600 transition hover:bg-rose-50 hover:text-rose-700"
+                        >
+                          Sil
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </>
           ) : (
-            <div className="text-center py-16 p-6">
-              <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
-                <svg className="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-        </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Mağaza Bulunamadı</h3>
-              <p className="text-gray-600 mb-6 max-w-md mx-auto leading-relaxed">
-                {searchTerm || statusFilter !== 'all' 
+            <div className="px-6 py-16 text-center">
+              <h3 className="text-sm font-medium text-slate-900">Mağaza Bulunamadı</h3>
+              <p className="mx-auto mt-1.5 max-w-md text-sm text-slate-500">
+                {searchTerm || statusFilter !== 'all'
                   ? 'Arama kriterlerinize uygun mağaza bulunamadı. Filtreleri temizleyerek tekrar deneyin.'
                   : 'Henüz hiç mağaza eklenmemiş. İlk mağazayı ekleyerek başlayın.'
                 }
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button
-            onClick={() => router.push('/dashboard/magazalar/ekle')}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
+              <div className="mt-6 flex flex-col justify-center gap-2 sm:flex-row">
+                <button onClick={() => router.push('/dashboard/magazalar/ekle')} className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50">
                   İlk Mağazayı Ekle
                 </button>
                 {(searchTerm || statusFilter !== 'all') && (
@@ -852,11 +710,8 @@ export default function StoresPage() {
                       setSearchTerm("");
                       setStatusFilter("all");
                     }}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-white hover:bg-gray-50 text-[#00365a] border-2 border-[#00365a] rounded-lg font-semibold transition-all hover:shadow-md"
+                    className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
                     Filtreleri Temizle
                   </button>
                 )}
@@ -867,61 +722,36 @@ export default function StoresPage() {
 
         {/* Delete Confirmation Modal */}
         {deleteModalVisible && storeToDelete && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl">
-              {/* Header */}
-              <div className="bg-red-600 text-white rounded-t-2xl p-6">
-                <div className="flex items-center">
-                  <div className="bg-white bg-opacity-20 rounded-xl p-2 mr-3">
-                    <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold">Mağaza Sil</h3>
-                </div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+            <div className="w-full max-w-md overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-lg">
+              <div className="border-b border-slate-200/80 px-5 py-4">
+                <h3 className="text-base font-semibold text-slate-900">Mağaza Sil</h3>
               </div>
 
-              {/* Content */}
-              <div className="p-6">
-                <p className="text-gray-900 mb-4">
-                  <strong>{storeToDelete.kurum_adi}</strong> mağazasını silmek istediğinize emin misiniz?
+              <div className="px-5 py-5">
+                <p className="text-sm text-slate-700">
+                  <span className="font-medium text-slate-900">{storeToDelete.kurum_adi}</span> mağazasını silmek
+                  istediğinize emin misiniz?
                 </p>
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="text-red-700 text-sm">
-                    ⚠️ Bu işlem geri alınamaz ve mağazaya bağlı tüm kullanıcı bağlantıları kaldırılacaktır.
+                <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-3">
+                  <p className="text-sm text-rose-700">
+                    Bu işlem geri alınamaz ve mağazaya bağlı tüm kullanıcı bağlantıları kaldırılacaktır.
                   </p>
                 </div>
               </div>
 
-              {/* Footer */}
-              <div className="bg-gray-50 px-6 py-4 rounded-b-2xl flex justify-end gap-3">
+              <div className="flex justify-end gap-2 border-t border-slate-200/80 bg-slate-50/60 px-5 py-3.5">
                 <button
-            onClick={() => {
-              setDeleteModalVisible(false);
-              setStoreToDelete(null);
-            }}
-                  className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition-all"
-          >
-            İptal
-                </button>
-                <button
-            onClick={handleDelete}
-                  disabled={deleteLoading}
-                  className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  onClick={() => {
+                    setDeleteModalVisible(false);
+                    setStoreToDelete(null);
+                  }}
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                 >
-                  {deleteLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                      Siliniyor...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                      Sil
-                    </>
-                  )}
+                  İptal
+                </button>
+                <button onClick={handleDelete} disabled={deleteLoading} className="inline-flex items-center justify-center rounded-lg bg-rose-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/25 disabled:cursor-not-allowed disabled:opacity-50">
+                  {deleteLoading ? 'Siliniyor...' : 'Sil'}
                 </button>
               </div>
             </div>
@@ -930,56 +760,45 @@ export default function StoresPage() {
 
         {/* Price List Assignment Modal */}
         {assignModalVisible && selectedStore && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl">
-              {/* Header */}
-              <div className="bg-[#00365a] text-white rounded-t-2xl p-6">
-                <div className="flex items-center">
-                  <div className="bg-white bg-opacity-20 rounded-xl p-2 mr-3">
-                    <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold">Fiyat Listesi Ata</h3>
-                </div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+            <div className="w-full max-w-md rounded-xl border border-slate-200/80 bg-white shadow-lg">
+              <div className="border-b border-slate-200/80 px-5 py-4">
+                <h3 className="text-base font-semibold text-slate-900">Fiyat Listesi Ata</h3>
+                <p className="mt-0.5 text-xs text-slate-500">{selectedStore.kurum_adi}</p>
               </div>
 
-              {/* Content */}
-              <div className="p-6">
-                <p className="text-gray-900 mb-4">
-                  <strong>{selectedStore.kurum_adi}</strong> mağazasına fiyat listesi atayın.
-                </p>
-                <div className="mb-4 dropdown-container">
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    Fiyat Listesi Seçin
-                  </label>
+              <div className="px-5 py-5">
+                <div className="dropdown-container">
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Fiyat Listesi Seçin</label>
                   <div className="relative">
                     <button
                       type="button"
                       onClick={() => setPriceListDropdownOpen(!priceListDropdownOpen)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-all text-left bg-white"
+                      className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15 pr-9 text-left"
                     >
-                      <span className={selectedPriceList ? "text-gray-900" : "text-gray-500"}>
-                        {selectedPriceList 
+                      <span className={selectedPriceList ? "text-slate-900" : "text-slate-400"}>
+                        {selectedPriceList
                           ? formatPriceListDisplay(selectedPriceList)
                           : "Fiyat listesi seçin"
                         }
                       </span>
-                      <svg 
-                        className={`absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${priceListDropdownOpen ? 'rotate-180' : ''}`}
-                        fill="none" 
-                        stroke="currentColor" 
+                      <svg
+                        className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-transform ${priceListDropdownOpen ? 'rotate-180' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={1.8}
                         viewBox="0 0 24 24"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                       </svg>
                     </button>
-                    
+
                     {priceListDropdownOpen && (
-                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                        <div
-                          className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                            !selectedPriceList ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                      <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+                        <button
+                          type="button"
+                          className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                            !selectedPriceList ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                           }`}
                           onClick={() => {
                             setSelectedPriceList("");
@@ -987,12 +806,13 @@ export default function StoresPage() {
                           }}
                         >
                           Fiyat listesi seçin
-                        </div>
+                        </button>
                         {priceLists.map(list => (
-                          <div
+                          <button
                             key={list.price_list_id}
-                            className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                              selectedPriceList === list.price_list_id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                            type="button"
+                            className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                              selectedPriceList === list.price_list_id ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                             }`}
                             onClick={() => {
                               setSelectedPriceList(list.price_list_id);
@@ -1000,7 +820,7 @@ export default function StoresPage() {
                             }}
                           >
                             {formatPriceListDisplay(list.price_list_id)}
-                          </div>
+                          </button>
                         ))}
                       </div>
                     )}
@@ -1008,44 +828,29 @@ export default function StoresPage() {
                 </div>
               </div>
 
-              {/* Footer */}
-              <div className="bg-gray-50 px-6 py-4 rounded-b-2xl flex justify-end gap-3">
+              <div className="flex justify-end gap-2 rounded-b-xl border-t border-slate-200/80 bg-slate-50/60 px-5 py-3.5">
                 <button
-            onClick={() => {
-              setAssignModalVisible(false);
-              setSelectedStore(null);
-              setSelectedPriceList('');
-            }}
-                  className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition-all"
-          >
-            İptal
+                  onClick={() => {
+                    setAssignModalVisible(false);
+                    setSelectedStore(null);
+                    setSelectedPriceList('');
+                  }}
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                >
+                  İptal
                 </button>
                 <button
-            onClick={handleAssignPriceList}
+                  onClick={handleAssignPriceList}
                   disabled={assignLoading || !selectedPriceList}
-                  className="px-6 py-3 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-                  {assignLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                      Atanıyor...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Ata
-                    </>
-                  )}
+                  className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {assignLoading ? 'Atanıyor...' : 'Ata'}
                 </button>
               </div>
             </div>
           </div>
         )}
-
-
-        </div>
+      </div>
     </div>
   );
-} 
+}

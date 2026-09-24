@@ -850,7 +850,7 @@ const SaticiSiparisVer = () => {
                     value={productForm.notes}
                     onChange={(e) => setProductForm(prev => ({ ...prev, notes: e.target.value }))}
                     placeholder="Özel kesim veya not..."
-                    className="h-16 w-full resize-none rounded-lg border border-slate-200/80 px-3 py-2 text-sm text-slate-900 transition-all duration-200 ease-out placeholder:text-slate-400 hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20"
+                    className="h-16 w-full resize-none rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 transition-all duration-200 ease-out placeholder:text-slate-400 hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20"
                     rows={2}
                   />
                 </div>

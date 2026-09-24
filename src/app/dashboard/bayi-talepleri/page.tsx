@@ -127,67 +127,53 @@ export default function BayiTalepleri() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#f7f8fa]">
+        <div className="h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
+        <p className="text-sm text-slate-500">Bayi talepleri yükleniyor...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="space-y-6">
-        {/* Modern Header */}
-        <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-6 text-white">
-          <div className="flex justify-between items-center">
+      <div className="min-h-screen bg-[#f7f8fa]">
+        <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+          <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Bayi Talepleri</h1>
-              <p className="text-slate-300">Gelen bayi taleplerini yönetin ve takip edin</p>
+              <h1 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl sm:tracking-[0.12em]">
+                Bayi Talepleri
+              </h1>
+              <div className="mt-3 h-px w-[min(100%,20rem)] bg-neutral-300 sm:mt-4" />
+              <p className="mt-3 text-sm text-slate-500">Gelen bayi taleplerini yönetin ve takip edin</p>
             </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-blue-400">0</div>
-              <div className="text-sm text-slate-300">Toplam Talep</div>
+            <div className="shrink-0 text-right">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Toplam Talep</p>
+              <p className="mt-2 text-2xl font-light text-slate-900">0</p>
             </div>
           </div>
-        </div>
 
-        {/* Hata Mesajı */}
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6">
-          <div className="flex items-start">
-            <div className="flex-shrink-0">
-              <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Hata Oluştu</h3>
-              <p className="mt-1 text-sm text-red-700">{error}</p>
-              <div className="mt-4 flex space-x-3">
-                {error.includes('Giriş yapmanız gerekiyor') ? (
-                  <a
-                    href="/login"
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
-                  >
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                    </svg>
-                    Giriş Yap
-                  </a>
-                ) : (
-                  <button
-                    onClick={() => {
-                      setError(null);
-                      fetchContactForms();
-                    }}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200"
-                  >
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    Tekrar Dene
-                  </button>
-                )}
-              </div>
-            </div>
+          <div className="rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-3 text-sm text-rose-700">
+            {error}
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {error.includes('Giriş yapmanız gerekiyor') ? (
+              <a
+                href="/login"
+                className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25"
+              >
+                Giriş Yap
+              </a>
+            ) : (
+              <button
+                onClick={() => {
+                  setError(null);
+                  fetchContactForms();
+                }}
+                className="inline-flex items-center justify-center rounded-lg bg-rose-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/25"
+              >
+                Tekrar Dene
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -195,53 +181,56 @@ export default function BayiTalepleri() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Modern Header */}
-      <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-6 text-white">
-        <div className="flex justify-between items-center">
+    <div className="min-h-screen bg-[#f7f8fa]">
+      <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+        <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Bayi Talepleri</h1>
-            <p className="text-slate-300">Gelen bayi taleplerini yönetin ve takip edin</p>
+            <h1 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl sm:tracking-[0.12em]">
+              Bayi Talepleri
+            </h1>
+            <div className="mt-3 h-px w-[min(100%,20rem)] bg-neutral-300 sm:mt-4" />
+            <p className="mt-3 text-sm text-slate-500">Gelen bayi taleplerini yönetin ve takip edin</p>
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-blue-400">{totalItems}</div>
-            <div className="text-sm text-slate-300">Toplam Talep</div>
+          <div className="shrink-0 text-right">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Toplam Talep</p>
+            <p className="mt-2 text-2xl font-light text-slate-900">{totalItems}</p>
           </div>
         </div>
-      </div>
 
-      {/* Modern Filtreler */}
-      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Okunma Durumu
-            </label>
-            <div className="relative dropdown-container">
-              <button
-                type="button"
-                onClick={() => setShowReadDropdown(!showReadDropdown)}
-                className="w-full px-4 py-3 pr-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white text-left flex items-center justify-between"
-              >
-                <span className="text-gray-900">
+        <div className="mb-6 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="dropdown-container">
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                Okunma Durumu
+              </label>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowReadDropdown(!showReadDropdown)}
+                  className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15 pr-9 text-left"
+                >
                   {filters.isRead === undefined ? "Tümü" : filters.isRead ? "Okunmuş" : "Okunmamış"}
-                </span>
-                <svg className={`h-5 w-5 text-gray-400 transition-transform duration-200 ${showReadDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              
-              {showReadDropdown && (
-                <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg">
-                  <div className="py-1">
+                  <svg
+                    className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-transform ${showReadDropdown ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.8}
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {showReadDropdown && (
+                  <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
                     <button
                       type="button"
                       onClick={() => {
                         setFilters(prev => ({ ...prev, isRead: undefined }));
                         setShowReadDropdown(false);
                       }}
-                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${
-                        filters.isRead === undefined ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                      className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                        filters.isRead === undefined ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                     >
                       Tümü
@@ -252,8 +241,8 @@ export default function BayiTalepleri() {
                         setFilters(prev => ({ ...prev, isRead: false }));
                         setShowReadDropdown(false);
                       }}
-                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${
-                        filters.isRead === false ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                      className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                        filters.isRead === false ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                     >
                       Okunmamış
@@ -264,47 +253,49 @@ export default function BayiTalepleri() {
                         setFilters(prev => ({ ...prev, isRead: true }));
                         setShowReadDropdown(false);
                       }}
-                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${
-                        filters.isRead === true ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                      className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                        filters.isRead === true ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                     >
                       Okunmuş
                     </button>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              İletişim Durumu
-            </label>
-            <div className="relative dropdown-container">
-              <button
-                type="button"
-                onClick={() => setShowContactedDropdown(!showContactedDropdown)}
-                className="w-full px-4 py-3 pr-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white text-left flex items-center justify-between"
-              >
-                <span className="text-gray-900">
+            <div className="dropdown-container">
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                İletişim Durumu
+              </label>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowContactedDropdown(!showContactedDropdown)}
+                  className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15 pr-9 text-left"
+                >
                   {filters.isContacted === undefined ? "Tümü" : filters.isContacted ? "İletişim Kurulmuş" : "İletişim Kurulmamış"}
-                </span>
-                <svg className={`h-5 w-5 text-gray-400 transition-transform duration-200 ${showContactedDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              
-              {showContactedDropdown && (
-                <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg">
-                  <div className="py-1">
+                  <svg
+                    className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-transform ${showContactedDropdown ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.8}
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {showContactedDropdown && (
+                  <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
                     <button
                       type="button"
                       onClick={() => {
                         setFilters(prev => ({ ...prev, isContacted: undefined }));
                         setShowContactedDropdown(false);
                       }}
-                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${
-                        filters.isContacted === undefined ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                      className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                        filters.isContacted === undefined ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                     >
                       Tümü
@@ -315,8 +306,8 @@ export default function BayiTalepleri() {
                         setFilters(prev => ({ ...prev, isContacted: false }));
                         setShowContactedDropdown(false);
                       }}
-                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${
-                        filters.isContacted === false ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                      className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                        filters.isContacted === false ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                     >
                       İletişim Kurulmamış
@@ -327,246 +318,232 @@ export default function BayiTalepleri() {
                         setFilters(prev => ({ ...prev, isContacted: true }));
                         setShowContactedDropdown(false);
                       }}
-                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${
-                        filters.isContacted === true ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                      className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                        filters.isContacted === true ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                       }`}
                     >
                       İletişim Kurulmuş
                     </button>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-end">
-            <button
-              onClick={() => {
-                setFilters({ isRead: undefined, isContacted: undefined, search: "" });
-                setCurrentPage(1);
-              }}
-              className="w-full px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 transition-all duration-200 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-            >
-              Filtreleri Temizle
-            </button>
+            <div className="flex items-end">
+              <button
+                onClick={() => {
+                  setFilters({ isRead: undefined, isContacted: undefined, search: "" });
+                  setCurrentPage(1);
+                }}
+                className="inline-flex w-full items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15 md:w-auto"
+              >
+                Filtreleri Temizle
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Modern Talep Listesi */}
-      <div className="bg-white shadow-xl rounded-xl overflow-hidden border border-gray-100">
-        {contactForms.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <p className="text-gray-500 text-lg">Henüz bayi talebi bulunmuyor.</p>
+        <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/60 px-4 py-3 sm:px-5">
+            <h3 className="text-sm font-semibold text-slate-900">Talep Listesi</h3>
+            <span className="text-xs text-slate-500">{contactForms.length} kayıt</span>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Firma Bilgileri
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    İletişim
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Tarih
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Notlar
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    İşlemler
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Durum
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-100">
-                {contactForms.map((form) => (
-                  <tr key={form.id} className={`hover:bg-gray-50 transition-colors duration-200 ${!form.isRead ? "bg-blue-50 border-l-4 border-l-blue-500" : ""}`}>
-                    <td className="px-6 py-6">
-                      <div>
-                        <div className="text-sm font-semibold text-gray-900 mb-1">
-                          {form.companyName}
-                        </div>
-                        <div className="text-sm text-gray-600 mb-1">
-                          {form.authorityFullName}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {form.address}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-6">
-                      <div className="text-sm text-gray-900 mb-1">{form.email}</div>
-                      <div className="text-sm text-gray-600">{form.phone}</div>
-                    </td>
-                    <td className="px-6 py-6 text-sm text-gray-600">
-                      {formatDate(form.createdAt)}
-                    </td>
-                    <td className="px-6 py-6">
-                      <div className="max-w-xs">
-                        {form.notes && form.notes.trim() !== '' ? (
-                          <p className="text-sm text-gray-700 line-clamp-2">
-                            {form.notes}
-                          </p>
-                        ) : (
-                          <p className="text-sm text-gray-400 italic">
-                            Not bulunmamaktadır
-                          </p>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-6">
-                      <button
-                        onClick={() => handleDelete(form.id)}
-                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200 shadow-sm hover:shadow-md"
-                      >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                        Sil
-                      </button>
-                    </td>
-                    <td className="px-6 py-6">
-                      <div className="space-y-3">
-                        <label className="flex items-center cursor-pointer group">
-                          <div className="relative">
-                            <input
-                              type="checkbox"
-                              checked={form.isRead}
-                              onChange={(e) => handleStatusUpdate(form.id, 'isRead', e.target.checked)}
-                              className="sr-only"
-                            />
-                            <div className={`w-5 h-5 rounded border-2 transition-all duration-200 ${
-                              form.isRead 
-                                ? 'bg-blue-500 border-blue-500' 
-                                : 'bg-white border-gray-300 group-hover:border-blue-400'
-                            }`}>
-                              {form.isRead && (
-                                <svg className="w-3 h-3 text-white m-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                              )}
-                            </div>
-                          </div>
-                          <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
-                            Okundu
-                          </span>
-                        </label>
-                        
-                        <label className="flex items-center cursor-pointer group">
-                          <div className="relative">
-                            <input
-                              type="checkbox"
-                              checked={form.isContacted}
-                              onChange={(e) => handleStatusUpdate(form.id, 'isContacted', e.target.checked)}
-                              className="sr-only"
-                            />
-                            <div className={`w-5 h-5 rounded border-2 transition-all duration-200 ${
-                              form.isContacted 
-                                ? 'bg-green-500 border-green-500' 
-                                : 'bg-white border-gray-300 group-hover:border-green-400'
-                            }`}>
-                              {form.isContacted && (
-                                <svg className="w-3 h-3 text-white m-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                              )}
-                            </div>
-                          </div>
-                          <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-green-600 transition-colors">
-                            İletişim
-                          </span>
-                        </label>
-                      </div>
-                    </td>
+
+          {contactForms.length === 0 ? (
+            <div className="px-6 py-16 text-center">
+              <h3 className="text-sm font-medium text-slate-900">Henüz bayi talebi bulunmuyor.</h3>
+            </div>
+          ) : (
+            <div className="w-full overflow-x-auto">
+              <table className="w-full min-w-full">
+                <thead className="bg-slate-50/60">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Firma Bilgileri
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                      İletişim
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Tarih
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Notlar
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                      İşlemler
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Durum
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {contactForms.map((form) => (
+                    <tr
+                      key={form.id}
+                      className={`transition-colors hover:bg-slate-50/70 ${!form.isRead ? 'border-l-4 border-l-[#00365a] bg-[#00365a]/[0.04]' : ''}`}
+                    >
+                      <td className="px-4 py-3">
+                        <div className="text-sm font-medium text-slate-900">{form.companyName}</div>
+                        <div className="mt-0.5 text-sm text-slate-700">{form.authorityFullName}</div>
+                        <div className="mt-0.5 text-sm text-slate-500">{form.address}</div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="text-sm text-slate-900">{form.email}</div>
+                        <div className="mt-0.5 text-sm text-slate-700">{form.phone}</div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-700">{formatDate(form.createdAt)}</td>
+                      <td className="px-4 py-3">
+                        <div className="max-w-xs">
+                          {form.notes && form.notes.trim() !== '' ? (
+                            <p className="line-clamp-2 text-sm text-slate-700">{form.notes}</p>
+                          ) : (
+                            <p className="text-sm italic text-slate-400">Not bulunmamaktadır</p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(form.id)}
+                          className="inline-flex items-center justify-center rounded-lg bg-rose-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/25"
+                        >
+                          Sil
+                        </button>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="space-y-3">
+                          <label className="group flex cursor-pointer items-center">
+                            <div className="relative">
+                              <input
+                                type="checkbox"
+                                checked={form.isRead}
+                                onChange={(e) => handleStatusUpdate(form.id, 'isRead', e.target.checked)}
+                                className="sr-only"
+                              />
+                              <div
+                                className={`h-5 w-5 rounded border-2 transition ${
+                                  form.isRead
+                                    ? 'border-[#00365a] bg-[#00365a]'
+                                    : 'border-slate-300 bg-white group-hover:border-slate-400'
+                                }`}
+                              >
+                                {form.isRead && (
+                                  <svg className="m-0.5 h-3 w-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                )}
+                              </div>
+                            </div>
+                            <span className="ml-3 text-sm font-medium text-slate-700 transition-colors group-hover:text-slate-900">
+                              Okundu
+                            </span>
+                          </label>
 
-      {/* Modern Sayfalama */}
-      {totalPages > 1 && (
-        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div className="text-sm font-medium text-gray-700">
-              Sayfa {currentPage} / {totalPages} • Toplam {totalItems} talep
+                          <label className="group flex cursor-pointer items-center">
+                            <div className="relative">
+                              <input
+                                type="checkbox"
+                                checked={form.isContacted}
+                                onChange={(e) => handleStatusUpdate(form.id, 'isContacted', e.target.checked)}
+                                className="sr-only"
+                              />
+                              <div
+                                className={`h-5 w-5 rounded border-2 transition ${
+                                  form.isContacted
+                                    ? 'border-emerald-600 bg-emerald-600'
+                                    : 'border-slate-300 bg-white group-hover:border-slate-400'
+                                }`}
+                              >
+                                {form.isContacted && (
+                                  <svg className="m-0.5 h-3 w-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                )}
+                              </div>
+                            </div>
+                            <span className="ml-3 text-sm font-medium text-slate-700 transition-colors group-hover:text-slate-900">
+                              İletişim
+                            </span>
+                          </label>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <div className="flex space-x-3">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Önceki
-              </button>
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-              >
-                Sonraki
-                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* Notlar Modal */}
-      {showModal && selectedForm && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Notlar - {selectedForm.companyName}
-              </h3>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={6}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Notlarınızı buraya yazın..."
-              />
-              <div className="flex justify-end space-x-2 mt-4">
+          {totalPages > 1 && (
+            <div className="flex flex-col gap-3 border-t border-slate-200/80 bg-slate-50/60 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+              <div className="text-sm text-slate-700">
+                Sayfa {currentPage} / {totalPages} • Toplam {totalItems} talep
+              </div>
+              <div className="flex gap-2">
                 <button
+                  type="button"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Önceki
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Sonraki
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {showModal && selectedForm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+            <div className="w-full max-w-md overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-lg">
+              <div className="border-b border-slate-200/80 px-5 py-4">
+                <h3 className="text-base font-semibold text-slate-900">Notlar - {selectedForm.companyName}</h3>
+                <p className="mt-0.5 text-xs text-slate-500">Talep notlarını güncelleyin</p>
+              </div>
+              <div className="px-5 py-5">
+                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Notlar</label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={6}
+                  className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                  placeholder="Notlarınızı buraya yazın..."
+                />
+              </div>
+              <div className="flex justify-end gap-2 border-t border-slate-200/80 bg-slate-50/60 px-5 py-3.5">
+                <button
+                  type="button"
                   onClick={() => {
                     setShowModal(false);
                     setSelectedForm(null);
                     setNotes("");
                   }}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                 >
                   İptal
                 </button>
                 <button
+                  type="button"
                   onClick={handleNotesUpdate}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25"
                 >
                   Kaydet
                 </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

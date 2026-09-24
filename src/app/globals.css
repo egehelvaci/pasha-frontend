@@ -128,7 +128,9 @@ a {
 
 button {
   background: none;
-  border: none;
+  /* border-style korunur, aksi halde Tailwind'in border-* sınıfları çizilmez */
+  border-width: 0;
+  border-style: solid;
   padding: 0;
   font: inherit;
   cursor: pointer;
@@ -137,7 +139,8 @@ button {
 
 input, textarea, select {
   font: inherit;
-  border: none;
+  border-width: 0;
+  border-style: solid;
   outline: none;
   background: none;
 }

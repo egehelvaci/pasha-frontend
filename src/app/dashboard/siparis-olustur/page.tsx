@@ -391,11 +391,30 @@ const SiparisOlustur: React.FC = () => {
     }
   };
 
+  const inputClassName =
+    'w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15';
+
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-[#f7f8fa]">
+        <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+          <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h1 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl sm:tracking-[0.12em]">
+                Sipariş Oluştur
+              </h1>
+              <div className="mt-3 h-px w-[min(100%,20rem)] bg-neutral-300 sm:mt-4" />
+              <p className="mt-3 text-sm text-slate-500">
+                Sipariş bilgilerinizi kontrol edin ve siparişinizi oluşturun.
+              </p>
+            </div>
+          </div>
+          <div className="rounded-xl border border-slate-200/80 bg-white shadow-sm">
+            <div className="flex flex-col items-center justify-center gap-3 py-16">
+              <div className="h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
+              <p className="text-sm text-slate-500">Yükleniyor...</p>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -403,426 +422,418 @@ const SiparisOlustur: React.FC = () => {
 
   if (!cartData || cartData.items.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Sepetiniz Boş</h2>
-          <p className="text-gray-600 mb-6">Sipariş oluşturmak için sepetinizde ürün bulunmalıdır.</p>
-          <button
-            onClick={() => router.push('/dashboard/sepetim')}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Sepete Dön
-          </button>
+      <div className="min-h-screen bg-[#f7f8fa]">
+        <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+          <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h1 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl sm:tracking-[0.12em]">
+                Sipariş Oluştur
+              </h1>
+              <div className="mt-3 h-px w-[min(100%,20rem)] bg-neutral-300 sm:mt-4" />
+              <p className="mt-3 text-sm text-slate-500">
+                Sipariş bilgilerinizi kontrol edin ve siparişinizi oluşturun.
+              </p>
+            </div>
+          </div>
+          <div className="rounded-xl border border-slate-200/80 bg-white shadow-sm">
+            <div className="px-6 py-16 text-center">
+              <h2 className="text-sm font-medium text-slate-900">Sepetiniz Boş</h2>
+              <p className="mx-auto mt-1.5 max-w-md text-sm text-slate-500">
+                Sipariş oluşturmak için sepetinizde ürün bulunmalıdır.
+              </p>
+              <button
+                type="button"
+                onClick={() => router.push('/dashboard/sepetim')}
+                className="mt-6 inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Sepete Dön
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Başlık */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Sipariş Oluştur</h1>
-          <p className="text-gray-600">Sipariş bilgilerinizi kontrol edin ve siparişinizi oluşturun.</p>
+    <div className="min-h-screen bg-[#f7f8fa]">
+      <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+        <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl sm:tracking-[0.12em]">
+              Sipariş Oluştur
+            </h1>
+            <div className="mt-3 h-px w-[min(100%,20rem)] bg-neutral-300 sm:mt-4" />
+            <p className="mt-3 text-sm text-slate-500">
+              Sipariş bilgilerinizi kontrol edin ve siparişinizi oluşturun.
+            </p>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
           {/* Sol taraf - Sipariş Bilgileri */}
           <div className="space-y-6">
             {/* Limit Kontrolü */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Sipariş Durumu</h2>
-              
-              {checkingLimits ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <span className="ml-2 text-gray-600">Limit kontrolü yapılıyor...</span>
-                </div>
-              ) : limitInfo ? (
-                <div className={`border rounded-lg p-4 ${
-                  limitInfo.canProceed 
-                    ? 'bg-green-50 border-green-200' 
-                    : 'bg-red-50 border-red-200'
-                }`}>
-                  <div className="flex items-center mb-2">
-                    <span className="text-2xl mr-2">
-                      {limitInfo.canProceed ? '✅' : '⚠️'}
-                    </span>
-                    <h3 className={`text-sm font-medium ${
-                      limitInfo.canProceed 
-                        ? 'text-green-900' 
-                        : 'text-red-900'
-                    }`}>
+            <div className="rounded-xl border border-slate-200/80 bg-white shadow-sm">
+              <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/60 px-4 py-3 sm:px-5">
+                <h2 className="text-sm font-semibold text-slate-900">Sipariş Durumu</h2>
+              </div>
+              <div className="p-4 sm:p-5">
+                {checkingLimits ? (
+                  <div className="flex flex-col items-center justify-center gap-3 py-8">
+                    <div className="h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
+                    <p className="text-sm text-slate-500">Limit kontrolü yapılıyor...</p>
+                  </div>
+                ) : limitInfo ? (
+                  <div
+                    className={
+                      limitInfo.canProceed
+                        ? 'rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-sm text-emerald-700'
+                        : 'rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-3 text-sm text-rose-700'
+                    }
+                  >
+                    <h3 className="text-sm font-medium text-slate-900">
                       {limitInfo.canProceed ? 'Sipariş Verilebilir' : 'Sipariş Verilemez'}
                     </h3>
-                  </div>
-                  <p className={`text-sm ${
-                    limitInfo.canProceed 
-                      ? 'text-green-800' 
-                      : 'text-red-800'
-                  }`}>
-                    {formatLimitMessage(limitInfo.message)}
-                  </p>
-                  {limitInfo.requiresPayment && (
-                    <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs text-yellow-800">
-                          💳 Sipariş verebilmek için önce ödeme yapmanız gerekmektedir.
-                        </p>
-                        <button
-                          onClick={() => router.push('/dashboard/odemeler')}
-                          className="ml-3 px-4 py-2 bg-[#1e3a8a] text-white text-xs font-medium rounded-lg hover:bg-[#1e40af] transition-colors"
-                        >
-                          Ödeme Yap
-                        </button>
+                    <p className="mt-1.5">{formatLimitMessage(limitInfo.message)}</p>
+                    {limitInfo.requiresPayment && (
+                      <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-sm text-amber-700">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <p className="text-xs">
+                            Sipariş verebilmek için önce ödeme yapmanız gerekmektedir.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => router.push('/dashboard/odemeler')}
+                            className="inline-flex shrink-0 items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-xs font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            Ödeme Yap
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  {user?.canSeePrice && (
-                    <div className="mt-3 pt-3 border-t border-gray-200">
-                      <p className="text-xs text-gray-600">
-                        Sepet Tutarı: <strong>{parseFloat(limitInfo.cartTotal).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}</strong>
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <p className="text-sm text-gray-600">Limit bilgisi yükleniyor...</p>
-                </div>
-              )}
+                    )}
+                    {user?.canSeePrice && (
+                      <div className="mt-3 border-t border-slate-200/80 pt-3">
+                        <p className="text-xs text-slate-600">
+                          Sepet Tutarı:{' '}
+                          <span className="font-medium tabular-nums text-slate-900">
+                            {parseFloat(limitInfo.cartTotal).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}{' '}
+                            {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}
+                          </span>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-slate-200 bg-slate-50/60 px-3.5 py-3">
+                    <p className="text-sm text-slate-500">Limit bilgisi yükleniyor...</p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Teslimat Adresi Seçimi */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Teslimat Adresi</h2>
-              
-              {addressesLoading ? (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center space-x-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-blue-600"></div>
-                    <p className="text-sm text-gray-600">Adresler yükleniyor...</p>
-                  </div>
-                </div>
-              ) : storeAddresses.length > 0 ? (
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Teslimat Adresi Seçin <span className="text-red-500">*</span>
-                      </label>
-                      <button
-                        onClick={() => setShowAddressModal(true)}
-                        className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        Yeni Adres Ekle
-                      </button>
+            <div className="rounded-xl border border-slate-200/80 bg-white shadow-sm">
+              <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/60 px-4 py-3 sm:px-5">
+                <h2 className="text-sm font-semibold text-slate-900">Teslimat Adresi</h2>
+              </div>
+              <div className="p-4 sm:p-5">
+                {addressesLoading ? (
+                  <div className="rounded-lg border border-slate-200 bg-slate-50/60 px-3.5 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
+                      <p className="text-sm text-slate-500">Adresler yükleniyor...</p>
                     </div>
-                    
-                    {/* Custom Dropdown */}
-                    <div className="relative" ref={addressDropdownRef}>
-                      <button
-                        type="button"
-                        onClick={() => setAddressDropdownOpen(!addressDropdownOpen)}
-                        className="w-full px-4 py-3 text-left bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-400"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
-                            <span className={`${selectedAddressId ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
-                              {selectedAddressId ? 
-                                (() => {
-                                  const selectedAddress = storeAddresses.find(addr => addr.id === selectedAddressId);
-                                  return selectedAddress ? `${selectedAddress.title} - ${selectedAddress.address.substring(0, 50)}${selectedAddress.address.length > 50 ? '...' : ''}` : 'Teslimat adresi seçin';
-                                })() 
-                                : 'Teslimat adresi seçin'
-                              }
-                            </span>
-                          </div>
+                  </div>
+                ) : storeAddresses.length > 0 ? (
+                  <div className="space-y-4">
+                    <div>
+                      <div className="mb-1.5 flex items-center justify-between gap-3">
+                        <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">
+                          Teslimat Adresi Seçin <span className="text-rose-500">*</span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setShowAddressModal(true)}
+                          className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                        >
+                          Yeni Adres Ekle
+                        </button>
+                      </div>
+
+                      {/* Custom Dropdown */}
+                      <div className="relative" ref={addressDropdownRef}>
+                        <button
+                          type="button"
+                          onClick={() => setAddressDropdownOpen(!addressDropdownOpen)}
+                          className={`relative ${inputClassName} pr-9 text-left`}
+                        >
+                          <span className={selectedAddressId ? 'font-medium text-slate-900' : 'text-slate-500'}>
+                            {selectedAddressId
+                              ? (() => {
+                                  const selectedAddress = storeAddresses.find(
+                                    (addr) => addr.id === selectedAddressId
+                                  );
+                                  return selectedAddress
+                                    ? `${selectedAddress.title} - ${selectedAddress.address.substring(0, 50)}${selectedAddress.address.length > 50 ? '...' : ''}`
+                                    : 'Teslimat adresi seçin';
+                                })()
+                              : 'Teslimat adresi seçin'}
+                          </span>
                           <svg
-                            className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${addressDropdownOpen ? 'rotate-180' : ''}`}
+                            className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-transform ${addressDropdownOpen ? 'rotate-180' : ''}`}
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 9l-7 7-7-7" />
                           </svg>
-                        </div>
-                      </button>
+                        </button>
 
-                      {/* Dropdown Options */}
-                      {addressDropdownOpen && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
-                          {storeAddresses.filter(addr => addr.is_active).length > 0 ? (
-                            <>
-                              <div className="py-1">
-                                <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide bg-gray-50">
+                        {addressDropdownOpen && (
+                          <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+                            {storeAddresses.filter((addr) => addr.is_active).length > 0 ? (
+                              <>
+                                <div className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-500">
                                   Kayıtlı Adresler
                                 </div>
-                              </div>
-                              {storeAddresses
-                                .filter(addr => addr.is_active)
-                                .map((addr) => (
-                                  <button
-                                    key={addr.id}
-                                    type="button"
-                                    onClick={() => {
-                                      setSelectedAddressId(addr.id);
-                                      setAddressDropdownOpen(false);
-                                    }}
-                                    className={`w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0 ${
-                                      selectedAddressId === addr.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
-                                    }`}
-                                  >
-                                    <div className="flex items-start gap-3">
-                                      <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
-                                        selectedAddressId === addr.id ? 'bg-blue-500' : 'bg-gray-300'
-                                      }`}></div>
-                                      <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-sm font-medium text-gray-900">{addr.title}</span>
-                                          {addr.is_default && (
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                              Varsayılan
-                                            </span>
-                                          )}
-                                        </div>
-                                        <p className="text-sm text-gray-600 mt-1">{addr.address}</p>
-                                        {(addr.city || addr.district) && (
-                                          <p className="text-xs text-gray-500 mt-1">
-                                            {addr.district && addr.district + ', '}
-                                            {addr.city}
-                                            {addr.postal_code && ' - ' + addr.postal_code}
-                                          </p>
+                                {storeAddresses
+                                  .filter((addr) => addr.is_active)
+                                  .map((addr) => (
+                                    <button
+                                      key={addr.id}
+                                      type="button"
+                                      onClick={() => {
+                                        setSelectedAddressId(addr.id);
+                                        setAddressDropdownOpen(false);
+                                      }}
+                                      className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                                        selectedAddressId === addr.id
+                                          ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]'
+                                          : 'text-slate-700'
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <span>{addr.title}</span>
+                                        {addr.is_default && (
+                                          <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
+                                            Varsayılan
+                                          </span>
                                         )}
                                       </div>
-                                      {selectedAddressId === addr.id && (
-                                        <div className="flex-shrink-0">
-                                          <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M9 16.17L5.53 12.7a.996.996 0 10-1.41 1.41L9 19l11-11a.996.996 0 10-1.41-1.41L9 16.17z"/>
-                                          </svg>
-                                        </div>
+                                      <p className="mt-0.5 text-sm text-slate-600">{addr.address}</p>
+                                      {(addr.city || addr.district) && (
+                                        <p className="mt-0.5 text-xs text-slate-500">
+                                          {addr.district && addr.district + ', '}
+                                          {addr.city}
+                                          {addr.postal_code && ' - ' + addr.postal_code}
+                                        </p>
                                       )}
-                                    </div>
-                                  </button>
-                                ))
-                              }
-                            </>
-                          ) : (
-                            <div className="px-4 py-6 text-center">
-                              <div className="text-gray-400 mb-2">
-                                <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
+                                    </button>
+                                  ))}
+                              </>
+                            ) : (
+                              <div className="px-3 py-6 text-center">
+                                <p className="text-sm font-medium text-slate-700">Henüz adres bulunamadı</p>
+                                <p className="mt-1 text-xs text-slate-500">Yeni adres ekleyebilirsiniz</p>
                               </div>
-                              <p className="text-sm text-gray-600 font-medium">Henüz adres bulunamadı</p>
-                              <p className="text-xs text-gray-500 mt-1">Yeni adres ekleyebilirsiniz</p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {selectedAddressId && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      {(() => {
-                        const selectedAddress = storeAddresses.find(addr => addr.id === selectedAddressId);
-                        return selectedAddress ? (
-                          <div>
-                            <h4 className="text-sm font-medium text-blue-900 mb-1">{selectedAddress.title}</h4>
-                            <p className="text-sm text-blue-800">{selectedAddress.address}</p>
-                            {(selectedAddress.city || selectedAddress.district) && (
-                              <p className="text-sm text-blue-700 mt-1">
-                                {selectedAddress.district && selectedAddress.district + ', '}
-                                {selectedAddress.city}
-                                {selectedAddress.postal_code && ' - ' + selectedAddress.postal_code}
-                              </p>
                             )}
                           </div>
-                        ) : null;
-                      })()}
+                        )}
+                      </div>
                     </div>
-                  )}
-                </div>
-              ) : (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-blue-800 font-medium">
-                        Henüz adres bulunamadı
-                      </p>
-                      <p className="text-xs text-blue-600 mt-1">
-                        Sipariş verebilmek için önce bir adres eklemeniz gerekiyor
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setShowAddressModal(true)}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm font-medium"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      Adres Ekle
-                    </button>
+
+                    {selectedAddressId && (
+                      <div className="rounded-lg border border-sky-200 bg-sky-50 px-3.5 py-3 text-sm text-sky-700">
+                        {(() => {
+                          const selectedAddress = storeAddresses.find(
+                            (addr) => addr.id === selectedAddressId
+                          );
+                          return selectedAddress ? (
+                            <div>
+                              <h4 className="text-sm font-medium text-slate-900">{selectedAddress.title}</h4>
+                              <p className="mt-1">{selectedAddress.address}</p>
+                              {(selectedAddress.city || selectedAddress.district) && (
+                                <p className="mt-1 text-sm">
+                                  {selectedAddress.district && selectedAddress.district + ', '}
+                                  {selectedAddress.city}
+                                  {selectedAddress.postal_code && ' - ' + selectedAddress.postal_code}
+                                </p>
+                              )}
+                            </div>
+                          ) : null;
+                        })()}
+                      </div>
+                    )}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="rounded-lg border border-sky-200 bg-sky-50 px-3.5 py-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="text-sm text-sky-700">
+                        <p className="font-medium text-slate-900">Henüz adres bulunamadı</p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          Sipariş verebilmek için önce bir adres eklemeniz gerekiyor
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowAddressModal(true)}
+                        className="inline-flex shrink-0 items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Adres Ekle
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Sipariş Notları */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Sipariş Notları</h2>
-              <textarea
-                value={orderNotes}
-                onChange={(e) => setOrderNotes(e.target.value)}
-                placeholder="Sipariş ile ilgili özel notlarınızı buraya yazabilirsiniz..."
-                className="w-full h-24 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                maxLength={500}
-              />
-              <p className="text-xs text-gray-500 mt-2">
-                {orderNotes.length}/500 karakter
-              </p>
+            <div className="rounded-xl border border-slate-200/80 bg-white shadow-sm">
+              <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/60 px-4 py-3 sm:px-5">
+                <h2 className="text-sm font-semibold text-slate-900">Sipariş Notları</h2>
+              </div>
+              <div className="p-4 sm:p-5">
+                <textarea
+                  value={orderNotes}
+                  onChange={(e) => setOrderNotes(e.target.value)}
+                  placeholder="Sipariş ile ilgili özel notlarınızı buraya yazabilirsiniz..."
+                  className={`${inputClassName} h-24 resize-none`}
+                  maxLength={500}
+                />
+                <p className="mt-1.5 text-xs text-slate-500">{orderNotes.length}/500 karakter</p>
+              </div>
             </div>
           </div>
 
           {/* Sağ taraf - Sepet Özeti */}
           <div className="space-y-6">
             {/* Sepet Özeti */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Sepet Özeti</h2>
-              
-              <div className="space-y-4 max-h-96 overflow-y-auto">
+            <div className="rounded-xl border border-slate-200/80 bg-white shadow-sm">
+              <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/60 px-4 py-3 sm:px-5">
+                <h2 className="text-sm font-semibold text-slate-900">Sepet Özeti</h2>
+                <span className="text-xs text-slate-500">{cartData.items.length} ürün</span>
+              </div>
+
+              <div className="max-h-96 overflow-y-auto divide-y divide-slate-100">
                 {cartData.items.map((item) => {
-                  const imageUrl = item.product.productImage && 
-                                   item.product.productImage !== 'undefined' && 
-                                   item.product.productImage.trim() !== '' 
-                    ? item.product.productImage 
-                    : null;
-                  
+                  const imageUrl =
+                    item.product.productImage &&
+                    item.product.productImage !== 'undefined' &&
+                    item.product.productImage.trim() !== ''
+                      ? item.product.productImage
+                      : null;
+
                   return (
-                    <div key={item.id} className="flex items-start space-x-4 pb-4 border-b border-gray-100 last:border-b-0">
+                    <div key={item.id} className="flex items-start gap-4 p-4 sm:p-5">
                       {imageUrl ? (
                         <OptimizedImage
                           src={imageUrl}
                           alt={item.product.name}
-                          className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                          className="h-16 w-16 shrink-0 rounded-lg border border-slate-200 object-cover"
                           placeholder={
-                            <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center border border-gray-200">
-                              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                            </div>
+                            <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-slate-200 bg-slate-50" />
                           }
                           onError={() => {}}
                         />
                       ) : (
-                        <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200">
-                          <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                        </div>
+                        <div className="h-16 w-16 shrink-0 rounded-lg border border-slate-200 bg-slate-50" />
                       )}
-                      <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-medium text-gray-900 truncate">{item.product.name}</h3>
-                      <p className="text-xs text-gray-500">{item.product.collection.name}</p>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <span className="text-xs text-gray-600">
-                          {item.width}x{item.height} cm
-                        </span>
-                        <span className="text-xs text-gray-400">•</span>
-                        <span className="text-xs text-gray-600">
-                          {translateCutType(item.cut_type)}
-                        </span>
-                      </div>
-                      {item.notes && (
-                        <p className="text-xs text-gray-500 mt-1 italic">{item.notes}</p>
-                      )}
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="text-sm text-gray-600">Adet: {item.quantity}</span>
-                        {user?.canSeePrice && (
-                          <span className="text-sm font-medium text-gray-900">
-                            {parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}
+                      <div className="min-w-0 flex-1">
+                        <h3 className="truncate text-sm font-medium text-slate-900">{item.product.name}</h3>
+                        <p className="text-xs text-slate-500">{item.product.collection.name}</p>
+                        <div className="mt-1 flex items-center gap-2">
+                          <span className="text-xs text-slate-600">
+                            {item.width}x{item.height} cm
                           </span>
+                          <span className="text-xs text-slate-300">•</span>
+                          <span className="text-xs text-slate-600">{translateCutType(item.cut_type)}</span>
+                        </div>
+                        {item.notes && (
+                          <p className="mt-1 text-xs italic text-slate-500">{item.notes}</p>
                         )}
+                        <div className="mt-2 flex items-center justify-between">
+                          <span className="text-sm text-slate-600">Adet: {item.quantity}</span>
+                          {user?.canSeePrice && (
+                            <span className="text-right text-sm font-medium tabular-nums text-slate-900">
+                              {parseFloat(item.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}{' '}
+                              {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
                     </div>
                   );
                 })}
               </div>
 
-              <div className="mt-6 pt-4 border-t border-gray-200">
+              <div className="border-t border-slate-200/80 p-4 sm:p-5">
                 {user?.canSeePrice ? (
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-semibold text-gray-900">Toplam:</span>
-                    <span className="text-xl font-bold text-blue-600">
-                      {parseFloat(cartData.totalPrice).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-slate-900">Toplam:</span>
+                    <span className="text-right text-lg font-semibold tabular-nums text-[#00365a]">
+                      {parseFloat(cartData.totalPrice).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}{' '}
+                      {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}
                     </span>
                   </div>
                 ) : (
-                  <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.664-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                      </svg>
-                      <span className="text-yellow-800 font-medium">Fiyat Görme Yetkiniz Bulunmamaktadır</span>
-                    </div>
-                    <p className="text-yellow-700 text-sm mt-1">Sipariş tutarını görmeden de sipariş verebilirsiniz.</p>
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-sm text-amber-700">
+                    <p className="font-medium text-slate-900">Fiyat Görme Yetkiniz Bulunmamaktadır</p>
+                    <p className="mt-1 text-sm">Sipariş tutarını görmeden de sipariş verebilirsiniz.</p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Sipariş Ver Butonu */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="rounded-xl border border-slate-200/80 bg-white shadow-sm p-4 sm:p-5">
               <button
+                type="button"
                 onClick={handleSubmitOrder}
                 disabled={submitting || !limitInfo?.canProceed || !selectedAddressId}
-                className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-colors ${
-                  submitting || !limitInfo?.canProceed || !selectedAddressId
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
-                }`}
+                className="inline-flex w-full items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {submitting ? 'Sipariş Oluşturuluyor...' : 'Siparişi Onayla'}
               </button>
-              
+
               {(!limitInfo?.canProceed || !selectedAddressId) && (
-                <p className="text-sm text-red-600 mt-2 text-center">
+                <p className="mt-1.5 text-center text-xs text-rose-600">
                   {!selectedAddressId ? 'Lütfen teslimat adresi seçin' : 'Sipariş durumunu kontrol edin'}
                 </p>
               )}
             </div>
 
             {/* Sipariş Süreci */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">📋 Sipariş Süreci</h3>
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-medium">1</div>
+            <div className="rounded-xl border border-slate-200/80 bg-white shadow-sm">
+              <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/60 px-4 py-3 sm:px-5">
+                <h3 className="text-sm font-semibold text-slate-900">Sipariş Süreci</h3>
+              </div>
+              <div className="space-y-3 p-4 sm:p-5">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-200/50 bg-emerald-50 text-sm font-medium text-emerald-700">
+                    1
+                  </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">Onay</p>
-                    <p className="text-xs text-gray-500">Siparişiniz alınır ve onaylanır</p>
+                    <p className="text-sm font-medium text-slate-900">Onay</p>
+                    <p className="text-xs text-slate-500">Siparişiniz alınır ve onaylanır</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium">2</div>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-sm font-medium text-slate-600">
+                    2
+                  </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">Hazırlık</p>
-                    <p className="text-xs text-gray-500">Ürünleriniz hazırlanır ve paketlenir</p>
+                    <p className="text-sm font-medium text-slate-900">Hazırlık</p>
+                    <p className="text-xs text-slate-500">Ürünleriniz hazırlanır ve paketlenir</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium">3</div>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-sm font-medium text-slate-600">
+                    3
+                  </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">Teslimat</p>
-                    <p className="text-xs text-gray-500">Ürünleriniz adresinize teslim edilir</p>
+                    <p className="text-sm font-medium text-slate-900">Teslimat</p>
+                    <p className="text-xs text-slate-500">Ürünleriniz adresinize teslim edilir</p>
                   </div>
                 </div>
               </div>
@@ -833,126 +844,138 @@ const SiparisOlustur: React.FC = () => {
 
       {/* Yeni Adres Ekleme Modal */}
       {showAddressModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-2xl w-full shadow-2xl">
-            <div className="bg-[#00365a] text-white rounded-t-xl p-6">
-              <h3 className="text-xl font-bold">Yeni Teslimat Adresi Ekle</h3>
-              <p className="text-blue-100 text-sm mt-1">Bu adres sipariş teslimatı için kullanılacaktır</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+          <div className="flex max-h-[92vh] w-full max-w-md flex-col rounded-xl border border-slate-200/80 bg-white shadow-lg">
+            <div className="flex items-start justify-between gap-4 rounded-t-xl border-b border-slate-200/80 px-5 py-4">
+              <div>
+                <h3 className="text-base font-semibold text-slate-900">Yeni Teslimat Adresi Ekle</h3>
+                <p className="mt-0.5 text-xs text-slate-500">Bu adres sipariş teslimatı için kullanılacaktır</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddressModal(false);
+                  setNewAddress({
+                    title: '',
+                    address: '',
+                    city: '',
+                    district: '',
+                    postal_code: '',
+                    is_default: false
+                  });
+                }}
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                aria-label="Kapat"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-            
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div className="flex-1 overflow-y-auto px-5 py-5">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Adres Başlığı <span className="text-red-500">*</span>
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Adres Başlığı <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={newAddress.title}
-                    onChange={(e) => setNewAddress(prev => ({ ...prev, title: e.target.value }))}
+                    onChange={(e) => setNewAddress((prev) => ({ ...prev, title: e.target.value }))}
                     placeholder="Örn: Ana Mağaza, Depo, Şube 1"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={inputClassName}
                     required
                   />
                 </div>
-                
+
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tam Adres <span className="text-red-500">*</span>
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Tam Adres <span className="text-rose-500">*</span>
                   </label>
                   <textarea
                     value={newAddress.address}
-                    onChange={(e) => setNewAddress(prev => ({ ...prev, address: e.target.value }))}
+                    onChange={(e) => setNewAddress((prev) => ({ ...prev, address: e.target.value }))}
                     placeholder="Sokak, cadde, mahalle, bina no vs."
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={inputClassName}
                     required
                   />
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">İlçe</label>
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">İlçe</label>
                   <input
                     type="text"
                     value={newAddress.district}
-                    onChange={(e) => setNewAddress(prev => ({ ...prev, district: e.target.value }))}
+                    onChange={(e) => setNewAddress((prev) => ({ ...prev, district: e.target.value }))}
                     placeholder="Örn: Kadıköy"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={inputClassName}
                   />
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Şehir</label>
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Şehir</label>
                   <input
                     type="text"
                     value={newAddress.city}
-                    onChange={(e) => setNewAddress(prev => ({ ...prev, city: e.target.value }))}
+                    onChange={(e) => setNewAddress((prev) => ({ ...prev, city: e.target.value }))}
                     placeholder="Örn: İstanbul"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={inputClassName}
                   />
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Posta Kodu</label>
+
+                <div className="md:col-span-2">
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Posta Kodu</label>
                   <input
                     type="text"
                     value={newAddress.postal_code}
-                    onChange={(e) => setNewAddress(prev => ({ ...prev, postal_code: e.target.value }))}
+                    onChange={(e) => setNewAddress((prev) => ({ ...prev, postal_code: e.target.value }))}
                     placeholder="Örn: 34710"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={inputClassName}
                   />
                 </div>
-                
-                <div className="flex items-center">
-                  <label className="flex items-center">
+
+                <div className="md:col-span-2">
+                  <label className="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50/60 p-3">
                     <input
                       type="checkbox"
                       checked={newAddress.is_default}
-                      onChange={(e) => setNewAddress(prev => ({ ...prev, is_default: e.target.checked }))}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      onChange={(e) => setNewAddress((prev) => ({ ...prev, is_default: e.target.checked }))}
+                      className="mt-0.5 h-4 w-4 rounded border-slate-300 text-[#00365a] focus:ring-[#00365a]/20"
                     />
-                    <span className="ml-2 text-sm text-gray-700">Varsayılan adres olarak ayarla</span>
+                    <span className="text-sm text-slate-700">Varsayılan adres olarak ayarla</span>
                   </label>
                 </div>
               </div>
-              
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  onClick={() => {
-                    setShowAddressModal(false);
-                    setNewAddress({
-                      title: '',
-                      address: '',
-                      city: '',
-                      district: '',
-                      postal_code: '',
-                      is_default: false
-                    });
-                  }}
-                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                >
-                  İptal
-                </button>
-                <button
-                  onClick={handleAddNewAddress}
-                  disabled={addingAddress || !newAddress.title || !newAddress.address}
-                  className="px-6 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  {addingAddress ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                      Ekleniyor...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      Adres Ekle
-                    </>
-                  )}
-                </button>
-              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 rounded-b-xl border-t border-slate-200/80 bg-slate-50/60 px-5 py-3.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddressModal(false);
+                  setNewAddress({
+                    title: '',
+                    address: '',
+                    city: '',
+                    district: '',
+                    postal_code: '',
+                    is_default: false
+                  });
+                }}
+                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+              >
+                İptal
+              </button>
+              <button
+                type="button"
+                onClick={handleAddNewAddress}
+                disabled={addingAddress || !newAddress.title || !newAddress.address}
+                className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {addingAddress ? 'Ekleniyor...' : 'Adres Ekle'}
+              </button>
             </div>
           </div>
         </div>

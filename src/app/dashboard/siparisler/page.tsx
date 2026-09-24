@@ -2508,7 +2508,7 @@ const Siparisler = () => {
                 </label>
                 <div className="relative">
                   <div
-                    className="w-full cursor-pointer rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 transition-all duration-200 ease-out hover:border-slate-300 focus-within:border-slate-300 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#00365a]/15"
+                    className="w-full cursor-pointer rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 transition-all duration-200 ease-out hover:border-slate-400 focus-within:border-[#00365a] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#00365a]/15"
                     onClick={() => {
                       if (!isStoreDropdownOpen) {
                         setStoreSearchQuery('');
@@ -2597,7 +2597,7 @@ const Siparisler = () => {
               </label>
               <div className="relative">
                 <div
-                  className="w-full cursor-pointer rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 transition-all duration-200 ease-out hover:border-slate-300 focus-within:border-slate-300 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#00365a]/15"
+                  className="w-full cursor-pointer rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 transition-all duration-200 ease-out hover:border-slate-400 focus-within:border-[#00365a] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#00365a]/15"
                   onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
                 >
                   <div className="flex items-center justify-between">
@@ -2655,7 +2655,7 @@ const Siparisler = () => {
                 </label>
                 <div className="relative">
                   <div
-                    className="w-full cursor-pointer rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 transition-all duration-200 ease-out hover:border-slate-300 focus-within:border-slate-300 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#00365a]/15"
+                    className="w-full cursor-pointer rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 transition-all duration-200 ease-out hover:border-slate-400 focus-within:border-[#00365a] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#00365a]/15"
                     onClick={() => setIsReceiptDropdownOpen(!isReceiptDropdownOpen)}
                   >
                     <div className="flex items-center justify-between">
@@ -4607,7 +4607,7 @@ const Siparisler = () => {
                   <textarea
                     value={cancelOrderModal.reason}
                     onChange={(e) => setCancelOrderModal(prev => ({ ...prev, reason: e.target.value }))}
-                    className="w-full resize-none rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 transition-all duration-200 ease-out placeholder:text-slate-400 hover:border-slate-300 focus:border-slate-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-400/25"
+                    className="w-full resize-none rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 transition-all duration-200 ease-out placeholder:text-slate-400 hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-400/25"
                     rows={3}
                     placeholder="Vazgeçtim, yanlış ürün seçtim, vb..."
                     maxLength={500}

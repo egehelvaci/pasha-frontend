@@ -716,7 +716,7 @@ const AdminSiparisOlustur = () => {
                     type="button"
                     onClick={() => setAddressDropdownOpen(!addressDropdownOpen)}
                     disabled={addressesLoading}
-                    className="w-full rounded-lg border border-slate-200/80 bg-slate-50/50 px-2.5 py-2 text-left text-xs text-slate-800 transition-all duration-200 ease-out hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="w-full rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-2 text-left text-xs text-slate-800 transition-all duration-200 ease-out hover:border-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <span className={selectedAddressId ? 'text-slate-800' : 'text-slate-400'}>
                       {selectedAddressId
@@ -768,7 +768,7 @@ const AdminSiparisOlustur = () => {
                   onChange={(e) => setOrderNotes(e.target.value)}
                   placeholder="Sipariş notları..."
                   rows={2}
-                  className="w-full resize-none rounded-lg border border-slate-200/80 bg-slate-50/50 px-2.5 py-2 text-xs text-slate-800 transition-all duration-200 ease-out placeholder:text-slate-400 hover:border-slate-300 focus:border-slate-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00365a]/15"
+                  className="w-full resize-none rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-2 text-xs text-slate-800 transition-all duration-200 ease-out placeholder:text-slate-400 hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00365a]/15"
                 />
               </div>
 
@@ -803,7 +803,7 @@ const AdminSiparisOlustur = () => {
                   placeholder="Ürün adına göre ara..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200/80 bg-slate-50/50 py-2.5 pl-9 pr-3 text-sm text-slate-900 transition-all duration-200 ease-out placeholder:text-slate-400 hover:border-slate-300 focus:border-slate-300 focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                  className="w-full rounded-lg border border-slate-300 bg-slate-50 py-2.5 pl-9 pr-3 text-sm text-slate-900 transition-all duration-200 ease-out placeholder:text-slate-400 hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                 />
                 <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <circle cx="11" cy="11" r="8"/>
@@ -817,7 +817,7 @@ const AdminSiparisOlustur = () => {
                 <button
                   type="button"
                   onClick={() => setCollectionDropdownOpen(!collectionDropdownOpen)}
-                  className="w-full rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 text-left text-sm text-slate-900 transition-all duration-200 ease-out hover:border-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                  className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-left text-sm text-slate-900 transition-all duration-200 ease-out hover:border-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                 >
                   {selectedCollection === 'all' ? 'Tüm Koleksiyonlar' : selectedCollection}
                   <svg
@@ -866,7 +866,7 @@ const AdminSiparisOlustur = () => {
                 <button
                   type="button"
                   onClick={() => setStockFilterDropdownOpen(!stockFilterDropdownOpen)}
-                  className="w-full rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 text-left text-sm text-slate-900 transition-all duration-200 ease-out hover:border-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                  className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-left text-sm text-slate-900 transition-all duration-200 ease-out hover:border-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                 >
                   {stockFilter === 'all' ? 'Tüm Ürünler' :
                    stockFilter === 'inStock' ? 'Stokta Olanlar' :

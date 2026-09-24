@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useToken } from '@/app/hooks/useToken';
-import { FaPlus, FaEdit, FaTrash, FaStore, FaUser, FaLock, FaBuilding, FaEye, FaEyeSlash, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaStore, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { getStores, assignUserToStore, removeUserFromStore, getMyProfile, updateStoreProfile, changePassword, updateUserProfile, StoreUpdateData, PasswordChangeData, UserProfileInfo, StoreProfileInfo, UserUpdateData, getStoreAddresses, createStoreAddress, updateStoreAddress, deleteStoreAddress, setDefaultStoreAddress, StoreAddress, CreateStoreAddressRequest } from '@/services/api';
 
 interface User {
@@ -225,8 +225,9 @@ export default function Settings() {
   // Auth yüklenirken loading göster
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#f7f8fa]">
+        <div className="h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
+        <p className="text-sm text-slate-500">Yetkilendirme kontrol ediliyor...</p>
       </div>
     );
   }
@@ -656,86 +657,69 @@ export default function Settings() {
 
   // Normal kullanıcı için profil yönetimi UI'ı
   if (!isAdminOrEditor) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Profil Ayarları</h1>
-          <p className="text-gray-600">Kişisel bilgilerinizi ve ayarlarınızı yönetin</p>
-        </div>
+    const tabClass = (tab: typeof activeTab) =>
+      `border-b-2 px-1 py-2 text-sm font-medium transition-colors ${
+        activeTab === tab
+          ? 'border-[#00365a] text-[#00365a]'
+          : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'
+      }`;
 
-        {/* Tab Navigation */}
-        <div className="border-b border-gray-200 mb-6">
-          <nav className="-mb-px flex space-x-8">
-            <button
-              onClick={() => setActiveTab('profile')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'profile'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <FaUser className="inline mr-2" />
-              Profil Bilgileri
-            </button>
-            {storeProfile && (
-              <button
-                onClick={() => setActiveTab('store')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'store'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <FaBuilding className="inline mr-2" />
-                Mağaza Bilgileri
+    return (
+      <div className="min-h-screen bg-[#f7f8fa]">
+        <div className="mx-auto max-w-4xl px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl sm:tracking-[0.12em]">
+              Profil Ayarları
+            </h1>
+            <div className="mt-3 h-px w-[min(100%,20rem)] bg-neutral-300 sm:mt-4" />
+            <p className="mt-3 text-sm text-slate-500">Kişisel bilgilerinizi ve ayarlarınızı yönetin</p>
+          </div>
+
+          <div className="mb-6 border-b border-slate-200">
+            <nav className="-mb-px flex flex-wrap gap-x-6 gap-y-1">
+              <button type="button" onClick={() => setActiveTab('profile')} className={tabClass('profile')}>
+                Profil Bilgileri
               </button>
-            )}
-            <button
-              onClick={() => {
-                setActiveTab('address');
-                if (addresses.length === 0) {
-                  fetchAddresses();
-                }
-              }}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'address'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <FaMapMarkerAlt className="inline mr-2" />
-              Adres Yönetimi
-            </button>
-            <button
-              onClick={() => setActiveTab('password')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'password'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <FaLock className="inline mr-2" />
-              Şifre Değiştir
-            </button>
-          </nav>
-        </div>
+              {storeProfile && (
+                <button type="button" onClick={() => setActiveTab('store')} className={tabClass('store')}>
+                  Mağaza Bilgileri
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('address');
+                  if (addresses.length === 0) {
+                    fetchAddresses();
+                  }
+                }}
+                className={tabClass('address')}
+              >
+                Adres Yönetimi
+              </button>
+              <button type="button" onClick={() => setActiveTab('password')} className={tabClass('password')}>
+                Şifre Değiştir
+              </button>
+            </nav>
+          </div>
 
         {profileLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="flex flex-col items-center justify-center gap-3 py-16">
+            <div className="h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
+            <p className="text-sm text-slate-500">Profil bilgileri yükleniyor...</p>
           </div>
         ) : (
           <>
             {/* Profil Bilgileri Tab */}
             {activeTab === 'profile' && userProfile && (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Kişisel Bilgiler</h2>
+              <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+                <h2 className="mb-4 text-sm font-semibold text-slate-900">Kişisel Bilgiler</h2>
                 
                 {userMessage && (
-                  <div className={`mb-4 p-3 rounded-md ${
+                  <div className={`mb-4 text-sm ${
                     userMessage.startsWith('Hata') 
-                      ? 'bg-red-50 border border-red-200 text-red-700' 
-                      : 'bg-green-50 border border-green-200 text-green-700'
+                      ? 'rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-3 text-rose-700' 
+                      : 'rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-emerald-700'
                   }`}>
                     {userMessage}
                   </div>
@@ -744,8 +728,8 @@ export default function Settings() {
                 <form onSubmit={handleUserSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Ad <span className="text-red-500">*</span>
+                      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                        Ad <span className="text-rose-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -753,12 +737,12 @@ export default function Settings() {
                         value={userForm.name}
                         onChange={handleUserChange}
                         required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Soyad <span className="text-red-500">*</span>
+                      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                        Soyad <span className="text-rose-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -766,11 +750,11 @@ export default function Settings() {
                         value={userForm.surname}
                         onChange={handleUserChange}
                         required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                         Telefon
                       </label>
                       <input
@@ -779,28 +763,28 @@ export default function Settings() {
                         value={userForm.phoneNumber}
                         onChange={handleUserChange}
                         placeholder="05xx xxx xx xx"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Kullanıcı Adı</label>
-                      <p className="bg-gray-50 px-3 py-2 rounded-md text-gray-900">{userProfile.username}</p>
+                      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Kullanıcı Adı</label>
+                      <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900">{userProfile.username}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">E-posta</label>
-                      <p className="bg-gray-50 px-3 py-2 rounded-md text-gray-900">{userProfile.email}</p>
+                      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">E-posta</label>
+                      <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900">{userProfile.email}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Kullanıcı Tipi</label>
-                      <p className="bg-gray-50 px-3 py-2 rounded-md text-gray-900">{userProfile.userType}</p>
+                      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Kullanıcı Tipi</label>
+                      <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900">{userProfile.userType}</p>
                     </div>
                   </div>
                   
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                       Adres
                     </label>
-                    <div className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-500 text-sm">
+                    <div className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-500">
                       Adres bilgileri artık mağaza bazlı yönetilmektedir. Mağaza adres yönetimi için lütfen admin ile iletişime geçiniz.
                     </div>
                   </div>
@@ -809,7 +793,7 @@ export default function Settings() {
                     <button
                       type="submit"
                       disabled={userLoading}
-                      className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {userLoading ? 'Güncelleniyor...' : 'Güncelle'}
                     </button>
@@ -820,14 +804,14 @@ export default function Settings() {
 
             {/* Mağaza Bilgileri Tab */}
             {activeTab === 'store' && storeProfile && (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Mağaza Bilgileri</h2>
+              <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+                <h2 className="mb-4 text-sm font-semibold text-slate-900">Mağaza Bilgileri</h2>
                 
                 {storeMessage && (
-                  <div className={`mb-4 p-3 rounded-md ${
+                  <div className={`mb-4 text-sm ${
                     storeMessage.startsWith('Hata') 
-                      ? 'bg-red-50 border border-red-200 text-red-700' 
-                      : 'bg-green-50 border border-green-200 text-green-700'
+                      ? 'rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-3 text-rose-700' 
+                      : 'rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-emerald-700'
                   }`}>
                     {storeMessage}
                   </div>
@@ -836,7 +820,7 @@ export default function Settings() {
                 <form onSubmit={handleStoreSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                         Kurum Adı *
                       </label>
                       <input
@@ -845,12 +829,12 @@ export default function Settings() {
                         value={storeForm.kurum_adi}
                         onChange={handleStoreChange}
                         required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       />
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                         Vergi Numarası
                       </label>
                       <input
@@ -859,12 +843,12 @@ export default function Settings() {
                         value={storeForm.vergi_numarasi}
                         onChange={handleStoreChange}
                         placeholder="10-11 haneli sayısal değer"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       />
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                         Vergi Dairesi
                       </label>
                       <input
@@ -872,12 +856,12 @@ export default function Settings() {
                         name="vergi_dairesi"
                         value={storeForm.vergi_dairesi}
                         onChange={handleStoreChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       />
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                         Yetkili Adı
                       </label>
                       <input
@@ -885,12 +869,12 @@ export default function Settings() {
                         name="yetkili_adi"
                         value={storeForm.yetkili_adi}
                         onChange={handleStoreChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       />
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                         Yetkili Soyadı
                       </label>
                       <input
@@ -898,12 +882,12 @@ export default function Settings() {
                         name="yetkili_soyadi"
                         value={storeForm.yetkili_soyadi}
                         onChange={handleStoreChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       />
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                         TCKN
                       </label>
                       <input
@@ -913,12 +897,12 @@ export default function Settings() {
                         onChange={handleStoreChange}
                         maxLength={11}
                         placeholder="12345678901"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       />
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                         Telefon
                       </label>
                       <input
@@ -927,12 +911,12 @@ export default function Settings() {
                         value={storeForm.telefon}
                         onChange={handleStoreChange}
                         placeholder="0212 555 0123"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       />
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                         E-posta
                       </label>
                       <input
@@ -940,12 +924,12 @@ export default function Settings() {
                         name="eposta"
                         value={storeForm.eposta}
                         onChange={handleStoreChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       />
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                         Faks Numarası
                       </label>
                       <input
@@ -953,7 +937,7 @@ export default function Settings() {
                         name="faks_numarasi"
                         value={storeForm.faks_numarasi}
                         onChange={handleStoreChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       />
                     </div>
                   </div>
@@ -962,7 +946,7 @@ export default function Settings() {
                     <button
                       type="submit"
                       disabled={storeLoading}
-                      className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {storeLoading ? 'Güncelleniyor...' : 'Güncelle'}
                     </button>
@@ -973,14 +957,14 @@ export default function Settings() {
 
             {/* Şifre Değiştir Tab */}
             {activeTab === 'password' && (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Şifre Değiştir</h2>
+              <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+                <h2 className="mb-4 text-sm font-semibold text-slate-900">Şifre Değiştir</h2>
                 
                 {passwordMessage && (
-                  <div className={`mb-4 p-3 rounded-md ${
+                  <div className={`mb-4 text-sm ${
                     passwordMessage.startsWith('Hata') 
-                      ? 'bg-red-50 border border-red-200 text-red-700' 
-                      : 'bg-green-50 border border-green-200 text-green-700'
+                      ? 'rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-3 text-rose-700' 
+                      : 'rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-emerald-700'
                   }`}>
                     {passwordMessage}
                   </div>
@@ -988,7 +972,7 @@ export default function Settings() {
 
                 <form onSubmit={handlePasswordSubmit} className="space-y-4 max-w-md">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                       Mevcut Şifre *
                     </label>
                     <div className="relative">
@@ -998,20 +982,20 @@ export default function Settings() {
                         value={passwordForm.currentPassword}
                         onChange={handlePasswordChange}
                         required
-                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 pr-10 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       />
                       <button
                         type="button"
                         onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                         className="absolute inset-y-0 right-0 pr-3 flex items-center"
                       >
-                        {showCurrentPassword ? <FaEyeSlash className="h-4 w-4 text-gray-400" /> : <FaEye className="h-4 w-4 text-gray-400" />}
+                        {showCurrentPassword ? <FaEyeSlash className="h-4 w-4 text-slate-400" /> : <FaEye className="h-4 w-4 text-slate-400" />}
                       </button>
                     </div>
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                       Yeni Şifre *
                     </label>
                     <div className="relative">
@@ -1022,21 +1006,21 @@ export default function Settings() {
                         onChange={handlePasswordChange}
                         required
                         minLength={6}
-                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 pr-10 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       />
                       <button
                         type="button"
                         onClick={() => setShowNewPassword(!showNewPassword)}
                         className="absolute inset-y-0 right-0 pr-3 flex items-center"
                       >
-                        {showNewPassword ? <FaEyeSlash className="h-4 w-4 text-gray-400" /> : <FaEye className="h-4 w-4 text-gray-400" />}
+                        {showNewPassword ? <FaEyeSlash className="h-4 w-4 text-slate-400" /> : <FaEye className="h-4 w-4 text-slate-400" />}
                       </button>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">En az 6 karakter olmalıdır</p>
+                    <p className="mt-1 text-xs text-slate-500">En az 6 karakter olmalıdır</p>
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
                       Yeni Şifre Onayı *
                     </label>
                     <div className="relative">
@@ -1046,14 +1030,14 @@ export default function Settings() {
                         value={passwordForm.confirmPassword}
                         onChange={handlePasswordChange}
                         required
-                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 pr-10 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         className="absolute inset-y-0 right-0 pr-3 flex items-center"
                       >
-                        {showConfirmPassword ? <FaEyeSlash className="h-4 w-4 text-gray-400" /> : <FaEye className="h-4 w-4 text-gray-400" />}
+                        {showConfirmPassword ? <FaEyeSlash className="h-4 w-4 text-slate-400" /> : <FaEye className="h-4 w-4 text-slate-400" />}
                       </button>
                     </div>
                   </div>
@@ -1062,7 +1046,7 @@ export default function Settings() {
                     <button
                       type="submit"
                       disabled={passwordLoading}
-                      className="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="inline-flex w-full items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {passwordLoading ? 'Değiştiriliyor...' : 'Şifre Değiştir'}
                     </button>
@@ -1073,30 +1057,32 @@ export default function Settings() {
 
             {/* Adres Yönetimi Tab */}
             {activeTab === 'address' && (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-lg font-semibold text-gray-900">Adres Yönetimi</h2>
+              <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+                <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/60 px-4 py-3 sm:px-5">
+                  <h3 className="text-sm font-semibold text-slate-900">Adres Yönetimi</h3>
                   <button
+                    type="button"
                     onClick={openCreateModal}
-                    className="bg-[#00365a] text-white px-4 py-2 rounded-lg hover:bg-[#004170] transition-colors flex items-center gap-2"
+                    className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-3 py-2 text-xs font-medium text-white transition hover:bg-[#004170]"
                   >
-                    <FaPlus className="w-4 h-4" />
                     Yeni Adres Ekle
                   </button>
                 </div>
 
+                <div className="p-4 sm:p-5">
                 {addressesLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <div className="flex flex-col items-center justify-center gap-3 py-16">
+                    <div className="h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
+                    <p className="text-sm text-slate-500">Adresler yükleniyor...</p>
                   </div>
                 ) : addresses.length === 0 ? (
-                  <div className="text-center py-8">
-                    <FaMapMarkerAlt className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Henüz adres yok</h3>
-                    <p className="text-gray-600 mb-4">İlk adresinizi ekleyerek başlayın</p>
+                  <div className="px-6 py-16 text-center">
+                    <h3 className="text-sm font-medium text-slate-900">Henüz adres yok</h3>
+                    <p className="mx-auto mt-1.5 max-w-md text-sm text-slate-500">İlk adresinizi ekleyerek başlayın</p>
                     <button
+                      type="button"
                       onClick={openCreateModal}
-                      className="bg-[#00365a] text-white px-6 py-2 rounded-lg hover:bg-[#004170] transition-colors"
+                      className="mt-4 inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25"
                     >
                       İlk Adresi Ekle
                     </button>
@@ -1106,57 +1092,60 @@ export default function Settings() {
                     {addresses.map((address) => (
                       <div
                         key={address.id}
-                        className={`border rounded-lg p-4 ${
-                          address.is_default 
-                            ? 'border-green-200 bg-green-50' 
-                            : 'border-gray-200 bg-white'
+                        className={`rounded-lg border p-4 ${
+                          address.is_default
+                            ? 'border-emerald-200 bg-emerald-50/50'
+                            : 'border-slate-200 bg-white'
                         }`}
                       >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h3 className="font-medium text-gray-900">{address.title}</h3>
+                        <div className="flex items-start justify-between">
+                          <div className="min-w-0 flex-1">
+                            <div className="mb-2 flex flex-wrap items-center gap-2">
+                              <h3 className="text-sm font-medium text-slate-900">{address.title}</h3>
                               {address.is_default && (
-                                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                                <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
                                   Varsayılan
                                 </span>
                               )}
                             </div>
-                            <p className="text-gray-600 text-sm mb-1">{address.address}</p>
+                            <p className="mb-1 text-sm text-slate-700">{address.address}</p>
                             {(address.city || address.district) && (
-                              <p className="text-gray-500 text-sm">
+                              <p className="text-sm text-slate-500">
                                 {address.district && address.district + ', '}
                                 {address.city}
                                 {address.postal_code && ' - ' + address.postal_code}
                               </p>
                             )}
                           </div>
-                          
-                          <div className="flex gap-2">
+
+                          <div className="flex gap-1">
                             {!address.is_default && (
                               <button
+                                type="button"
                                 onClick={() => handleSetDefaultAddress(address.id)}
-                                className="text-green-600 hover:text-green-700 p-2 rounded-lg hover:bg-green-50 transition-colors"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                                 title="Varsayılan yap"
                               >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                               </button>
                             )}
                             <button
+                              type="button"
                               onClick={() => handleEditAddress(address)}
-                              className="text-blue-600 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition-colors"
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                               title="Düzenle"
                             >
-                              <FaEdit className="w-4 h-4" />
+                              <FaEdit className="h-4 w-4" />
                             </button>
                             <button
+                              type="button"
                               onClick={() => handleDeleteAddress(address.id)}
-                              className="text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors"
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-rose-600 transition hover:bg-rose-50 hover:text-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/20"
                               title="Sil"
                             >
-                              <FaTrash className="w-4 h-4" />
+                              <FaTrash className="h-4 w-4" />
                             </button>
                           </div>
                         </div>
@@ -1164,6 +1153,7 @@ export default function Settings() {
                     ))}
                   </div>
                 )}
+                </div>
               </div>
             )}
           </>
@@ -1171,77 +1161,75 @@ export default function Settings() {
         
         {/* Adres Ekleme/Düzenleme Modal - Normal kullanıcı için */}
         {showAddressModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
-            <div className="bg-white rounded-xl max-w-2xl w-full shadow-2xl">
-              <div className="bg-[#00365a] text-white rounded-t-xl p-6">
-                <h3 className="text-xl font-bold">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/50 p-4">
+            <div className="max-h-[92vh] w-full max-w-2xl overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-lg">
+              <div className="border-b border-slate-200/80 px-5 py-4">
+                <h3 className="text-base font-semibold text-slate-900">
                   {editingAddress ? 'Adres Düzenle' : 'Yeni Adres Ekle'}
                 </h3>
-                <p className="text-blue-100 text-sm mt-1">
-                  Adres bilgilerini girin
-                </p>
+                <p className="mt-0.5 text-xs text-slate-500">Adres bilgilerini girin</p>
               </div>
               
-              <div className="p-6">
+              <div className="max-h-[calc(92vh-8rem)] overflow-y-auto px-5 py-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Adres Başlığı <span className="text-red-500">*</span>
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Adres Başlığı <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={newAddress.title}
                       onChange={(e) => setNewAddress(prev => ({ ...prev, title: e.target.value }))}
                       placeholder="Örn: Ana Mağaza, Depo, Şube 1"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       required
                     />
                   </div>
                   
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tam Adres <span className="text-red-500">*</span>
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Tam Adres <span className="text-rose-500">*</span>
                     </label>
                     <textarea
                       value={newAddress.address}
                       onChange={(e) => setNewAddress(prev => ({ ...prev, address: e.target.value }))}
                       placeholder="Sokak, cadde, mahalle, bina no vs."
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       required
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">İlçe</label>
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">İlçe</label>
                     <input
                       type="text"
                       value={newAddress.district}
                       onChange={(e) => setNewAddress(prev => ({ ...prev, district: e.target.value }))}
                       placeholder="Örn: Kadıköy"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Şehir</label>
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Şehir</label>
                     <input
                       type="text"
                       value={newAddress.city}
                       onChange={(e) => setNewAddress(prev => ({ ...prev, city: e.target.value }))}
                       placeholder="Örn: İstanbul"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Posta Kodu</label>
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Posta Kodu</label>
                     <input
                       type="text"
                       value={newAddress.postal_code}
                       onChange={(e) => setNewAddress(prev => ({ ...prev, postal_code: e.target.value }))}
                       placeholder="Örn: 34710"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                     />
                   </div>
                   
@@ -1251,228 +1239,230 @@ export default function Settings() {
                         type="checkbox"
                         checked={newAddress.is_default}
                         onChange={(e) => setNewAddress(prev => ({ ...prev, is_default: e.target.checked }))}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="rounded border-slate-300 text-[#00365a] focus:ring-[#00365a]"
                       />
-                      <span className="ml-2 text-sm text-gray-700">Varsayılan adres olarak ayarla</span>
+                      <span className="ml-2 text-sm text-slate-700">Varsayılan adres olarak ayarla</span>
                     </label>
                   </div>
                 </div>
                 
-                <div className="flex justify-end gap-3 mt-6">
-                  <button
-                    onClick={() => {
-                      setShowAddressModal(false);
-                      setEditingAddress(null);
-                      setNewAddress({
-                        title: '',
-                        address: '',
-                        city: '',
-                        district: '',
-                        postal_code: '',
-                        is_default: false
-                      });
-                    }}
-                    className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                  >
-                    İptal
-                  </button>
-                  <button
-                    onClick={handleAddressSubmit}
-                    disabled={addingAddress || !newAddress.title || !newAddress.address}
-                    className="px-6 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                  >
-                    {addingAddress ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                        {editingAddress ? 'Güncelleniyor...' : 'Ekleniyor...'}
-                      </>
-                    ) : (
-                      <>
-                        <FaPlus className="w-4 h-4" />
-                        {editingAddress ? 'Güncelle' : 'Adres Ekle'}
-                      </>
-                    )}
-                  </button>
-                </div>
+              </div>
+              <div className="flex justify-end gap-2 border-t border-slate-200/80 bg-slate-50/60 px-5 py-3.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddressModal(false);
+                    setEditingAddress(null);
+                    setNewAddress({
+                      title: '',
+                      address: '',
+                      city: '',
+                      district: '',
+                      postal_code: '',
+                      is_default: false
+                    });
+                  }}
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                >
+                  İptal
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddressSubmit}
+                  disabled={addingAddress || !newAddress.title || !newAddress.address}
+                  className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {addingAddress
+                    ? (editingAddress ? 'Güncelleniyor...' : 'Ekleniyor...')
+                    : (editingAddress ? 'Güncelle' : 'Adres Ekle')}
+                </button>
               </div>
             </div>
           </div>
         )}
+        </div>
       </div>
     );
   }
 
-  // Admin için mevcut UI (değişiklik yok)
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Yükleniyor...</div>;
+    return (
+      <div className="min-h-screen bg-[#f7f8fa]">
+        <div className="flex flex-col items-center justify-center gap-3 py-16 min-h-screen">
+          <div className="h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
+          <p className="text-sm text-slate-500">Kullanıcılar yükleniyor...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="min-h-screen flex items-center justify-center text-red-500">{error}</div>;
+    return (
+      <div className="min-h-screen bg-[#f7f8fa]">
+        <div className="mx-auto flex min-h-screen max-w-lg items-center justify-center px-4">
+          <div className="rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-3 text-sm text-rose-700">{error}</div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
-      {/* Modern Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-[#f7f8fa]">
+      <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+        <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Kullanıcı Yönetimi</h1>
-            <p className="text-gray-600">Sistem kullanıcılarını yönetin ve yeni kullanıcılar ekleyin</p>
+            <h1 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl sm:tracking-[0.12em]">
+              Kullanıcı Yönetimi
+            </h1>
+            <div className="mt-3 h-px w-[min(100%,20rem)] bg-neutral-300 sm:mt-4" />
+            <p className="mt-3 text-sm text-slate-500">Sistem kullanıcılarını yönetin ve yeni kullanıcılar ekleyin</p>
           </div>
           <button
             onClick={() => { setSelectedUser(null); setModalOpen(true); }}
-            className="bg-[#00365a] hover:bg-[#004170] text-white rounded-xl px-6 py-3 font-semibold flex items-center gap-2 transition-all shadow-lg hover:shadow-xl"
+            className="inline-flex shrink-0 items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <FaPlus className="w-4 h-4" /> Yeni Kullanıcı
+            Yeni Kullanıcı
           </button>
         </div>
-      </div>
 
-      {/* Modern Table Container */}
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden w-full">
-        <div className="overflow-x-auto">
-          <table className="w-full divide-y divide-gray-200">
-            <thead className="bg-gradient-to-r from-[#00365a] to-[#004170]">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider w-1/7">Kullanıcı Adı</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider w-1/7">Ad Soyad</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider w-1/5">E-posta</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider w-1/8">Kullanıcı Tipi</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider w-1/4">Mağaza</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider w-1/8">Durum</th>
-                <th className="px-6 py-4 text-right text-xs font-semibold text-white uppercase tracking-wider w-1/8">İşlemler</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-100">
-              {users.map((user, index) => (
-                <tr
-                  key={user.userId}
-                  className={`hover:bg-gray-50 transition-colors ${
-                    !user.isActive ? 'opacity-60' : ''
-                  }`}
-                >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      <div className="h-8 w-8 rounded-full bg-gradient-to-r from-[#00365a] to-[#004170] flex items-center justify-center text-white text-sm font-semibold mr-3 flex-shrink-0">
-                        {user.username.charAt(0).toUpperCase()}
-                      </div>
-                      <span className="text-sm font-medium text-gray-900 truncate">{user.username}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-gray-900 truncate block">
-                      {user.fullName || ((user.name || '') + ' ' + (user.surname || ''))}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-gray-900 truncate block" title={user.email}>{user.email}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {(() => {
-                        const userTypeName = typeof user.userType === 'object' ? user.userType.name : user.userType;
-                        switch(userTypeName) {
-                          case 'admin': return 'Admin';
-                          case 'editor': return 'Editör';
-                          case 'viewer': return 'Görüntüleyici';
-                          case 'employee': return 'Çalışan';
-                          default: return userTypeName;
-                        }
-                      })()}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-gray-900 truncate block" title={user.Store ? user.Store.kurum_adi : '-'}>
-                      {user.Store ? user.Store.kurum_adi : '-'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      user.isActive 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {user.isActive ? 'Aktif' : 'Pasif'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end space-x-2">
-                      <button
-                        onClick={() => handleUserClick(user.userId)}
-                        className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Düzenle"
-                      >
-                        <FaEdit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => { 
-                          setAssigningUserId(user.userId); 
-                          setSelectedStoreId(user.Store?.store_id || '');
-                          setAssignStoreModalOpen(true); 
-                        }}
-                        className="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-lg transition-colors"
-                        title="Mağaza Ata"
-                      >
-                        <FaStore className="w-4 h-4" />
-                      </button>
-                      {isAdmin && (
-                        <button
-                          onClick={() => { setDeleteUserId(user.userId); setDeleteModalOpen(true); }}
-                          className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Sil"
-                        >
-                          <FaTrash className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </td>
+        <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/60 px-4 py-3 sm:px-5">
+            <h3 className="text-sm font-semibold text-slate-900">Kullanıcı Listesi</h3>
+            <span className="text-xs text-slate-500">{users.length} kullanıcı</span>
+          </div>
+          <div className="w-full overflow-x-auto">
+            <table className="w-full table-fixed">
+              <thead className="bg-slate-50/60">
+                <tr>
+                  <th className="w-1/7 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Kullanıcı Adı</th>
+                  <th className="w-1/7 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Ad Soyad</th>
+                  <th className="w-1/5 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">E-posta</th>
+                  <th className="w-1/8 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Kullanıcı Tipi</th>
+                  <th className="w-1/4 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Mağaza</th>
+                  <th className="w-1/8 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Durum</th>
+                  <th className="w-1/8 px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-slate-500">İşlemler</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {users.map((user) => (
+                  <tr
+                    key={user.userId}
+                    className={`transition-colors hover:bg-slate-50/70 ${!user.isActive ? 'opacity-60' : ''}`}
+                  >
+                    <td className="px-4 py-3">
+                      <span className="block truncate text-sm font-medium text-slate-900">{user.username}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="block truncate text-sm text-slate-700">
+                        {user.fullName || ((user.name || '') + ' ' + (user.surname || ''))}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="block truncate text-sm text-slate-700" title={user.email}>{user.email}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700">
+                        {(() => {
+                          const userTypeName = typeof user.userType === 'object' ? user.userType.name : user.userType;
+                          switch(userTypeName) {
+                            case 'admin': return 'Admin';
+                            case 'editor': return 'Editör';
+                            case 'viewer': return 'Görüntüleyici';
+                            case 'employee': return 'Çalışan';
+                            default: return userTypeName;
+                          }
+                        })()}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="block truncate text-sm text-slate-700" title={user.Store ? user.Store.kurum_adi : '-'}>
+                        {user.Store ? user.Store.kurum_adi : '-'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${
+                        user.isActive
+                          ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                          : 'border-rose-200 bg-rose-50 text-rose-700'
+                      }`}>
+                        {user.isActive ? 'Aktif' : 'Pasif'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => handleUserClick(user.userId)}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                          title="Düzenle"
+                        >
+                          <FaEdit className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setAssigningUserId(user.userId);
+                            setSelectedStoreId(user.Store?.store_id || '');
+                            setAssignStoreModalOpen(true);
+                          }}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                          title="Mağaza Ata"
+                        >
+                          <FaStore className="h-4 w-4" />
+                        </button>
+                        {isAdmin && (
+                          <button
+                            onClick={() => { setDeleteUserId(user.userId); setDeleteModalOpen(true); }}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-rose-600 transition hover:bg-rose-50 hover:text-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/20"
+                            title="Sil"
+                          >
+                            <FaTrash className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
 
-      {/* Kullanıcı Detay/Düzenleme Modalı */}
       {modalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-4xl w-full h-[95vh] overflow-y-auto shadow-2xl" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {/* Modal Header */}
-            <div className="bg-gradient-to-r from-[#00365a] to-[#004170] text-white rounded-t-2xl p-6">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h2 className="text-xl font-bold">
-                    {selectedUser ? 'Kullanıcı Düzenle' : 'Yeni Kullanıcı Ekle'}
-                  </h2>
-                  <p className="text-blue-100 text-sm mt-1">
-                    {selectedUser ? 'Kullanıcı bilgilerini güncelleyin' : 'Yeni kullanıcı bilgilerini girin'}
-                  </p>
-                </div>
-                <button
-                  onClick={() => { setModalOpen(false); setSelectedUser(null); }}
-                  className="text-blue-100 hover:text-white transition-colors p-2 hover:bg-white hover:bg-opacity-20 rounded-xl"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+          <div className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-lg" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <div className="flex shrink-0 items-start justify-between gap-3 border-b border-slate-200/80 px-5 py-4">
+              <div>
+                <h3 className="text-base font-semibold text-slate-900">
+                  {selectedUser ? 'Kullanıcı Düzenle' : 'Yeni Kullanıcı Ekle'}
+                </h3>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  {selectedUser ? 'Kullanıcı bilgilerini güncelleyin' : 'Yeni kullanıcı bilgilerini girin'}
+                </p>
               </div>
+              <button
+                type="button"
+                onClick={() => { setModalOpen(false); setSelectedUser(null); }}
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                aria-label="Kapat"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
 
-            {/* Modal Content */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+              <div className="space-y-6 px-5 py-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Kullanıcı Adı */}
                 <div>
-                  <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">Kullanıcı Adı <span className="text-red-500">*</span></label>
+                  <label htmlFor="username" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Kullanıcı Adı <span className="text-rose-500">*</span></label>
                   <input
                     name="username"
                     id="username"
                     value={formData.username}
                     onChange={handleInputChange}
                     placeholder="Kullanıcı adını girin"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors"
+                    className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                     required
                   />
                 </div>
@@ -1480,7 +1470,7 @@ export default function Settings() {
                 {/* Şifre - Sadece yeni kullanıcı için */}
                 {!selectedUser && (
                   <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Şifre <span className="text-red-500">*</span></label>
+                    <label htmlFor="password" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Şifre <span className="text-rose-500">*</span></label>
                     <input
                       name="password"
                       id="password"
@@ -1488,7 +1478,7 @@ export default function Settings() {
                       value={formData.password}
                       onChange={handleInputChange}
                       placeholder="Şifre girin"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors"
+                      className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       required
                     />
                   </div>
@@ -1496,35 +1486,35 @@ export default function Settings() {
 
                 {/* Ad */}
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">Ad <span className="text-red-500">*</span></label>
+                  <label htmlFor="name" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Ad <span className="text-rose-500">*</span></label>
                   <input
                     name="name"
                     id="name"
                     value={formData.name}
                     onChange={handleInputChange}
                     placeholder="Adını girin"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors"
+                    className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                     required
                   />
                 </div>
 
                 {/* Soyad */}
                 <div>
-                  <label htmlFor="surname" className="block text-sm font-medium text-gray-700 mb-2">Soyad <span className="text-red-500">*</span></label>
+                  <label htmlFor="surname" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Soyad <span className="text-rose-500">*</span></label>
                   <input
                     name="surname"
                     id="surname"
                     value={formData.surname}
                     onChange={handleInputChange}
                     placeholder="Soyadını girin"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors"
+                    className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                     required
                   />
                 </div>
 
                 {/* E-posta */}
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">E-posta <span className="text-red-500">*</span></label>
+                  <label htmlFor="email" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">E-posta <span className="text-rose-500">*</span></label>
                   <input
                     name="email"
                     id="email"
@@ -1532,14 +1522,14 @@ export default function Settings() {
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder="E-posta adresini girin"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors"
+                    className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                     required
                   />
                 </div>
 
                 {/* Telefon */}
                 <div>
-                  <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">Telefon</label>
+                  <label htmlFor="phoneNumber" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Telefon</label>
                   <input
                     name="phoneNumber"
                     id="phoneNumber"
@@ -1547,15 +1537,15 @@ export default function Settings() {
                     value={formData.phoneNumber}
                     onChange={handleInputChange}
                     placeholder="05xx xxx xx xx"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors"
+                    className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                   />
                 </div>
               </div>
 
               {/* Adres - Artık kullanılmıyor */}
               <div>
-                <label htmlFor="adres" className="block text-sm font-medium text-gray-700 mb-2">Adres</label>
-                <div className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 text-sm">
+                <label htmlFor="adres" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Adres</label>
+                <div className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-500">
                   Adres bilgileri artık mağaza bazlı yönetilmektedir. Mağaza ayarlarından adres yönetimini yapabilirsiniz.
                 </div>
               </div>
@@ -1563,35 +1553,35 @@ export default function Settings() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Kullanıcı Tipi Dropdown */}
                 <div className="dropdown-container">
-                  <label htmlFor="userTypeName" className="block text-sm font-medium text-gray-700 mb-2">Kullanıcı Tipi <span className="text-red-500">*</span></label>
+                  <label htmlFor="userTypeName" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Kullanıcı Tipi <span className="text-rose-500">*</span></label>
                   <div className="relative">
                     <button
                       type="button"
                       onClick={() => setUserTypeDropdownOpen(!userTypeDropdownOpen)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors text-left bg-white"
+                      className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 pr-9 text-left text-sm text-slate-900 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                     >
-                      <span className="text-gray-900">
+                      <span className="text-slate-900">
                         {formData.userTypeName === "admin" && "Admin"}
                         {formData.userTypeName === "editor" && "Editör"}
                         {formData.userTypeName === "viewer" && "Görüntüleyici"}
                         {formData.userTypeName === "employee" && "Çalışan"}
                       </span>
                       <svg 
-                        className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${userTypeDropdownOpen ? 'rotate-180' : ''}`}
+                        className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-transform ${userTypeDropdownOpen ? 'rotate-180' : ''}`}
                         fill="none" 
                         stroke="currentColor" 
                         viewBox="0 0 24 24"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 9l-7 7-7-7" />
                       </svg>
                     </button>
                     
                     {userTypeDropdownOpen && (
-                      <div className="absolute z-[100] w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                      <div className="absolute z-[100] mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
                         {canAssignAdmin && (
                           <div
-                            className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                              formData.userTypeName === "admin" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                            className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                              formData.userTypeName === "admin" ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                             }`}
                             onClick={() => {
                               setFormData(prev => ({ ...prev, userTypeName: "admin" }));
@@ -1602,8 +1592,8 @@ export default function Settings() {
                           </div>
                         )}
                         <div
-                          className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                            formData.userTypeName === "editor" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                          className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                            formData.userTypeName === "editor" ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                           }`}
                           onClick={() => {
                             setFormData(prev => ({ ...prev, userTypeName: "editor" }));
@@ -1613,8 +1603,8 @@ export default function Settings() {
                           Editör
                         </div>
                         <div
-                          className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                            formData.userTypeName === "viewer" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                          className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                            formData.userTypeName === "viewer" ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                           }`}
                           onClick={() => {
                             setFormData(prev => ({ ...prev, userTypeName: "viewer" }));
@@ -1624,8 +1614,8 @@ export default function Settings() {
                           Görüntüleyici
                         </div>
                         <div
-                          className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                            formData.userTypeName === "employee" ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                          className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                            formData.userTypeName === "employee" ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                           }`}
                           onClick={() => {
                             setFormData(prev => ({ ...prev, userTypeName: "employee" }));
@@ -1642,36 +1632,36 @@ export default function Settings() {
                 {/* Mağaza Dropdown - Sadece yeni kullanıcı için */}
                 {!selectedUser && (
                   <div className="dropdown-container">
-                    <label htmlFor="storeId" className="block text-sm font-medium text-gray-700 mb-2">Mağaza <span className="text-red-500">*</span></label>
+                    <label htmlFor="storeId" className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Mağaza <span className="text-rose-500">*</span></label>
                     <div className="relative">
                       <button
                         type="button"
                         onClick={() => setStoreDropdownOpen(!storeDropdownOpen)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors text-left bg-white"
+                        className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 pr-9 text-left text-sm text-slate-900 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                       >
-                        <span className="text-gray-900">
+                        <span className="text-slate-900">
                           {formData.storeId ? 
                             stores.find(s => s.store_id === formData.storeId)?.kurum_adi || 'Seçili Mağaza' :
                             'Mağaza seçin'
                           }
                         </span>
                         <svg 
-                          className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${storeDropdownOpen ? 'rotate-180' : ''}`}
+                          className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-transform ${storeDropdownOpen ? 'rotate-180' : ''}`}
                           fill="none" 
                           stroke="currentColor" 
                           viewBox="0 0 24 24"
                         >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 9l-7 7-7-7" />
                         </svg>
                       </button>
                       
                       {storeDropdownOpen && (
-                        <div className="absolute z-[100] w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                        <div className="absolute z-[100] mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
                           {stores.map((store) => (
                             <div
                               key={store.store_id}
-                              className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                formData.storeId === store.store_id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                              className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                                formData.storeId === store.store_id ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                               }`}
                               onClick={() => {
                                 setFormData(prev => ({ ...prev, storeId: store.store_id }));
@@ -1689,7 +1679,7 @@ export default function Settings() {
 
                 {/* Fiyat Görme Yetkisi */}
                 <div className="md:col-span-2">
-                  <div className="flex items-center space-x-3 bg-gray-50 p-4 rounded-lg">
+                  <div className="flex items-center space-x-3 rounded-lg border border-slate-200 bg-slate-50/60 p-4">
                     <div className="flex items-center">
                       <input
                         type="checkbox"
@@ -1697,14 +1687,14 @@ export default function Settings() {
                         name="canSeePrice"
                         checked={formData.canSeePrice}
                         onChange={(e) => setFormData(prev => ({ ...prev, canSeePrice: e.target.checked }))}
-                        className="h-4 w-4 text-[#00365a] focus:ring-[#00365a] border-gray-300 rounded"
+                        className="h-4 w-4 rounded border-slate-300 text-[#00365a] focus:ring-[#00365a]"
                       />
                     </div>
                     <div className="flex-1">
-                      <label htmlFor="canSeePrice" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="canSeePrice" className="block text-sm font-medium text-slate-700">
                         Fiyat Görme Yetkisi
                       </label>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="mt-1 text-xs text-slate-500">
                         Bu kullanıcı ürün fiyatlarını görebilir
                       </p>
                     </div>
@@ -1712,18 +1702,18 @@ export default function Settings() {
                 </div>
               </div>
 
-              {/* Butonlar */}
-              <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
-                <button 
-                  type="button" 
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors" 
+              </div>
+              <div className="flex shrink-0 justify-end gap-2 border-t border-slate-200/80 bg-slate-50/60 px-5 py-3.5">
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                   onClick={() => { setModalOpen(false); setSelectedUser(null); }}
                 >
                   Vazgeç
                 </button>
-                <button 
-                  type="submit" 
-                  className="bg-[#00365a] hover:bg-[#004170] text-white rounded-lg px-6 py-2 font-semibold transition-colors"
+                <button
+                  type="submit"
+                  className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {selectedUser ? 'Güncelle' : 'Ekle'}
                 </button>
@@ -1733,53 +1723,54 @@ export default function Settings() {
         </div>
       )}
 
-      {/* Silme Onay Modalı */}
       {deleteModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-lg relative">
-            <h2 className="text-lg font-bold mb-4 text-black">Kullanıcıyı Sil</h2>
-            <p className="text-gray-600 mb-6">Bu kullanıcıyı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.</p>
-            <div className="flex justify-end gap-2">
-              <button className="px-4 py-2 rounded bg-gray-200 text-black" onClick={() => { setDeleteModalOpen(false); setDeleteUserId(null); }}>Vazgeç</button>
-              <button className="px-4 py-2 rounded bg-red-600 text-white" onClick={handleDeleteUser}>Evet</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+          <div className="w-full max-w-md overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-lg">
+            <div className="border-b border-slate-200/80 px-5 py-4">
+              <h3 className="text-base font-semibold text-slate-900">Kullanıcıyı Sil</h3>
+              <p className="mt-0.5 text-xs text-slate-500">Bu işlem geri alınamaz</p>
+            </div>
+            <div className="px-5 py-5">
+              <p className="text-sm text-slate-700">Bu kullanıcıyı silmek istediğinizden emin misiniz?</p>
+            </div>
+            <div className="flex justify-end gap-2 border-t border-slate-200/80 bg-slate-50/60 px-5 py-3.5">
+              <button type="button" className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15" onClick={() => { setDeleteModalOpen(false); setDeleteUserId(null); }}>Vazgeç</button>
+              <button type="button" className="inline-flex items-center justify-center rounded-lg bg-rose-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/25 disabled:cursor-not-allowed disabled:opacity-50" onClick={handleDeleteUser}>Evet</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Mağaza Atama Modalı */}
       {assignStoreModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl">
-            {/* Modal Header */}
-            <div className="bg-gradient-to-r from-[#00365a] to-[#004170] text-white rounded-t-2xl p-6">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h2 className="text-xl font-bold">Kullanıcı Mağaza Bilgileri</h2>
-                  <p className="text-blue-100 text-sm mt-1">Kullanıcıya mağaza atayın veya kaldırın</p>
-                </div>
-                <button
-                  onClick={() => { setAssignStoreModalOpen(false); setAssigningUserId(null); setSelectedStoreId(''); }}
-                  className="text-blue-100 hover:text-white transition-colors p-2 hover:bg-white hover:bg-opacity-20 rounded-xl"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+          <div className="w-full max-w-md rounded-xl border border-slate-200/80 bg-white shadow-lg">
+            <div className="flex items-start justify-between gap-3 border-b border-slate-200/80 px-5 py-4">
+              <div>
+                <h3 className="text-base font-semibold text-slate-900">Kullanıcı Mağaza Bilgileri</h3>
+                <p className="mt-0.5 text-xs text-slate-500">Kullanıcıya mağaza atayın veya kaldırın</p>
               </div>
+              <button
+                type="button"
+                onClick={() => { setAssignStoreModalOpen(false); setAssigningUserId(null); setSelectedStoreId(''); }}
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#00365a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                aria-label="Kapat"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
 
-            {/* Modal Content */}
-            <div className="p-6 space-y-6">
+            <div className="space-y-6 px-5 py-5">
               <div className="dropdown-container">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mağaza</label>
+                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">Mağaza</label>
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => setAssignStoreDropdownOpen(!assignStoreDropdownOpen)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00365a] focus:border-transparent transition-colors text-left bg-white"
+                    className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 pr-9 text-left text-sm text-slate-900 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                   >
-                    <span className="text-gray-900">
+                    <span className="text-slate-900">
                       {selectedStoreId === "remove" ? "Mağaza Atamasını Kaldır" :
                         selectedStoreId ? 
                           stores.find(s => s.store_id === selectedStoreId)?.kurum_adi || 'Seçili Mağaza' :
@@ -1787,22 +1778,22 @@ export default function Settings() {
                       }
                     </span>
                     <svg 
-                      className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${assignStoreDropdownOpen ? 'rotate-180' : ''}`}
+                      className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-transform ${assignStoreDropdownOpen ? 'rotate-180' : ''}`}
                       fill="none" 
                       stroke="currentColor" 
                       viewBox="0 0 24 24"
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
                   
                   {assignStoreDropdownOpen && (
-                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto scrollbar-hide">
+                    <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
                       {stores.map((store) => (
                         <div
                           key={store.store_id}
-                          className={`px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
-                            selectedStoreId === store.store_id ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
+                          className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                            selectedStoreId === store.store_id ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
                           }`}
                           onClick={() => {
                             setSelectedStoreId(store.store_id);
@@ -1814,8 +1805,8 @@ export default function Settings() {
                       ))}
                       {users.find(u => u.userId === assigningUserId)?.Store && (
                         <div
-                          className={`px-3 py-2 cursor-pointer hover:bg-red-50 transition-colors border-t border-gray-200 ${
-                            selectedStoreId === "remove" ? 'bg-red-50 text-red-900' : 'text-red-600'
+                          className={`block w-full border-t border-slate-200 px-3 py-2 text-left text-sm transition-colors hover:bg-rose-50 ${
+                            selectedStoreId === "remove" ? 'bg-rose-50 font-medium text-rose-700' : 'text-rose-600'
                           }`}
                           onClick={() => {
                             setSelectedStoreId("remove");
@@ -1830,40 +1821,42 @@ export default function Settings() {
                 </div>
               </div>
 
-              {/* Butonlar */}
-              <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
-                <button 
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors" 
-                  onClick={() => { 
-                    setAssignStoreModalOpen(false); 
-                    setAssigningUserId(null);
-                    setSelectedStoreId('');
-                  }}
-                >
-                  Vazgeç
-                </button>
-                <button 
-                  className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-                    selectedStoreId === "remove" 
-                      ? "bg-red-600 hover:bg-red-700 text-white" 
-                      : "bg-[#00365a] hover:bg-[#004170] text-white"
-                  }`}
-                  onClick={handleAssignStore}
-                  disabled={!selectedStoreId || assignLoading || removeLoading}
-                >
-                  {assignLoading || removeLoading 
-                    ? 'İşleniyor...' 
-                    : selectedStoreId === "remove" 
-                      ? 'Kaldır' 
-                      : 'Ata'
-                  }
-                </button>
-              </div>
+            </div>
+            <div className="flex justify-end gap-2 rounded-b-xl border-t border-slate-200/80 bg-slate-50/60 px-5 py-3.5">
+              <button
+                type="button"
+                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                onClick={() => {
+                  setAssignStoreModalOpen(false);
+                  setAssigningUserId(null);
+                  setSelectedStoreId('');
+                }}
+              >
+                Vazgeç
+              </button>
+              <button
+                type="button"
+                className={`inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white transition focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${
+                  selectedStoreId === "remove"
+                    ? "bg-rose-600 hover:bg-rose-700 focus-visible:ring-2 focus-visible:ring-rose-500/25"
+                    : "bg-[#00365a] hover:bg-[#004170] focus-visible:ring-2 focus-visible:ring-[#00365a]/25"
+                }`}
+                onClick={handleAssignStore}
+                disabled={!selectedStoreId || assignLoading || removeLoading}
+              >
+                {assignLoading || removeLoading
+                  ? 'İşleniyor...'
+                  : selectedStoreId === "remove"
+                    ? 'Kaldır'
+                    : 'Ata'
+                }
+              </button>
             </div>
           </div>
         </div>
       )}
 
+      </div>
     </div>
   );
 } 

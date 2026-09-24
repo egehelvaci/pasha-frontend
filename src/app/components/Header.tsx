@@ -1018,236 +1018,210 @@ const Header = ({ title, user, className }: HeaderProps) => {
       )}
 
       {/* Profil Modal */}
-      {isProfileModalOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center min-h-screen"
-          onClick={() => setIsProfileModalOpen(false)}
-        >
-          <div 
-            className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden m-4"
-            onClick={(e) => e.stopPropagation()}
+      {isProfileModalOpen && isMounted && createPortal(
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
+            onClick={() => setIsProfileModalOpen(false)}
           >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-[#00365a] to-[#004170]">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center text-white text-lg font-bold">
-                  {user.name.charAt(0).toUpperCase()}
+            <div
+              className="flex max-h-[92vh] w-full max-w-lg flex-col rounded-xl border border-slate-200/80 bg-white shadow-lg"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="flex items-start justify-between gap-4 rounded-t-xl border-b border-slate-200/80 px-5 py-4">
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900">Kullanıcı Profili</h3>
+                  <p className="mt-0.5 text-xs text-slate-500">Hesap ve yetki bilgileriniz</p>
                 </div>
-                <h3 className="text-xl font-semibold text-white">Kullanıcı Profili</h3>
-              </div>
-              <button
-                onClick={() => setIsProfileModalOpen(false)}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors text-white"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            
-            {/* Modal Content */}
-            <div className="p-6 max-h-[calc(90vh-140px)] overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              {/* Profil Fotoğrafı ve Temel Bilgiler */}
-              <div className="text-center mb-6">
-                <div className="h-24 w-24 mx-auto rounded-full bg-gradient-to-br from-[#00365a] to-[#004170] flex items-center justify-center text-white text-3xl font-bold shadow-lg mb-4">
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
-                <h4 className="text-xl font-semibold text-gray-900 mb-1">{user.name}</h4>
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                  {isAdmin ? 'Admin' : 'Mağaza Kullanıcısı'}
-                </span>
-              </div>
-              
-              {/* Kullanıcı Bilgileri */}
-              <div className="space-y-4">
-                {/* Admin kullanıcısı için */}
-                {isAdmin && (
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
-                    <div className="flex items-center gap-2 mb-2">
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                      </svg>
-                      <span className="text-sm font-semibold text-blue-800">Yönetici Yetkisi</span>
-                    </div>
-                    <p className="text-sm text-blue-700">Tam sistem erişimi ve yönetim yetkileriniz bulunmaktadır.</p>
-                  </div>
-                )}
-                
-                {/* Mağaza kullanıcısı için finansal bilgiler - Sadece canSeePrice=true olanlar için */}
-                {authUser?.store && (
-                  <>
-                    <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
-                        <span className="text-sm font-semibold text-gray-700">Mağaza Bilgisi</span>
-                      </div>
-                      <p className="text-gray-900 font-medium">{authUser.store.kurum_adi}</p>
-                    </div>
-                    
-                    {authUser.canSeePrice ? (
-                      isLoadingBalance ? (
-                        <div className="flex items-center justify-center py-8">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00365a]"></div>
-                          <span className="ml-3 text-gray-600">Finansal bilgiler güncelleniyor...</span>
-                        </div>
-                      ) : (
-                        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
-                          <div className="flex items-center gap-2 mb-4">
-                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                            </svg>
-                            <span className="text-sm font-semibold text-green-800">Finansal Durum</span>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 gap-3">
-                            {/* Bakiye ve Toplam Kullanılabilir gösterimi kaldırıldı - sadece admin mağaza bakiyelerini görebilir */}
-                            <div className="bg-white/50 rounded-lg p-3">
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium text-gray-600">Açık Hesap Limiti</span>
-                                <span className="text-[#00365a] font-bold">
-                                  {financialInfo.limitsizAcikHesap 
-                                    ? 'Limitsiz' 
-                                    : `${financialInfo.acikHesapLimiti.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}`
-                                  }
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    ) : (
-                      <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-4 border border-yellow-200">
-                        <div className="flex items-center gap-2 mb-2">
-                          <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.664-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                          </svg>
-                          <span className="text-sm font-semibold text-yellow-800">Finansal Bilgilere Erişim Yok</span>
-                        </div>
-                        <p className="text-sm text-yellow-700">Fiyat görme yetkiniz bulunmamaktadır.</p>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-            
-            {/* Modal Footer */}
-            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-              <button
-                onClick={() => setIsProfileModalOpen(false)}
-                className="w-full px-4 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors font-medium"
-              >
-                Kapat
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Şifre Değiştirme Modalı */}
-      {showPasswordModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 min-h-screen">
-          <div className="bg-white rounded-xl w-full max-w-md shadow-lg mx-auto">
-            <div className="bg-[#00365a] rounded-t-xl px-6 py-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-white">Şifre Değiştir</h2>
                 <button
-                  onClick={closePasswordModal}
-                  className="text-white hover:text-gray-200 transition-colors"
+                  onClick={() => setIsProfileModalOpen(false)}
+                  aria-label="Kapat"
+                  className="-mr-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
-            </div>
-            
-            <form onSubmit={handlePasswordSubmit} className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mevcut Şifre *
-                  </label>
-                  <input
-                    type="password"
-                    name="currentPassword"
-                    value={passwordForm.currentPassword}
-                    onChange={handlePasswordChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a]"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Yeni Şifre *
-                  </label>
-                  <input
-                    type="password"
-                    name="newPassword"
-                    value={passwordForm.newPassword}
-                    onChange={handlePasswordChange}
-                    required
-                    minLength={6}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a]"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Yeni Şifre Onayı *
-                  </label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={passwordForm.confirmPassword}
-                    onChange={handlePasswordChange}
-                    required
-                    minLength={6}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00365a] focus:border-[#00365a]"
-                  />
-                </div>
-                
-                {passwordMessage && (
-                  <div className={`p-3 rounded-lg text-sm ${
-                    passwordMessage.includes('Hata') 
-                      ? 'bg-red-50 text-red-700 border border-red-200' 
-                      : 'bg-green-50 text-green-700 border border-green-200'
-                  }`}>
-                    {passwordMessage}
+
+              {/* Modal Content */}
+              <div className="flex-1 overflow-y-auto px-5 py-5 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                {/* Profil Fotoğrafı ve Temel Bilgiler */}
+                <div className="flex items-center gap-4">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#00365a] text-lg font-medium text-white">
+                    {user.name.charAt(0).toUpperCase()}
                   </div>
-                )}
-              </div>
-              
-              <div className="flex space-x-3 mt-6">
-                <button
-                  type="button"
-                  onClick={closePasswordModal}
-                  disabled={passwordLoading}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-                >
-                  İptal
-                </button>
-                <button
-                  type="submit"
-                  disabled={passwordLoading}
-                  className="flex-1 px-4 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors disabled:opacity-50 flex items-center justify-center"
-                >
-                  {passwordLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Değiştiriliyor...
-                    </>
-                  ) : (
-                    'Şifre Değiştir'
+                  <div className="min-w-0">
+                    <p className="text-base font-medium text-slate-900">{user.name}</p>
+                    <span className="mt-1 inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-600">
+                      {isAdmin ? 'Admin' : 'Mağaza Kullanıcısı'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Kullanıcı Bilgileri */}
+                <div className="mt-5 space-y-4 border-t border-slate-200/80 pt-5">
+                  {/* Admin kullanıcısı için */}
+                  {isAdmin && (
+                    <div className="rounded-lg border border-sky-200 bg-sky-50 px-3.5 py-3">
+                      <p className="text-sm font-medium text-sky-800">Yönetici Yetkisi</p>
+                      <p className="mt-0.5 text-sm text-sky-700">Tam sistem erişimi ve yönetim yetkileriniz bulunmaktadır.</p>
+                    </div>
                   )}
+
+                  {/* Mağaza kullanıcısı için finansal bilgiler - Sadece canSeePrice=true olanlar için */}
+                  {authUser?.store && (
+                    <>
+                      <div>
+                        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Mağaza Bilgisi</p>
+                        <p className="mt-1.5 text-sm font-medium text-slate-900">{authUser.store.kurum_adi}</p>
+                      </div>
+
+                      {authUser.canSeePrice ? (
+                        isLoadingBalance ? (
+                          <div className="flex flex-col items-center justify-center gap-3 py-8">
+                            <div className="h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
+                            <p className="text-sm text-slate-500">Finansal bilgiler güncelleniyor...</p>
+                          </div>
+                        ) : (
+                          <div className="border-t border-slate-200/80 pt-4">
+                            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Finansal Durum</p>
+                            {/* Bakiye ve Toplam Kullanılabilir gösterimi kaldırıldı - sadece admin mağaza bakiyelerini görebilir */}
+                            <div className="mt-2.5 flex items-baseline justify-between gap-4">
+                              <span className="text-sm text-slate-500">Açık Hesap Limiti</span>
+                              <span className="text-sm font-medium tabular-nums text-slate-900">
+                                {financialInfo.limitsizAcikHesap
+                                  ? 'Limitsiz'
+                                  : `${financialInfo.acikHesapLimiti.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}`
+                                }
+                              </span>
+                            </div>
+                          </div>
+                        )
+                      ) : (
+                        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3">
+                          <p className="text-sm font-medium text-amber-800">Finansal Bilgilere Erişim Yok</p>
+                          <p className="mt-0.5 text-sm text-amber-700">Fiyat görme yetkiniz bulunmamaktadır.</p>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex justify-end gap-2 rounded-b-xl border-t border-slate-200/80 bg-slate-50/60 px-5 py-3.5">
+                <button
+                  onClick={() => setIsProfileModalOpen(false)}
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                >
+                  Kapat
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
+            </div>
+          </div>,
+        document.body
+      )}
+
+      {/* Şifre Değiştirme Modalı */}
+      {showPasswordModal && isMounted && createPortal(
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+            <div className="w-full max-w-md rounded-xl border border-slate-200/80 bg-white shadow-lg">
+              <div className="flex items-start justify-between gap-4 rounded-t-xl border-b border-slate-200/80 px-5 py-4">
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900">Şifre Değiştir</h2>
+                  <p className="mt-0.5 text-xs text-slate-500">Hesap şifrenizi güncelleyin</p>
+                </div>
+                <button
+                  onClick={closePasswordModal}
+                  aria-label="Kapat"
+                  className="-mr-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <form onSubmit={handlePasswordSubmit} className="px-5 py-5">
+                <div className="space-y-4">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Mevcut Şifre <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="password"
+                      name="currentPassword"
+                      value={passwordForm.currentPassword}
+                      onChange={handlePasswordChange}
+                      required
+                      className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Yeni Şifre <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="password"
+                      name="newPassword"
+                      value={passwordForm.newPassword}
+                      onChange={handlePasswordChange}
+                      required
+                      minLength={6}
+                      className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                    />
+                    <p className="mt-1.5 text-xs text-slate-500">En az 6 karakter olmalıdır.</p>
+                  </div>
+
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Yeni Şifre Onayı <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="password"
+                      name="confirmPassword"
+                      value={passwordForm.confirmPassword}
+                      onChange={handlePasswordChange}
+                      required
+                      minLength={6}
+                      className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
+                    />
+                  </div>
+
+                  {passwordMessage && (
+                    <div className={`rounded-lg border px-3.5 py-3 text-sm ${
+                      passwordMessage.includes('Hata')
+                        ? 'border-rose-200 bg-rose-50 text-rose-700'
+                        : 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                    }`}>
+                      {passwordMessage}
+                    </div>
+                  )}
+                </div>
+
+                <div className="-mx-5 -mb-5 mt-6 flex justify-end gap-2 rounded-b-xl border-t border-slate-200/80 bg-slate-50/60 px-5 py-3.5">
+                  <button
+                    type="button"
+                    onClick={closePasswordModal}
+                    disabled={passwordLoading}
+                    className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    İptal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={passwordLoading}
+                    className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {passwordLoading ? 'Değiştiriliyor...' : 'Şifre Değiştir'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>,
+        document.body
       )}
     </header>
   );
