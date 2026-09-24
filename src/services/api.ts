@@ -5223,3 +5223,48 @@ export async function deleteBanner(id: string): Promise<void> {
     throw error;
   }
 }
+
+// Sipariş statüsünü ilerletir (POST /api/admin/orders/:orderId/advance).
+// requestId tekrar gönderimlere karşı idempotency anahtarıdır; expectedStatus
+// istemcinin gördüğü mevcut statüdür, sunucu eşleşmezse işlemi reddeder.
+export interface AdvanceOrderStatusData {
+  requestId: string;
+  expectedStatus: AdminOrderStatusV2;
+  targetStatus: AdminOrderStatusV2;
+  reason?: string;
+}
+
+export function createRequestId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  // randomUUID yoksa (eski tarayici / guvensiz baglam) RFC4122 v4 bicimli yedek
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+export async function advanceOrderStatus(
+  orderId: string,
+  data: AdvanceOrderStatusData
+): Promise<any> {
+  try {
+    const response = await apiRequest(`${API_BASE_URL}/api/admin/orders/${orderId}/advance`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok || result?.success === false) {
+      throw new Error(result?.message || 'Sipariş durumu ilerletilemedi');
+    }
+
+    return result?.data ?? result;
+  } catch (error) {
+    console.error('Sipariş durumu ilerletme hatası:', error);
+    throw error;
+  }
+}

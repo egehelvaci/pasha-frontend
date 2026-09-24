@@ -83,6 +83,7 @@ const SiparisOlustur: React.FC = () => {
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
   const [addressesLoading, setAddressesLoading] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
+  const [showOrderSuccessModal, setShowOrderSuccessModal] = useState(false);
   const [newAddress, setNewAddress] = useState<CreateStoreAddressRequest>({
     title: '',
     address: '',
@@ -378,8 +379,7 @@ const SiparisOlustur: React.FC = () => {
 
       const data = await response.json();
       if (data.success) {
-        alert('Siparişiniz başarıyla oluşturuldu!');
-        router.push('/dashboard/siparisler');
+        setShowOrderSuccessModal(true);
       } else {
         throw new Error(data.message || 'Sipariş oluşturulamadı');
       }
@@ -975,6 +975,29 @@ const SiparisOlustur: React.FC = () => {
                 className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {addingAddress ? 'Ekleniyor...' : 'Adres Ekle'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showOrderSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+          <div className="flex w-full max-w-md flex-col rounded-xl border border-slate-200/80 bg-white shadow-lg">
+            <div className="rounded-t-xl border-b border-slate-200/80 px-5 py-4">
+              <h3 className="text-base font-semibold text-slate-900">Sipariş Oluşturuldu</h3>
+              <p className="mt-0.5 text-xs text-slate-500">Siparişiniz kayda alındı</p>
+            </div>
+            <div className="px-5 py-5">
+              <p className="text-sm text-slate-700">Siparişiniz başarıyla oluşturuldu.</p>
+            </div>
+            <div className="flex justify-end rounded-b-xl border-t border-slate-200/80 bg-slate-50/60 px-5 py-3.5">
+              <button
+                type="button"
+                onClick={() => router.push('/dashboard/siparisler')}
+                className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25"
+              >
+                Siparişlerime Git
               </button>
             </div>
           </div>

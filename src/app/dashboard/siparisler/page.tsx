@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { useAuth } from '../../context/AuthContext';
 import { useToken } from '@/app/hooks/useToken';
 import { StoreType, storeTypeLabels } from '@/components/StoreTypeSelector';
-import { bulkConfirmOrders, BulkConfirmOrdersResponse, getStores, Store, adminCancelOrder, cancelOrder, getAdminOrdersV2, getAdminOrdersLegacy, getAdminOrderStatusCounts, AdminOrderStatusV2 } from '@/services/api';
+import { bulkConfirmOrders, BulkConfirmOrdersResponse, getStores, Store, adminCancelOrder, cancelOrder, getAdminOrdersV2, getAdminOrdersLegacy, getAdminOrderStatusCounts, AdminOrderStatusV2, advanceOrderStatus, createRequestId } from '@/services/api';
 import CargoReceipt from '@/app/components/CargoReceipt';
 import QRLabel from '@/app/components/QRLabel';
 import QRCode from 'qrcode';
@@ -340,6 +340,15 @@ const Siparisler = () => {
   const [userCurrency, setUserCurrency] = useState<string>('TRY');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [deliverOrderModal, setDeliverOrderModal] = useState({
+    isOpen: false,
+    orderId: '',
+    orderNumber: '',
+    currentStatus: '',
+    isLoading: false,
+    error: '',
+    success: false,
+  });
   const [orderStats, setOrderStats] = useState<OrderStats | null>(null);
   const [totalOrdersCount, setTotalOrdersCount] = useState<number>(0);
   const [fixedStats, setFixedStats] = useState<OrderStats | null>(null);
@@ -2221,6 +2230,56 @@ const Siparisler = () => {
   };
 
   // Admin/Editor için sipariş durumu güncelleme
+  const closeDeliverOrderModal = () => {
+    setDeliverOrderModal((prev) => {
+      if (prev.isLoading) return prev;
+      return {
+        isOpen: false,
+        orderId: '',
+        orderNumber: '',
+        currentStatus: '',
+        isLoading: false,
+        error: '',
+        success: false,
+      };
+    });
+  };
+
+  // Siparisi teslim edildi olarak isaretler. expectedStatus olarak siparisin
+  // o anki statusu gonderilir; sunucu farkli gorurse islemi reddeder.
+  const handleDeliverOrder = async () => {
+    if (!isAdminOrEditor || !deliverOrderModal.orderId || deliverOrderModal.isLoading) return;
+
+    const { orderId, currentStatus } = deliverOrderModal;
+    setDeliverOrderModal((prev) => ({ ...prev, isLoading: true, error: '' }));
+    try {
+      await advanceOrderStatus(orderId, {
+        requestId: createRequestId(),
+        expectedStatus: currentStatus as AdminOrderStatusV2,
+        targetStatus: 'DELIVERED',
+        reason: 'Admin teslim onayı',
+      });
+
+      await fetchOrders(currentPage, statusFilter, receiptFilter, storeFilter, showAllOrders);
+      if (isAdminOrEditor) {
+        await fetchOrderStatusCounts();
+      }
+      if (selectedOrder && selectedOrder.id === orderId) {
+        await handleViewOrderDetail(orderId);
+      }
+
+      setDeliverOrderModal((prev) => ({ ...prev, isLoading: false, success: true, error: '' }));
+    } catch (error: any) {
+      console.error('Sipariş teslim edilirken hata:', error);
+      setDeliverOrderModal((prev) => ({
+        ...prev,
+        isLoading: false,
+        success: false,
+        error: error?.message || 'Sipariş teslim edilirken bir hata oluştu. Lütfen tekrar deneyiniz.',
+      }));
+    }
+  };
+
   const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
     if (!isAdminOrEditor) return;
     
@@ -2892,9 +2951,12 @@ const Siparisler = () => {
                   <div className="min-w-0 flex-1">
                     {/* Üst: Mağaza + Sipariş durumu */}
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                      <h3 className="min-w-0 truncate text-base font-semibold tracking-tight text-slate-900">
-                        {order.store_name}
-                      </h3>
+                      <div className="min-w-0">
+                        <h3 className="truncate text-base font-semibold tracking-tight text-slate-900">
+                          {order.store_name}
+                        </h3>
+                        <p className="mt-0.5 truncate text-sm font-medium text-slate-500">{order.id}</p>
+                      </div>
                       <span className={`inline-flex w-fit shrink-0 items-center rounded-md px-2 py-0.5 text-xs font-medium ${statusColors[order.status]}`}>
                         {statusLabels[order.status]}
                       </span>
@@ -3460,12 +3522,32 @@ const Siparisler = () => {
                     )}
                       </div>
 
-                      <button
-                        onClick={() => handleViewOrderDetail(order.id)}
-                        className="w-full rounded-lg border border-slate-200/80 bg-stone-50 px-3.5 py-2 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98] sm:w-auto"
-                      >
-                        Detayları Gör
-                      </button>
+                      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                        {isAdminOrEditor && order.status !== 'DELIVERED' && order.status !== 'CANCELED' && (
+                          <button
+                            type="button"
+                            onClick={() => setDeliverOrderModal({
+                              isOpen: true,
+                              orderId: order.id,
+                              orderNumber: order.id.slice(0, 8),
+                              currentStatus: order.status,
+                              isLoading: false,
+                              error: '',
+                              success: false,
+                            })}
+                            disabled={deliverOrderModal.isLoading}
+                            className="w-full rounded-lg border border-[#b9cddb] bg-[#dce8f0] px-3.5 py-2 text-sm font-medium text-[#2f4d66] transition-all duration-200 ease-out hover:bg-[#cfdce8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7aa0b8]/40 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                          >
+                            Teslim Et
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleViewOrderDetail(order.id)}
+                          className="w-full rounded-lg border border-slate-200/80 bg-stone-50 px-3.5 py-2 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98] sm:w-auto"
+                        >
+                          Detayları Gör
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -4430,12 +4512,32 @@ const Siparisler = () => {
                       </button>
                     )}
                   </div>
-                  <button
-                    onClick={() => setSelectedOrder(null)}
-                    className="rounded-lg border border-slate-200/80 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98]"
-                  >
-                    Kapat
-                  </button>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                    {isAdminOrEditor && selectedOrder.status !== 'DELIVERED' && selectedOrder.status !== 'CANCELED' && (
+                      <button
+                        type="button"
+                        onClick={() => setDeliverOrderModal({
+                          isOpen: true,
+                          orderId: selectedOrder.id,
+                          orderNumber: selectedOrder.id.slice(0, 8),
+                          currentStatus: selectedOrder.status,
+                          isLoading: false,
+                          error: '',
+                          success: false,
+                        })}
+                        disabled={deliverOrderModal.isLoading}
+                        className="rounded-lg border border-[#b9cddb] bg-[#dce8f0] px-4 py-2 text-sm font-medium text-[#2f4d66] transition-all duration-200 ease-out hover:bg-[#cfdce8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7aa0b8]/40 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Teslim Et
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setSelectedOrder(null)}
+                      className="rounded-lg border border-slate-200/80 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98]"
+                    >
+                      Kapat
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -4654,6 +4756,75 @@ const Siparisler = () => {
                       : (cancelOrderModal.isRefund ? 'Siparişi İade Et' : 'Siparişi İptal Et')
                     }
                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Sipariş Teslim Modal */}
+        {deliverOrderModal.isOpen && (
+          <div
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+            onClick={closeDeliverOrderModal}
+          >
+            <div
+              className="mx-4 w-full max-w-md rounded-xl border border-slate-200/80 bg-white"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6">
+                <h3 className="mb-4 text-lg font-semibold tracking-tight text-slate-900">
+                  {deliverOrderModal.success ? 'Sipariş Teslim Edildi' : 'Siparişi Teslim Et'}
+                </h3>
+
+                {deliverOrderModal.success ? (
+                  <p className="mb-6 text-sm text-slate-500">
+                    {deliverOrderModal.orderNumber} numaralı sipariş teslim edildi olarak işaretlendi.
+                  </p>
+                ) : (
+                  <p className="mb-6 text-sm text-slate-500">
+                    {deliverOrderModal.orderNumber} numaralı sipariş teslim edildi olarak işaretlenecek. Bu işlem geri alınamaz. Onaylıyor musunuz?
+                  </p>
+                )}
+
+                {deliverOrderModal.error && (
+                  <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-3 text-sm text-rose-700">
+                    {deliverOrderModal.error}
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-3">
+                  {deliverOrderModal.success ? (
+                    <button
+                      type="button"
+                      onClick={closeDeliverOrderModal}
+                      className="rounded-lg bg-[#00365a] px-4 py-2 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98]"
+                    >
+                      Kapat
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={closeDeliverOrderModal}
+                        disabled={deliverOrderModal.isLoading}
+                        className="rounded-lg border border-slate-200/80 bg-stone-50 px-4 py-2 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Vazgeç
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDeliverOrder}
+                        disabled={deliverOrderModal.isLoading}
+                        className="inline-flex items-center gap-2 rounded-lg border border-[#b9cddb] bg-[#dce8f0] px-4 py-2 text-sm font-medium text-[#2f4d66] transition-colors hover:bg-[#cfdce8] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {deliverOrderModal.isLoading && (
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#b9cddb] border-t-[#2f4d66]"></div>
+                        )}
+                        {deliverOrderModal.isLoading ? 'Teslim Ediliyor...' : 'Teslim Et'}
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
