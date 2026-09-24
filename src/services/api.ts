@@ -3388,6 +3388,209 @@ export async function bulkConfirmOrders(orderIds: string[]): Promise<BulkConfirm
   }
 }
 
+// Admin Sipariş Listesi v2 (GET /api/admin/orders-v2)
+export type AdminOrderStatusV2 =
+  | 'PENDING'
+  | 'CONFIRMED'
+  | 'READY'
+  | 'SHIPPED'
+  | 'DELIVERED'
+  | 'CANCELED';
+
+export interface AdminOrderStatusCount {
+  status: AdminOrderStatusV2;
+  count: number;
+}
+
+export interface AdminOrdersV2Pagination {
+  page: number;
+  limit: number;
+  totalCount: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export interface AdminOrdersV2Result {
+  orders: any[];
+  filters: {
+    status: AdminOrderStatusV2;
+    userId: string | null;
+  };
+  pagination: AdminOrdersV2Pagination;
+}
+
+export interface AdminOrdersV2Params {
+  status: AdminOrderStatusV2;
+  page?: number;
+  limit?: number;
+  userId?: string;
+  signal?: AbortSignal;
+}
+
+/** Statü seçenekleri ve adetleri — filtre parametresi desteklemez, altı statünün tamamını döner */
+export async function getAdminOrderStatusCounts(signal?: AbortSignal): Promise<AdminOrderStatusCount[]> {
+  const token = getAuthToken();
+
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  const response = await fetch(`${API_URL}/api/admin/orders-v2/statuses`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    signal,
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result?.message || 'Statü adetleri getirilemedi');
+  }
+
+  return Array.isArray(result?.data) ? result.data : [];
+}
+
+/** Statü bazlı sipariş listesi — status zorunlu, sıralama sabit (created_at DESC, id DESC) */
+export async function getAdminOrdersV2({
+  status,
+  page = 1,
+  limit = 20,
+  userId,
+  signal,
+}: AdminOrdersV2Params): Promise<AdminOrdersV2Result> {
+  const token = getAuthToken();
+
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  const query = new URLSearchParams({
+    status,
+    page: String(page),
+    limit: String(limit),
+  });
+
+  if (userId) {
+    query.set('userId', userId);
+  }
+
+  const response = await fetch(`${API_URL}/api/admin/orders-v2?${query.toString()}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    signal,
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result?.message || 'Siparişler getirilemedi');
+  }
+
+  const data = result?.data ?? {};
+
+  return {
+    orders: Array.isArray(data.orders) ? data.orders : [],
+    filters: {
+      status: data.filters?.status ?? status,
+      userId: data.filters?.userId ?? null,
+    },
+    pagination: {
+      page: data.pagination?.page ?? page,
+      limit: data.pagination?.limit ?? limit,
+      totalCount: data.pagination?.totalCount ?? 0,
+      totalPages: data.pagination?.totalPages ?? 0,
+      hasNext: data.pagination?.hasNext ?? false,
+      hasPrev: data.pagination?.hasPrev ?? page > 1,
+    },
+  };
+}
+
+export interface AdminOrdersLegacyParams {
+  page?: number;
+  limit?: number;
+  status?: string;
+  storeId?: string;
+  receiptPrinted?: boolean;
+  signal?: AbortSignal;
+}
+
+export interface AdminOrdersLegacyResult {
+  orders: any[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
+/** Eski liste endpoint'i — "Toplam" ve mağaza filtresi için (status zorunlu değil) */
+export async function getAdminOrdersLegacy({
+  page = 1,
+  limit = 20,
+  status,
+  storeId,
+  receiptPrinted,
+  signal,
+}: AdminOrdersLegacyParams = {}): Promise<AdminOrdersLegacyResult> {
+  const token = getAuthToken();
+
+  if (!token) {
+    throw new Error('Token bulunamadı');
+  }
+
+  const query = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+
+  if (status) {
+    query.set('status', status);
+  }
+
+  if (storeId) {
+    query.set('storeId', storeId);
+  }
+
+  if (typeof receiptPrinted === 'boolean') {
+    query.set('receiptPrinted', String(receiptPrinted));
+  }
+
+  const response = await fetch(`${API_URL}/api/admin/orders?${query.toString()}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    signal,
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result?.message || 'Siparişler getirilemedi');
+  }
+
+  const data = result?.data ?? {};
+  const total = data.pagination?.total ?? data.pagination?.totalCount ?? 0;
+  const totalPages = data.pagination?.totalPages ?? 0;
+
+  return {
+    orders: Array.isArray(data.orders) ? data.orders : [],
+    pagination: {
+      page: data.pagination?.page ?? page,
+      limit: data.pagination?.limit ?? limit,
+      total,
+      totalPages,
+      hasNext: data.pagination?.hasNext ?? page < totalPages,
+      hasPrev: data.pagination?.hasPrev ?? page > 1,
+    },
+  };
+}
+
 // Kullanıcı Adres Yönetimi API Types and Functions
 export interface UserAddress {
   id: string;
