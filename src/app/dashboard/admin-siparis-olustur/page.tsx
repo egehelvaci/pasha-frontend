@@ -298,9 +298,15 @@ const AdminSiparisOlustur = () => {
     try {
       // AdminOrderProduct tipinde ise
       if ('pricing' in selectedProduct) {
-        const sizeOption = selectedProduct.sizeOptions[0];
+        const sizeOption = selectedProduct.sizeOptions.find((s) => s.id === productForm.selectedSizeId) || selectedProduct.sizeOptions[0];
         if (!sizeOption) {
           alert('Bu ürün için boyut seçeneği bulunamadı');
+          return;
+        }
+
+        const heightValue = typeof productForm.height === 'string' ? parseFloat(productForm.height) : productForm.height;
+        if (sizeOption.is_optional_height && (!heightValue || heightValue < 1)) {
+          alert('Lütfen boy giriniz');
           return;
         }
 
@@ -310,7 +316,7 @@ const AdminSiparisOlustur = () => {
           productId: selectedProduct.productId,
           quantity: productForm.quantity,
           width: productForm.width,
-          height: typeof productForm.height === 'string' ? (parseFloat(productForm.height) || 100) : (productForm.height || 100),
+          height: sizeOption.is_optional_height ? heightValue : (heightValue || sizeOption.height),
           hasFringe: productForm.hasFringe,
           cutType: toCanonicalCutType(productForm.cutType),
           notes: productForm.notes
@@ -1116,9 +1122,7 @@ const AdminSiparisOlustur = () => {
                                   const maxHeight = ('sizeOptions' in selectedProduct)
                                     ? toNumber(selectedProduct.sizeOptions?.find((s: any) => s.width === productForm.width && s.is_optional_height)?.height)
                                     : 0;
-                                  if (value === '' || Number(value) < 1) {
-                                    setProductForm(prev => ({ ...prev, height: '1' }));
-                                  } else if (maxHeight > 0 && Number(value) > maxHeight) {
+                                  if (value !== '' && maxHeight > 0 && Number(value) > maxHeight) {
                                     setProductForm(prev => ({ ...prev, height: String(maxHeight) }));
                                   }
                                 }}
@@ -1220,9 +1224,11 @@ const AdminSiparisOlustur = () => {
                         <div className="flex justify-between items-center">
                           <span className="text-sm font-medium text-slate-700">Toplam Tutar</span>
                           <span className="text-base font-semibold tabular-nums text-[#00365a]">
-                            {('pricing' in selectedProduct) && productForm.width && (productForm.height || (('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions.find((s: any) => s.width === productForm.width && s.is_optional_height) : false)) ? 
+                            {('pricing' in selectedProduct) && productForm.width && (parseFloat(String(productForm.height)) >= 1 || (('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions.find((s: any) => s.width === productForm.width && !s.is_optional_height) : false)) ? 
                               (() => {
-                                const height = typeof productForm.height === 'string' ? parseFloat(productForm.height) || 100 : (productForm.height || 100);
+                                const parsedHeight = typeof productForm.height === 'string' ? parseFloat(productForm.height) : productForm.height;
+                                const height = parsedHeight >= 1 ? parsedHeight : 0;
+                                if (!height) return 'Boy giriniz';
                                 const areaM2 = (productForm.width * height) / 10000;
                                 const totalPrice = selectedProduct.pricing.price * areaM2 * productForm.quantity;
                                 return `${totalPrice.toFixed(2)} ${selectedProduct.pricing.currency}`;
@@ -1231,9 +1237,9 @@ const AdminSiparisOlustur = () => {
                             }
                           </span>
                         </div>
-                        {productForm.width && (productForm.height || (('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions?.find((s: any) => s.width === productForm.width && s.is_optional_height) : false)) && (
+                        {productForm.width && parseFloat(String(productForm.height)) >= 1 && (
                           <div className="mt-1 text-xs text-slate-500">
-                            {productForm.width} cm genişlik × {typeof productForm.height === 'string' ? (parseFloat(productForm.height) || 100) : (productForm.height || 100)} cm Boy × {productForm.quantity} adet için hesaplandı
+                            {productForm.width} cm genişlik × {parseFloat(String(productForm.height))} cm Boy × {productForm.quantity} adet için hesaplandı
                           </div>
                         )}
                       </div>

@@ -980,7 +980,7 @@ export default function ProductList() {
     const [selectedCutType, setSelectedCutType] = useState<any>(null);
     const [selectedHasFringe, setSelectedHasFringe] = useState<boolean | null>(null);
     const [totalPrice, setTotalPrice] = useState<number>(0);
-    const [customHeight, setCustomHeight] = useState<number | string>(100);  // Varsayılan 100 cm boy
+    const [customHeight, setCustomHeight] = useState<number | string>('');
     const [quantity, setQuantity] = useState<number>(1);
     const [notes, setNotes] = useState<string>("");
     const [addToCartLoading, setAddToCartLoading] = useState(false);
@@ -1075,7 +1075,11 @@ export default function ProductList() {
         let squareMeters;
         if (selectedSize.is_optional_height) {
           // İsteğe bağlı boy için kullanıcının girdiği değeri kullan
-          const heightValue = parseFloat(customHeight.toString()) || 100;
+          const heightValue = parseFloat(customHeight.toString());
+          if (!heightValue || heightValue < 1) {
+            setTotalPrice(0);
+            return;
+          }
           squareMeters = (selectedSize.width * heightValue) / 10000; // cm² -> m²
         } else {
           // Sabit boy için metrekare hesapla
@@ -1120,7 +1124,7 @@ export default function ProductList() {
       
       // İsteğe bağlı boy seçilince varsayılan değeri 100cm olarak ayarla
       if (size && size.is_optional_height) {
-        setCustomHeight(100);
+        setCustomHeight('');
       }
     };
     
@@ -1159,7 +1163,12 @@ export default function ProductList() {
         const authToken = token;
         
         // Boy değerini belirle
-        const heightValue = selectedSize.is_optional_height ? parseFloat(customHeight.toString()) || 100 : selectedSize.height;
+        const heightValue = selectedSize.is_optional_height ? parseFloat(customHeight.toString()) : selectedSize.height;
+        if (selectedSize.is_optional_height && (!heightValue || heightValue < 1)) {
+          setAddToCartError('Lütfen boy giriniz');
+          setAddToCartLoading(false);
+          return;
+        }
         
         const requestBody = {
           productId: product.productId,
@@ -1327,6 +1336,7 @@ export default function ProductList() {
                               type="button"
                               onClick={() => {
                                 setSelectedSize(size);
+                                if (size.is_optional_height) setCustomHeight('');
                                 setSizeDropdownOpen(false);
                               }}
                               className={`rounded-lg border px-3.5 py-2 text-sm tabular-nums transition-all duration-200 ease-out active:scale-[0.98] ${
@@ -1367,9 +1377,7 @@ export default function ProductList() {
                               onBlur={(e) => {
                                 const value = e.target.value;
                                 const maxHeight = toNumber(selectedSize.height);
-                                if (value === '' || Number(value) < 1) {
-                                  setCustomHeight(1);
-                                } else if (Number(value) > maxHeight) {
+                                if (value !== '' && Number(value) > maxHeight) {
                                   setCustomHeight(maxHeight);
                                 }
                               }}

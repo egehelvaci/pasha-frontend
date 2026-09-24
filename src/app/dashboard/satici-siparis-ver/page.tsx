@@ -45,7 +45,7 @@ const SaticiSiparisVer = () => {
   const [selectedSize, setSelectedSize] = useState<any>(null);
   const [selectedCutType, setSelectedCutType] = useState<any>(null);
   const [selectedHasFringe, setSelectedHasFringe] = useState<boolean | null>(null);
-  const [customHeight, setCustomHeight] = useState<number | string>(100);
+  const [customHeight, setCustomHeight] = useState<number | string>('');
   const [sizeDropdownOpen, setSizeDropdownOpen] = useState(false);
   const [cutTypeDropdownOpen, setCutTypeDropdownOpen] = useState(false);
   const [fringeDropdownOpen, setFringeDropdownOpen] = useState(false);
@@ -136,7 +136,7 @@ const SaticiSiparisVer = () => {
       setSelectedHasFringe(selectedProduct.canHaveFringe ? false : null);
       
       // Custom height'ı reset et
-      setCustomHeight(100);
+      setCustomHeight('');
       
       // Form'u reset et
       setProductForm({
@@ -281,7 +281,11 @@ const SaticiSiparisVer = () => {
     let height = selectedSize.height;
     
     if (selectedSize.is_optional_height) {
-      const heightValue = parseFloat(customHeight.toString()) || 100;
+      const heightValue = parseFloat(customHeight.toString());
+      if (!heightValue || heightValue < 1) {
+        alert('Lütfen boy giriniz');
+        return;
+      }
       height = heightValue;
     }
 
@@ -322,7 +326,7 @@ const SaticiSiparisVer = () => {
       setSelectedSize(null);
       setSelectedCutType(null);
       setSelectedHasFringe(null);
-      setCustomHeight(100);
+      setCustomHeight('');
       setProductForm({
         quantity: 1,
         notes: ''
@@ -715,8 +719,9 @@ const SaticiSiparisVer = () => {
                         <button
                           key={size.id}
                           type="button"
-                          onClick={() => {
+                            onClick={() => {
                             setSelectedSize(size);
+                            if (size.is_optional_height) setCustomHeight('');
                             setSizeDropdownOpen(false);
                           }}
                           className={`rounded-md border px-2.5 py-1.5 text-xs tabular-nums transition-all duration-200 ease-out active:scale-[0.98] ${
@@ -756,7 +761,7 @@ const SaticiSiparisVer = () => {
                           onBlur={(e) => {
                             const value = e.target.value;
                             if (value === '' || Number(value) < 10) {
-                              setCustomHeight(100);
+                              setCustomHeight('');
                             }
                           }}
                           className="h-full w-full bg-transparent px-2.5 text-sm tabular-nums text-slate-900 outline-none"
@@ -824,7 +829,8 @@ const SaticiSiparisVer = () => {
                           let squareMeters;
                           if (selectedSize.is_optional_height) {
                             // İsteğe bağlı boy için kullanıcının girdiği değeri kullan
-                            const heightValue = parseFloat(customHeight.toString()) || 100;
+                            const heightValue = parseFloat(customHeight.toString());
+                            if (!heightValue || heightValue < 1) return '0.00';
                             squareMeters = (selectedSize.width * heightValue) / 10000; // cm² -> m²
                           } else {
                             // Sabit boy için metrekare hesapla

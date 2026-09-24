@@ -47,7 +47,7 @@ export default function ProductDetail() {
   const [selectedCutType, setSelectedCutType] = useState<any>(null);
   const [selectedHasFringe, setSelectedHasFringe] = useState<boolean | null>(null);
   const [totalPrice, setTotalPrice] = useState<number>(0);
-  const [customHeight, setCustomHeight] = useState<number | string>(100);  // Varsayılan 100 cm boy
+  const [customHeight, setCustomHeight] = useState<number | string>('');
   const [quantity, setQuantity] = useState<number>(1);  // Ürün adedi
 
   // Custom dropdown state'leri
@@ -95,7 +95,10 @@ export default function ProductDetail() {
       const pricePerSquareMeter = parseFloat(product.pricing?.price) || 0;
       
       // Boy değerini belirle (özel boy varsa onu kullan)
-      const heightValue = selectedSize.is_optional_height ? parseFloat(customHeight.toString()) || 100 : parseFloat(selectedSize.height);
+      const parsedHeight = parseFloat(customHeight.toString());
+      const heightValue = selectedSize.is_optional_height
+        ? (parsedHeight >= 1 ? parsedHeight : 0)
+        : parseFloat(selectedSize.height);
       const widthValue = parseFloat(selectedSize.width);
       
       // Alan hesaplama (cm² -> m²)
@@ -168,7 +171,7 @@ export default function ProductDetail() {
     
     // İsteğe bağlı boy seçilince varsayılan değeri 100cm olarak ayarla
     if (size && size.is_optional_height) {
-      setCustomHeight(100);
+      setCustomHeight('');
     }
   };
   
@@ -213,6 +216,11 @@ export default function ProductDetail() {
       return;
     }
     
+    if (selectedSize.is_optional_height && (!(parseFloat(customHeight.toString()) >= 1))) {
+      setPreorderError('Lütfen boy giriniz');
+      return;
+    }
+
     const cutTypeValue = toCanonicalCutType(selectedCutType.name);
     
     setPreorderLoading(true);
@@ -223,7 +231,7 @@ export default function ProductDetail() {
       const authToken = token;
       
       // Boy değerini belirle
-      const heightValue = selectedSize.is_optional_height ? customHeight : selectedSize.height;
+      const heightValue = selectedSize.is_optional_height ? parseFloat(customHeight.toString()) : selectedSize.height;
       
       const requestBody = {
         productId: product.productId,
@@ -287,6 +295,11 @@ export default function ProductDetail() {
       return;
     }
     
+    if (selectedSize.is_optional_height && (!(parseFloat(customHeight.toString()) >= 1))) {
+      setAddToCartError('Lütfen boy giriniz');
+      return;
+    }
+
     const cutTypeValue = toCanonicalCutType(selectedCutType.name);
     
     setAddToCartLoading(true);
@@ -297,7 +310,7 @@ export default function ProductDetail() {
       const authToken = token;
       
       // Boy değerini belirle
-      const heightValue = selectedSize.is_optional_height ? customHeight : selectedSize.height;
+      const heightValue = selectedSize.is_optional_height ? parseFloat(customHeight.toString()) : selectedSize.height;
       
       const requestBody = {
         productId: product.productId,
@@ -657,6 +670,7 @@ export default function ProductDetail() {
                             type="button"
                             onClick={() => {
                               setSelectedSize(size);
+                              if (size.is_optional_height) setCustomHeight('');
                               setSizeDropdownOpen(false);
                             }}
                             className={`rounded-lg border px-3.5 py-2 text-sm tabular-nums transition-all duration-200 ease-out active:scale-[0.98] ${
@@ -696,9 +710,7 @@ export default function ProductDetail() {
                             onBlur={(e) => {
                               const value = e.target.value;
                               const maxHeight = toNumber(selectedSize.height);
-                              if (value === '' || Number(value) < 1) {
-                                setCustomHeight(1);
-                              } else if (Number(value) > maxHeight) {
+                              if (value !== '' && Number(value) > maxHeight) {
                                 setCustomHeight(maxHeight);
                               }
                             }}
