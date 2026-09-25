@@ -10,6 +10,7 @@ import {
   getPurchasePriceLists,
   PurchasePriceList,
   Supplier,
+  getSuppliers,
   addToSupplierCart,
   getSupplierCart,
   deleteSupplierCartItem,
@@ -55,6 +56,15 @@ const SaticiSiparisVer = () => {
   const [cartLoading, setCartLoading] = useState(false);
   const [orderLoading, setOrderLoading] = useState(false);
   const [showPurchaseSuccessModal, setShowPurchaseSuccessModal] = useState(false);
+  const [notice, setNotice] = useState({ isOpen: false, title: '', message: '', isError: false });
+  const showNotice = (message: string, isError = true) => {
+    setNotice({
+      isOpen: true,
+      title: isError ? 'İşlem tamamlanamadı' : 'İşlem tamamlandı',
+      message,
+      isError,
+    });
+  };
   const [purchaseResult, setPurchaseResult] = useState<any>(null);
 
   const supplierId = searchParams.get('supplierId');
@@ -164,10 +174,13 @@ const SaticiSiparisVer = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [productsResult, priceListData, cartData] = await Promise.all([
-        getProducts(1, 50), // Sayfa 1, 50 ürün
+      const [productsResult, priceListData, suppliers, cartData] = await Promise.all([
+        getProducts(1, 50),
         getPurchasePriceLists(),
-        supplierId ? getSupplierCart(supplierId) : null
+        getSuppliers().catch(() => [] as Supplier[]),
+        supplierId
+          ? getSupplierCart(supplierId).catch(() => null)
+          : Promise.resolve(null)
       ]);
       
       setProducts(productsResult.data);
@@ -179,31 +192,40 @@ const SaticiSiparisVer = () => {
         setPriceList(priceListData[0]);
       }
 
-      // Sepet verilerini yükle
+      const supplierFromList = suppliers.find((supplier) => supplier.id === supplierId) || null;
+
       if (cartData) {
         setSupplierCart(cartData.data.cart.items);
         setCartTotal(cartData.data.total.amount);
+      } else {
+        setSupplierCart([]);
+        setCartTotal(0);
+      }
+
+      if (supplierFromList) {
+        setSelectedSupplier(supplierFromList);
+      } else if (cartData?.data?.cart?.supplier) {
+        const cartSupplier = cartData.data.cart.supplier;
         setSelectedSupplier({
-          id: cartData.data.cart.supplier.id,
-          name: cartData.data.cart.supplier.name,
-          company_name: cartData.data.cart.supplier.company_name,
-          phone: '0555 123 45 67', // API'den gelmiyor
-          address: '', // API'den gelmiyor
-          balance: parseFloat(cartData.data.cart.supplier.balance),
+          id: cartSupplier.id,
+          name: cartSupplier.name,
+          company_name: cartSupplier.company_name,
+          phone: '',
+          address: '',
+          balance: parseFloat(cartSupplier.balance),
           currency: 'USD',
-          notes: '', // API'den gelmiyor
+          notes: '',
           is_active: true,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           purchasePriceLists: []
         });
-      } else {
-        // Satıcı bilgilerini URL'den al (şimdilik mock data)
+      } else if (supplierId) {
         setSelectedSupplier({
-          id: supplierId || '',
-          name: 'Seçilen Satıcı',
-          company_name: 'Satıcı Firma',
-          phone: '0555 123 45 67',
+          id: supplierId,
+          name: '',
+          company_name: '',
+          phone: '',
           address: '',
           balance: 0,
           currency: 'USD',
@@ -302,12 +324,12 @@ const SaticiSiparisVer = () => {
   const handleAddToCart = async () => {
     // Validasyon kontrolleri
     if (!selectedProduct || !supplierId || !selectedSize || !selectedCutType) {
-      alert('Lütfen tüm gerekli alanları doldurun (boyut, kesim türü)');
+      showNotice('Lütfen tüm gerekli alanları doldurun (boyut, kesim türü)');
       return;
     }
     
     if (productForm.quantity <= 0) {
-      alert('Lütfen geçerli bir miktar girin');
+      showNotice('Lütfen geçerli bir miktar girin');
       return;
     }
 
@@ -318,7 +340,7 @@ const SaticiSiparisVer = () => {
     if (selectedSize.is_optional_height) {
       const heightValue = parseFloat(customHeight.toString());
       if (!heightValue || heightValue < 1) {
-        alert('Lütfen boy giriniz');
+        showNotice('Lütfen boy giriniz');
         return;
       }
       height = heightValue;
@@ -368,7 +390,7 @@ const SaticiSiparisVer = () => {
       });
     } catch (err) {
       console.error('Ürün sepete eklenirken hata oluştu:', err);
-      alert('Ürün sepete eklenirken bir hata oluştu');
+      showNotice('Ürün sepete eklenirken bir hata oluştu');
     } finally {
       setCartLoading(false);
     }
@@ -388,7 +410,7 @@ const SaticiSiparisVer = () => {
       setCartTotal(cartData.data.total.amount);
     } catch (err) {
       console.error('Ürün sepetten çıkarılırken hata oluştu:', err);
-      alert('Ürün sepetten çıkarılırken bir hata oluştu');
+      showNotice('Ürün sepetten çıkarılırken bir hata oluştu');
     } finally {
       setCartLoading(false);
     }
@@ -409,7 +431,7 @@ const SaticiSiparisVer = () => {
       setCartTotal(cartData.data.total.amount);
     } catch (err) {
       console.error('Sepet temizlenirken hata oluştu:', err);
-      alert('Sepet temizlenirken bir hata oluştu');
+      showNotice('Sepet temizlenirken bir hata oluştu');
     } finally {
       setCartLoading(false);
     }
@@ -417,8 +439,8 @@ const SaticiSiparisVer = () => {
 
   // Sipariş oluştur
   const handleCreateOrder = async () => {
-    if (!selectedSupplier || !supplierId) {
-      alert('Satıcı bilgisi bulunamadı!');
+    if (!supplierId) {
+      showNotice('Satıcı bilgisi bulunamadı!');
       return;
     }
 
@@ -428,7 +450,7 @@ const SaticiSiparisVer = () => {
       const currentCartData = await getSupplierCart(supplierId);
       
       if (!currentCartData.data.cart.items || currentCartData.data.cart.items.length === 0) {
-        alert('Sepet boş! Lütfen önce ürün ekleyin.');
+        showNotice('Sepet boş! Lütfen önce ürün ekleyin.');
         setOrderLoading(false);
         return;
       }
@@ -453,7 +475,7 @@ const SaticiSiparisVer = () => {
       
     } catch (err) {
       console.error('Sipariş oluşturma hatası:', err);
-      alert('Sipariş oluşturulurken bir hata oluştu');
+      showNotice('Sipariş oluşturulurken bir hata oluştu');
     } finally {
       setOrderLoading(false);
     }
@@ -1033,6 +1055,23 @@ const SaticiSiparisVer = () => {
                     Satın Alım İşlemlerine Git
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {notice.isOpen && (
+          <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-xl border border-slate-200/80 bg-white p-6">
+              <h3 className="mb-3 text-lg font-semibold tracking-tight text-slate-900">{notice.title}</h3>
+              <p className={`mb-6 text-sm ${notice.isError ? 'text-rose-700' : 'text-slate-500'}`}>{notice.message}</p>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setNotice((prev) => ({ ...prev, isOpen: false }))}
+                  className="rounded-lg bg-[#00365a] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#004170]"
+                >
+                  Tamam
+                </button>
               </div>
             </div>
           </div>

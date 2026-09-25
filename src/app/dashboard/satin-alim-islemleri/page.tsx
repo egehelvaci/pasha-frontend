@@ -38,6 +38,15 @@ export default function SatinAlimIslemleriPage() {
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
   const [isModalLoading, setIsModalLoading] = useState(false);
+  const [notice, setNotice] = useState({ isOpen: false, title: '', message: '', isError: false });
+  const showNotice = (message: string, isError = false) => {
+    setNotice({
+      isOpen: true,
+      title: isError ? 'İşlem tamamlanamadı' : 'İşlem tamamlandı',
+      message,
+      isError,
+    });
+  };
 
   // Payment modal states
   const [selectedPaymentSupplier, setSelectedPaymentSupplier] = useState<Supplier | null>(null);
@@ -145,7 +154,7 @@ export default function SatinAlimIslemleriPage() {
       setIsDeleteModalOpen(false);
       setSupplierToDelete(null);
     } catch (error) {
-      alert('Satıcı silinirken bir hata oluştu');
+      showNotice('Satıcı silinirken bir hata oluştu', true);
     } finally {
       setIsModalLoading(false);
     }
@@ -205,7 +214,7 @@ export default function SatinAlimIslemleriPage() {
   // Ödeme işlemini onayla
   const handlePaymentConfirm = async () => {
     if (!selectedPaymentSupplier || !tlAmount || !exchangeRate) {
-      alert('Lütfen tüm alanları doldurun');
+      showNotice('Lütfen tüm alanları doldurun', true);
       return;
     }
 
@@ -226,9 +235,9 @@ export default function SatinAlimIslemleriPage() {
       await updateSupplierBalance(selectedPaymentSupplier.id, balanceUpdate);
       await loadData(); // Verileri yenile
       closePaymentModal();
-      alert('Ödeme başarıyla gerçekleştirildi');
+      showNotice('Ödeme başarıyla gerçekleştirildi');
     } catch (err) {
-      alert('Ödeme işlemi sırasında bir hata oluştu');
+      showNotice('Ödeme işlemi sırasında bir hata oluştu', true);
     } finally {
       setIsPaymentLoading(false);
     }
@@ -782,6 +791,23 @@ export default function SatinAlimIslemleriPage() {
                     <span>İşlemi Onayla</span>
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {notice.isOpen && (
+          <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-xl border border-slate-200/80 bg-white p-6">
+              <h3 className="mb-3 text-lg font-semibold tracking-tight text-slate-900">{notice.title}</h3>
+              <p className={`mb-6 text-sm ${notice.isError ? 'text-rose-700' : 'text-slate-500'}`}>{notice.message}</p>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setNotice((prev) => ({ ...prev, isOpen: false }))}
+                  className="rounded-lg bg-[#00365a] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#004170]"
+                >
+                  Tamam
+                </button>
               </div>
             </div>
           </div>
