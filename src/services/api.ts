@@ -468,6 +468,12 @@ export interface AdminOrderProduct {
     availableAreaM2?: number;
     reservedAreaM2?: number;
     consumableAreaM2?: number;
+    widths?: Array<{
+      width: number;
+      availableAreaM2?: number;
+      reservedAreaM2?: number;
+      consumableAreaM2?: number;
+    }>;
   };
   productvariations?: Array<{
     id: number;

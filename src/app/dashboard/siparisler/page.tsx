@@ -327,6 +327,18 @@ const translateCutType = (cutType: string): string => {
   return translations[cutType.toLowerCase()] || (cutType.charAt(0).toUpperCase() + cutType.slice(1) + ' Kesim');
 };
 
+const APPROVED_ORDER_STATUSES = ['CONFIRMED', 'READY', 'SHIPPED', 'DELIVERED'];
+
+const isCargoStoreOrder = (order: Order) => {
+  const storeType = (
+    order.user?.Store?.store_type ||
+    (order as { store_info?: { store_type?: string }; store_type?: string }).store_info?.store_type ||
+    (order as { store_type?: string }).store_type ||
+    ''
+  ).toString().toUpperCase();
+  return storeType === 'KARGO';
+};
+
 const Siparisler = () => {
   const { user, isAdmin, isAdminOrEditor, isLoading: authLoading } = useAuth();
   const token = useToken();
@@ -2382,6 +2394,7 @@ const Siparisler = () => {
   // Sayfa değiştirme
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // API'den sipariş fişi alma fonksiyonu
@@ -2472,7 +2485,7 @@ const Siparisler = () => {
 
         {/* Admin/Editor Statü Rozetleri — tıklanınca ilgili siparişler yüklenir */}
         {isAdminOrEditor && fixedStats && (
-          <div className="mb-6 grid grid-cols-2 gap-2.5 sm:mb-8 sm:gap-3 md:grid-cols-3 lg:grid-cols-7">
+          <div className="mb-6 grid grid-cols-2 gap-2.5 sm:mb-8 sm:gap-3 md:grid-cols-3 lg:grid-cols-5">
             <button
               type="button"
               onClick={handleShowAllOrders}
@@ -2508,30 +2521,6 @@ const Siparisler = () => {
             >
               <div className="text-xl font-semibold tabular-nums text-slate-800 sm:text-2xl">{fixedStats.confirmed}</div>
               <div className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-500">Onaylandı</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleStatusFilter('READY')}
-              className={`rounded-xl border p-3.5 text-left transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-400/30 active:scale-[0.99] sm:p-4 ${
-                statusFilter === 'READY'
-                  ? 'border-stone-300/80 bg-stone-100'
-                  : 'border-stone-200/70 bg-stone-50/70 hover:bg-stone-100/80'
-              }`}
-            >
-              <div className="text-xl font-semibold tabular-nums text-stone-800 sm:text-2xl">{fixedStats.ready}</div>
-              <div className="mt-1 text-xs font-medium uppercase tracking-wide text-stone-500">Hazır</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleStatusFilter('SHIPPED')}
-              className={`rounded-xl border p-3.5 text-left transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/30 active:scale-[0.99] sm:p-4 ${
-                statusFilter === 'SHIPPED'
-                  ? 'border-sky-300/70 bg-sky-50'
-                  : 'border-sky-200/50 bg-sky-50/40 hover:bg-sky-50/80'
-              }`}
-            >
-              <div className="text-xl font-semibold tabular-nums text-sky-900/80 sm:text-2xl">{fixedStats.shipped}</div>
-              <div className="mt-1 text-xs font-medium uppercase tracking-wide text-sky-700/70">Gönderildi</div>
             </button>
             <button
               type="button"
@@ -2694,7 +2683,7 @@ const Siparisler = () => {
                     >
                       <span className="text-slate-500">Tüm Durumlar</span>
                     </div>
-                    {Object.entries(statusLabels).map(([status, label]) => (
+                    {Object.entries(statusLabels).filter(([status]) => status !== 'READY' && status !== 'SHIPPED').map(([status, label]) => (
                       <div
                         key={status}
                         className={`flex cursor-pointer items-center justify-between px-3 py-2.5 text-sm transition-colors duration-150 hover:bg-stone-50 ${
@@ -3425,8 +3414,8 @@ const Siparisler = () => {
                       </button>
                     )}
 
-                    {/* Kargo Fişi Butonu - Sadece admin/editor için ve DELIVERED durumunda */}
-                    {isAdminOrEditor && order.status === 'DELIVERED' && (
+                    {/* Kargo fişi: onaylanmış siparişlerde, yalnızca mağaza türü kargo ise */}
+                    {isAdminOrEditor && APPROVED_ORDER_STATUSES.includes(order.status) && isCargoStoreOrder(order) && (
                       <button
                         onClick={() => {
                           setSelectedOrderForCargo(order);
@@ -3568,8 +3557,20 @@ const Siparisler = () => {
           </div>
         ) : null}
 
-        {/* Sayfalama - Mağaza filtresi aktif değilken göster */}
-        {!loading && ordersData && ordersData.pagination && ordersData.pagination.totalPages > 1 && (
+        {/* Sayfalama yalnızca birden fazla sayfa gerektiğinde */}
+        {(() => {
+          if (loading || !ordersData?.pagination || !filteredOrders?.orders?.length) return null;
+          const limit = Number(ordersData.pagination.limit) || PAGE_LIMIT;
+          const total = Number(ordersData.pagination.total) || 0;
+          const page = Number(ordersData.pagination.page) || 1;
+          const reportedPages = Number(ordersData.pagination.totalPages) || 0;
+          const visibleCount = filteredOrders.orders.length;
+          const fitsOnOnePage = total > 0
+            ? total <= limit
+            : visibleCount < limit && page <= 1 && !ordersData.pagination.hasNext;
+          const hasMultiplePages = reportedPages > 1 || page > 1 || Boolean(ordersData.pagination.hasNext) || total > limit;
+          if (fitsOnOnePage || !hasMultiplePages) return null;
+          return (
           <div className="mt-6 flex justify-center sm:mt-8">
             <div className="flex flex-wrap items-center justify-center gap-2">
               <button
@@ -3617,7 +3618,8 @@ const Siparisler = () => {
               </button>
             </div>
           </div>
-        )}
+          );
+        })()}
 
         {/* Sipariş Detay Modal */}
         {selectedOrder && (
@@ -4524,6 +4526,18 @@ const Siparisler = () => {
                     )}
                   </div>
                   <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                    {isAdminOrEditor && APPROVED_ORDER_STATUSES.includes(selectedOrder.status) && isCargoStoreOrder(selectedOrder) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedOrderForCargo(selectedOrder);
+                          setCargoReceiptVisible(true);
+                        }}
+                        className="rounded-lg border border-slate-200/80 bg-slate-700/90 px-4 py-2 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/30 active:scale-[0.98]"
+                      >
+                        Kargo Fişi
+                      </button>
+                    )}
                     {isAdminOrEditor && selectedOrder.status !== 'DELIVERED' && selectedOrder.status !== 'CANCELED' && (
                       <button
                         type="button"

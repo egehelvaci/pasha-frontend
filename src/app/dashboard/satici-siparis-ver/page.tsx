@@ -19,12 +19,13 @@ import {
   SupplierCartItem as ApiSupplierCartItem,
   SupplierCartResponse
 } from '@/services/api';
+import { formatSizeOptionLabel, formatStockM2, getConsumableAreaM2ForWidth, isCommonStockEnabled, sortSizeOptionsByWidth, toNumber } from '@/app/utils/productStock';
 
 
 const SaticiSiparisVer = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isAdmin, isAdminOrEditor, user, isLoading: authLoading } = useAuth();
+  const { isAdmin, isAdminOrEditor, user, token, isLoading: authLoading } = useAuth();
   const canSeePurchasePrices = isAdmin;
   
   const [products, setProducts] = useState<Product[]>([]);
@@ -119,11 +120,8 @@ const SaticiSiparisVer = () => {
   useEffect(() => {
     if (showAddProductModal && selectedProduct) {
       // Default olarak ilk boyut seçeneğini seç
-      if (selectedProduct.sizeOptions && selectedProduct.sizeOptions.length > 0) {
-        setSelectedSize(selectedProduct.sizeOptions[0]);
-      } else {
-        setSelectedSize(null);
-      }
+      const sizes = sortSizeOptionsByWidth(selectedProduct.sizeOptions || []);
+      setSelectedSize(sizes[0] ?? null);
       
       // Default olarak ilk kesim türünü seç
       if (selectedProduct.cutTypes && selectedProduct.cutTypes.length > 0) {
@@ -144,7 +142,7 @@ const SaticiSiparisVer = () => {
         notes: ''
       });
     }
-  }, [showAddProductModal, selectedProduct]);
+  }, [showAddProductModal, selectedProduct?.productId]);
 
   // Dropdown'ların dışına tıklandığında kapanması
   useEffect(() => {
@@ -258,6 +256,43 @@ const SaticiSiparisVer = () => {
   const filteredProducts = products;
 
   // Ürün fiyatını al (purchasePricing'dan)
+  const openAddProductModal = async (product: Product) => {
+    const sizes = sortSizeOptionsByWidth(product.sizeOptions || []);
+    setSelectedProduct(product);
+    setSelectedSize(sizes[0] ?? null);
+    setCustomHeight('');
+    setProductForm({ quantity: 1, notes: '' });
+    setShowAddProductModal(true);
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/products/${product.productId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      if (!res.ok) return;
+      const payload = await res.json();
+      const detail = payload.data || payload;
+      if (!detail?.productId) return;
+      setSelectedProduct((prev) => {
+        if (!prev || prev.productId !== product.productId) return prev;
+        return {
+          ...prev,
+          stock: detail.stock ?? prev.stock,
+          sizeOptions: detail.sizeOptions ?? prev.sizeOptions,
+          cutTypes: detail.cutTypes ?? prev.cutTypes,
+          canHaveFringe: detail.canHaveFringe ?? prev.canHaveFringe,
+        } as Product;
+      });
+      const detailSizes = Array.isArray(detail.sizeOptions)
+        ? sortSizeOptionsByWidth(detail.sizeOptions as Array<{ id: number; width: number; height: number; is_optional_height?: boolean }>)
+        : [];
+      if (detailSizes[0]) {
+        setSelectedSize((current: typeof selectedSize) => current ?? detailSizes[0]);
+      }
+    } catch {
+      // Liste kaydı açık kalır.
+    }
+  };
+
   const getProductPrice = (product: Product) => {
     if (!product.purchasePricing) return 0;
     return parseFloat(product.purchasePricing.price_per_square_meter.toString());
@@ -622,10 +657,7 @@ const SaticiSiparisVer = () => {
                   </div>
                   <button
                     type="button"
-                    onClick={() => {
-                      setSelectedProduct(product);
-                      setShowAddProductModal(true);
-                    }}
+                    onClick={() => openAddProductModal(product)}
                     className="inline-flex shrink-0 items-center justify-center rounded-lg bg-[#00365a] px-2.5 py-1.5 text-[11px] font-medium text-white transition-all duration-200 ease-out hover:bg-[#004170] focus-visible:ring-2 focus-visible:ring-[#00365a]/25 active:scale-[0.98]"
                   >
                     Sepete Ekle
@@ -708,67 +740,96 @@ const SaticiSiparisVer = () => {
                 {/* Boyut */}
                 <div className="dropdown-container">
                   <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-slate-500">Boyut</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {selectedProduct.sizeOptions?.map((size: any) => {
-                      const isSelected = selectedSize?.id === size.id;
-                      const label = size.is_optional_height
-                        ? `${size.width} × Özel`
-                        : `${size.width} × ${size.height}`;
-
-                      return (
-                        <button
-                          key={size.id}
-                          type="button"
+                  {isCommonStockEnabled(selectedProduct) && selectedSize && (
+                    <p className="mb-2 text-sm text-slate-600">
+                      Mevcut stok: <span className="font-semibold tabular-nums text-slate-900">{getConsumableAreaM2ForWidth(selectedProduct, toNumber(selectedSize.width)).toFixed(2)} m²</span>
+                    </p>
+                  )}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setSizeDropdownOpen(!sizeDropdownOpen)}
+                      className="w-full rounded-lg border border-slate-200/80 bg-white px-3 py-2.5 pr-9 text-left text-sm tabular-nums transition hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20"
+                    >
+                      <span className="flex items-center justify-between gap-3 pr-4 text-slate-900">
+                        <span>{selectedSize ? formatSizeOptionLabel(selectedSize) : 'Boyut seçin'}</span>
+                        {selectedSize && isCommonStockEnabled(selectedProduct) && (
+                          <span className="inline-flex items-baseline gap-1 text-xs font-normal">
+                            <span className="tabular-nums text-slate-400">{formatStockM2(getConsumableAreaM2ForWidth(selectedProduct, toNumber(selectedSize.width)))}</span>
+                            <span className="text-rose-600">stok</span>
+                          </span>
+                        )}
+                      </span>
+                      <svg className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-transform ${sizeDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {sizeDropdownOpen && (
+                      <div className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200/80 bg-white py-1 shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
+                        {sortSizeOptionsByWidth(selectedProduct.sizeOptions || []).map((size) => (
+                          <button
+                            key={size.id}
+                            type="button"
                             onClick={() => {
-                            setSelectedSize(size);
-                            if (size.is_optional_height) setCustomHeight('');
-                            setSizeDropdownOpen(false);
-                          }}
-                          className={`rounded-md border px-2.5 py-1.5 text-xs tabular-nums transition-all duration-200 ease-out active:scale-[0.98] ${
-                            isSelected
-                              ? 'border-[#00365a] bg-[#00365a] font-medium text-white'
-                              : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      );
-                    })}
+                              setSelectedSize(size);
+                              if (size.is_optional_height) setCustomHeight('');
+                              setSizeDropdownOpen(false);
+                            }}
+                            className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm tabular-nums transition hover:bg-slate-50 ${
+                              selectedSize?.id === size.id ? 'bg-[#00365a]/[0.08] font-medium text-[#00365a]' : 'text-slate-700'
+                            }`}
+                          >
+                            <span>{formatSizeOptionLabel(size)}</span>
+                            {isCommonStockEnabled(selectedProduct) && (
+                              <span className="inline-flex items-baseline gap-1 text-xs font-normal">
+                                <span className="tabular-nums text-slate-400">{formatStockM2(getConsumableAreaM2ForWidth(selectedProduct, toNumber(size.width)))}</span>
+                                <span className="text-rose-600">stok</span>
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {selectedSize && selectedSize.is_optional_height && (
-                    <div className="mt-2.5 flex items-center gap-2">
-                      <label className="shrink-0 text-xs text-slate-500">Boy</label>
-                      <div className="flex h-9 max-w-[120px] items-center overflow-hidden rounded-lg border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-[#00365a]/20">
-                        <input
-                          type="number"
-                          min="10"
-                          max="10000"
-                          value={customHeight}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            if (value === '') {
-                              setCustomHeight('');
-                            } else {
-                              const numValue = Number(value);
-                              if (numValue >= 10) {
-                                setCustomHeight(numValue);
-                              } else if (value.length <= 1) {
-                                setCustomHeight(value);
+                    <div className="mt-2.5 flex flex-col gap-1.5">
+                      <div className="flex items-center gap-2">
+                        <label className="shrink-0 text-xs text-slate-500">Boy</label>
+                        <div className="flex h-9 max-w-[120px] items-center overflow-hidden rounded-lg border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-[#00365a]/20">
+                          <input
+                            type="number"
+                            min="1"
+                            max={toNumber(selectedSize.height) > 0 ? toNumber(selectedSize.height) : undefined}
+                            value={customHeight}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === '') {
+                                setCustomHeight('');
+                              } else {
+                                const numValue = Number(value);
+                                const maxHeight = toNumber(selectedSize.height);
+                                if (numValue >= 1 && (maxHeight <= 0 || numValue <= maxHeight)) {
+                                  setCustomHeight(numValue);
+                                } else if (value.length <= 1) {
+                                  setCustomHeight(value);
+                                }
                               }
-                            }
-                          }}
-                          onBlur={(e) => {
-                            const value = e.target.value;
-                            if (value === '' || Number(value) < 10) {
-                              setCustomHeight('');
-                            }
-                          }}
-                          className="h-full w-full bg-transparent px-2.5 text-sm tabular-nums text-slate-900 outline-none"
-                          aria-label="Boy (cm)"
-                        />
-                        <span className="pr-2.5 text-xs text-slate-400">cm</span>
+                            }}
+                            onBlur={(e) => {
+                              const value = e.target.value;
+                              const maxHeight = toNumber(selectedSize.height);
+                              if (value !== '' && maxHeight > 0 && Number(value) > maxHeight) {
+                                setCustomHeight(maxHeight);
+                              }
+                            }}
+                            className="h-full w-full bg-transparent px-2.5 text-sm tabular-nums text-slate-900 outline-none"
+                            aria-label="Boy (cm)"
+                          />
+                          <span className="pr-2.5 text-xs text-slate-400">cm</span>
+                        </div>
                       </div>
+                      <p className="text-xs font-medium text-rose-600">Lütfen boy giriniz.</p>
                     </div>
                   )}
                 </div>

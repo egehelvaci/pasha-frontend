@@ -24,7 +24,7 @@ import {
   createStoreAddress,
   CreateStoreAddressRequest
 } from '@/services/api';
-import { getConsumableAreaM2, getStockWarning, isCommonStockEnabled, isProductOutOfStock, toCanonicalCutType, toNumber } from '@/app/utils/productStock';
+import { formatSizeOptionLabel, formatStockM2, getConsumableAreaM2, getConsumableAreaM2ForWidth, getStockWarning, isCommonStockEnabled, isProductOutOfStock, sortSizeOptionsByWidth, toCanonicalCutType, toNumber } from '@/app/utils/productStock';
 
 interface CartItem {
   productId: string;
@@ -44,7 +44,7 @@ interface CartItem {
 const AdminSiparisOlustur = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isAdmin, user, isLoading: authLoading } = useAuth();
+  const { isAdmin, user, token, isLoading: authLoading } = useAuth();
   const { refreshCart } = useCart();
   
   const [orderData, setOrderData] = useState<AdminOrderCreateData | null>(null);
@@ -362,20 +362,65 @@ const AdminSiparisOlustur = () => {
     }
   };
 
-  const openAddProductModal = (product: AdminOrderProduct | Product) => {
-    const isAdminProduct = 'pricing' in product;
-    
-    setSelectedProduct(product);
+  const selectFirstSize = (product: AdminOrderProduct | Product) => {
+    const sizes = 'sizeOptions' in product && Array.isArray(product.sizeOptions)
+      ? sortSizeOptionsByWidth(product.sizeOptions)
+      : [];
+    const first = sizes[0];
     setProductForm({
       quantity: 1,
-      width: isAdminProduct ? product.sizeOptions[0]?.width || 80 : product.width || 80,
-      height: isAdminProduct ? (product.sizeOptions[0]?.is_optional_height ? '' : product.sizeOptions[0]?.height || 100) : product.height || 100,
-      selectedSizeId: isAdminProduct ? product.sizeOptions[0]?.id ?? null : null,
-      hasFringe: isAdminProduct ? product.canHaveFringe : false,
-      cutType: isAdminProduct ? product.cutTypes[0]?.name || 'standart' : 'standart',
+      width: first?.width || ('width' in product ? toNumber(product.width, 80) : 80),
+      height: first?.is_optional_height ? '' : (first?.height || ('height' in product ? product.height : 100) || 100),
+      selectedSizeId: first?.id ?? null,
+      hasFringe: 'canHaveFringe' in product ? Boolean(product.canHaveFringe) : false,
+      cutType: 'cutTypes' in product && product.cutTypes?.[0]?.name ? product.cutTypes[0].name : 'standart',
       notes: ''
     });
+    return first?.id ?? null;
+  };
+
+  const openAddProductModal = async (product: AdminOrderProduct | Product) => {
+    setSelectedProduct(product);
+    const initialSizeId = selectFirstSize(product);
     setShowAddProductModal(true);
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/products/${product.productId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      if (!res.ok) return;
+      const payload = await res.json();
+      const detail = payload.data || payload;
+      if (!detail?.productId) return;
+
+      setSelectedProduct((prev) => {
+        if (!prev || prev.productId !== product.productId) return prev;
+        return {
+          ...prev,
+          stock: detail.stock ?? ('stock' in prev ? prev.stock : undefined),
+          sizeOptions: detail.sizeOptions ?? ('sizeOptions' in prev ? prev.sizeOptions : []),
+          cutTypes: detail.cutTypes ?? ('cutTypes' in prev ? prev.cutTypes : []),
+          canHaveFringe: detail.canHaveFringe ?? ('canHaveFringe' in prev ? prev.canHaveFringe : false),
+        } as AdminOrderProduct | Product;
+      });
+
+      const sizes = Array.isArray(detail.sizeOptions)
+        ? sortSizeOptionsByWidth(detail.sizeOptions as Array<{ id: number; width: number; height: number; is_optional_height?: boolean }>)
+        : [];
+      const first = sizes[0];
+      if (!first) return;
+      setProductForm((prev) => {
+        if (prev.selectedSizeId && prev.selectedSizeId !== initialSizeId) return prev;
+        return {
+          ...prev,
+          width: toNumber(first.width),
+          height: first.is_optional_height ? '' : toNumber(first.height),
+          selectedSizeId: first.id,
+        };
+      });
+    } catch {
+      // Liste kaydı açık kalır; detay stok bilgisi gelmezse mevcut ürün kullanılır.
+    }
   };
 
   const handleRemoveFromAdminCart = async (adminCartItemId: number) => {
@@ -1064,40 +1109,63 @@ const AdminSiparisOlustur = () => {
                         <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Boyut</span>
                         {isCommonStockEnabled(selectedProduct) && (
                           <p className="text-sm text-slate-600">
-                            Mevcut stok: <span className="font-semibold tabular-nums text-slate-900">{getConsumableAreaM2(selectedProduct).toFixed(2)} m²</span>
+                            Mevcut stok: <span className="font-semibold tabular-nums text-slate-900">{getConsumableAreaM2ForWidth(selectedProduct, toNumber(productForm.width)).toFixed(2)} m²</span>
                           </p>
                         )}
-                        <div className="flex flex-wrap gap-1.5">
+                        <div className="relative dropdown-container">
                           {selectedProduct.sizeOptions && selectedProduct.sizeOptions.length > 0 ? (
-                            selectedProduct.sizeOptions.map((option: any) => {
-                              const isSelected = productForm.selectedSizeId === option.id;
-                              const label = option.is_optional_height
-                                ? `${option.width} × Özel`
-                                : `${option.width} × ${option.height}`;
-
-                              return (
-                                <button
-                                  key={option.id}
-                                  type="button"
-                                  onClick={() => {
-                                    setProductForm(prev => ({
-                                      ...prev,
-                                      width: option.width,
-                                      height: option.is_optional_height ? '' : option.height,
-                                      selectedSizeId: option.id
-                                    }));
-                                    setSizeDropdownOpen(false);
-                                  }}
-                                  className={`rounded-md border px-2.5 py-1.5 text-xs tabular-nums transition-all duration-200 ease-out active:scale-[0.98] ${
-                                    isSelected
-                                      ? 'border-[#00365a] bg-[#00365a] font-medium text-white'
-                                      : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-stone-50'
-                                  }`}
-                                >
-                                  {label}
-                                </button>
-                              );
-                            })
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => setSizeDropdownOpen(!sizeDropdownOpen)}
+                                className="w-full rounded-lg border border-slate-200/80 bg-white px-3 py-2.5 pr-9 text-left text-sm tabular-nums transition hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20"
+                              >
+                                <span className="flex items-center justify-between gap-3 pr-4 text-slate-900">
+                                  {(() => {
+                                    const selected = selectedProduct.sizeOptions.find((option: any) => option.id === productForm.selectedSizeId);
+                                    if (!selected) return 'Boyut seçin';
+                                    return (
+                                      <>
+                                        <span>{formatSizeOptionLabel(selected)}</span>
+                                        {isCommonStockEnabled(selectedProduct) && (
+                                          <span className="inline-flex items-baseline gap-1 text-xs font-normal"><span className="tabular-nums text-slate-400">{formatStockM2(getConsumableAreaM2ForWidth(selectedProduct, toNumber(selected.width)))}</span><span className="text-rose-600">stok</span></span>
+                                        )}
+                                      </>
+                                    );
+                                  })()}
+                                </span>
+                                <svg className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-transform ${sizeDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </button>
+                              {sizeDropdownOpen && (
+                                <div className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200/80 bg-white py-1 shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
+                                  {sortSizeOptionsByWidth(selectedProduct.sizeOptions).map((option: any) => (
+                                    <button
+                                      key={option.id}
+                                      type="button"
+                                      onClick={() => {
+                                        setProductForm(prev => ({
+                                          ...prev,
+                                          width: option.width,
+                                          height: option.is_optional_height ? '' : option.height,
+                                          selectedSizeId: option.id
+                                        }));
+                                        setSizeDropdownOpen(false);
+                                      }}
+                                      className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm tabular-nums transition hover:bg-slate-50 ${
+                                        productForm.selectedSizeId === option.id ? 'bg-[#00365a]/[0.08] font-medium text-[#00365a]' : 'text-slate-700'
+                                      }`}
+                                    >
+                                      <span>{formatSizeOptionLabel(option)}</span>
+                                      {isCommonStockEnabled(selectedProduct) && (
+                                        <span className="inline-flex items-baseline gap-1 text-xs font-normal"><span className="tabular-nums text-slate-400">{formatStockM2(getConsumableAreaM2ForWidth(selectedProduct, toNumber(option.width)))}</span><span className="text-rose-600">stok</span></span>
+                                      )}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </>
                           ) : (
                             <span className="text-xs text-slate-400">Bu ürün için boyut seçenekleri mevcut değil</span>
                           )}
@@ -1111,7 +1179,13 @@ const AdminSiparisOlustur = () => {
                               <input
                                 type="number"
                                 min="1"
-                                max={('sizeOptions' in selectedProduct) ? selectedProduct.sizeOptions?.find((s: any) => s.width === productForm.width && s.is_optional_height)?.height : undefined}
+                                max={(() => {
+                                  const option = ('sizeOptions' in selectedProduct)
+                                    ? selectedProduct.sizeOptions?.find((s: any) => s.id === productForm.selectedSizeId)
+                                    : undefined;
+                                  const maxHeight = toNumber(option?.height);
+                                  return maxHeight > 0 ? maxHeight : undefined;
+                                })()}
                                 value={productForm.height}
                                 onChange={(e) => {
                                   const value = e.target.value;
@@ -1119,9 +1193,10 @@ const AdminSiparisOlustur = () => {
                                 }}
                                 onBlur={(e) => {
                                   const value = e.target.value;
-                                  const maxHeight = ('sizeOptions' in selectedProduct)
-                                    ? toNumber(selectedProduct.sizeOptions?.find((s: any) => s.width === productForm.width && s.is_optional_height)?.height)
-                                    : 0;
+                                  const option = ('sizeOptions' in selectedProduct)
+                                    ? selectedProduct.sizeOptions?.find((s: any) => s.id === productForm.selectedSizeId)
+                                    : undefined;
+                                  const maxHeight = toNumber(option?.height);
                                   if (value !== '' && maxHeight > 0 && Number(value) > maxHeight) {
                                     setProductForm(prev => ({ ...prev, height: String(maxHeight) }));
                                   }

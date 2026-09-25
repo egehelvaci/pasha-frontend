@@ -9,7 +9,7 @@ import { useCart } from '@/app/context/CartContext';
 import { useSiteSettings } from '@/app/context/SiteSettingsContext';
 import { getProductRules, ProductRule } from '@/services/api';
 import { useToken } from '@/app/hooks/useToken';
-import { getConsumableAreaM2, getStockWarning, isCommonStockEnabled, isProductOutOfStock, toCanonicalCutType, toNumber } from '@/app/utils/productStock';
+import { formatSizeOptionLabel, formatStockM2, getConsumableAreaM2ForWidth, getStockWarning, isCommonStockEnabled, isProductOutOfStock, sortSizeOptionsByWidth, toCanonicalCutType, toNumber } from '@/app/utils/productStock';
 
 // API Base URL
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://pashahomeapps.up.railway.app";
@@ -1319,36 +1319,49 @@ export default function ProductList() {
                       <span className="text-sm font-medium text-slate-900">Boyut</span>
                       {siteSettingsLoaded && !hideStock && isCommonStockEnabled(product) && (
                         <p className="text-sm text-slate-600">
-                          Mevcut stok: <span className="font-semibold tabular-nums text-slate-900">{getConsumableAreaM2(product).toFixed(2)} m²</span>
+                          Mevcut stok: <span className="font-semibold tabular-nums text-slate-900">{getConsumableAreaM2ForWidth(product, toNumber(selectedSize?.width)).toFixed(2)} m²</span>
                         </p>
                       )}
 
-                      <div className="flex flex-wrap gap-2">
-                        {product.sizeOptions?.map((size: any) => {
-                          const isSelected = selectedSize?.id === size.id;
-                          const label = size.is_optional_height
-                            ? `${size.width} × Özel`
-                            : `${size.width} × ${size.height}`;
-
-                          return (
-                            <button
-                              key={size.id}
-                              type="button"
-                              onClick={() => {
-                                setSelectedSize(size);
-                                if (size.is_optional_height) setCustomHeight('');
-                                setSizeDropdownOpen(false);
-                              }}
-                              className={`rounded-lg border px-3.5 py-2 text-sm tabular-nums transition-all duration-200 ease-out active:scale-[0.98] ${
-                                isSelected
-                                  ? 'border-[#00365a] bg-[#00365a] font-medium text-white'
-                                  : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
-                              }`}
-                            >
-                              {label}
-                            </button>
-                          );
-                        })}
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setSizeDropdownOpen(!sizeDropdownOpen)}
+                          className="w-full rounded-lg border border-slate-200/80 bg-white px-3 py-2.5 pr-9 text-left text-sm tabular-nums transition hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/20"
+                        >
+                          <span className={`flex items-center justify-between gap-3 pr-4 ${selectedSize ? 'text-slate-900' : 'text-slate-500'}`}>
+                            <span>{selectedSize ? formatSizeOptionLabel(selectedSize) : 'Boyut seçin'}</span>
+                            {selectedSize && siteSettingsLoaded && !hideStock && isCommonStockEnabled(product) && (
+                              <span className="inline-flex items-baseline gap-1 text-xs font-normal"><span className="tabular-nums text-slate-400">{formatStockM2(getConsumableAreaM2ForWidth(product, toNumber(selectedSize.width)))}</span><span className="text-rose-600">stok</span></span>
+                            )}
+                          </span>
+                          <svg className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-transform ${sizeDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                        {sizeDropdownOpen && (
+                          <div className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200/80 bg-white py-1 shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
+                            {sortSizeOptionsByWidth(product.sizeOptions || []).map((size: any) => (
+                              <button
+                                key={size.id}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedSize(size);
+                                  if (size.is_optional_height) setCustomHeight('');
+                                  setSizeDropdownOpen(false);
+                                }}
+                                className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm tabular-nums transition hover:bg-slate-50 ${
+                                  selectedSize?.id === size.id ? 'bg-[#00365a]/[0.08] font-medium text-[#00365a]' : 'text-slate-700'
+                                }`}
+                              >
+                                <span>{formatSizeOptionLabel(size)}</span>
+                                {siteSettingsLoaded && !hideStock && isCommonStockEnabled(product) && (
+                                  <span className="inline-flex items-baseline gap-1 text-xs font-normal"><span className="tabular-nums text-slate-400">{formatStockM2(getConsumableAreaM2ForWidth(product, toNumber(size.width)))}</span><span className="text-rose-600">stok</span></span>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
                       {selectedSize && selectedSize.is_optional_height && (
