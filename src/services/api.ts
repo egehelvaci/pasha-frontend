@@ -1,5 +1,15 @@
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://pashahomeapps.up.railway.app";
 
+export async function getLoginBackground(signal: AbortSignal): Promise<string> {
+  const response = await fetch(`${API_URL}/api/login-assets/random`, { signal });
+  if (!response.ok) throw new Error('Giriş görseli alınamadı');
+  const result = await response.json();
+  if (!result.success || typeof result.data?.imageUrl !== 'string' || !result.data.imageUrl) {
+    throw new Error('Geçersiz giriş görseli');
+  }
+  return result.data.imageUrl;
+}
+
 // Token'ı localStorage veya sessionStorage'dan al
 function getAuthToken(): string | null {
   if (typeof window === 'undefined') {
@@ -2360,6 +2370,52 @@ export interface TopProduct {
   order_count: number;
 }
 
+export type BestsellerProduct = Pick<TopProduct,
+  'product_id' | 'product_name' | 'collection_name' | 'product_image' | 'total_quantity'>;
+
+/** Use the same one-year sales sources as analytics; never substitute catalog order. */
+export async function getBestsellers({ token, isAdmin, signal }: {
+  token: string;
+  isAdmin: boolean;
+  signal: AbortSignal;
+}): Promise<BestsellerProduct[]> {
+  const path = isAdmin
+    ? '/api/admin/statistics/top-products?period=1_year'
+    : '/api/my-statistics/user-stats?period=1_year';
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+    signal,
+  });
+  if (!response.ok) throw new Error('Satış verileri alınamadı');
+  const result = await response.json();
+  const products: unknown = isAdmin ? result.data?.products : result.data?.top_products;
+  if (result.success !== true || !Array.isArray(products)) {
+    throw new Error('Geçersiz satış verisi');
+  }
+  const seen = new Set<string>();
+  return products.map((product: unknown): BestsellerProduct => {
+    if (!product || typeof product !== 'object') throw new Error('Geçersiz ürün');
+    const item = product as Record<string, unknown>;
+    const quantity = typeof item.total_quantity === 'number' ? item.total_quantity
+      : typeof item.total_quantity === 'string' && item.total_quantity.trim() ? Number(item.total_quantity) : NaN;
+    if (typeof item.product_id !== 'string' || !item.product_id.trim()
+      || typeof item.product_name !== 'string' || !item.product_name.trim()
+      || !Number.isFinite(quantity) || quantity < 0) throw new Error('Geçersiz ürün satış verisi');
+    return {
+      product_id: item.product_id,
+      product_name: item.product_name,
+      collection_name: typeof item.collection_name === 'string' ? item.collection_name : '',
+      product_image: typeof item.product_image === 'string' ? item.product_image : '',
+      total_quantity: quantity,
+    };
+  }).filter(product => {
+    if (product.total_quantity === 0 || seen.has(product.product_id)) return false;
+    seen.add(product.product_id);
+    return true;
+  }).sort((a, b) => b.total_quantity - a.total_quantity);
+}
+
 export interface TopCollection {
   collection_id: string;
   collection_name: string;
@@ -3842,10 +3898,11 @@ export interface PublicCatalogResponse {
 }
 
 // Public koleksiyonları getir (token gerektirmez)
-export async function getPublicCollections(): Promise<PublicCatalogResponse['data']> {
+export async function getPublicCollections(signal?: AbortSignal): Promise<PublicCatalogResponse['data']> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/public/catalog/collections`, {
       method: 'GET',
+      signal,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -3856,6 +3913,9 @@ export async function getPublicCollections(): Promise<PublicCatalogResponse['dat
     }
 
     const result: PublicCatalogResponse = await response.json();
+    if (!result.success || !Array.isArray(result.data?.collections)) {
+      throw new Error('Geçersiz koleksiyon verisi');
+    }
     return result.data;
   } catch (error) {
     console.error('Public koleksiyonları getirirken hata:', error);
@@ -5300,4 +5360,25 @@ export async function advanceOrderStatus(
     console.error('Sipariş durumu ilerletme hatası:', error);
     throw error;
   }
+}
+
+// E-catalog uses existing pagination and keeps only printable fields in memory.
+export async function getCatalogProductPage({ token, page = 1, limit = 24, search = '', signal }: {
+  token: string; page?: number; limit?: number; search?: string; signal: AbortSignal;
+}): Promise<{ products: import('@/features/catalog/model').CatalogProduct[]; total: number; totalPages: number }> {
+  const { normalizeCatalogProduct } = await import('@/features/catalog/model');
+  const params = new URLSearchParams({ page: String(page), limit: String(Math.min(100, Math.max(1, limit))) });
+  if (search.trim()) params.set('search', search.trim());
+  const response = await fetch(`${API_BASE_URL}/api/products?${params}`, {
+    headers: { Authorization: `Bearer ${token}` }, signal, cache: 'no-store',
+  });
+  if (!response.ok) throw new Error('Ürünler yüklenemedi. Seçimleriniz korundu; tekrar deneyin.');
+  const result = await response.json();
+  if (result.success === false || !Array.isArray(result.data)) throw new Error('Ürün listesi geçersiz.');
+  const total = Number(result.pagination?.total ?? result.pagination?.totalCount);
+  const totalPages = Number(result.pagination?.totalPages);
+  if (!Number.isFinite(total) || !Number.isFinite(totalPages) || total < 0 || totalPages < 0) {
+    throw new Error('Ürün sayfalama bilgisi alınamadı.');
+  }
+  return { products: result.data.map(normalizeCatalogProduct), total, totalPages };
 }

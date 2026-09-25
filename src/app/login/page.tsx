@@ -1,100 +1,48 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { EyeIcon, EyeSlashIcon, ArrowRightIcon, ArrowLeftIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import { useAuth } from "../context/AuthContext";
+import { getLoginBackground } from "@/services/api";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [backgroundImage, setBackgroundImage] = useState("");
-  const [imageLoading, setImageLoading] = useState(true);
+  const [backgroundImage, setBackgroundImage] = useState("/login-background.jpg");
   const router = useRouter();
   const { login, user, isLoading } = useAuth();
-  const hasFetchedImage = useRef(false);
 
   useEffect(() => {
-    if (!isLoading && user) {
-      // Kullanıcı zaten giriş yapmışsa dashboard'a yönlendir
-      router.push("/dashboard");
-    }
+    if (!isLoading && user) router.replace("/dashboard");
   }, [user, isLoading, router]);
 
-  // Rastgele halı mağazası görseli al - sadece bir kez
   useEffect(() => {
-    // Eğer daha önce görsel yüklendiyse tekrar yükleme
-    if (hasFetchedImage.current) {
-      return;
-    }
+    const controller = new AbortController();
+    let active = true;
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    getLoginBackground(controller.signal)
+      .then(src => { if (active) setBackgroundImage(src); })
+      .catch(() => { /* The bundled image keeps the form independent of this optional API. */ })
+      .finally(() => clearTimeout(timeout));
+    return () => { active = false; controller.abort(); clearTimeout(timeout); };
+  }, []);
 
-    const fetchRandomImage = async () => {
-      try {
-        // Session storage'dan cache'lenmiş görseli kontrol et
-        const cachedImage = sessionStorage.getItem('loginBackgroundImage');
-        const cachedTimestamp = sessionStorage.getItem('loginBackgroundImageTimestamp');
-        
-        // Cache'de görsel varsa ve 1 saatten eski değilse kullan
-        if (cachedImage && cachedTimestamp) {
-          const now = Date.now();
-          const cacheAge = now - parseInt(cachedTimestamp);
-          const oneHour = 60 * 60 * 1000; // 1 saat
-          
-          if (cacheAge < oneHour) {
-            setBackgroundImage(cachedImage);
-            setImageLoading(false);
-            hasFetchedImage.current = true;
-            return;
-          }
-        }
-
-        setImageLoading(true);
-        setBackgroundImage(""); // Görseli temizle
-        
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "https://pashahomeapps.up.railway.app"}/api/login-assets/random`);
-        const data = await response.json();
-        
-        if (data.success && data.data.imageUrl) {
-          setBackgroundImage(data.data.imageUrl);
-          // Görseli session storage'a cache'le
-          sessionStorage.setItem('loginBackgroundImage', data.data.imageUrl);
-          sessionStorage.setItem('loginBackgroundImageTimestamp', Date.now().toString());
-        } else {
-          // API başarısız olursa varsayılan görsel kullan
-          setBackgroundImage("/login-background.jpg");
-        }
-      } catch (error) {
-        console.error('Rastgele görsel yüklenirken hata:', error);
-        // Hata durumunda varsayılan görsel kullan
-        setBackgroundImage("/login-background.jpg");
-      } finally {
-        setImageLoading(false);
-        hasFetchedImage.current = true;
-      }
-    };
-
-    fetchRandomImage();
-  }, []); // Boş dependency array - sadece component mount olduğunda çalışır
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (loading) return;
     setLoading(true);
     setError("");
-
     try {
-      const result = await login(username, password, rememberMe);
-      
-      if (result.success) {
-        // Login başarılı, dashboard'a yönlendir
-        router.push("/dashboard");
-      } else {
-        // Login başarısız, hata mesajı göster
-        setError(result.message || "Kullanıcı adı veya şifre hatalı");
-      }
+      const result = await login(username.trim(), password, rememberMe);
+      if (result.success) router.replace("/dashboard");
+      else setError(result.message || "Kullanıcı adı veya şifre hatalı.");
     } catch {
       setError("Giriş sırasında bir hata oluştu. Lütfen tekrar deneyin.");
     } finally {
@@ -102,133 +50,75 @@ export default function Login() {
     }
   };
 
-  // Auth yüklenirken veya kullanıcı zaten giriş yapmışsa loading göster
-  if (isLoading || user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
+  if ((isLoading && !loading) || user) {
+    return <main className="design-shell grid min-h-screen place-items-center"><p role="status" className="text-sm text-slate-600">Oturum kontrol ediliyor…</p></main>;
   }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Sol taraftaki görsel bölümü */}
-      <div className="flex-1 relative hidden lg:block">
-        <div className="absolute inset-0 bg-cover bg-center flex flex-col p-12 z-10">
-          <h1 className="text-white text-3xl font-bold">
-            Paşa Home Bayi Sipariş Sistemi
-          </h1>
-          <p className="text-white text-sm mt-2">© 2025 Paşa Home</p>
+    <main className="design-shell login-shell min-h-screen lg:grid lg:grid-cols-[1fr_1fr]">
+      <aside className="login-art relative m-4 hidden min-h-[calc(100svh-2rem)] overflow-hidden rounded-[2rem] bg-[#12384b] lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-16">
+        <Image src={backgroundImage} alt="" fill priority unoptimized
+          sizes="50vw" className="object-cover opacity-65"
+          onError={() => setBackgroundImage('/login-background.jpg')} />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#082a3d] via-[#082a3d]/20 to-[#082a3d]/40" />
+        <div className="relative flex items-center justify-between gap-4">
+          <Image src="/logo.svg" alt="Paşa Home" width={150} height={60} className="h-12 w-auto" priority />
+          <span className="rounded-full border border-white/30 bg-white/10 px-4 py-2 text-[10px] uppercase tracking-[.18em] text-white backdrop-blur">Bayi Portalı</span>
         </div>
-        
-        {/* Loading durumu */}
-        {imageLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 z-20">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
-              <p className="text-white text-lg font-medium">Görsel Yükleniyor...</p>
-              <p className="text-gray-300 text-sm mt-2">Halı mağazası görseli hazırlanıyor</p>
+        <div className="relative max-w-lg py-6 text-white">
+          <div className="mb-8 h-px w-12 bg-[#d3bd98]" />
+          <p className="text-xs uppercase tracking-[.2em] text-[#d3bd98]">Toptan satış & sipariş yönetimi</p>
+          <h2 className="mt-5 text-4xl font-medium leading-tight tracking-tight xl:text-5xl">İşiniz için gerekenler,<br />tek bir yerde.</h2>
+          <p className="mt-6 max-w-sm text-sm leading-7 text-white/75">Ürünleri inceleyin, siparişlerinizi oluşturun ve süreçlerinizi bayi panelinizden takip edin.</p>
+          <div className="mt-12 flex flex-wrap gap-x-6 gap-y-3 border-t border-white/20 pt-6 text-xs text-white/70"><span>Ürün kataloğu</span><span>Sipariş takibi</span><span>Bayi işlemleri</span></div>
+        </div>
+      </aside>
+
+      <section className="flex min-h-svh flex-col px-6 py-7 sm:px-12 lg:px-14 xl:px-24">
+        <Link href="/" className="inline-flex w-fit items-center gap-2 text-xs text-slate-600 hover:text-[#00365a]"><ArrowLeftIcon className="h-4 w-4" /> Ana sayfaya dön</Link>
+        <div className="mx-auto flex w-full max-w-[400px] flex-1 flex-col justify-center py-12 reveal-in">
+          <Image src="/black-logo.svg" alt="Paşa Home" width={160} height={64} className="mb-10 h-12 w-auto self-start lg:hidden" priority />
+          <p className="eyebrow">Paşa Home · Bayi hesabı</p>
+          <h1 className="display-heading mt-4 text-4xl sm:text-5xl">Bayi girişi</h1>
+          <p className="mb-9 mt-4 text-sm leading-7 text-slate-600">Devam etmek için hesap bilgilerinizle giriş yapın.</p>
+
+          <form onSubmit={handleLogin} aria-busy={loading} className="space-y-6">
+            {error && <div id="login-error" role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm leading-6 text-rose-800">{error}</div>}
+            <div>
+              <label htmlFor="username" className="mb-2 block text-sm font-medium">Kullanıcı adı</label>
+              <input id="username" name="username" type="text" autoComplete="username" autoCapitalize="none" spellCheck={false}
+                className="login-input" placeholder="Kullanıcı adınız" value={username}
+                onChange={event => setUsername(event.target.value)} required disabled={loading} aria-describedby={error ? 'login-error' : undefined} />
             </div>
-          </div>
-        )}
-        
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-black bg-opacity-40 z-0"></div>
-        
-        {/* Görsel - sadece yüklendiğinde göster */}
-        {backgroundImage && !imageLoading && (
-          <Image 
-            src={backgroundImage}
-            alt="Halı Mağazası"
-            fill
-            style={{ objectFit: "cover" }}
-            priority
-            className="z-[-1]"
-            onError={() => {
-              setImageLoading(false);
-              setBackgroundImage("/login-background.jpg");
-            }}
-          />
-        )}
-      </div>
-
-      {/* Sağ taraftaki login formu */}
-      <div className="flex-1 bg-neutral-900 flex flex-col justify-center items-center p-8">
-        <div className="w-full max-w-md">
-          <div className="flex justify-center mb-12">
-            <Image
-              src="/logo.svg"
-              alt="Paşa Home Logo"
-              width={200}
-              height={60}
-              priority
-            />
-          </div>
-
-          <h2 className="text-white text-2xl mb-8 mt-4 text-center">GİRİŞ</h2>
-
-          {error && (
-            <div className="bg-red-600/20 border border-red-600 text-red-500 px-4 py-2 rounded mb-4">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleLogin}>
-            <div className="mb-4">
-              <label className="block text-gray-400 text-sm mb-2">Kullanıcı Adı</label>
-              <input
-                type="text"
-                className="w-full bg-white py-2 px-4 rounded focus:outline-none text-black"
-                placeholder="Kullanıcı Adı"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-gray-400 text-sm mb-2">Şifre</label>
-              <input
-                type="password"
-                className="w-full bg-white py-2 px-4 rounded focus:outline-none text-black"
-                placeholder="************"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-gray-300 rounded"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-400">
-                  Beni Hatırla
-                </label>
-              </div>
-              <div className="text-sm">
-                <Link href="/forgot-password" className="text-blue-500 hover:text-blue-600">
-                  Şifremi Unuttum
-                </Link>
+            <div>
+              <label htmlFor="password" className="mb-2 block text-sm font-medium">Şifre</label>
+              <div className="relative">
+                <input id="password" name="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password"
+                  className="login-input !pr-14" placeholder="Şifreniz" value={password}
+                  onChange={event => setPassword(event.target.value)} required disabled={loading} aria-describedby={error ? 'login-error' : undefined} />
+                <button type="button" onClick={() => setShowPassword(value => !value)} disabled={loading}
+                  aria-label={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'} aria-pressed={showPassword}
+                  className="absolute right-1 top-1 grid h-12 w-12 place-items-center text-slate-500 hover:text-[#00365a]">
+                  {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                </button>
               </div>
             </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-150 ease-in-out"
-            >
-              {loading ? "GİRİŞ YAPILIYOR..." : "GİRİŞ"}
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm">
+              <label className="flex min-h-11 cursor-pointer items-center gap-2.5" htmlFor="remember-me">
+                <input id="remember-me" type="checkbox" checked={rememberMe} disabled={loading} className="h-4 w-4 accent-[#00365a]" onChange={event => setRememberMe(event.target.checked)} />
+                Beni hatırla
+              </label>
+              <Link href="/forgot-password" className="inline-flex min-h-11 items-center text-[#00365a] underline-offset-4 hover:underline">Şifremi unuttum</Link>
+            </div>
+            <button type="submit" disabled={loading} className="primary-action w-full !justify-between disabled:opacity-60">
+              <span>{loading ? 'Giriş yapılıyor…' : 'Giriş yap'}</span>
+              {loading ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" aria-hidden="true" /> : <ArrowRightIcon className="h-4 w-4" />}
             </button>
           </form>
+          <p className="mt-8 border-t border-[#deddd5] pt-7 text-center text-sm text-slate-600">Henüz bayi hesabınız yok mu? <Link href="/bayi-talebi" className="inline-flex min-h-11 items-center font-medium text-[#00365a] underline-offset-4 hover:underline">Bayi başvurusu</Link></p>
         </div>
-      </div>
-    </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-500"><span>© {new Date().getFullYear()} Paşa Home</span><span className="flex items-center gap-1.5"><LockClosedIcon className="h-3.5 w-3.5" /> Bayi erişimi</span></div>
+      </section>
+    </main>
   );
-} 
+}

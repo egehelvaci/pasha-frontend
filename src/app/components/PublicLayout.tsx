@@ -8,7 +8,7 @@ interface PublicLayoutProps {
 
 export default function PublicLayout({ children }: PublicLayoutProps) {
   return (
-    <div className="min-h-screen bg-[#f7f8fa]">
+    <div className="design-shell min-h-screen">
       <PublicHeader />
 
       {children}
@@ -47,7 +47,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
             </div>
           </div>
           <div className="mt-6 border-t border-slate-200/80 pt-6 text-center">
-            <p className="text-sm text-slate-500">© 2025 Helken Teknoloji Yazılım Limited Şirketi</p>
+            <p className="text-sm text-slate-500">© {new Date().getFullYear()} Helken Teknoloji Yazılım Limited Şirketi</p>
             <p className="mt-1.5 text-sm text-slate-500">Helken Teknoloji İletişim: +90 538 294 77 27</p>
           </div>
         </div>

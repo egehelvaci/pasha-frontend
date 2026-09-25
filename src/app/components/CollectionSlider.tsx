@@ -88,12 +88,12 @@ export default function CollectionSlider() {
   }
 
   return (
-    <section className="py-8 sm:py-10">
+    <section className="py-12 sm:py-16">
       <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
         {collectionsWithProducts.map((collection, index) => (
           <div key={collection.id} className="mb-12">
             <div className="mb-6 flex flex-col items-center text-center">
-              <h3 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl sm:tracking-[0.12em]">
+              <h3 className="display-heading text-2xl text-[#183342] sm:text-3xl">
                 {collection.name}
               </h3>
               <div className="mt-3 h-px w-[min(100%,16rem)] bg-neutral-300" />
@@ -135,7 +135,7 @@ export default function CollectionSlider() {
               >
                 {collection.products.map((product) => (
                   <SwiperSlide key={product.id}>
-                    <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+                    <div className="product-card group surface overflow-hidden">
                       <div className="flex aspect-square items-center justify-center bg-slate-50">
                         {product.image ? (
                           <Image
