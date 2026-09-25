@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSiteSettings } from '../context/SiteSettingsContext';
-import { SiteBanner } from '../../services/api';
+import { getMyUserStatistics, SiteBanner } from '../../services/api';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -13,39 +13,12 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
-interface Product {
-  productId: string;
-  name: string;
-  description: string;
-  stock: number;
-  width: number;
-  height: number;
-  cut: boolean;
-  productImage: string;
-  collectionId: string;
-  created_at: string;
-  Collection?: {
-    name: string;
-    code: string;
-  };
-  // UI-only fallback alanları (API'den gelmez)
-  _isFallback?: boolean;
-  _displayCode?: string;
-  _displayPrice?: number;
-  _displaySalePrice?: number | null;
+interface BestsellerProduct {
+  product_id: string;
+  product_name: string;
+  collection_name: string;
+  product_image: string;
 }
-
-interface ProductsResponse {
-  success: boolean;
-  data: Product[];
-  message?: string;
-}
-
-const CURRENCY_SYMBOLS = {
-  'TRY': '₺',
-  'USD': '$',
-  'EUR': '€'
-};
 
 function BannerImage({ banner }: { banner: SiteBanner }) {
   return (
@@ -85,67 +58,16 @@ function BannerSlide({ banner }: { banner: SiteBanner }) {
   );
 }
 
-function buildDisplayProducts(products: Product[]): Product[] {
-  const real = products.slice(0, 10);
-  if (real.length >= 10) return real;
-
-  const fallbacks: Product[] = [];
-  for (let i = real.length; i < 10; i++) {
-    fallbacks.push({
-      productId: `fallback-${i + 1}`,
-      name: `Örnek Ürün ${i + 1}`,
-      description: '',
-      stock: 0,
-      width: 0,
-      height: 0,
-      cut: false,
-      productImage: `https://placehold.co/400x400/f1f5f9/94a3b8?text=Urun+${i + 1}`,
-      collectionId: '',
-      created_at: '',
-      Collection: { name: 'Koleksiyon', code: `SKU-00${i + 1}` },
-      _isFallback: true,
-      _displayCode: `SKU-00${i + 1}`,
-      _displayPrice: 1200 + i * 75,
-      _displaySalePrice: i % 3 === 0 ? 999 + i * 40 : null,
-    });
-  }
-  return [...real, ...fallbacks];
-}
-
 export default function Dashboard() {
-  const { user, isLoading, token } = useAuth();
+  const { user, isLoading, token, isAdmin } = useAuth();
   const { banners } = useSiteSettings();
   const router = useRouter();
 
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
 
-  const [recentProducts, setRecentProducts] = useState<Product[]>([]);
+  const [recentProducts, setRecentProducts] = useState<BestsellerProduct[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
-  const [userCurrency, setUserCurrency] = useState<string>('TRY');
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const rememberMe = localStorage.getItem('rememberMe') === 'true';
-        let storedCurrency;
-
-        if (rememberMe) {
-          storedCurrency = localStorage.getItem('currency');
-        } else {
-          storedCurrency = sessionStorage.getItem('currency');
-        }
-
-        if (storedCurrency) {
-          setUserCurrency(storedCurrency);
-        } else if (user?.store?.currency) {
-          setUserCurrency(user.store.currency);
-        }
-      } catch (error) {
-        console.error('LocalStorage okuma hatası:', error);
-      }
-    }
-  }, [user]);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -154,35 +76,41 @@ export default function Dashboard() {
   }, [user, isLoading, router]);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || isLoading) return;
 
-    const fetchRecentProducts = async () => {
+    const fetchBestsellers = async () => {
       setIsLoadingProducts(true);
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/products?limit=20&page=1`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (response.ok) {
-          const data: ProductsResponse = await response.json();
+        // Analiz sayfasıyla aynı kaynak ve varsayılan dönem (1 yıl).
+        if (isAdmin) {
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/admin/statistics/top-products?period=1_year`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+          if (!response.ok) throw new Error('Çok satanlar alınamadı');
+          const data = await response.json();
           if (data.success) {
-            setRecentProducts(data.data);
+            setRecentProducts(data.data.products || []);
           }
+        } else {
+          const data = await getMyUserStatistics('1_year');
+          setRecentProducts(data.top_products || []);
         }
       } catch (error) {
-        console.error('Son ürünler çekme hatası:', error);
+        console.error('Çok satanlar çekme hatası:', error);
+        setRecentProducts([]);
       } finally {
         setIsLoadingProducts(false);
       }
     };
 
-    fetchRecentProducts();
-  }, [token]);
+    fetchBestsellers();
+  }, [token, isAdmin, isLoading]);
 
   if (isLoading || !user) {
     return (
@@ -193,9 +121,7 @@ export default function Dashboard() {
     );
   }
 
-  const currencySymbol =
-    CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency;
-  const displayProducts = buildDisplayProducts(recentProducts);
+  const displayProducts = recentProducts;
   const hasMultipleBanners = banners.length > 1;
 
   return (
@@ -294,6 +220,10 @@ export default function Dashboard() {
                 <p className="text-xs text-slate-400">Ürünler yükleniyor</p>
               </div>
             </div>
+          ) : displayProducts.length === 0 ? (
+            <div className="flex h-40 items-center justify-center rounded-xl border border-slate-200/80 bg-white">
+              <p className="text-sm text-slate-500">Henüz çok satan ürün yok</p>
+            </div>
           ) : (
             <div className="home-products-swiper">
               <Swiper
@@ -311,100 +241,62 @@ export default function Dashboard() {
                   1280: { slidesPerView: 5, spaceBetween: 18 },
                 }}
               >
-                {displayProducts.map((product) => {
-                  const code =
-                    product._displayCode ||
-                    product.Collection?.code ||
-                    product.productId.slice(0, 8).toUpperCase();
-                  const hasSale =
-                    typeof product._displaySalePrice === 'number' &&
-                    product._displaySalePrice !== null;
-                  const price =
-                    typeof product._displayPrice === 'number'
-                      ? product._displayPrice
-                      : null;
-
-                  return (
-                    <SwiperSlide key={product.productId} className="!h-auto">
-                      <article
-                        className={`group flex h-full flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm transition ${
-                          product._isFallback
-                            ? 'cursor-default'
-                            : 'cursor-pointer hover:border-slate-300 hover:shadow-md'
-                        }`}
-                        onClick={() => {
-                          if (product._isFallback) return;
-                          setSelectedProductId(product.productId);
+                {displayProducts.map((product) => (
+                  <SwiperSlide key={product.product_id} className="!h-auto">
+                    <article
+                      className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm transition hover:border-slate-300 hover:shadow-md"
+                      onClick={() => {
+                        setSelectedProductId(product.product_id);
+                        setDetailModalOpen(true);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setSelectedProductId(product.product_id);
                           setDetailModalOpen(true);
-                        }}
-                        onKeyDown={(e) => {
-                          if (product._isFallback) return;
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            setSelectedProductId(product.productId);
-                            setDetailModalOpen(true);
-                          }
-                        }}
-                        role={product._isFallback ? undefined : 'button'}
-                        tabIndex={product._isFallback ? undefined : 0}
-                      >
-                        <div className="relative aspect-square overflow-hidden bg-slate-50">
-                          {product.productImage ? (
-                            <img
-                              src={product.productImage}
-                              alt={product.name}
-                              className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-                            />
-                          ) : (
-                            <div className="flex h-full w-full flex-col items-center justify-center p-3">
-                              <div className="mb-3 flex h-20 w-20 items-center justify-center rounded-xl bg-slate-100 sm:mb-4 sm:h-24 sm:w-24">
-                                <Image
-                                  src="/black-logo.svg"
-                                  alt="Paşa Home Logo"
-                                  width={80}
-                                  height={80}
-                                  className="h-12 w-12 opacity-80 sm:h-14 sm:w-14"
-                                  onError={(e) => {
-                                    e.currentTarget.src = '/logo.svg';
-                                  }}
-                                />
-                              </div>
-                              <p className="text-center text-xs font-medium text-slate-500 sm:text-sm">
-                                Ürün görseli<br />hazırlanıyor
-                              </p>
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <div className="relative aspect-square overflow-hidden bg-slate-50">
+                        {product.product_image ? (
+                          <img
+                            src={product.product_image}
+                            alt={product.product_name}
+                            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full flex-col items-center justify-center p-3">
+                            <div className="mb-3 flex h-20 w-20 items-center justify-center rounded-xl bg-slate-100 sm:mb-4 sm:h-24 sm:w-24">
+                              <Image
+                                src="/black-logo.svg"
+                                alt="Paşa Home Logo"
+                                width={80}
+                                height={80}
+                                className="h-12 w-12 opacity-80 sm:h-14 sm:w-14"
+                                onError={(e) => {
+                                  e.currentTarget.src = '/logo.svg';
+                                }}
+                              />
                             </div>
-                          )}
-                        </div>
-                        <div className="flex flex-1 flex-col gap-1.5 p-3.5 sm:p-4">
-                          <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
-                            {code}
-                          </p>
-                          <h3 className="line-clamp-2 text-sm font-medium leading-snug text-slate-900 transition-colors group-hover:text-[#00365a]">
-                            {product.name}
-                          </h3>
-                          {(price !== null || product._isFallback) && (
-                            <div className="mt-auto pt-2">
-                              {hasSale ? (
-                                <div className="flex items-baseline gap-2">
-                                  <span className="text-sm font-semibold tabular-nums text-slate-900">
-                                    {product._displaySalePrice!.toLocaleString('tr-TR')} {currencySymbol}
-                                  </span>
-                                  <span className="text-xs tabular-nums text-slate-400 line-through">
-                                    {price!.toLocaleString('tr-TR')} {currencySymbol}
-                                  </span>
-                                </div>
-                              ) : price !== null ? (
-                                <span className="text-sm font-semibold tabular-nums text-slate-900">
-                                  {price.toLocaleString('tr-TR')} {currencySymbol}
-                                </span>
-                              ) : null}
-                            </div>
-                          )}
-                        </div>
-                      </article>
-                    </SwiperSlide>
-                  );
-                })}
+                            <p className="text-center text-xs font-medium text-slate-500 sm:text-sm">
+                              Ürün görseli<br />hazırlanıyor
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-1 flex-col gap-1.5 p-3.5 sm:p-4">
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                          {product.collection_name}
+                        </p>
+                        <h3 className="line-clamp-2 text-sm font-medium leading-snug text-slate-900 transition-colors group-hover:text-[#00365a]">
+                          {product.product_name}
+                        </h3>
+                      </div>
+                    </article>
+                  </SwiperSlide>
+                ))}
               </Swiper>
             </div>
           )}

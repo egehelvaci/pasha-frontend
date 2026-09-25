@@ -126,6 +126,7 @@ export default function PaymentsPage() {
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [storeDropdownOpen, setStoreDropdownOpen] = useState(false);
   const [paymentStoreDropdownOpen, setPaymentStoreDropdownOpen] = useState(false);
+  const [paymentStoreSearch, setPaymentStoreSearch] = useState('');
   const [paymentCurrencyDropdownOpen, setPaymentCurrencyDropdownOpen] = useState(false);
 
   // Ödeme formu state'leri
@@ -198,6 +199,7 @@ export default function PaymentsPage() {
         setStatusDropdownOpen(false);
         setStoreDropdownOpen(false);
         setPaymentStoreDropdownOpen(false);
+        setPaymentStoreSearch('');
         setPaymentCurrencyDropdownOpen(false);
       }
     };
@@ -1239,34 +1241,73 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
                         </button>
                         
                         {paymentStoreDropdownOpen && (
-                          <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
-                            <button
-                              type="button"
-                              className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
-                                !paymentForm.storeId ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
-                              }`}
-                              onClick={() => {
-                                setPaymentForm(prev => ({ ...prev, storeId: "" }));
-                                setPaymentStoreDropdownOpen(false);
-                              }}
-                            >
-                              Mağaza Seçiniz
-                            </button>
-                            {[...stores].sort((a, b) => a.kurum_adi.localeCompare(b.kurum_adi, 'tr', { sensitivity: 'base' })).map((store) => (
-                              <button
-                                key={store.store_id}
-                                type="button"
-                                className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
-                                  paymentForm.storeId === store.store_id ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
-                                }`}
-                                onClick={() => {
-                                  setPaymentForm(prev => ({ ...prev, storeId: store.store_id }));
-                                  setPaymentStoreDropdownOpen(false);
+                          <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
+                            <div className="border-b border-slate-200/80 p-2">
+                              <input
+                                type="text"
+                                value={paymentStoreSearch}
+                                onChange={(e) => setPaymentStoreSearch(e.target.value)}
+                                onClick={(e) => e.stopPropagation()}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') e.preventDefault();
                                 }}
-                              >
-                                {store.kurum_adi} - {store.vergi_numarasi}
-                              </button>
-                            ))}
+                                placeholder="Mağaza ara"
+                                autoFocus
+                                className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25"
+                              />
+                            </div>
+                            <div className="max-h-60 overflow-y-auto py-1">
+                            {(() => {
+                              const query = paymentStoreSearch.trim().toLocaleLowerCase('tr');
+                              const filteredStores = [...stores]
+                                .sort((a, b) => a.kurum_adi.localeCompare(b.kurum_adi, 'tr', { sensitivity: 'base' }))
+                                .filter((store) => {
+                                  if (!query) return true;
+                                  return (
+                                    store.kurum_adi.toLocaleLowerCase('tr').includes(query) ||
+                                    (store.vergi_numarasi || '').toLocaleLowerCase('tr').includes(query)
+                                  );
+                                });
+                              return (
+                                <>
+                                  {!query && (
+                                    <button
+                                      type="button"
+                                      className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                                        !paymentForm.storeId ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
+                                      }`}
+                                      onClick={() => {
+                                        setPaymentForm(prev => ({ ...prev, storeId: "" }));
+                                        setPaymentStoreSearch('');
+                                        setPaymentStoreDropdownOpen(false);
+                                      }}
+                                    >
+                                      Mağaza Seçiniz
+                                    </button>
+                                  )}
+                                  {filteredStores.map((store) => (
+                                    <button
+                                      key={store.store_id}
+                                      type="button"
+                                      className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 ${
+                                        paymentForm.storeId === store.store_id ? 'bg-[#00365a]/[0.06] font-medium text-[#00365a]' : 'text-slate-700'
+                                      }`}
+                                      onClick={() => {
+                                        setPaymentForm(prev => ({ ...prev, storeId: store.store_id }));
+                                        setPaymentStoreSearch('');
+                                        setPaymentStoreDropdownOpen(false);
+                                      }}
+                                    >
+                                      {store.kurum_adi} - {store.vergi_numarasi}
+                                    </button>
+                                  ))}
+                                  {filteredStores.length === 0 && (
+                                    <p className="px-3 py-2 text-sm text-slate-500">Mağaza bulunamadı</p>
+                                  )}
+                                </>
+                              );
+                            })()}
+                            </div>
                           </div>
                         )}
                       </div>
