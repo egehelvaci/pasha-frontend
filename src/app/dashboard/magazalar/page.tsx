@@ -19,6 +19,15 @@ export default function StoresPage() {
   const [selectedPriceList, setSelectedPriceList] = useState<string>('');
   const [selectedStore, setSelectedStore] = useState<Store | null>(null);
   const [assignLoading, setAssignLoading] = useState(false);
+  const [notice, setNotice] = useState({ isOpen: false, title: '', message: '', isError: false });
+  const showNotice = (message: string, isError = false) => {
+    setNotice({
+      isOpen: true,
+      title: isError ? 'İşlem tamamlanamadı' : 'İşlem tamamlandı',
+      message,
+      isError,
+    });
+  };
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   
@@ -99,7 +108,7 @@ export default function StoresPage() {
       const data = await getStores();
       setStores(data);
     } catch (error: any) {
-      alert(error.message || 'Mağazalar yüklenirken bir hata oluştu');
+      showNotice(error.message || 'Mağazalar yüklenirken bir hata oluştu', true);
     } finally {
       setLoading(false);
     }
@@ -123,7 +132,7 @@ export default function StoresPage() {
       
       setPriceLists(validPriceLists);
     } catch (error) {
-      alert('Fiyat listeleri yüklenirken bir hata oluştu');
+      showNotice('Fiyat listeleri yüklenirken bir hata oluştu', true);
     }
   };
 
@@ -133,7 +142,7 @@ export default function StoresPage() {
     setDeleteLoading(true);
     try {
       await deleteStore(storeToDelete.store_id);
-      alert('Mağaza başarıyla silindi');
+      showNotice('Mağaza başarıyla silindi');
       setStores(stores.filter(store => store.store_id !== storeToDelete.store_id));
       setDeleteModalVisible(false);
       setStoreToDelete(null);
@@ -141,7 +150,7 @@ export default function StoresPage() {
       // Verileri yenilemek için referansı sıfırla
       storesFetchedRef.current = false;
     } catch (error: any) {
-      alert(error.message || 'Mağaza silinirken bir hata oluştu');
+      showNotice(error.message || 'Mağaza silinirken bir hata oluştu', true);
     } finally {
       setDeleteLoading(false);
     }
@@ -156,7 +165,7 @@ export default function StoresPage() {
         storeId: selectedStore.store_id,
         priceListId: selectedPriceList
       });
-      alert('Fiyat listesi başarıyla atandı');
+      showNotice('Fiyat listesi başarıyla atandı');
       setAssignModalVisible(false);
       setSelectedStore(null);
       setSelectedPriceList('');
@@ -165,7 +174,7 @@ export default function StoresPage() {
       storesFetchedRef.current = false;
       fetchStores();
     } catch (error: any) {
-      alert(error.message || 'Fiyat listesi atanırken bir hata oluştu');
+      showNotice(error.message || 'Fiyat listesi atanırken bir hata oluştu', true);
     } finally {
       setAssignLoading(false);
     }
@@ -757,6 +766,23 @@ export default function StoresPage() {
                   className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {assignLoading ? 'Atanıyor...' : 'Ata'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {notice.isOpen && (
+          <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 p-4">
+            <div className="w-full max-w-md rounded-xl border border-slate-200/80 bg-white p-6">
+              <h3 className="mb-3 text-lg font-semibold tracking-tight text-slate-900">{notice.title}</h3>
+              <p className={`mb-6 text-sm ${notice.isError ? 'text-rose-700' : 'text-slate-500'}`}>{notice.message}</p>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setNotice((prev) => ({ ...prev, isOpen: false }))}
+                  className="rounded-lg bg-[#00365a] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#004170]"
+                >
+                  Tamam
                 </button>
               </div>
             </div>

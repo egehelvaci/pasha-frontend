@@ -97,8 +97,8 @@ export default function UserAnalyticsPage() {
   // Auth yüklenirken loading göster
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f8fa]">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
       </div>
     );
   }
@@ -106,21 +106,17 @@ export default function UserAnalyticsPage() {
   // Kullanıcı girişi kontrolü
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <svg className="mx-auto h-12 w-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">Oturum Gerekli</h3>
-          <p className="mt-1 text-sm text-gray-500">Bu sayfayı görüntülemek için giriş yapmanız gerekiyor.</p>
-          <div className="mt-6">
-            <button
-              onClick={() => router.push('/')}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              Giriş Yap
-            </button>
-          </div>
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f8fa] px-4">
+        <div className="w-full max-w-md rounded-xl border border-slate-200/80 bg-white p-6 text-center shadow-sm">
+          <h3 className="text-sm font-semibold text-slate-900">Oturum Gerekli</h3>
+          <p className="mt-1.5 text-sm text-slate-500">Bu sayfayı görüntülemek için giriş yapmanız gerekiyor.</p>
+          <button
+            type="button"
+            onClick={() => router.push('/')}
+            className="mt-5 rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170]"
+          >
+            Giriş Yap
+          </button>
         </div>
       </div>
     );
@@ -299,10 +295,10 @@ export default function UserAnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex items-center space-x-2">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="text-gray-600">İstatistik verileri yükleniyor...</span>
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f8fa]">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
+          <p className="text-sm text-slate-500">Analiz verileri yükleniyor...</p>
         </div>
       </div>
     );
@@ -310,13 +306,14 @@ export default function UserAnalyticsPage() {
 
   if (!statisticsData) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-500 text-lg font-medium mb-2">Veri Yüklenemedi</div>
-          <div className="text-gray-600 mb-4">{error}</div>
-          <button 
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f8fa] px-4">
+        <div className="w-full max-w-md rounded-xl border border-slate-200/80 bg-white p-6 text-center shadow-sm">
+          <div className="mb-2 text-sm font-semibold text-rose-700">Veri Yüklenemedi</div>
+          <div className="mb-4 text-sm text-slate-500">{error}</div>
+          <button
+            type="button"
             onClick={refreshData}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170]"
           >
             Tekrar Dene
           </button>
@@ -513,156 +510,99 @@ export default function UserAnalyticsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Sipariş Analizlerim</h1>
-          <p className="mt-2 text-gray-600">
-            Merhaba <span className="font-semibold">{statisticsData.user_info.name}</span>, sipariş istatistiklerinizi görüntüleyin
+    <div className="min-h-screen bg-[#f7f8fa]">
+      <div className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl sm:tracking-[0.12em]">
+            Sipariş Analizlerim
+          </h1>
+          <div className="mt-3 h-px w-[min(100%,20rem)] bg-neutral-300 sm:mt-4" />
+          <p className="mt-3 text-sm text-slate-500">
+            Merhaba <span className="font-medium text-slate-700">{statisticsData.user_info.name}</span>, sipariş istatistiklerinizi görüntüleyin
           </p>
-          <p className="text-sm text-gray-500">{statisticsData.user_info.store_name}</p>
+          <p className="mt-1 text-sm text-slate-500">{statisticsData.user_info.store_name}</p>
         </div>
 
-        {/* Period Selector & Refresh */}
-        <div className="mb-8">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">Zaman Aralığı Seçin</h2>
-                <div className="flex flex-wrap gap-3">
-                  {[
-                    { value: '1_month', label: 'Son 1 Ay' },
-                    { value: '3_months', label: 'Son 3 Ay' },
-                    { value: '6_months', label: 'Son 6 Ay' },
-                    { value: '1_year', label: 'Son 1 Yıl' }
-                  ].map((period) => (
-                    <button
-                      key={period.value}
-                      onClick={() => setSelectedPeriod(period.value as any)}
-                      className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                        selectedPeriod === period.value
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {period.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+        <div className="mb-6 overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/60 px-4 py-3 sm:px-5">
+            <h2 className="text-sm font-semibold text-slate-900">Zaman Aralığı</h2>
+            <button
+              type="button"
+              onClick={refreshData}
+              disabled={loading}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+            >
+              Yenile
+            </button>
+          </div>
+          <div className="flex flex-wrap px-4 sm:px-5">
+            {[
+              { value: '1_month', label: 'Son 1 Ay' },
+              { value: '3_months', label: 'Son 3 Ay' },
+              { value: '6_months', label: 'Son 6 Ay' },
+              { value: '1_year', label: 'Son 1 Yıl' }
+            ].map((period) => (
               <button
-                onClick={refreshData}
-                disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+                key={period.value}
+                type="button"
+                onClick={() => setSelectedPeriod(period.value as '1_month' | '3_months' | '6_months' | '1_year')}
+                className={
+                  selectedPeriod === period.value
+                    ? '-mb-px border-b-2 border-[#00365a] px-4 py-2.5 text-sm font-medium text-[#00365a]'
+                    : 'px-4 py-2.5 text-sm text-slate-500 transition hover:text-slate-900'
+                }
               >
-                <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Yenile
+                {period.label}
               </button>
-            </div>
+            ))}
           </div>
         </div>
 
         {/* Toplam İstatistikler Kartları */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-blue-100 rounded-md flex items-center justify-center">
-                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                  </svg>
-                </div>
-              </div>
-              <div className="ml-4">
-                <h3 className="text-lg font-semibold text-gray-900">Toplam Sipariş</h3>
-                <p className="text-3xl font-bold text-blue-600">
-                  {statisticsData.order_statistics.total_orders}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">{getPeriodLabel(selectedPeriod)}</p>
-              </div>
-            </div>
+        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Toplam Sipariş</p>
+            <p className="mt-2 text-2xl font-light tabular-nums text-slate-900">{statisticsData.order_statistics.total_orders}</p>
+            <p className="mt-1 text-xs text-slate-500">{getPeriodLabel(selectedPeriod)}</p>
           </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-green-100 rounded-md flex items-center justify-center">
-                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                  </svg>
-                </div>
-              </div>
-              <div className="ml-4">
-                <h3 className="text-lg font-semibold text-gray-900">Toplam Harcama</h3>
-                <p className="text-3xl font-bold text-green-600">
-                  {statisticsData.order_statistics.total_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">{getPeriodLabel(selectedPeriod)}</p>
-              </div>
-            </div>
+          <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Toplam Harcama</p>
+            <p className="mt-2 text-2xl font-light tabular-nums text-slate-900">
+              {statisticsData.order_statistics.total_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}
+            </p>
+            <p className="mt-1 text-xs text-slate-500">{getPeriodLabel(selectedPeriod)}</p>
           </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-purple-100 rounded-md flex items-center justify-center">
-                  <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                </div>
-              </div>
-              <div className="ml-4">
-                <h3 className="text-lg font-semibold text-gray-900">Tamamlanan</h3>
-                <p className="text-3xl font-bold text-purple-600">
-                  {statisticsData.order_statistics.completed_orders}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">Onaylanmış + Teslim Edilmiş</p>
-              </div>
-            </div>
+          <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Tamamlanan</p>
+            <p className="mt-2 text-2xl font-light tabular-nums text-slate-900">{statisticsData.order_statistics.completed_orders}</p>
+            <p className="mt-1 text-xs text-slate-500">Onaylanmış + Teslim Edilmiş</p>
           </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-orange-100 rounded-md flex items-center justify-center">
-                  <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
-                  </svg>
-                </div>
-              </div>
-              <div className="ml-4">
-                <h3 className="text-lg font-semibold text-gray-900">Toplam Alan</h3>
-                <p className="text-3xl font-bold text-orange-600">
-                  {statisticsData.order_statistics.total_area_m2.toFixed(1)} m²
-                </p>
-                <p className="text-sm text-gray-500 mt-1">{getPeriodLabel(selectedPeriod)}</p>
-              </div>
-            </div>
+          <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Toplam Alan</p>
+            <p className="mt-2 text-2xl font-light tabular-nums text-slate-900">{statisticsData.order_statistics.total_area_m2.toFixed(1)} m²</p>
+            <p className="mt-1 text-xs text-slate-500">{getPeriodLabel(selectedPeriod)}</p>
           </div>
         </div>
 
         {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
           {/* En Çok Sipariş Ettiğim Ürünler */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">En Çok Sipariş Ettiğim Ürünler</h2>
+          <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+            <h2 className="mb-4 text-sm font-semibold text-slate-900">En Çok Sipariş Ettiğim Ürünler</h2>
             <div style={{ height: '400px' }}>
               <Bar data={topProductsChartData} options={simpleChartOptions} />
             </div>
             <div className="mt-4 space-y-2">
               {statisticsData.top_products.map((product, index) => (
-                <div key={product.product_id} className="flex justify-between items-center text-sm border-b border-gray-100 pb-2">
+                <div key={product.product_id} className="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
                   <div>
                     <div className="font-medium">{index + 1}. {product.product_name}</div>
-                    <div className="text-gray-500">{product.collection_name}</div>
+                    <div className="text-slate-500">{product.collection_name}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-gray-900">{product.total_quantity} adet</div>
-                    <div className="text-gray-500">{product.total_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}</div>
-                    <div className="text-xs text-blue-600">{product.order_count} sipariş</div>
+                    <div className="text-slate-900">{product.total_quantity} adet</div>
+                    <div className="text-slate-500">{product.total_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}</div>
+                    <div className="text-xs text-[#00365a]">{product.order_count} sipariş</div>
                   </div>
                 </div>
               ))}
@@ -670,22 +610,22 @@ export default function UserAnalyticsPage() {
           </div>
 
           {/* En Çok Tercih Ettiğim Koleksiyonlar */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">En Çok Tercih Ettiğim Koleksiyonlar</h2>
+          <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+            <h2 className="mb-4 text-sm font-semibold text-slate-900">En Çok Tercih Ettiğim Koleksiyonlar</h2>
             <div style={{ height: '400px' }}>
               <Bar data={topCollectionsChartData} options={simpleChartOptions} />
             </div>
             <div className="mt-4 space-y-2">
               {statisticsData.top_collections.map((collection, index) => (
-                <div key={collection.collection_id} className="flex justify-between items-center text-sm border-b border-gray-100 pb-2">
+                <div key={collection.collection_id} className="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
                   <div>
                     <div className="font-medium">{index + 1}. {collection.collection_name}</div>
-                    <div className="text-gray-500">Kod: {collection.collection_code}</div>
+                    <div className="text-slate-500">Kod: {collection.collection_code}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-gray-900">{collection.total_quantity} adet</div>
-                    <div className="text-gray-500">{collection.total_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}</div>
-                    <div className="text-xs text-blue-600">{collection.order_count} sipariş</div>
+                    <div className="text-slate-900">{collection.total_quantity} adet</div>
+                    <div className="text-slate-500">{collection.total_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}</div>
+                    <div className="text-xs text-[#00365a]">{collection.order_count} sipariş</div>
                   </div>
                 </div>
               ))}
@@ -694,10 +634,10 @@ export default function UserAnalyticsPage() {
         </div>
 
         {/* İkinci Satır Grafikler */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
           {/* Aylık Sipariş Trendi */}
-          <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Aylık Sipariş Trendi</h2>
+          <div className="lg:col-span-2 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+            <h2 className="mb-4 text-sm font-semibold text-slate-900">Aylık Sipariş Trendi</h2>
             <div style={{ height: '400px' }}>
               <Line data={monthlyOrdersChartData} options={chartOptions} />
             </div>
@@ -706,9 +646,9 @@ export default function UserAnalyticsPage() {
                 const date = new Date(item.month);
                 const monthName = date.toLocaleDateString('tr-TR', { year: 'numeric', month: 'short' });
                 return (
-                  <div key={index} className="text-center p-3 bg-gray-50 rounded-lg">
-                    <div className="text-sm font-semibold text-gray-900">{monthName}</div>
-                    <div className="text-xs text-gray-600 mt-1">
+                  <div key={index} className="text-center p-3 bg-slate-50 rounded-lg">
+                    <div className="text-sm font-semibold text-slate-900">{monthName}</div>
+                    <div className="text-xs text-slate-600 mt-1">
                       <div>{item.order_count} sipariş</div>
                       <div>{item.total_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}</div>
                     </div>
@@ -719,8 +659,8 @@ export default function UserAnalyticsPage() {
           </div>
 
           {/* Sipariş Durumu Dağılımı */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Sipariş Durumu Dağılımı</h2>
+          <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+            <h2 className="mb-4 text-sm font-semibold text-slate-900">Sipariş Durumu Dağılımı</h2>
             <div style={{ height: '300px' }}>
               <Doughnut data={orderStatusChartData} options={pieChartOptions} />
             </div>
@@ -758,30 +698,30 @@ export default function UserAnalyticsPage() {
         </div>
 
         {/* Özet Bilgiler */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Özet Bilgiler</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">{statisticsData.order_statistics.total_orders}</div>
-              <div className="text-sm text-gray-600">Toplam Sipariş</div>
+        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+          <h2 className="mb-4 text-sm font-semibold text-slate-900">Özet Bilgiler</h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-lg border border-slate-200/80 bg-slate-50/70 p-4 text-center">
+              <div className="text-2xl font-light tabular-nums text-slate-900">{statisticsData.order_statistics.total_orders}</div>
+              <div className="mt-1 text-sm text-slate-500">Toplam Sipariş</div>
             </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">
+            <div className="rounded-lg border border-slate-200/80 bg-slate-50/70 p-4 text-center">
+              <div className="text-2xl font-light tabular-nums text-slate-900">
                 {(statisticsData.order_statistics.total_amount / statisticsData.order_statistics.total_orders || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}
               </div>
-              <div className="text-sm text-gray-600">Ortalama Sipariş Tutarı</div>
+              <div className="mt-1 text-sm text-slate-500">Ortalama Sipariş Tutarı</div>
             </div>
-            <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">
+            <div className="rounded-lg border border-slate-200/80 bg-slate-50/70 p-4 text-center">
+              <div className="text-2xl font-light tabular-nums text-slate-900">
                 {((statisticsData.order_statistics.completed_orders / statisticsData.order_statistics.total_orders) * 100 || 0).toFixed(1)}%
               </div>
-              <div className="text-sm text-gray-600">Tamamlanma Oranı</div>
+              <div className="mt-1 text-sm text-slate-500">Tamamlanma Oranı</div>
             </div>
-            <div className="text-center p-4 bg-orange-50 rounded-lg">
-              <div className="text-2xl font-bold text-orange-600">
+            <div className="rounded-lg border border-slate-200/80 bg-slate-50/70 p-4 text-center">
+              <div className="text-2xl font-light tabular-nums text-slate-900">
                 {(statisticsData.order_statistics.total_area_m2 / statisticsData.order_statistics.total_orders || 0).toFixed(1)} m²
               </div>
-              <div className="text-sm text-gray-600">Ortalama Sipariş Alanı</div>
+              <div className="mt-1 text-sm text-slate-500">Ortalama Sipariş Alanı</div>
             </div>
           </div>
         </div>

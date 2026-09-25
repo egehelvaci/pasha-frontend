@@ -16,6 +16,16 @@ export default function AddStorePage() {
   const router = useRouter();
   const { isAdmin, isAdminOrEditor, token } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [notice, setNotice] = useState({ isOpen: false, title: '', message: '', isError: false, nextPath: '' });
+  const showNotice = (message: string, isError = false, nextPath = '') => {
+    setNotice({
+      isOpen: true,
+      title: isError ? 'İşlem tamamlanamadı' : 'İşlem tamamlandı',
+      message,
+      isError,
+      nextPath,
+    });
+  };
   const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false);
   const [formData, setFormData] = useState<CreateStoreData>({
     kurum_adi: '',
@@ -157,20 +167,16 @@ export default function AddStorePage() {
       const result = await response.json();
       if (result.success) {
         const storeId = result.data?.store_id;
-        alert('Mağaza başarıyla oluşturuldu. Şimdi adres bilgilerini ekleyebilirsiniz.');
-        
-        // Yeni oluşturulan mağazanın adres yönetimi sayfasına yönlendir
-        if (storeId) {
-          router.push(`/dashboard/magazalar/${storeId}/adresler`);
-        } else {
-          // Store ID bulunamazsa mağazalar listesine git
-          router.push('/dashboard/magazalar');
-        }
+        showNotice(
+          'Mağaza başarıyla oluşturuldu. Şimdi adres bilgilerini ekleyebilirsiniz.',
+          false,
+          storeId ? `/dashboard/magazalar/${storeId}/adresler` : '/dashboard/magazalar'
+        );
       } else {
         throw new Error(result.message || 'Mağaza oluşturulamadı');
       }
     } catch (error: any) {
-      alert(error.message || 'Mağaza oluşturulurken bir hata oluştu');
+      showNotice(error.message || 'Mağaza oluşturulurken bir hata oluştu', true);
     } finally {
       setLoading(false);
     }
@@ -548,6 +554,27 @@ export default function AddStorePage() {
             </div>
           </form>
         </div>
+        {notice.isOpen && (
+          <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 p-4">
+            <div className="w-full max-w-md rounded-xl border border-slate-200/80 bg-white p-6">
+              <h3 className="mb-3 text-lg font-semibold tracking-tight text-slate-900">{notice.title}</h3>
+              <p className={`mb-6 text-sm ${notice.isError ? 'text-rose-700' : 'text-slate-500'}`}>{notice.message}</p>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextPath = notice.nextPath;
+                    setNotice((prev) => ({ ...prev, isOpen: false, nextPath: '' }));
+                    if (nextPath) router.push(nextPath);
+                  }}
+                  className="rounded-lg bg-[#00365a] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#004170]"
+                >
+                  Tamam
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

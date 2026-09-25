@@ -38,6 +38,16 @@ export default function StoreAddressesPage() {
     is_default: false
   });
   const [submitting, setSubmitting] = useState(false);
+  const [notice, setNotice] = useState({ isOpen: false, title: '', message: '', isError: false });
+  const [addressToDelete, setAddressToDelete] = useState<string | null>(null);
+  const showNotice = (message: string, isError = false) => {
+    setNotice({
+      isOpen: true,
+      title: isError ? 'İşlem tamamlanamadı' : 'İşlem tamamlandı',
+      message,
+      isError,
+    });
+  };
 
   const storeId = params.storeId as string;
 
@@ -71,7 +81,7 @@ export default function StoreAddressesPage() {
       }
     } catch (error) {
       console.error('Adresler yüklenemedi:', error);
-      alert('Adresler yüklenirken bir hata oluştu');
+      showNotice('Adresler yüklenirken bir hata oluştu', true);
     } finally {
       setLoading(false);
     }
@@ -86,13 +96,13 @@ export default function StoreAddressesPage() {
       };
       const response = await createStoreAddress(payload);
       if (response.success) {
-        alert('Adres başarıyla eklendi');
+        showNotice('Adres başarıyla eklendi');
         setModal({ isOpen: false, type: 'create' });
         resetForm();
         fetchAddresses();
       }
     } catch (error: any) {
-      alert(error.message || 'Adres eklenirken bir hata oluştu');
+      showNotice(error.message || 'Adres eklenirken bir hata oluştu', true);
     } finally {
       setSubmitting(false);
     }
@@ -105,29 +115,29 @@ export default function StoreAddressesPage() {
       setSubmitting(true);
       const response = await updateStoreAddress(modal.address.id, formData);
       if (response.success) {
-        alert('Adres başarıyla güncellendi');
+        showNotice('Adres başarıyla güncellendi');
         setModal({ isOpen: false, type: 'edit' });
         resetForm();
         fetchAddresses();
       }
     } catch (error: any) {
-      alert(error.message || 'Adres güncellenirken bir hata oluştu');
+      showNotice(error.message || 'Adres güncellenirken bir hata oluştu', true);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleDeleteAddress = async (addressId: string) => {
-    if (!confirm('Bu adresi silmek istediğinizden emin misiniz?')) return;
-    
+  const handleDeleteAddress = async () => {
+    if (!addressToDelete) return;
     try {
-      const response = await deleteStoreAddress(addressId);
+      const response = await deleteStoreAddress(addressToDelete);
       if (response.success) {
-        alert('Adres başarıyla silindi');
+        setAddressToDelete(null);
+        showNotice('Adres başarıyla silindi');
         fetchAddresses();
       }
     } catch (error: any) {
-      alert(error.message || 'Adres silinirken bir hata oluştu');
+      showNotice(error.message || 'Adres silinirken bir hata oluştu', true);
     }
   };
 
@@ -135,11 +145,11 @@ export default function StoreAddressesPage() {
     try {
       const response = await setDefaultStoreAddress(addressId);
       if (response.success) {
-        alert('Varsayılan adres değiştirildi');
+        showNotice('Varsayılan adres değiştirildi');
         fetchAddresses();
       }
     } catch (error: any) {
-      alert(error.message || 'Varsayılan adres değiştirilemedi');
+      showNotice(error.message || 'Varsayılan adres değiştirilemedi', true);
     }
   };
 
@@ -181,67 +191,52 @@ export default function StoreAddressesPage() {
   if (!isOrderMode && !isAdminOrEditor) return null;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
+    <div className="min-h-screen bg-[#f7f8fa]">
+      <div className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+          <div>
             <button
+              type="button"
               onClick={() => router.push('/dashboard/magazalar')}
-              className="text-gray-500 hover:text-gray-700 transition-colors"
+              className="mb-3 text-sm font-medium text-slate-500 transition hover:text-[#00365a]"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
+              Mağazalara dön
             </button>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Mağaza Adres Yönetimi
-            </h1>
+            <h1 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl">Mağaza Adres Yönetimi</h1>
+            <div className="mt-3 h-px w-[min(100%,20rem)] bg-neutral-300" />
+            <p className="mt-3 text-sm text-slate-500">Mağaza adreslerini yönetin</p>
           </div>
-          <div className="flex justify-between items-center">
-            <p className="text-gray-600">
-              Mağaza adreslerini yönetin
-            </p>
-            {!isOrderMode && (
-              <button
-                onClick={openCreateModal}
-                className="bg-[#00365a] text-white px-6 py-2 rounded-lg hover:bg-[#004170] transition-colors flex items-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Yeni Adres Ekle
-              </button>
-            )}
-          </div>
+          {!isOrderMode && (
+            <button
+              type="button"
+              onClick={openCreateModal}
+              className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170]"
+            >
+              Yeni Adres Ekle
+            </button>
+          )}
         </div>
 
         {/* Address List */}
         {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="flex h-64 items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
           </div>
         ) : (
-          <div className="grid gap-6">
+          <div>
             {addresses.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
-                  <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Henüz adres yok</h3>
-                <p className="text-gray-600 mb-6">
-                  {isOrderMode 
-                    ? 'Bu mağaza için henüz adres tanımlanmamış. Sipariş verebilmek için önce adres eklenmeli.' 
-                    : 'Bu mağaza için henüz adres tanımlanmamış'
-                  }
+              <div className="rounded-xl border border-slate-200/80 bg-white px-6 py-16 text-center shadow-sm">
+                <h3 className="mb-2 text-lg font-semibold tracking-tight text-slate-900">Henüz adres yok</h3>
+                <p className="mb-6 text-sm text-slate-500">
+                  {isOrderMode
+                    ? 'Bu mağaza için henüz adres tanımlanmamış. Sipariş verebilmek için önce adres eklenmeli.'
+                    : 'Bu mağaza için henüz adres tanımlanmamış'}
                 </p>
                 {!isOrderMode && (
                   <button
+                    type="button"
                     onClick={openCreateModal}
-                    className="bg-[#00365a] text-white px-6 py-3 rounded-lg hover:bg-[#004170] transition-colors"
+                    className="rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170]"
                   >
                     İlk Adresi Ekle
                   </button>
@@ -252,34 +247,32 @@ export default function StoreAddressesPage() {
                 {addresses.map((address) => (
                   <div
                     key={address.id}
-                    className={`bg-white rounded-lg shadow-sm border-2 p-6 transition-all ${
-                      address.is_default ? 'border-green-200 bg-green-50' : 'border-gray-200'
-                    }`}
+                    className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm"
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900">{address.title}</h3>
+                          <h3 className="text-lg font-semibold text-slate-900">{address.title}</h3>
                           {address.is_default && (
-                            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                            <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
                               Varsayılan
                             </span>
                           )}
                           {!address.is_active && (
-                            <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
+                            <span className="rounded-full bg-rose-50 px-2.5 py-0.5 text-xs font-medium text-rose-700">
                               Pasif
                             </span>
                           )}
                         </div>
-                        <p className="text-gray-700 mb-2">{address.address}</p>
+                        <p className="text-slate-700 mb-2">{address.address}</p>
                         {(address.district || address.city || address.postal_code) && (
-                          <p className="text-gray-600 text-sm">
+                          <p className="text-slate-500 text-sm">
                             {address.district && address.district + ', '}
                             {address.city}
                             {address.postal_code && ' - ' + address.postal_code}
                           </p>
                         )}
-                        <p className="text-gray-500 text-xs mt-2">
+                        <p className="mt-2 text-xs text-slate-500">
                           Oluşturulma: {new Date(address.created_at).toLocaleDateString('tr-TR')}
                         </p>
                       </div>
@@ -290,32 +283,26 @@ export default function StoreAddressesPage() {
                           <>
                             {!address.is_default && (
                               <button
+                                type="button"
                                 onClick={() => handleSetDefault(address.id)}
-                                className="text-green-600 hover:text-green-700 p-2 rounded-lg hover:bg-green-50 transition-colors"
-                                title="Varsayılan yap"
+                                className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
                               >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                                Varsayılan yap
                               </button>
                             )}
                             <button
+                              type="button"
                               onClick={() => openEditModal(address)}
-                              className="text-blue-600 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition-colors"
-                              title="Düzenle"
+                              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                              </svg>
+                              Düzenle
                             </button>
                             <button
-                              onClick={() => handleDeleteAddress(address.id)}
-                              className="text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors"
-                              title="Sil"
+                              type="button"
+                              onClick={() => setAddressToDelete(address.id)}
+                              className="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs font-medium text-rose-700 transition hover:bg-rose-50"
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
+                              Sil
                             </button>
                           </>
                         )}
@@ -330,18 +317,17 @@ export default function StoreAddressesPage() {
 
         {/* Modal */}
         {modal.isOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-xl max-w-2xl w-full shadow-2xl">
-              <div className="bg-[#00365a] text-white rounded-t-xl p-6">
-                <h3 className="text-xl font-bold">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div className="w-full max-w-2xl rounded-xl border border-slate-200/80 bg-white shadow-sm">
+              <div className="border-b border-slate-200/80 px-6 py-4">
+                <h3 className="text-lg font-semibold tracking-tight text-slate-900">
                   {modal.type === 'create' ? 'Yeni Adres Ekle' : 'Adres Düzenle'}
                 </h3>
               </div>
-              
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
                       Adres Başlığı <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -349,13 +335,13 @@ export default function StoreAddressesPage() {
                       value={formData.title}
                       onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                       placeholder="Örn: Ana Mağaza, Depo, Şube 1"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 transition hover:bg-white focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25"
                       required
                     />
                   </div>
                   
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
                       Tam Adres <span className="text-red-500">*</span>
                     </label>
                     <textarea
@@ -363,41 +349,41 @@ export default function StoreAddressesPage() {
                       onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
                       placeholder="Sokak, cadde, mahalle, bina no vs."
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 transition hover:bg-white focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25"
                       required
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">İlçe</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">İlçe</label>
                     <input
                       type="text"
                       value={formData.district}
                       onChange={(e) => setFormData(prev => ({ ...prev, district: e.target.value }))}
                       placeholder="Örn: Kadıköy"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 transition hover:bg-white focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Şehir</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Şehir</label>
                     <input
                       type="text"
                       value={formData.city}
                       onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
                       placeholder="Örn: İstanbul"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 transition hover:bg-white focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Posta Kodu</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Posta Kodu</label>
                     <input
                       type="text"
                       value={formData.postal_code}
                       onChange={(e) => setFormData(prev => ({ ...prev, postal_code: e.target.value }))}
                       placeholder="Örn: 34710"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 transition hover:bg-white focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25"
                     />
                   </div>
                   
@@ -407,9 +393,9 @@ export default function StoreAddressesPage() {
                         type="checkbox"
                         checked={formData.is_default}
                         onChange={(e) => setFormData(prev => ({ ...prev, is_default: e.target.checked }))}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="rounded border-slate-300 text-blue-600 focus-visible:ring-2 focus-visible:ring-[#00365a]/25 focus:outline-none"
                       />
-                      <span className="ml-2 text-sm text-gray-700">Varsayılan adres olarak ayarla</span>
+                      <span className="ml-2 text-sm text-slate-700">Varsayılan adres olarak ayarla</span>
                     </label>
                   </div>
                 </div>
@@ -417,25 +403,61 @@ export default function StoreAddressesPage() {
                 <div className="flex justify-end gap-3 mt-6">
                   <button
                     onClick={closeModal}
-                    className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                    className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
                   >
                     İptal
                   </button>
                   <button
                     onClick={modal.type === 'create' ? handleCreateAddress : handleUpdateAddress}
                     disabled={submitting || !formData.title || !formData.address}
-                    className="px-6 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="inline-flex items-center gap-2 rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170] disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {submitting ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                        {modal.type === 'create' ? 'Ekleniyor...' : 'Güncelleniyor...'}
-                      </>
-                    ) : (
-                      modal.type === 'create' ? 'Ekle' : 'Güncelle'
-                    )}
+                    {submitting
+                      ? (modal.type === 'create' ? 'Ekleniyor...' : 'Güncelleniyor...')
+                      : (modal.type === 'create' ? 'Ekle' : 'Güncelle')}
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {addressToDelete && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4">
+            <div className="w-full max-w-md rounded-xl border border-slate-200/80 bg-white p-6">
+              <h3 className="mb-3 text-lg font-semibold tracking-tight text-slate-900">Adresi sil</h3>
+              <p className="mb-6 text-sm text-slate-500">Bu adresi silmek istediğinizden emin misiniz?</p>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setAddressToDelete(null)}
+                  className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                >
+                  Vazgeç
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteAddress}
+                  className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-700"
+                >
+                  Sil
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {notice.isOpen && (
+          <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 p-4">
+            <div className="w-full max-w-md rounded-xl border border-slate-200/80 bg-white p-6">
+              <h3 className="mb-3 text-lg font-semibold tracking-tight text-slate-900">{notice.title}</h3>
+              <p className={`mb-6 text-sm ${notice.isError ? 'text-rose-700' : 'text-slate-500'}`}>{notice.message}</p>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setNotice((prev) => ({ ...prev, isOpen: false }))}
+                  className="rounded-lg bg-[#00365a] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#004170]"
+                >
+                  Tamam
+                </button>
               </div>
             </div>
           </div>

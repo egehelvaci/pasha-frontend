@@ -17,6 +17,15 @@ export default function StoreUsersPage() {
   const [store, setStore] = useState<Store | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [notice, setNotice] = useState({ isOpen: false, title: '', message: '', isError: false });
+  const showNotice = (message: string, isError = false) => {
+    setNotice({
+      isOpen: true,
+      title: isError ? 'İşlem tamamlanamadı' : 'İşlem tamamlandı',
+      message,
+      isError,
+    });
+  };
 
   const storeId = params.storeId as string;
 
@@ -62,7 +71,7 @@ export default function StoreUsersPage() {
       setUsers(data);
     } catch (error: any) {
       console.error('Kullanıcılar yüklenirken hata:', error);
-      alert(error.message || 'Kullanıcılar yüklenirken bir hata oluştu');
+      showNotice(error.message || 'Kullanıcılar yüklenirken bir hata oluştu', true);
     } finally {
       setLoading(false);
     }
@@ -95,23 +104,8 @@ export default function StoreUsersPage() {
   // Loading state
   if (authLoading) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="relative">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[#00365a]"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <svg className="w-6 h-6 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-            </div>
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-900">Yetkilendirme Kontrol Ediliyor</h3>
-              <p className="text-sm text-gray-500 mt-1">Lütfen bekleyiniz...</p>
-            </div>
-          </div>
-        </div>
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f8fa]">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
       </div>
     );
   }
@@ -123,140 +117,109 @@ export default function StoreUsersPage() {
   }
   if (!isOrderMode && !isAdminOrEditor) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center max-w-md">
-          <div className="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
-            <svg className="h-10 w-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-3">Erişim Reddedildi</h3>
-          <p className="text-gray-600 mb-8 leading-relaxed">Bu sayfaya erişim yetkiniz bulunmamaktadır. Kullanıcı yönetimi sadece admin ve editör kullanıcılar tarafından kullanılabilir.</p>
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f8fa] px-4">
+        <div className="w-full max-w-md rounded-xl border border-slate-200/80 bg-white p-8 text-center shadow-sm">
+          <h3 className="text-base font-semibold text-slate-900">Erişim Reddedildi</h3>
+          <p className="mt-2 text-sm text-slate-500">
+            Bu sayfaya erişim yetkiniz bulunmamaktadır. Kullanıcı yönetimi sadece admin ve editör kullanıcılar tarafından kullanılabilir.
+          </p>
           <button
+            type="button"
             onClick={() => router.push('/dashboard')}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
+            className="mt-6 rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170]"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
-            </svg>
-            Dashboard'a Dön
+            Dashboard&apos;a Dön
           </button>
         </div>
       </div>
     );
   }
 
+  const openOrderForUser = (user: StoreUser) => {
+    if (!isAdmin) return;
+    const userId = user.user_id || (user as any).id || (user as any).userId;
+    router.push(
+      `/dashboard/admin-siparis-olustur?storeId=${storeId}&userId=${userId}&userName=${encodeURIComponent(`${user.name} ${user.surname}`)}`
+    );
+  };
+
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto">
-        {/* Page Header */}
-        <div className="mb-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <div className="flex items-center mb-2">
-                <button
-                  onClick={() => router.push('/dashboard/magazalar')}
-                  className="mr-4 text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <h1 className="text-3xl font-bold text-[#00365a] flex items-center">
-                  {selectedAddressTitle ? 'Kullanıcı Seçin - Sipariş Ver' : 'Mağaza Kullanıcıları'}
-                </h1>
-                {selectedAddressTitle && (
-                  <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-800">
-                      <strong>Seçilen Adres:</strong> {decodeURIComponent(selectedAddressTitle)}
-                    </p>
-                    <p className="text-xs text-blue-600 mt-1">
-                      Bu adrese sipariş vermek için bir kullanıcı seçin
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+    <div className="min-h-screen bg-[#f7f8fa]">
+      <div className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <div className="mb-6">
+          <button
+            type="button"
+            onClick={() => router.push('/dashboard/magazalar')}
+            className="mb-3 text-sm font-medium text-slate-500 transition hover:text-[#00365a]"
+          >
+            Mağazalara dön
+          </button>
+          <h1 className="text-2xl font-light tracking-[0.08em] text-neutral-900 sm:text-3xl">
+            {selectedAddressTitle ? 'Kullanıcı Seçin' : 'Mağaza Kullanıcıları'}
+          </h1>
+          <div className="mt-3 h-px w-[min(100%,20rem)] bg-neutral-300" />
+          <p className="mt-3 text-sm text-slate-500">
+            {store ? `${store.kurum_adi} · ` : ''}
+            {selectedAddressTitle
+              ? `Seçilen adres: ${decodeURIComponent(selectedAddressTitle)}. Sipariş vermek için bir kullanıcı seçin.`
+              : `${filteredUsers.length} kullanıcı`}
+          </p>
+          <input
+            type="search"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Kullanıcı ara"
+            className="mt-4 w-full max-w-sm rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25"
+          />
         </div>
 
-        {/* Main Content */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 bg-[#00365a]">
-            <div className="flex items-center">
-              <h3 className="text-lg font-semibold text-white">Kullanıcı Listesi</h3>
-              <span className="ml-4 text-blue-100 text-sm">({filteredUsers.length} kullanıcı)</span>
-            </div>
-          </div>
-
+        <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
           {loading ? (
-            <div className="flex flex-col items-center justify-center h-48 p-6">
-              <div className="relative">
-                <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[#00365a]"></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-[#00365a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
-              </div>
-              <div className="text-center mt-4">
-                <h3 className="text-lg font-semibold text-gray-900">Kullanıcılar Yükleniyor</h3>
-                <p className="text-sm text-gray-500 mt-1">Lütfen bekleyiniz...</p>
-              </div>
+            <div className="flex h-48 items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
             </div>
           ) : filteredUsers.length > 0 ? (
             <>
               {/* Desktop Table View */}
               <div className="hidden xl:block overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-slate-200">
+                  <thead className="bg-slate-50">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Kullanıcı Bilgileri
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Kullanıcı
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                         İletişim
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Durum
+                      <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        İşlem
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="divide-y divide-slate-200 bg-white">
                     {filteredUsers.map((user) => (
-                      <tr 
-                        key={user.user_id} 
-                        className={`hover:bg-gray-50 transition-colors ${isAdmin ? 'cursor-pointer' : ''}`}
-                        onClick={() => {
-                          if (!isAdmin) return;
-                          const userId = user.user_id || (user as any).id || (user as any).userId;
-                          const url = `/dashboard/admin-siparis-olustur?storeId=${storeId}&userId=${userId}&userName=${encodeURIComponent(`${user.name} ${user.surname}`)}`;
-                          router.push(url);
-                        }}
+                      <tr
+                        key={user.user_id}
+                        className={`transition hover:bg-slate-50 ${isAdmin ? 'cursor-pointer' : ''}`}
+                        onClick={() => openOrderForUser(user)}
                       >
                         <td className="px-6 py-4">
-                          <div>
-                            <div className="text-sm font-semibold text-gray-900">{user.name} {user.surname}</div>
-                            <div className="text-sm text-gray-500">@{user.username}</div>
-                          </div>
+                          <div className="text-sm font-medium text-slate-900">{user.name} {user.surname}</div>
+                          <div className="text-sm text-slate-500">@{user.username}</div>
                         </td>
                         <td className="px-6 py-4">
-                          <div>
-                            <div className="text-sm text-gray-900">{user.email}</div>
-                            {user.phone_number && (
-                              <div className="text-sm text-gray-500">{user.phone_number}</div>
-                            )}
-                          </div>
+                          <div className="text-sm text-slate-900">{user.email}</div>
+                          {user.phone_number && (
+                            <div className="text-sm text-slate-500">{user.phone_number}</div>
+                          )}
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 text-right">
                           {isAdmin ? (
-                            <div className="flex items-center justify-center">
-                              <button className="px-3 py-1 bg-[#00365a] text-white text-sm rounded-lg hover:bg-[#004170] transition-colors">
-                                Sipariş Ver
-                              </button>
-                            </div>
+                            <span className="inline-flex rounded-lg bg-[#00365a] px-3 py-1.5 text-xs font-medium text-white">
+                              Sipariş Ver
+                            </span>
                           ) : (
-                            <span className="text-sm text-gray-400">—</span>
+                            <span className="text-sm text-slate-400">—</span>
                           )}
                         </td>
                       </tr>
@@ -266,96 +229,61 @@ export default function StoreUsersPage() {
               </div>
 
               {/* Mobile/Tablet Card View */}
-              <div className="xl:hidden p-6">
-                <div className="space-y-6">
-                  {filteredUsers.map((user) => (
-                    <div 
-                      key={user.user_id} 
-                      className={`bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow ${isAdmin ? 'cursor-pointer' : ''}`}
-                      onClick={() => {
-                        if (!isAdmin) return;
-                        const userId = user.user_id || (user as any).id || (user as any).userId;
-                        const url = `/dashboard/admin-siparis-olustur?storeId=${storeId}&userId=${userId}&userName=${encodeURIComponent(`${user.name} ${user.surname}`)}`;
-                        router.push(url);
-                      }}>
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-1">{user.name} {user.surname}</h3>
-                          <p className="text-sm text-gray-500">@{user.username}</p>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div className="bg-blue-50 rounded-lg p-4">
-                          <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                            <svg className="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                            İletişim
-                          </h4>
-                          <p className="text-sm text-gray-900">{user.email}</p>
-                          {user.phone_number && <p className="text-sm text-gray-500">{user.phone_number}</p>}
-                        </div>
-
-                        {isAdmin && (
-                          <div className="bg-blue-50 rounded-lg p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <button className="w-full px-4 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors flex items-center justify-center gap-2">
-                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5-5M17 13v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
-                                  </svg>
-                                  Sipariş Ver
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="space-y-3 p-4 xl:hidden">
+                {filteredUsers.map((user) => (
+                  <div
+                    key={user.user_id}
+                    className={`rounded-xl border border-slate-200/80 bg-white p-4 ${isAdmin ? 'cursor-pointer' : ''}`}
+                    onClick={() => openOrderForUser(user)}
+                  >
+                    <div className="text-sm font-medium text-slate-900">{user.name} {user.surname}</div>
+                    <p className="text-sm text-slate-500">@{user.username}</p>
+                    <p className="mt-2 text-sm text-slate-700">{user.email}</p>
+                    {user.phone_number && <p className="text-sm text-slate-500">{user.phone_number}</p>}
+                    {isAdmin && (
+                      <span className="mt-3 inline-flex rounded-lg bg-[#00365a] px-3 py-1.5 text-xs font-medium text-white">
+                        Sipariş Ver
+                      </span>
+                    )}
+                  </div>
+                ))}
               </div>
             </>
           ) : (
-            <div className="text-center py-16 p-6">
-              <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
-                <svg className="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Kullanıcı Bulunamadı</h3>
-              <p className="text-gray-600 mb-6 max-w-md mx-auto leading-relaxed">
-                {searchTerm 
-                  ? 'Arama kriterlerinize uygun kullanıcı bulunamadı. Arama terimini değiştirerek tekrar deneyin.'
-                  : 'Bu mağazaya henüz hiç kullanıcı atanmamış.'
-                }
+            <div className="px-6 py-16 text-center">
+              <h3 className="mb-2 text-lg font-semibold tracking-tight text-slate-900">Kullanıcı bulunamadı</h3>
+              <p className="mx-auto mb-6 max-w-md text-sm text-slate-500">
+                {searchTerm
+                  ? 'Arama kriterlerinize uygun kullanıcı bulunamadı.'
+                  : 'Bu mağazaya henüz kullanıcı atanmamış.'}
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                {searchTerm && (
-                  <button
-                    onClick={() => setSearchTerm("")}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-white hover:bg-gray-50 text-[#00365a] border-2 border-[#00365a] rounded-lg font-semibold transition-all hover:shadow-md"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    Aramayı Temizle
-                  </button>
-                )}
-                <button
-                  onClick={() => router.push('/dashboard/magazalar')}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#00365a] hover:bg-[#004170] text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
-                  </svg>
-                  Mağazalara Dön
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => router.push('/dashboard/magazalar')}
+                className="rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#004170]"
+              >
+                Mağazalara Dön
+              </button>
             </div>
           )}
         </div>
+        {notice.isOpen && (
+          <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 p-4">
+            <div className="w-full max-w-md rounded-xl border border-slate-200/80 bg-white p-6">
+              <h3 className="mb-3 text-lg font-semibold tracking-tight text-slate-900">{notice.title}</h3>
+              <p className={`mb-6 text-sm ${notice.isError ? 'text-rose-700' : 'text-slate-500'}`}>{notice.message}</p>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setNotice((prev) => ({ ...prev, isOpen: false }))}
+                  className="rounded-lg bg-[#00365a] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#004170]"
+                >
+                  Tamam
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
