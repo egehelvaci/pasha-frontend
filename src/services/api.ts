@@ -4671,6 +4671,7 @@ export async function completeSupplierPurchase(
 // Purchase product from supplier
 export interface PurchaseProductFromSupplierData {
   product_id: string;
+  width: number;
   quantity_m2: number;
   description?: string;
   reference_number?: string;

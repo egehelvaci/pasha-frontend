@@ -176,20 +176,6 @@ export default function StokPage() {
   // Debounce timer için ref
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
 
-  // Opsiyonel boy ürünlerde boy değiştiğinde m² hesaplama
-  useEffect(() => {
-    if (selectedProduct && selectedSizeOption) {
-      const productType = getProductType(selectedProduct.sizeOptions || []);
-      if (productType === 'optional_height' && stockForm.width > 0 && stockForm.height > 0) {
-        const calculatedAreaM2 = (stockForm.width * stockForm.height) / 10000; // cm² -> m²
-        setStockForm(prev => ({
-          ...prev,
-          areaM2: calculatedAreaM2
-        }));
-      }
-    }
-  }, [stockForm.width, stockForm.height, selectedProduct, selectedSizeOption]);
-
   // Component unmount olduğunda body scroll'unu geri aç
   useEffect(() => {
     return () => {
@@ -383,14 +369,13 @@ export default function StokPage() {
 
     if (productToUse.sizeOptions && productToUse.sizeOptions.length > 0) {
       const firstOption = productToUse.sizeOptions[0];
-      const productType = getProductType(productToUse.sizeOptions);
 
       setSelectedSizeOption(firstOption);
 
-      if (productType === 'optional_height') {
+      if (firstOption.is_optional_height) {
         setStockForm({
           width: firstOption.width,
-          height: 10000, // Opsiyonel ürünlerde height sabit 10000
+          height: 0,
           quantity: 0,
           areaM2: 0,
           updateMode: 'add' // Varsayılan olarak ekleme modu
@@ -465,14 +450,12 @@ export default function StokPage() {
   const handleSizeOptionChange = (sizeOption: SizeOption) => {
     setSelectedSizeOption(sizeOption);
 
-    const productType = getProductType(selectedProduct?.sizeOptions || []);
-
-    if (productType === 'optional_height') {
+    if (sizeOption.is_optional_height) {
       // Opsiyonel boy: m² bazlı
       setStockForm(prev => ({
         ...prev,
         width: sizeOption.width,
-        height: 10000, // Opsiyonel ürünlerde height sabit 10000
+        height: 0,
         quantity: 0,
         areaM2: 0,
         updateMode: 'add' // Varsayılan olarak ekleme modu
@@ -517,7 +500,7 @@ export default function StokPage() {
       return;
     }
 
-    const productType = getProductType(selectedProduct.sizeOptions || []);
+    const productType = selectedSizeOption?.is_optional_height ? 'optional_height' : 'fixed_size';
     let apiUrl: string;
     let requestBody: any;
 
@@ -525,8 +508,8 @@ export default function StokPage() {
       // Opsiyonel boy: m² bazlı stok işlemi
       apiUrl = `${API_BASE_URL}/api/products/${selectedProduct.productId}/stock-area`;
 
-      if (stockForm.width <= 0 || stockForm.height <= 0 || (stockForm.areaM2 || 0) < 0) {
-        alert('Lütfen geçerli boyut ve m² değerleri girin!');
+      if (stockForm.width <= 0 || (stockForm.areaM2 || 0) < 0) {
+        alert('Lütfen geçerli genişlik ve m² değerleri girin!');
         return;
       }
 
@@ -543,46 +526,33 @@ export default function StokPage() {
 
       requestBody = {
         width: stockForm.width,
-        height: 10000,
+        height: 0,
         areaM2: finalAreaM2,
         updateMode: stockForm.updateMode
       };
     } else {
-      // Hazır kesim: adet bazlı stok işlemi
-      apiUrl = `${API_BASE_URL}/api/products/${selectedProduct.productId}/stock`;
+      // Hazır kesim de aynı enin m² havuzunu günceller. Adedi doğrudan
+      // hedeflemek, havuzdaki başka hazır boylardan kalan m²'yi kaybettirirdi.
+      apiUrl = `${API_BASE_URL}/api/products/${selectedProduct.productId}/stock-area`;
 
       if (stockForm.width <= 0 || stockForm.height <= 0 || stockForm.quantity < 0) {
         alert('Lütfen geçerli boyut ve adet değerleri girin!');
         return;
       }
 
-      let finalQuantity = stockForm.quantity;
-      
-      if (stockForm.updateMode === 'add') {
-        // EKLEME MODU: Mevcut stok + eklenen miktar
-        let currentStock = 0;
-        
-        if (selectedSizeOption) {
-          // Size option kullanılan durum
-          currentStock = selectedSizeOption.stockQuantity || 0;
-        } else if (selectedProduct.variations && selectedProduct.variations.length > 0) {
-          // Variations kullanılan durum - aynı boyuttaki variation'ı bul
-          const matchingVariation = selectedProduct.variations.find(
-            v => v.width === stockForm.width && v.height === stockForm.height
-          );
-          currentStock = matchingVariation?.stockQuantity || 0;
-        }
-        
-        finalQuantity = currentStock + stockForm.quantity;
-      } else if (stockForm.updateMode === 'set') {
-        // GÜNCELLEME MODU: Direkt yazılan değer
-        finalQuantity = stockForm.quantity;
-      }
+      const pieceAreaM2 = (stockForm.width * stockForm.height) / 10000;
+      const enteredAreaM2 = (stockForm.areaM2ForFixed || 0) > 0
+        ? (stockForm.areaM2ForFixed || 0)
+        : stockForm.quantity * pieceAreaM2;
+      const currentWidthAreaM2 = selectedSizeOption?.stockAreaM2 || 0;
+      const finalAreaM2 = stockForm.updateMode === 'add'
+        ? currentWidthAreaM2 + enteredAreaM2
+        : enteredAreaM2;
 
       requestBody = {
         width: stockForm.width,
         height: stockForm.height,
-        quantity: finalQuantity,
+        areaM2: finalAreaM2,
         updateMode: stockForm.updateMode
       };
     }
@@ -1050,7 +1020,7 @@ export default function StokPage() {
                             }`}
                           >
                             <div className="text-sm font-medium tabular-nums text-slate-900">
-                              {option.width} × {option.height}
+                              {option.width} × {option.is_optional_height ? 'Özel' : option.height}
                             </div>
                             <div className="mt-0.5 text-xs text-slate-500">cm</div>
                             <div className="mt-2">
@@ -1156,8 +1126,7 @@ export default function StokPage() {
                 {/* Stok Ayarlama Formu - Ürün Tipine Göre */}
                 {selectedProduct.sizeOptions && selectedProduct.sizeOptions.length > 0 && (
                   (() => {
-                    const productType = getProductType(selectedProduct.sizeOptions);
-                    const isOptionalHeight = productType === 'optional_height';
+                    const isOptionalHeight = selectedSizeOption?.is_optional_height === true;
 
                     return (
                       <div className="mt-5 border-t border-slate-200/80 pt-5">
@@ -1170,38 +1139,10 @@ export default function StokPage() {
                           <div className="mt-3 space-y-4">
                             <div>
                               <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
-                                Boy (cm):
+                                {selectedSizeOption?.width} cm en için stok (m²):
                               </label>
                               <p className="mb-2 text-xs text-slate-500">
-                                Opsiyonel boy ürünlerde boy değeri girin. m² otomatik hesaplanacaktır.
-                              </p>
-                              <input
-                                type="number"
-                                step="0.1"
-                                min="0"
-                                value={inputValues.height}
-                                onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                                onChange={(e) => {
-                                  const heightValue = e.target.value;
-                                  const height = heightValue === '' ? 0 : Math.max(0, Number(heightValue));
-                                  setInputValues(prev => ({ ...prev, height: heightValue }));
-                                  setStockForm(prev => ({
-                                    ...prev,
-                                    height: height,
-                                    quantity: 0
-                                  }));
-                                }}
-                                className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition hover:border-slate-400 focus:border-[#00365a] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/15"
-                                placeholder="Boy değeri (cm)"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
-                                m² (Manuel giriş için):
-                              </label>
-                              <p className="mb-2 text-xs text-slate-500">
-                                Boy değiştiğinde m² otomatik hesaplanır. Manuel giriş yapabilirsiniz.
+                                Aynı endeki hazır ebatlar ve özel kesimler bu ortak havuzu kullanır.
                               </p>
                               <input
                                 type="number"
@@ -1316,7 +1257,7 @@ export default function StokPage() {
                       <div>
                         <dt className="text-xs text-slate-500">Seçilen boyut</dt>
                         <dd className="mt-0.5 font-medium tabular-nums text-slate-900">
-                          {stockForm.width}x{stockForm.height} cm
+                          {selectedSizeOption.is_optional_height ? `${stockForm.width} cm × özel boy` : `${stockForm.width}x${stockForm.height} cm`}
                         </dd>
                       </div>
                       <div>
@@ -1373,9 +1314,9 @@ export default function StokPage() {
                   disabled={
                     isUpdatingStock ||
                     stockForm.width <= 0 ||
-                    stockForm.height <= 0 ||
+                    (!selectedSizeOption?.is_optional_height && stockForm.height <= 0) ||
                     (selectedProduct.sizeOptions && selectedProduct.sizeOptions.length > 0 ?
-                      (getProductType(selectedProduct.sizeOptions) === 'optional_height' ?
+                      (selectedSizeOption?.is_optional_height ?
                         (stockForm.areaM2 || 0) < 0 :
                         stockForm.quantity < 0
                       ) :
@@ -1398,4 +1339,4 @@ export default function StokPage() {
       </div>
     </div>
   );
-} 
+}
