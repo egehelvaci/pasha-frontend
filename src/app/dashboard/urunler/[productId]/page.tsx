@@ -33,7 +33,6 @@ export default function ProductDetail() {
   // Sepete ekleme için state'ler
   const [addToCartLoading, setAddToCartLoading] = useState(false);
   const [addToCartSuccess, setAddToCartSuccess] = useState(false);
-  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [addToCartError, setAddToCartError] = useState("");
   
   // Ön sipariş için state'ler
@@ -343,7 +342,6 @@ export default function ProductDetail() {
       
       // Başarılı
       setAddToCartSuccess(true);
-      setShowSuccessPopup(true);
       setQuantity(1); // Miktar sıfırla
       setNotes(""); // Notları temizle
       
@@ -962,8 +960,10 @@ export default function ProductDetail() {
                     )}
 
                     {addToCartSuccess && (
-                      <div className="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
-                        Ürün başarıyla sepete eklendi!
+                      <div role="status" aria-live="polite" className="fixed right-4 top-24 z-[70] flex max-w-sm items-center gap-3 rounded-xl border border-emerald-200 bg-white px-4 py-3 text-sm text-emerald-800 shadow-xl">
+                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-700">✓</span>
+                        <span className="font-medium">Ürün sepete eklendi.</span>
+                        <Link href="/dashboard/sepetim" className="ml-2 font-semibold text-[#00365a] hover:underline">Sepete git</Link>
                       </div>
                     )}
 
@@ -1099,45 +1099,6 @@ export default function ProductDetail() {
           <UpdateProductModal open={modalOpen} onClose={() => setModalOpen(false)} product={product} collections={collections} onSuccess={setProduct} />
         )}
 
-        {/* Başarı Pop-up */}
-        {showSuccessPopup && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-[2px]">
-            <div className="mx-4 w-full max-w-md rounded-xl border border-slate-200/80 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-200 ease-out">
-              <div className="p-6 text-center">
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
-                  <svg className="h-7 w-7 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <h3 className="mb-1 text-lg font-semibold tracking-tight text-slate-900">
-                  Ürün sepete eklendi
-                </h3>
-                <div className="mt-6 flex flex-col gap-2.5">
-                  <Link
-                    href="/dashboard/sepetim"
-                    className="w-full rounded-lg bg-[#00365a] px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-[#004170] active:scale-[0.99]"
-                    onClick={() => setShowSuccessPopup(false)}
-                  >
-                    Sepete Git
-                  </Link>
-                  <Link
-                    href="/dashboard/urunler/liste"
-                    className="w-full rounded-lg border border-slate-200/80 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-all duration-200 ease-out hover:bg-slate-50 active:scale-[0.99]"
-                    onClick={() => setShowSuccessPopup(false)}
-                  >
-                    Alışverişe Devam Et
-                  </Link>
-                  <button
-                    onClick={() => setShowSuccessPopup(false)}
-                    className="w-full rounded-lg px-4 py-2.5 text-sm font-medium text-slate-500 transition-all duration-200 ease-out hover:bg-slate-50 hover:text-slate-700 active:scale-[0.99]"
-                  >
-                    Kapat
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
