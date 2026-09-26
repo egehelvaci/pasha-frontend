@@ -67,14 +67,22 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
               box-sizing: border-box;
             }
 
+            html,
+            body {
+              width: 210mm;
+              min-width: 210mm;
+              max-width: 210mm;
+              height: 148mm;
+              min-height: 148mm;
+              max-height: 148mm;
+            }
+
             body {
               font-family: 'Arial', sans-serif;
               font-size: 11px;
               line-height: 1.3;
               color: #000;
               background: white;
-              width: 210mm;
-              height: 148mm;
               margin: 0;
               padding: 10mm;
               overflow: hidden;
@@ -83,8 +91,11 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
             .receipt-container {
               width: 100%;
               height: 100%;
+              min-height: 0;
+              max-height: 128mm;
               display: flex;
               flex-direction: column;
+              overflow: hidden;
             }
 
             .header {
@@ -116,6 +127,7 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
 
             .content {
               flex: 1;
+              min-height: 0;
               display: flex;
               flex-direction: column;
               gap: 3mm;
@@ -123,15 +135,20 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
 
             .content-grid {
               display: grid;
-              grid-template-columns: 1fr 1fr;
+              grid-template-columns: repeat(2, minmax(0, 1fr));
               gap: 5mm;
               flex: 1;
+              min-height: 0;
+              align-items: start;
             }
 
             .section {
               border: 1.5px solid #000;
               padding: 3mm;
+              min-width: 0;
               height: fit-content;
+              break-inside: avoid;
+              page-break-inside: avoid;
             }
 
             .section h3 {
@@ -161,7 +178,8 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
               text-align: left;
               flex: 1;
               margin-left: 3mm;
-              word-wrap: break-word;
+              overflow-wrap: anywhere;
+              word-break: break-word;
               color: #000;
             }
 
@@ -178,15 +196,31 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
               text-align: center;
               font-size: 10px;
               color: #666;
+              flex: 0 0 auto;
             }
 
             @media print {
+              html,
               body {
+                width: 210mm !important;
+                min-width: 210mm !important;
+                max-width: 210mm !important;
+                height: 148mm !important;
+                min-height: 148mm !important;
+                max-height: 148mm !important;
+                margin: 0 !important;
+                padding: 0 !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
               }
 
               .receipt-container {
+                width: 190mm;
+                height: 128mm;
+                max-height: 128mm;
+                margin: 10mm;
+                overflow: hidden;
+                break-inside: avoid;
                 page-break-inside: avoid;
               }
 
