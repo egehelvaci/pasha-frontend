@@ -1,405 +1,137 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import { useToken } from '@/app/hooks/useToken';
-import OptimizedImage from '@/app/components/OptimizedImage';
-import { getOptimalSettings, measurePerformance, isLowEndDevice } from '@/app/utils/performance';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import Image from 'next/image';
+import { ArrowDownTrayIcon, ArrowLeftIcon, ArrowRightIcon, CheckIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useAuth } from '@/app/context/AuthContext';
+import { getCatalogProductPage } from '@/services/api';
+import { defaultOptions, parseCatalogDraft, planCatalogPages, type CatalogOptions, type CatalogProduct } from '@/features/catalog/model';
+import { useCatalogJob } from '@/features/catalog/useCatalogJob';
 
-interface Product {
-  productId: string;
-  name: string;
-  description: string;
-  productImage: string;
-  collectionId: string;
-  createdAt: string;
-  updatedAt: string;
-  collection: {
-    name: string;
-  } | null;
-}
+const PAGE_SIZE = 24;
+const phases = [
+  { key: 'layout', label: 'Sayfalar düzenleniyor' },
+  { key: 'assets', label: 'Görseller optimize ediliyor' },
+  { key: 'finalizing', label: 'PDF sonlandırılıyor' },
+] as const;
 
-interface ProductResponse {
-  success: boolean;
-  data: Product[];
-}
-
-const EKatalogPage = () => {
-  const router = useRouter();
-  const token = useToken();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+export default function ECatalogPage() {
+  const { user, token } = useAuth();
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [page, setPage] = useState(1);
+  const [query, setQuery] = useState('');
+  const [search, setSearch] = useState('');
+  const [products, setProducts] = useState<CatalogProduct[]>([]);
+  const [selected, setSelected] = useState<Map<string, CatalogProduct>>(new Map());
+  const [options, setOptions] = useState<CatalogOptions>(defaultOptions);
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 0 });
+  const [listState, setListState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [listError, setListError] = useState('');
+  const [retry, setRetry] = useState(0);
+  const job = useCatalogJob();
+  const storageKey = `catalog-draft:${user?.userId || 'anonymous'}`;
 
   useEffect(() => {
-    // Mobile detection logic - only for actual mobile devices, not screen size
-    const checkIfMobile = () => {
-      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-      // Only check for actual mobile devices, not screen size
-      return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
-    };
-
-    if (typeof window !== 'undefined') {
-      const mobileCheck = checkIfMobile();
-      setIsMobile(mobileCheck);
-      
-      // Mobile detection doesn't change on resize since it's based on user agent
-      // Remove resize listener as it's not needed for mobile detection
-    }
-  }, []);
+    const timeout = setTimeout(() => { setPage(1); setSearch(query); }, 350);
+    return () => clearTimeout(timeout);
+  }, [query]);
 
   useEffect(() => {
-    if (!isMobile) {
-      fetchProducts();
-    }
-  }, [isMobile]);
+    if (!token) return;
+    const controller = new AbortController();
+    setListState('loading'); setListError('');
+    getCatalogProductPage({ token, page, limit: PAGE_SIZE, search, signal: controller.signal })
+      .then(result => { setProducts(result.products); setPagination({ total: result.total, totalPages: result.totalPages }); setListState('ready'); })
+      .catch(error => { if (!controller.signal.aborted) { setListError(error instanceof Error ? error.message : 'Ürünler yüklenemedi.'); setListState('error'); } });
+    return () => controller.abort();
+  }, [token, page, search, retry]);
 
-  // Get optimal settings based on device capabilities
-  const optimalSettings = useMemo(() => getOptimalSettings(), []);
-  
-  // Memoize filtered products to prevent unnecessary re-renders
-  const visibleProducts = useMemo(() => {
-    return products; // Show all products, but warn on low-end devices
-  }, [products]);
-
-  const fetchProducts = async () => {
+  useEffect(() => {
     try {
-      setLoading(true);
-      const authToken = token;
-      
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/products/all`, {
-        headers: {
-          'Authorization': `Bearer ${authToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return;
+      const draft = parseCatalogDraft(raw);
+      setSelected(new Map(draft.products.map(product => [product.id, product])));
+      setOptions(draft.options);
+    } catch { localStorage.removeItem(storageKey); }
+  }, [storageKey]);
 
-      if (!response.ok) {
-        throw new Error('Ürünler yüklenirken hata oluştu');
-      }
+  useEffect(() => {
+    const timer = setTimeout(() => localStorage.setItem(storageKey, JSON.stringify({ version: 1, products: Array.from(selected.values()), options })), 250);
+    return () => clearTimeout(timer);
+  }, [selected, options, storageKey]);
 
-      const data: ProductResponse = await response.json();
-      if (data.success && Array.isArray(data.data)) {
-        setProducts(data.data);
-      } else {
-        setProducts([]);
-      }
-    } catch (error) {
-      console.error('Ürünler yüklenirken hata:', error);
-    } finally {
-      setLoading(false);
-    }
+  const selectedProducts = useMemo(() => Array.from(selected.values()), [selected]);
+  const progress = job.state.status === 'running' ? job.state.progress : null;
+  const canShare = typeof navigator !== 'undefined' && Boolean(navigator.share);
+  const estimatedPages = useMemo(() => planCatalogPages(selectedProducts, options).length + Number(options.cover), [selectedProducts, options]);
+  const toggle = useCallback((product: CatalogProduct) => setSelected(current => {
+    const next = new Map(current);
+    next.has(product.id) ? next.delete(product.id) : next.set(product.id, product);
+    return next;
+  }), []);
+  const pageSelected = products.length > 0 && products.every(product => selected.has(product.id));
+  const togglePage = () => setSelected(current => {
+    const next = new Map(current);
+    if (pageSelected) products.forEach(product => next.delete(product.id));
+    else products.forEach(product => next.set(product.id, product));
+    return next;
+  });
+  const updateOption = <K extends keyof CatalogOptions>(key: K, value: CatalogOptions[K]) => setOptions(current => ({ ...current, [key]: value }));
+  const filename = `${options.title.trim() || 'pasa-home-katalog'}.pdf`.replace(/[\\/:*?"<>|]+/g, '-');
+  const download = () => {
+    if (job.state.status !== 'done') return;
+    const anchor = document.createElement('a'); anchor.href = job.state.url; anchor.download = filename; anchor.click();
   };
-
-  const toggleProductSelection = useCallback((productId: string) => {
-    setSelectedProducts(prev => {
-      const newSelected = new Set(prev);
-      if (newSelected.has(productId)) {
-        newSelected.delete(productId);
-      } else {
-        newSelected.add(productId);
-      }
-      return newSelected;
-    });
-  }, []);
-
-  const selectAllProducts = useCallback(() => {
-    setSelectedProducts(prev => {
-      if (prev.size === visibleProducts.length) {
-        return new Set();
-      } else {
-        return new Set(visibleProducts.map(p => p.productId));
-      }
-    });
-  }, [visibleProducts]);
-
-  const generatePrintableCatalog = useCallback(() => {
-    if (selectedProducts.size === 0) {
-      alert('Lütfen en az bir ürün seçiniz.');
-      return;
-    }
-
-    // Show loading immediately
-    setIsGeneratingPDF(true);
-
-    const selectedProductIds = Array.from(selectedProducts);
-  
-    // Use requestIdleCallback for better performance on low-end devices
-    const processGeneration = () => {
-      try {
-        // Store selected products in localStorage
-        localStorage.setItem('selectedProductsForPrint', JSON.stringify(selectedProductIds));
-        
-        // Create hidden iframe with optimized loading
-        const iframe = document.createElement('iframe');
-        iframe.style.cssText = `
-          position: absolute;
-          left: -9999px;
-          top: -9999px;
-          width: 1px;
-          height: 1px;
-          opacity: 0;
-        `;
-        iframe.src = '/dashboard/e-katalog/print';
-        
-        let timeoutId: NodeJS.Timeout;
-        
-        // Set timeout based on number of products (longer for more products)
-        const timeoutDuration = Math.min(60000, 30000 + (selectedProductIds.length * 200)); // 30s base + 200ms per product, max 60s
-        
-        const cleanup = () => {
-          if (timeoutId) clearTimeout(timeoutId);
-          if (iframe.parentNode) {
-            document.body.removeChild(iframe);
-          }
-          localStorage.removeItem('selectedProductsForPrint');
-          setIsGeneratingPDF(false);
-        };
-
-        // Dynamic timeout based on product count
-        timeoutId = setTimeout(() => {
-          console.warn('Katalog oluşturma zaman aşımına uğradı');
-          cleanup();
-          alert(`${selectedProductIds.length} ürün için katalog oluşturma uzun sürdü. Lütfen daha az ürün seçerek tekrar deneyin.`);
-        }, timeoutDuration);
-        
-        iframe.onload = () => {
-          // Add extra delay for content to fully load
-          setTimeout(() => {
-            try {
-              if (iframe.contentWindow) {
-                iframe.contentWindow.print();
-                
-                // Cleanup after print dialog
-                setTimeout(cleanup, 2000);
-              } else {
-                cleanup();
-              }
-            } catch (error) {
-              console.error('Yazdırma hatası:', error);
-              cleanup();
-              alert('Yazdırma sırasında bir hata oluştu. Lütfen tekrar deneyin.');
-            }
-          }, 1500); // Increased delay for low-end devices
-        };
-
-        iframe.onerror = () => {
-          console.error('İframe yükleme hatası');
-          cleanup();
-          alert('Katalog sayfası yüklenirken hata oluştu.');
-        };
-        
-        document.body.appendChild(iframe);
-        
-      } catch (error) {
-        console.error('Katalog oluşturma hatası:', error);
-        setIsGeneratingPDF(false);
-        alert('Katalog oluşturulurken bir hata oluştu.');
-      }
-    };
-
-            // Use requestIdleCallback for better performance, fallback to setTimeout
-        if ('requestIdleCallback' in window) {
-          requestIdleCallback(processGeneration, { timeout: 1000 });
-        } else {
-          setTimeout(processGeneration, optimalSettings.imageLoadDelay);
-        }
-  }, [selectedProducts]);
-
-  // Mobile restriction screen
-  if (isMobile) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="text-center max-w-md mx-auto">
-          <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
-            <div className="mb-6">
-              <svg
-                className="w-20 h-20 mx-auto text-[#00365a] mb-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                />
-              </svg>
-              <h2 className="text-2xl font-bold text-gray-900 mb-3">
-                Sadece Masaüstü Kullanımı
-              </h2>
-              <p className="text-gray-600 leading-relaxed">
-                E-Katalog özelliği sadece masaüstü bilgisayarlarda kullanılabilir. 
-                Daha iyi bir deneyim için lütfen bir bilgisayar kullanarak tekrar deneyin.
-              </p>
-            </div>
-            
-            <div className="space-y-3">
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="w-full px-6 py-3 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] transition-colors font-medium"
-              >
-                Ana Sayfaya Dön
-              </button>
-              <p className="text-sm text-gray-500">
-                Önerilen minimum çözünürlük: 1024px ve üzeri
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00365a] mx-auto mb-4"></div>
-          <p className="text-gray-600">Ürünler yükleniyor...</p>
-        </div>
-      </div>
-    );
-  }
+  const share = async () => {
+    if (job.state.status !== 'done' || !navigator.share) return;
+    const file = new File([job.state.result.blob], filename, { type: 'application/pdf' });
+    if (navigator.canShare?.({ files: [file] })) await navigator.share({ title: options.title, files: [file] });
+    else await navigator.share({ title: options.title, url: job.state.url });
+  };
+  const start = () => { setStep(3); job.start(selectedProducts, options); };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6">
-        <div className="space-y-6">
-          {/* Başlık ve Kontroller */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">E-Katalog Oluşturucu</h1>
-                <p className="text-gray-600 mt-1">
-                  Ürünleri seçerek yazdırılabilir bir katalog oluşturun
-                </p>
-                {isLowEndDevice() && products.length > 50 && (
-                  <p className="text-sm text-amber-600 mt-1">
-                    ⚠️ Düşük performanslı cihaz algılandı. Çok fazla ürün seçerseniz yavaşlık yaşayabilirsiniz.
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={selectAllProducts}
-                  className="px-4 py-2 text-sm font-medium text-[#00365a] bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-                  disabled={isGeneratingPDF}
-                >
-                  {selectedProducts.size === visibleProducts.length ? 'Tümünü Kaldır' : 'Tümünü Seç'}
-                </button>
-                <button
-                  onClick={generatePrintableCatalog}
-                  disabled={selectedProducts.size === 0 || isGeneratingPDF}
-                  className="px-6 py-2 bg-[#00365a] text-white rounded-lg hover:bg-[#004170] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
-                >
-                  {isGeneratingPDF ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white inline-block mr-2"></div>
-                      {selectedProducts.size > 50 ? 
-                        `Katalog Hazırlanıyor... (${selectedProducts.size} ürün - Bu biraz sürebilir)` :
-                        selectedProducts.size > 20 ?
-                        `Katalog Hazırlanıyor... (${selectedProducts.size} ürün)` :
-                        'Katalog Hazırlanıyor...'
-                      }
-                    </>
-                  ) : (
-                    `🖨️ Katalog Oluştur (${selectedProducts.size})`
-                  )}
-                </button>
-              </div>
-            </div>
-            
-            {selectedProducts.size > 0 && (
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                <p className="text-sm text-[#00365a]">
-                  <span className="font-medium">{selectedProducts.size}</span> ürün seçildi
-                  {selectedProducts.size === visibleProducts.length && ' (Tüm ürünler)'}
-                </p>
-
-              </div>
-            )}
-          </div>
-
-          {/* Ürün Listesi */}
-          <div className="bg-white rounded-lg shadow-sm border">
-            <div className="p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Ürünler ({visibleProducts.length})
-              </h2>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {visibleProducts.map((product) => (
-                  <div
-                    key={product.productId}
-                    className={`relative border rounded-lg p-3 cursor-pointer transition-all duration-200 ${
-                      selectedProducts.has(product.productId)
-                        ? 'border-[#00365a] bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                    onClick={() => toggleProductSelection(product.productId)}
-                  >
-                    {/* Checkbox */}
-                    <div className="absolute top-2 right-2">
-                      <input
-                        type="checkbox"
-                        checked={selectedProducts.has(product.productId)}
-                        onChange={() => toggleProductSelection(product.productId)}
-                        className="w-4 h-4 text-[#00365a] border-gray-300 rounded focus:ring-[#00365a]"
-                      />
-                    </div>
-
-                    {/* Ürün Görseli */}
-                    <div className="aspect-square mb-3 bg-gray-100 rounded-lg overflow-hidden">
-                      <OptimizedImage
-                        src={product.productImage}
-                        alt={product.name}
-                        className="w-full h-full p-2"
-                        placeholder={
-                          <div className="w-full h-full flex items-center justify-center text-gray-400">
-                            <div className="text-center">
-                              <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                              <p className="text-xs">Görsel Yok</p>
-                            </div>
-                          </div>
-                        }
-                      />
-                    </div>
-
-                    {/* Ürün Bilgileri */}
-                    <div className="space-y-2">
-                      <h3 className="font-medium text-gray-900 text-sm line-clamp-2">
-                        {product.name}
-                      </h3>
-                      {product.collection && (
-                        <p className="text-xs text-[#00365a] font-medium">
-                          {product.collection.name}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {visibleProducts.length === 0 && (
-                <div className="text-center py-12">
-                  <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2-2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                  </svg>
-                  <p className="text-gray-500">Henüz ürün bulunmuyor</p>
-                </div>
-              )}
-            </div>
-          </div>
+    <main className="design-shell min-h-screen pb-28">
+      <div className="page-container py-8 sm:py-12">
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
+          <div><p className="eyebrow">Dijital satış araçları</p><h1 className="display-heading mt-3 text-3xl sm:text-4xl">E-Katalog Oluşturucu</h1><p className="mt-3 max-w-xl text-sm leading-6 text-slate-600">Ürünlerinizi seçin; katalog tarayıcınızı kilitlemeden arka planda hazırlansın.</p></div>
+          <div className="rounded-full border border-[#d8d9d2] bg-white/70 px-4 py-2 text-xs text-slate-600">{selected.size} ürün · tahmini {estimatedPages} sayfa</div>
         </div>
-      </div>
-    </div>
-  );
-};
 
-export default EKatalogPage; 
+        <ol className="mb-8 grid gap-2 rounded-2xl border border-[#deddd5] bg-white/70 p-2 sm:grid-cols-3" aria-label="Katalog adımları">
+          {(['Ürünleri seç', 'Tasarımı ayarla', 'Oluştur'] as const).map((label, index) => {
+            const number = (index + 1) as 1 | 2 | 3;
+            return <li key={label}><button type="button" disabled={number > 1 && !selected.size} onClick={() => setStep(number)} className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm ${step === number ? 'bg-[#00365a] text-white' : 'text-slate-600 hover:bg-white'}`}><span className={`grid h-7 w-7 place-items-center rounded-full text-xs ${step === number ? 'bg-white/15' : 'bg-[#edf0ed]'}`}>{step > number ? <CheckIcon className="h-4 w-4" /> : number}</span>{label}</button></li>;
+          })}
+        </ol>
+
+        {step === 1 && <section className="surface p-4 sm:p-6" aria-labelledby="products-title">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
+            <div><h2 id="products-title" className="text-lg font-semibold">Ürün seçimi</h2><p className="mt-1 text-xs text-slate-500">Yalnızca bu sayfadaki 24 ürün indirilir; seçimler sayfalar arasında korunur.</p></div>
+            <button type="button" onClick={togglePage} disabled={!products.length} className="secondary-action !min-h-10 !px-4">{pageSelected ? 'Bu sayfayı kaldır' : 'Bu sayfayı seç'}</button>
+          </div>
+          <label className="relative mb-6 block"><span className="sr-only">Ürün ara</span><MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" /><input value={query} onChange={event => setQuery(event.target.value)} className="h-12 w-full rounded-xl border border-[#d8d9d2] bg-white pl-12 pr-4 text-sm focus:border-[#547a8c]" placeholder="Ürün adıyla ara…" /></label>
+          {listState === 'loading' ? <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">{Array.from({ length: 8 }, (_, i) => <div key={i} className="surface overflow-hidden p-3"><div className="skeleton aspect-square rounded-xl" /><div className="skeleton mt-3 h-4 rounded" /></div>)}</div>
+            : listState === 'error' ? <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-8 text-center"><p className="text-sm text-rose-800">{listError}</p><button onClick={() => setRetry(value => value + 1)} className="primary-action mt-5">Tekrar dene</button></div>
+              : products.length === 0 ? <div className="py-16 text-center text-sm text-slate-500">Aramanızla eşleşen ürün bulunamadı.</div>
+                : <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">{products.map(product => <button type="button" key={product.id} onClick={() => toggle(product)} aria-pressed={selected.has(product.id)} className={`group overflow-hidden rounded-2xl border bg-white text-left transition ${selected.has(product.id) ? 'border-[#00365a] ring-2 ring-[#00365a]/15' : 'border-[#deddd5] hover:-translate-y-1 hover:border-[#9badae]'}`}><div className="relative aspect-square bg-[#f0eee8]">{product.image ? <Image src={product.image} alt="" fill unoptimized sizes="(max-width: 768px) 50vw, 25vw" className="object-contain p-4" /> : <div className="grid h-full place-items-center text-xs text-slate-400">Görsel yok</div>}<span className={`absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full border ${selected.has(product.id) ? 'border-[#00365a] bg-[#00365a] text-white' : 'border-white bg-white/90 text-transparent'}`}><CheckIcon className="h-4 w-4" /></span></div><div className="p-4"><p className="eyebrow truncate">{product.collectionName}</p><h3 className="mt-2 line-clamp-2 text-sm font-medium">{product.name}</h3></div></button>)}</div>}
+          <div className="mt-6 flex items-center justify-between border-t border-[#deddd5] pt-5"><span className="text-xs text-slate-500">{pagination.total} ürün · {page}/{Math.max(1, pagination.totalPages)}</span><div className="flex gap-2"><button className="secondary-action !min-h-10 !px-3" disabled={page <= 1 || listState === 'loading'} onClick={() => setPage(value => value - 1)} aria-label="Önceki sayfa"><ArrowLeftIcon className="h-4 w-4" /></button><button className="secondary-action !min-h-10 !px-3" disabled={page >= pagination.totalPages || listState === 'loading'} onClick={() => setPage(value => value + 1)} aria-label="Sonraki sayfa"><ArrowRightIcon className="h-4 w-4" /></button></div></div>
+        </section>}
+
+        {step === 2 && <section className="grid gap-6 lg:grid-cols-[1fr_.8fr]">
+          <div className="surface p-6"><h2 className="text-lg font-semibold">Katalog ayarları</h2><div className="mt-6 space-y-6"><label className="block text-sm font-medium">Katalog adı<input maxLength={80} value={options.title} onChange={event => updateOption('title', event.target.value)} className="mt-2 h-12 w-full rounded-xl border border-[#d8d9d2] bg-white px-4" /></label><fieldset><legend className="text-sm font-medium">Sayfa düzeni</legend><div className="mt-2 grid grid-cols-2 gap-3">{(['compact', 'spacious'] as const).map(value => <button type="button" key={value} onClick={() => updateOption('layout', value)} className={`rounded-xl border p-4 text-left ${options.layout === value ? 'border-[#00365a] bg-[#eef4f5]' : 'border-[#deddd5] bg-white'}`}><span className="block text-sm font-medium">{value === 'compact' ? 'Kompakt' : 'Ferah'}</span><span className="mt-1 block text-xs text-slate-500">Sayfada {value === 'compact' ? '6' : '4'} ürün</span></button>)}</div></fieldset><fieldset><legend className="text-sm font-medium">Görsel kalitesi</legend><div className="mt-2 grid grid-cols-2 gap-3">{(['standard', 'high'] as const).map(value => <button type="button" key={value} onClick={() => updateOption('quality', value)} className={`rounded-xl border p-4 text-left ${options.quality === value ? 'border-[#00365a] bg-[#eef4f5]' : 'border-[#deddd5] bg-white'}`}><span className="block text-sm font-medium">{value === 'standard' ? 'Hızlı' : 'Yüksek kalite'}</span><span className="mt-1 block text-xs text-slate-500">{value === 'standard' ? 'Web ve paylaşım' : 'Baskı için'}</span></button>)}</div></fieldset>{([['cover', 'Kapak sayfası'], ['descriptions', 'Ürün açıklamaları']] as const).map(([key, label]) => <label key={key} className="flex min-h-12 items-center justify-between rounded-xl border border-[#deddd5] bg-white px-4 text-sm"><span>{label}</span><input type="checkbox" checked={options[key]} onChange={event => updateOption(key, event.target.checked)} className="h-4 w-4 accent-[#00365a]" /></label>)}</div></div>
+          <aside className="surface p-6"><p className="eyebrow">Özet</p><h3 className="mt-3 text-xl font-semibold">{options.title || 'Adsız katalog'}</h3><dl className="mt-8 space-y-4 text-sm"><div className="flex justify-between"><dt className="text-slate-500">Ürün</dt><dd>{selected.size}</dd></div><div className="flex justify-between"><dt className="text-slate-500">Koleksiyon</dt><dd>{new Set(selectedProducts.map(p => p.collectionId || p.collectionName)).size}</dd></div><div className="flex justify-between"><dt className="text-slate-500">Tahmini sayfa</dt><dd>{estimatedPages}</dd></div></dl><button onClick={start} className="primary-action mt-8 w-full">Kataloğu oluştur <ArrowRightIcon className="h-4 w-4" /></button></aside>
+        </section>}
+
+        {step === 3 && <section className="surface mx-auto max-w-3xl overflow-hidden">
+          {progress && <div className="p-7 sm:p-10"><p className="eyebrow">Arka planda hazırlanıyor</p><h2 className="mt-3 text-2xl font-semibold">Katalog oluşturuluyor</h2><p className="mt-2 text-sm text-slate-600">Bu sırada sayfada kalabilir, işlemi iptal edebilirsiniz.</p><ol className="mt-8 space-y-3">{phases.map((phase, index) => { const activeIndex = phases.findIndex(item => item.key === progress.phase); const done = index < activeIndex; const active = index === activeIndex; return <li key={phase.key} className={`flex items-center gap-4 rounded-xl border p-4 ${active ? 'border-[#00365a] bg-[#eef4f5]' : 'border-[#deddd5]'}`}><span className={`grid h-8 w-8 place-items-center rounded-full ${done ? 'bg-emerald-600 text-white' : active ? 'bg-[#00365a] text-white' : 'bg-slate-100 text-slate-400'}`}>{done ? <CheckIcon className="h-4 w-4" /> : index + 1}</span><span className="flex-1 text-sm font-medium">{phase.label}</span>{active && phase.key === 'assets' && <span className="text-xs tabular-nums text-slate-500">{progress.completed}/{progress.total}</span>}</li>; })}</ol><div className="mt-7 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-[#00365a] transition-[width] duration-300" style={{ width: `${progress.phase === 'layout' ? 8 : progress.phase === 'finalizing' ? 96 : 10 + (progress.completed / Math.max(1, progress.total)) * 82}%` }} /></div><button onClick={job.cancel} className="secondary-action mt-7">İptal et</button></div>}
+          {(job.state.status === 'error' || job.state.status === 'cancelled') && <div className="p-10 text-center"><div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-rose-50 text-rose-700"><XMarkIcon className="h-6 w-6" /></div><h2 className="mt-5 text-xl font-semibold">{job.state.status === 'error' ? 'Katalog tamamlanamadı' : 'İşlem iptal edildi'}</h2><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">{job.state.status === 'error' ? job.state.message : 'Ürünleriniz ve ayarlarınız korundu.'}</p><div className="mt-7 flex justify-center gap-3"><button onClick={() => setStep(2)} className="secondary-action">Ayarları gözden geçir</button><button onClick={start} className="primary-action">Tekrar dene</button></div></div>}
+          {job.state.status === 'done' && <div className="p-8 text-center sm:p-12"><div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-100 text-emerald-700"><CheckIcon className="h-7 w-7" /></div><p className="eyebrow mt-6">Hazır</p><h2 className="mt-2 text-3xl font-semibold">Kataloğunuz oluşturuldu</h2><p className="mt-3 text-sm text-slate-600">{job.state.result.pages} sayfa · {(job.state.result.elapsedMs / 1000).toFixed(1)} saniye{job.state.result.warnings.length ? ` · ${job.state.result.warnings.length} görsel atlandı` : ''}</p><div className="mt-8 grid gap-3 sm:grid-cols-3"><a href={job.state.url} target="_blank" rel="noopener noreferrer" className="secondary-action">Önizle</a><button onClick={download} className="primary-action"><ArrowDownTrayIcon className="h-4 w-4" /> İndir</button><button onClick={share} disabled={!canShare} className="secondary-action disabled:opacity-40">Paylaş</button></div><button onClick={() => { job.reset(); setStep(2); }} className="mt-6 text-sm text-[#00365a] underline-offset-4 hover:underline">Ayarları değiştir</button></div>}
+          {job.state.status === 'idle' && <div className="p-10 text-center"><p className="text-sm text-slate-600">Oluşturma ayarlarını tamamlayın.</p><button onClick={() => setStep(2)} className="secondary-action mt-5">Ayarlara dön</button></div>}
+        </section>}
+      </div>
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-[#deddd5] bg-[#faf9f6]/95 px-5 py-3 backdrop-blur-xl"><div className="mx-auto flex max-w-[1344px] items-center justify-between gap-3"><span className="text-xs text-slate-500">Taslak otomatik kaydedilir</span>{step < 3 && <button onClick={() => step === 1 ? setStep(2) : start()} disabled={!selected.size} className="primary-action !min-h-11 disabled:opacity-40">{step === 1 ? 'Tasarımı ayarla' : 'Kataloğu oluştur'} <ArrowRightIcon className="h-4 w-4" /></button>}</div></div>
+    </main>
+  );
+}

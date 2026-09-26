@@ -1,400 +1,108 @@
 'use client';
 
-import { Order } from '@/services/api';
+import { useEffect, useMemo, useState } from 'react';
+import QRCode from 'qrcode';
+import Image from 'next/image';
+import { PrinterIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import type { Order } from '@/services/api';
 import { useAuth } from '@/app/context/AuthContext';
-import { useEffect } from 'react';
+
+type CargoItem = Order['items'][number] & {
+  product?: { name?: string; productCode?: string };
+  width?: string;
+  height?: string;
+};
+type CargoOrder = Omit<Order, 'items'> & { items: CargoItem[]; notes?: string };
 
 interface CargoReceiptProps {
-  order: Order;
+  order: CargoOrder;
+  orders?: CargoOrder[];
   isVisible: boolean;
   onClose: () => void;
 }
 
-export default function CargoReceipt({ order, isVisible, onClose }: CargoReceiptProps) {
-  const { user, isAdmin, isAdminOrEditor } = useAuth();
-  
+const sender = {
+  name: 'PAŞA HOME Tekstil San. ve Tic. Ltd. Şti.',
+  phone: '+90 555 234 58 91',
+  address: 'Güneşli Mah. Mahmutbey Cad. 1296. Sok. No:3 Daire:1 Bağcılar / İstanbul',
+};
+
+function addressFor(order: CargoOrder) {
+  if (order.address) return `${order.address.address}, ${order.address.district} / ${order.address.city}${order.address.postal_code ? ` · ${order.address.postal_code}` : ''}`;
+  return order.delivery_address || 'Adres belirtilmemiş';
+}
+
+function CargoSlip({ order, index, total }: { order: CargoOrder; index: number; total: number }) {
+  const [qr, setQr] = useState('');
+  const code = order.id.slice(0, 12).toUpperCase();
+  const quantity = order.items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  const items = order.items.slice(0, 6);
   useEffect(() => {
-    if (isVisible && !isAdminOrEditor) {
-      onClose();
-    }
-  }, [isVisible, isAdminOrEditor, onClose]);
-  
-  if (!isVisible) return null;
-  
-  if (!isAdminOrEditor) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl p-8">
-          <div className="text-center">
-            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
-              <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Erişim Engellendi</h3>
-            <p className="text-gray-600 mb-6">Kargo fişlerini görüntüleme yetkiniz bulunmamaktadır.</p>
-            <button
-              onClick={onClose}
-              className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-semibold transition-all"
-            >
-              Kapat
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const handlePrint = () => {
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
-    if (printWindow) {
-      const htmlContent = `
-        <!DOCTYPE html>
-        <html lang="tr">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Kargo Fişi</title>
-          <style>
-            @page {
-              size: A5 landscape;
-              margin: 0;
-            }
-            
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-            
-            body {
-              font-family: 'Arial', sans-serif;
-              font-size: 11px;
-              line-height: 1.3;
-              color: #000;
-              background: white;
-              width: 210mm;
-              height: 148mm;
-              margin: 0;
-              padding: 10mm;
-              overflow: hidden;
-            }
-            
-            .receipt-container {
-              width: 100%;
-              height: 100%;
-              display: flex;
-              flex-direction: column;
-            }
-            
-            .header {
-              text-align: center;
-              border-bottom: 2px solid #000;
-              padding-bottom: 5mm;
-              margin-bottom: 5mm;
-            }
-            
-            .header h1 {
-              font-size: 18px;
-              font-weight: bold;
-              margin-bottom: 2mm;
-              color: #000;
-            }
-            
-            .header h2 {
-              font-size: 14px;
-              font-weight: bold;
-              margin-bottom: 2mm;
-              color: #000;
-            }
-            
-            .header p {
-              font-size: 11px;
-              margin: 1mm 0;
-              color: #000;
-            }
-            
-            .content {
-              flex: 1;
-              display: flex;
-              flex-direction: column;
-              gap: 3mm;
-            }
-            
-            .content-grid {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 5mm;
-              flex: 1;
-            }
-            
-            .section {
-              border: 1.5px solid #000;
-              padding: 3mm;
-              height: fit-content;
-            }
-            
-            .section h3 {
-              font-size: 12px;
-              font-weight: bold;
-              border-bottom: 1px solid #000;
-              padding-bottom: 2mm;
-              margin-bottom: 3mm;
-              color: #000;
-            }
-            
-            .info-item {
-              display: flex;
-              justify-content: space-between;
-              margin-bottom: 2mm;
-              font-size: 11px;
-              align-items: flex-start;
-            }
-            
-            .info-item strong {
-              font-weight: bold;
-              min-width: 25mm;
-              color: #000;
-            }
-            
-            .info-item span {
-              text-align: left;
-              flex: 1;
-              margin-left: 3mm;
-              word-wrap: break-word;
-              color: #000;
-            }
-            
-            .address-section {
-              width: 100%;
-              margin-bottom: 3mm;
-            }
-            
-            .sender-info {
-              grid-column: 1 / -1;
-              margin-top: auto;
-              border-top: 1px solid #000;
-              padding-top: 3mm;
-              text-align: center;
-              font-size: 10px;
-              color: #666;
-            }
-            
-            @media print {
-              body {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-              }
-              
-              .receipt-container {
-                page-break-inside: avoid;
-              }
-              
-              .section {
-                page-break-inside: avoid;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="receipt-container">
-            <div class="header">
-              <h1>PAŞA HOME</h1>
-              <h2>KARGO FİŞİ</h2>
-              <p>Sipariş No: <strong>${order.id.slice(0, 8).toUpperCase()}</strong></p>
-              <p>Tarih: <strong>${new Date(order.created_at).toLocaleDateString('tr-TR', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}</strong></p>
-            </div>
-
-            <div class="content">
-              <div class="section address-section">
-                <h3>ALICI ADRESİ</h3>
-                <div class="info-item">
-                  <strong>Adres:</strong>
-                  <span>${order.address ? 
-                    `${(order.address as any).address}, ${(order.address as any).district} / ${(order.address as any).city}` : 
-                    order.delivery_address || 'Belirtilmemiş'
-                  }</span>
-                </div>
-                ${order.address && (order.address as any).postal_code ? 
-                  `<div class="info-item">
-                    <strong>Posta Kodu:</strong>
-                    <span>${(order.address as any).postal_code}</span>
-                  </div>` : ''
-                }
-              </div>
-
-              <div class="content-grid">
-                <div class="section">
-                  <h3>ALICI BİLGİLERİ</h3>
-                  <div class="info-item">
-                    <strong>Firma:</strong>
-                    <span>${order.store_name}</span>
-                  </div>
-                  <div class="info-item">
-                    <strong>Yetkili:</strong>
-                    <span>${order.user ? `${order.user.name} ${order.user.surname}` : 'Belirtilmemiş'}</span>
-                  </div>
-                  <div class="info-item">
-                    <strong>Telefon:</strong>
-                    <span>${order.store_phone || order.user?.phone || 'Belirtilmemiş'}</span>
-                  </div>
-                  <div class="info-item">
-                    <strong>E-posta:</strong>
-                      <span>${order.store_email || order.user?.email || 'Belirtilmemiş'}</span>
-                    </div>
-                  <div class="info-item">
-                    <strong>Vergi No:</strong>
-                    <span>${order.store_tax_number || 'Belirtilmemiş'}</span>
-                  </div>
-                  <div class="info-item">
-                    <strong>Vergi Dairesi:</strong>
-                    <span>${order.store_tax_office || 'Belirtilmemiş'}</span>
-                  </div>
-                </div>
-
-                <div class="section">
-                  <h3>GÖNDERİCİ BİLGİLERİ</h3>
-                  <div class="info-item">
-                    <strong>Firma:</strong>
-                    <span>PAŞA HOME Tekstil San. ve Tic. Ltd. Şti.</span>
-                  </div>
-                  <div class="info-item">
-                    <strong>Telefon:</strong>
-                    <span>+90 555 234 58 91</span>
-                  </div>
-                  <div class="info-item">
-                    <strong>Adres:</strong>
-                    <span>Güneşli Mah. Mahmutbey Cad. 1296. Sok. No:3 Daire:1 Bağcılar/İstanbul</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="sender-info">
-              <p><strong>PAŞA HOME</strong> - Halı ve Ev Tekstili Ürünleri</p>
-              <p>www.pasahome.com.tr | info@pasahome.com.tr</p>
-            </div>
-          </div>
-        </body>
-        </html>
-      `;
-
-      printWindow.document.write(htmlContent);
-      printWindow.document.close();
-      
-      printWindow.onload = () => {
-        setTimeout(() => {
-          try {
-            printWindow.focus();
-            printWindow.print();
-          } catch (error) {
-            console.error('Print error:', error);
-          }
-          setTimeout(() => {
-            try {
-              printWindow.close();
-            } catch (error) {
-              console.error('Close error:', error);
-            }
-          }, 3000);
-        }, 1500);
-      };
-    }
-  };
+    let active = true;
+    QRCode.toDataURL(`PASAHOME:ORDER:${order.id}`, { width: 220, margin: 0, errorCorrectionLevel: 'M', color: { dark: '#000000', light: '#ffffff' } })
+      .then(value => { if (active) setQr(value); }).catch(() => setQr(''));
+    return () => { active = false; };
+  }, [order.id]);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl">
-        {/* Header */}
-        <div className="bg-indigo-600 text-white rounded-t-2xl p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="bg-white bg-opacity-20 rounded-xl p-2 mr-3">
-                <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold">Kargo Fişi</h3>
-                <p className="text-indigo-100 text-sm mt-1">
-                  Sipariş: {order.id.slice(0, 8).toUpperCase()} - {order.store_name}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-white hover:text-indigo-200 text-3xl font-bold transition-colors"
-            >
-              ×
-            </button>
-          </div>
-        </div>
+    <article className="cargo-slip" aria-label={`${code} numaralı kargo fişi`}>
+      <header className="cargo-slip__header">
+        <div><p className="cargo-slip__brand">PAŞA HOME</p><p className="cargo-slip__label">KARGO SEVK FİŞİ</p></div>
+        <div className="cargo-slip__meta"><strong>{code}</strong><span>{new Date(order.created_at).toLocaleDateString('tr-TR')}</span>{total > 1 && <span>{index + 1} / {total}</span>}</div>
+      </header>
 
-        {/* Content */}
-        <div className="p-6">
-          <div className="bg-gray-50 rounded-lg p-4 mb-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-3">Kargo Fişi Önizleme</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-600 font-medium">Gönderici:</span>
-                <span className="ml-2 text-gray-900">PAŞA HOME</span>
-              </div>
-              <div>
-                <span className="text-gray-600 font-medium">Alıcı:</span>
-                <span className="ml-2 text-gray-900">{order.store_name}</span>
-              </div>
-              <div>
-                <span className="text-gray-600 font-medium">Teslimat Adresi:</span>
-                <span className="ml-2 text-gray-900">
-                  {order.address ? 
-                    `${(order.address as any).address}, ${(order.address as any).district} / ${(order.address as any).city}` : 
-                    order.delivery_address || 'Belirtilmemiş'
-                  }
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-600 font-medium">Ürün Sayısı:</span>
-                <span className="ml-2 text-gray-900">
-                  {order.items.reduce((total, item) => total + item.quantity, 0)} adet
-                </span>
-              </div>
-            </div>
-          </div>
+      <section className="cargo-slip__receiver">
+        <p className="cargo-slip__kicker">ALICI</p>
+        <h2>{order.store_name || 'Firma belirtilmemiş'}</h2>
+        <p>{addressFor(order)}</p>
+        <div className="cargo-slip__contact"><span><b>Yetkili:</b> {order.user ? `${order.user.name} ${order.user.surname}` : 'Belirtilmemiş'}</span><span><b>Telefon:</b> {order.store_phone || order.user?.phone || 'Belirtilmemiş'}</span></div>
+      </section>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <div className="flex items-center">
-              <svg className="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-blue-800 text-sm">
-                Bu kargo fişi A5 boyutunda yazdırılacak ve teslimat sırasında kullanılacaktır.
-              </p>
-            </div>
-          </div>
-        </div>
+      <div className="cargo-slip__grid">
+        <section className="cargo-slip__box"><p className="cargo-slip__kicker">GÖNDERİCİ</p><strong>{sender.name}</strong><p>{sender.address}</p><p>{sender.phone}</p></section>
+        <section className="cargo-slip__box cargo-slip__summary"><p className="cargo-slip__kicker">GÖNDERİ ÖZETİ</p><dl><div><dt>Kalem</dt><dd>{order.items.length}</dd></div><div><dt>Toplam adet</dt><dd>{quantity}</dd></div><div><dt>Sipariş</dt><dd>{code}</dd></div></dl></section>
+      </div>
 
-        {/* Footer */}
-        <div className="bg-gray-50 px-6 py-4 rounded-b-2xl flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition-all"
-          >
-            İptal
-          </button>
-          <button
-            onClick={handlePrint}
-            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-            </svg>
-            Kargo Fişi Yazdır
-          </button>
-        </div>
+      <section className="cargo-slip__items">
+        <div className="cargo-slip__row cargo-slip__row--head"><span>ÜRÜN</span><span>ÖLÇÜ</span><span>ADET</span></div>
+        {items.map((item, itemIndex) => <div className="cargo-slip__row" key={'id' in item && item.id ? String(item.id) : itemIndex}><span>{item.product?.name || `Ürün ${itemIndex + 1}`}</span><span>{item.width && item.height ? `${item.width} × ${item.height}` : '—'}</span><span>{item.quantity}</span></div>)}
+        {order.items.length > items.length && <div className="cargo-slip__more">+ {order.items.length - items.length} ek ürün kalemi</div>}
+      </section>
+
+      <footer className="cargo-slip__footer">
+        <div className="cargo-slip__code"><span>TAKİP / SİPARİŞ KODU</span><strong>{code}</strong><div className="cargo-slip__bars" aria-hidden="true" /></div>
+        {qr ? <Image src={qr} alt={`${code} sipariş QR kodu`} width={220} height={220} unoptimized className="cargo-slip__qr" /> : <div className="cargo-slip__qr cargo-slip__qr--empty" />}
+      </footer>
+    </article>
+  );
+}
+
+export default function CargoReceipt({ order, orders, isVisible, onClose }: CargoReceiptProps) {
+  const { isAdminOrEditor } = useAuth();
+  const slips = useMemo(() => orders?.length ? orders : [order], [order, orders]);
+  useEffect(() => {
+    if (isVisible && !isAdminOrEditor) onClose();
+  }, [isVisible, isAdminOrEditor, onClose]);
+  useEffect(() => {
+    if (!isVisible) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = previous; };
+  }, [isVisible]);
+  if (!isVisible || !isAdminOrEditor) return null;
+
+  return (
+    <div className="cargo-print-root fixed inset-0 z-[100] overflow-y-auto bg-slate-950/70 p-4 backdrop-blur-sm sm:p-8" role="dialog" aria-modal="true" aria-labelledby="cargo-preview-title">
+      <div className="cargo-preview-chrome mx-auto mb-4 flex max-w-[760px] items-center justify-between rounded-2xl border border-white/15 bg-[#153b4d] px-5 py-4 text-white shadow-xl">
+        <div><p className="text-[10px] uppercase tracking-[.18em] text-white/60">A5 · 148 × 210 mm</p><h2 id="cargo-preview-title" className="mt-1 text-lg font-semibold">Kargo fişi önizleme</h2><p className="mt-1 text-xs text-white/65">{slips.length} fiş · her fiş ayrı A5 sayfasına basılır</p></div>
+        <button type="button" onClick={onClose} className="grid h-10 w-10 place-items-center rounded-full bg-white/10 hover:bg-white/20" aria-label="Önizlemeyi kapat"><XMarkIcon className="h-5 w-5" /></button>
+      </div>
+      <div className="cargo-preview-pages mx-auto flex max-w-[760px] flex-col items-center gap-6">
+        {slips.map((slip, index) => <CargoSlip key={slip.id} order={slip} index={index} total={slips.length} />)}
+      </div>
+      <div className="cargo-preview-chrome sticky bottom-4 mx-auto mt-4 flex max-w-[760px] items-center justify-end gap-3 rounded-2xl border border-[#deddd5] bg-white/95 p-3 shadow-xl backdrop-blur">
+        <button type="button" onClick={onClose} className="secondary-action !min-h-11">Kapat</button>
+        <button type="button" onClick={() => window.print()} className="primary-action !min-h-11"><PrinterIcon className="h-4 w-4" /> {slips.length > 1 ? `${slips.length} fişi yazdır` : 'A5 yazdır'}</button>
       </div>
     </div>
   );

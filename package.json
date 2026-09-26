@@ -9,7 +9,8 @@
     "lint": "eslint src",
     "deploy": "vercel --prod",
     "preview": "vercel",
-    "test:bestsellers": "node --test src/services/bestsellers.test.cjs"
+    "test:bestsellers": "node --test src/services/bestsellers.test.cjs",
+    "test:catalog": "node --test src/features/catalog/catalog.test.cjs"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.18",
