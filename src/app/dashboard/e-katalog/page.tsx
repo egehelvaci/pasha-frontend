@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { ArrowDownTrayIcon, ArrowLeftIcon, ArrowRightIcon, CheckIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/app/context/AuthContext';
@@ -28,6 +28,8 @@ export default function ECatalogPage() {
   const [listState, setListState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [listError, setListError] = useState('');
   const [retry, setRetry] = useState(0);
+  const [selectAllState, setSelectAllState] = useState<{ status: 'idle' | 'loading' | 'error'; loaded: number; total: number; message?: string }>({ status: 'idle', loaded: 0, total: 0 });
+  const selectAllController = useRef<AbortController | null>(null);
   const job = useCatalogJob();
   const storageKey = `catalog-draft:${user?.userId || 'anonymous'}`;
 
@@ -61,6 +63,8 @@ export default function ECatalogPage() {
     return () => clearTimeout(timer);
   }, [selected, options, storageKey]);
 
+  useEffect(() => () => selectAllController.current?.abort(), []);
+
   const selectedProducts = useMemo(() => Array.from(selected.values()), [selected]);
   const progress = job.state.status === 'running' ? job.state.progress : null;
   const canShare = typeof navigator !== 'undefined' && Boolean(navigator.share);
@@ -77,6 +81,37 @@ export default function ECatalogPage() {
     else products.forEach(product => next.set(product.id, product));
     return next;
   });
+  const selectAllProducts = async () => {
+    if (!token || selectAllState.status === 'loading') return;
+    const controller = new AbortController();
+    selectAllController.current?.abort();
+    selectAllController.current = controller;
+    setSelectAllState({ status: 'loading', loaded: 0, total: pagination.total });
+    try {
+      const first = await getCatalogProductPage({ token, page: 1, limit: 100, search, signal: controller.signal });
+      const allProducts = [...first.products];
+      setSelectAllState({ status: 'loading', loaded: allProducts.length, total: first.total });
+      const remainingPages = Array.from({ length: Math.max(0, first.totalPages - 1) }, (_, index) => index + 2);
+      for (let offset = 0; offset < remainingPages.length; offset += 4) {
+        const batch = await Promise.all(remainingPages.slice(offset, offset + 4).map(pageNumber =>
+          getCatalogProductPage({ token, page: pageNumber, limit: 100, search, signal: controller.signal })
+        ));
+        batch.forEach(result => allProducts.push(...result.products));
+        setSelectAllState({ status: 'loading', loaded: allProducts.length, total: first.total });
+      }
+      setSelected(current => {
+        const next = new Map(current);
+        allProducts.forEach(product => next.set(product.id, product));
+        return next;
+      });
+      setSelectAllState({ status: 'idle', loaded: allProducts.length, total: first.total });
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      setSelectAllState({ status: 'error', loaded: 0, total: pagination.total, message: error instanceof Error ? error.message : 'Tüm ürünler seçilemedi.' });
+    } finally {
+      if (selectAllController.current === controller) selectAllController.current = null;
+    }
+  };
   const updateOption = <K extends keyof CatalogOptions>(key: K, value: CatalogOptions[K]) => setOptions(current => ({ ...current, [key]: value }));
   const filename = `${options.title.trim() || 'pasa-home-katalog'}.pdf`.replace(/[\\/:*?"<>|]+/g, '-');
   const download = () => {
@@ -108,9 +143,16 @@ export default function ECatalogPage() {
 
         {step === 1 && <section className="surface p-4 sm:p-6" aria-labelledby="products-title">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
-            <div><h2 id="products-title" className="text-lg font-semibold">Ürün seçimi</h2><p className="mt-1 text-xs text-slate-500">Yalnızca bu sayfadaki 24 ürün indirilir; seçimler sayfalar arasında korunur.</p></div>
-            <button type="button" onClick={togglePage} disabled={!products.length} className="secondary-action !min-h-10 !px-4">{pageSelected ? 'Bu sayfayı kaldır' : 'Bu sayfayı seç'}</button>
+            <div><h2 id="products-title" className="text-lg font-semibold">Ürün seçimi</h2><p className="mt-1 text-xs text-slate-500">Sayfa seçimi yapabilir veya tüm ürünleri tek işlemle kataloğa ekleyebilirsiniz.</p></div>
+            <div className="flex flex-wrap gap-2">
+              {selected.size > 0 && <button type="button" onClick={() => setSelected(new Map())} disabled={selectAllState.status === 'loading'} className="secondary-action !min-h-10 !px-4">Seçimi temizle</button>}
+              <button type="button" onClick={togglePage} disabled={!products.length || selectAllState.status === 'loading'} className="secondary-action !min-h-10 !px-4">{pageSelected ? 'Bu sayfayı kaldır' : 'Bu sayfayı seç'}</button>
+              <button type="button" onClick={selectAllProducts} disabled={!pagination.total || selectAllState.status === 'loading'} className="primary-action !min-h-10 !px-4">
+                {selectAllState.status === 'loading' ? `${Math.min(selectAllState.loaded, selectAllState.total)}/${selectAllState.total} seçiliyor…` : search ? `Eşleşen ${pagination.total} ürünü seç` : `Tüm ${pagination.total} ürünü seç`}
+              </button>
+            </div>
           </div>
+          {selectAllState.status === 'error' && <div role="alert" className="mb-5 flex items-center justify-between gap-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-800"><span>{selectAllState.message}</span><button type="button" onClick={selectAllProducts} className="font-semibold underline underline-offset-2">Tekrar dene</button></div>}
           <label className="relative mb-6 block"><span className="sr-only">Ürün ara</span><MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" /><input value={query} onChange={event => setQuery(event.target.value)} className="h-12 w-full rounded-xl border border-[#d8d9d2] bg-white pl-12 pr-4 text-sm focus:border-[#547a8c]" placeholder="Ürün adıyla ara…" /></label>
           {listState === 'loading' ? <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">{Array.from({ length: 8 }, (_, i) => <div key={i} className="surface overflow-hidden p-3"><div className="skeleton aspect-square rounded-xl" /><div className="skeleton mt-3 h-4 rounded" /></div>)}</div>
             : listState === 'error' ? <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-8 text-center"><p className="text-sm text-rose-800">{listError}</p><button onClick={() => setRetry(value => value + 1)} className="primary-action mt-5">Tekrar dene</button></div>

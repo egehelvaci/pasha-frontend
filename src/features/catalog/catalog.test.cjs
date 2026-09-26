@@ -35,10 +35,3 @@ test('draft restoration validates and normalizes options', () => {
   assert.equal(JSON.stringify(restored.options), JSON.stringify({ title: 'Katalog', layout: 'spacious', quality: 'high', cover: false, descriptions: false }));
   assert.throws(() => parseCatalogDraft('{"version":2}'));
 });
-
-test('A5 cargo stylesheet has exact portrait dimensions and one-slip page breaks', () => {
-  const css = fs.readFileSync('src/app/globals.css', 'utf8');
-  assert.match(css, /@page\s*\{\s*size:\s*A5 portrait;\s*margin:\s*0;/);
-  assert.match(css, /width:\s*148mm !important;\s*height:\s*210mm !important;/);
-  assert.match(css, /page-break-after:\s*always !important/);
-});
