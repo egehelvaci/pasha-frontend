@@ -10,7 +10,8 @@
     "deploy": "vercel --prod",
     "preview": "vercel",
     "test:bestsellers": "node --test src/services/bestsellers.test.cjs",
-    "test:catalog": "node --test src/features/catalog/catalog.test.cjs"
+    "test:catalog": "node --test src/features/catalog/catalog.test.cjs",
+    "test:product-stock": "node --test src/app/utils/productStock.test.cjs"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.18",

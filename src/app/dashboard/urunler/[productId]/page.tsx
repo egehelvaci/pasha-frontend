@@ -10,7 +10,7 @@ import { useSiteSettings } from '@/app/context/SiteSettingsContext';
 import { API_BASE_URL } from '@/services/api';
 import { useToken } from '@/app/hooks/useToken';
 import Image from 'next/image';
-import { formatSizeOptionLabel, formatStockM2, getConsumableAreaM2ForWidth, getStockWarning, isCommonStockEnabled, isLegacySizeOutOfStock, sortSizeOptionsByWidth, toCanonicalCutType, toNumber } from '@/app/utils/productStock';
+import { formatSizeOptionLabel, formatStockM2, getConsumableAreaM2ForWidth, getOptionalHeightLimit, getStockWarning, isCommonStockEnabled, isLegacySizeOutOfStock, normalizeOptionalHeightInput, sortSizeOptionsByWidth, toCanonicalCutType, toNumber } from '@/app/utils/productStock';
 
 export default function ProductDetail() {
   const params = useParams();
@@ -706,26 +706,17 @@ export default function ProductDetail() {
                           <input
                             type="number"
                             min="1"
-                            max={selectedSize.height}
+                            max={getOptionalHeightLimit(selectedSize.height)}
                             value={customHeight}
                             onChange={(e) => {
-                              const value = e.target.value;
-                              if (value === '') {
-                                setCustomHeight('');
-                              } else {
-                                const numValue = Number(value);
-                                if (numValue >= 1 && numValue <= toNumber(selectedSize.height)) {
-                                  setCustomHeight(numValue);
-                                } else if (value.length <= 1) {
-                                  setCustomHeight(value);
-                                }
-                              }
+                              const value = normalizeOptionalHeightInput(e.target.value, selectedSize.height);
+                              if (value !== null) setCustomHeight(value);
                             }}
                             onBlur={(e) => {
                               const value = e.target.value;
-                              const maxHeight = toNumber(selectedSize.height);
+                              const maxHeight = getOptionalHeightLimit(selectedSize.height);
                               if (value !== '' && Number(value) > maxHeight) {
-                                setCustomHeight(maxHeight);
+                                setCustomHeight(String(maxHeight));
                               }
                             }}
                             className="h-full w-full bg-transparent px-3 text-sm tabular-nums text-slate-900 outline-none"

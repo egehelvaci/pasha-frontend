@@ -9,7 +9,7 @@ import { useCart } from '@/app/context/CartContext';
 import { useSiteSettings } from '@/app/context/SiteSettingsContext';
 import { getProductRules, ProductRule } from '@/services/api';
 import { useToken } from '@/app/hooks/useToken';
-import { formatSizeOptionLabel, formatStockM2, getConsumableAreaM2ForWidth, getStockWarning, isCommonStockEnabled, isProductOutOfStock, sortSizeOptionsByWidth, toCanonicalCutType, toNumber } from '@/app/utils/productStock';
+import { formatSizeOptionLabel, formatStockM2, getConsumableAreaM2ForWidth, getOptionalHeightLimit, getStockWarning, isCommonStockEnabled, isProductOutOfStock, normalizeOptionalHeightInput, sortSizeOptionsByWidth, toCanonicalCutType, toNumber } from '@/app/utils/productStock';
 
 // API Base URL
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://pashahomeapps.up.railway.app";
@@ -1372,26 +1372,17 @@ export default function ProductList() {
                             <input
                               type="number"
                             min="1"
-                            max={selectedSize.height}
+                            max={getOptionalHeightLimit(selectedSize.height)}
                               value={customHeight}
                               onChange={(e) => {
-                                const value = e.target.value;
-                                if (value === '') {
-                                  setCustomHeight('');
-                                } else {
-                                  const numValue = Number(value);
-                                  if (numValue >= 1 && numValue <= toNumber(selectedSize.height)) {
-                                    setCustomHeight(numValue);
-                                  } else if (value.length <= 1) {
-                                    setCustomHeight(value);
-                                  }
-                                }
+                                const value = normalizeOptionalHeightInput(e.target.value, selectedSize.height);
+                                if (value !== null) setCustomHeight(value);
                               }}
                               onBlur={(e) => {
                                 const value = e.target.value;
-                                const maxHeight = toNumber(selectedSize.height);
+                                const maxHeight = getOptionalHeightLimit(selectedSize.height);
                                 if (value !== '' && Number(value) > maxHeight) {
-                                  setCustomHeight(maxHeight);
+                                  setCustomHeight(String(maxHeight));
                                 }
                               }}
                               className="h-full w-full bg-transparent px-3 text-sm tabular-nums text-slate-900 outline-none"

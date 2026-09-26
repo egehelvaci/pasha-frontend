@@ -24,7 +24,7 @@ import {
   createStoreAddress,
   CreateStoreAddressRequest
 } from '@/services/api';
-import { formatSizeOptionLabel, formatStockM2, getConsumableAreaM2, getConsumableAreaM2ForWidth, getStockWarning, isCommonStockEnabled, isProductOutOfStock, sortSizeOptionsByWidth, toCanonicalCutType, toNumber } from '@/app/utils/productStock';
+import { formatSizeOptionLabel, formatStockM2, getConsumableAreaM2, getConsumableAreaM2ForWidth, getOptionalHeightLimit, getStockWarning, isCommonStockEnabled, isProductOutOfStock, normalizeOptionalHeightInput, sortSizeOptionsByWidth, toCanonicalCutType, toNumber } from '@/app/utils/productStock';
 
 interface CartItem {
   productId: string;
@@ -1183,21 +1183,23 @@ const AdminSiparisOlustur = () => {
                                   const option = ('sizeOptions' in selectedProduct)
                                     ? selectedProduct.sizeOptions?.find((s: any) => s.id === productForm.selectedSizeId)
                                     : undefined;
-                                  const maxHeight = toNumber(option?.height);
-                                  return maxHeight > 0 ? maxHeight : undefined;
+                                  return getOptionalHeightLimit(option?.height);
                                 })()}
                                 value={productForm.height}
                                 onChange={(e) => {
-                                  const value = e.target.value;
-                                  setProductForm(prev => ({ ...prev, height: value }));
+                                  const option = ('sizeOptions' in selectedProduct)
+                                    ? selectedProduct.sizeOptions?.find((s: any) => s.id === productForm.selectedSizeId)
+                                    : undefined;
+                                  const value = normalizeOptionalHeightInput(e.target.value, option?.height);
+                                  if (value !== null) setProductForm(prev => ({ ...prev, height: value }));
                                 }}
                                 onBlur={(e) => {
                                   const value = e.target.value;
                                   const option = ('sizeOptions' in selectedProduct)
                                     ? selectedProduct.sizeOptions?.find((s: any) => s.id === productForm.selectedSizeId)
                                     : undefined;
-                                  const maxHeight = toNumber(option?.height);
-                                  if (value !== '' && maxHeight > 0 && Number(value) > maxHeight) {
+                                  const maxHeight = getOptionalHeightLimit(option?.height);
+                                  if (value !== '' && Number(value) > maxHeight) {
                                     setProductForm(prev => ({ ...prev, height: String(maxHeight) }));
                                   }
                                 }}

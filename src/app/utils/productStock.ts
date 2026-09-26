@@ -3,6 +3,19 @@ export function toNumber(value: unknown, fallback = 0): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+export const DEFAULT_OPTIONAL_HEIGHT_LIMIT_CM = 10000;
+
+export function getOptionalHeightLimit(configuredHeight: unknown): number {
+  const configured = toNumber(configuredHeight);
+  return configured > 1 ? configured : DEFAULT_OPTIONAL_HEIGHT_LIMIT_CM;
+}
+
+export function normalizeOptionalHeightInput(value: string, configuredHeight: unknown): string | null {
+  if (value === '') return '';
+  if (!/^\d+$/.test(value)) return null;
+  return Number(value) <= getOptionalHeightLimit(configuredHeight) ? value : null;
+}
+
 export function calculateAreaM2(width: number, height: number, quantity = 1): number {
   return (width * height * quantity) / 10000;
 }
