@@ -9,7 +9,23 @@ const source = ts.transpileModule(fs.readFileSync('src/app/utils/productStock.ts
 }).outputText;
 const context = { exports: {} };
 vm.runInNewContext(source, context);
-const { getOptionalHeightLimit, normalizeOptionalHeightInput } = context.exports;
+const { getOptionalHeightLimit, normalizeOptionalHeightInput, sortSizeOptionsByWidth } = context.exports;
+
+test('size dropdowns show cut sizes before ready sizes, ordered by width and height within each group', () => {
+  const sizes = [
+    { id: 'ready-80-long', width: 80, height: 300, is_optional_height: false },
+    { id: 'cut-200', width: '200', height: 0, is_optional_height: true },
+    { id: 'ready-60', width: 60, height: 100 },
+    { id: 'cut-80', width: '80', height: 0, is_optional_height: true },
+    { id: 'ready-80-short', width: 80, height: 150, is_optional_height: false },
+  ];
+  const originalOrder = sizes.map(size => size.id);
+  const result = sortSizeOptionsByWidth(sizes);
+  assert.deepEqual(Array.from(result, size => size.id), [
+    'cut-80', 'cut-200', 'ready-60', 'ready-80-short', 'ready-80-long',
+  ]);
+  assert.deepEqual(sizes.map(size => size.id), originalOrder);
+});
 
 test('optional height accepts multi-digit values when backend uses a sentinel height', () => {
   assert.equal(getOptionalHeightLimit(0), 10000);

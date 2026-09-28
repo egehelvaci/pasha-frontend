@@ -45,9 +45,9 @@ export function getConsumableAreaM2ForWidth(
 
 export function sortSizeOptionsByWidth<T extends { width?: unknown; height?: unknown; is_optional_height?: boolean }>(sizes: T[]): T[] {
   return [...sizes].sort((a, b) => {
+    if (Boolean(a.is_optional_height) !== Boolean(b.is_optional_height)) return a.is_optional_height ? -1 : 1;
     const widthDiff = toNumber(a.width) - toNumber(b.width);
     if (widthDiff !== 0) return widthDiff;
-    if (Boolean(a.is_optional_height) !== Boolean(b.is_optional_height)) return a.is_optional_height ? 1 : -1;
     return toNumber(a.height) - toNumber(b.height);
   });
 }
