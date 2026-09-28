@@ -62,292 +62,153 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>Kargo Fişi</title>
           <style>
-            @page {
-              size: A5 landscape;
-              margin: 0;
-            }
-
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-
-            html,
+            * { margin: 0; padding: 0; box-sizing: border-box; }
             body {
-              width: 210mm;
-              min-width: 210mm;
-              max-width: 210mm;
-              height: 148mm;
-              min-height: 148mm;
-              max-height: 148mm;
-            }
-
-            body {
-              font-family: 'Arial', sans-serif;
-              font-size: 11px;
-              line-height: 1.3;
-              color: #000;
+              font-family: Arial, sans-serif;
+              line-height: 1.4;
+              color: #333;
+              max-width: 800px;
+              margin: 0 auto;
+              padding: 20px;
               background: white;
-              margin: 0;
-              padding: 10mm;
-              overflow: hidden;
             }
-
-            .receipt-container {
-              position: relative;
-              width: 100%;
-              height: 100%;
-              min-height: 0;
-              max-height: 128mm;
-              display: flex;
-              flex-direction: column;
-              overflow: hidden;
-            }
-
             .header {
               text-align: center;
               border-bottom: 2px solid #000;
-              padding-bottom: 3mm;
-              margin-bottom: 3mm;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
             }
-
             .header h1 {
-              font-size: 18px;
-              font-weight: bold;
-              margin-bottom: 2mm;
+              font-size: 24px;
+              margin-bottom: 10px;
               color: #000;
             }
-
             .header h2 {
-              font-size: 14px;
-              font-weight: bold;
-              margin-bottom: 2mm;
+              font-size: 18px;
+              margin-bottom: 10px;
               color: #000;
             }
-
-            .header p {
-              font-size: 11px;
-              margin: 1mm 0;
-              color: #000;
-            }
-
-            .content {
-              flex: 1;
-              min-height: 0;
-              display: flex;
-              flex-direction: column;
-              gap: 3mm;
-            }
-
-            .content-grid {
-              display: grid;
-              grid-template-columns: repeat(2, minmax(0, 1fr));
-              gap: 5mm;
-              flex: 1;
-              min-height: 0;
-              align-items: start;
-            }
-
-            .receipt-content {
-              position: absolute;
-              top: 0;
-              left: 0;
-              width: 100%;
-              transform-origin: top center;
-            }
-
-            .sender-column {
-              display: flex;
-              flex-direction: column;
-              gap: 2mm;
-              min-width: 0;
-            }
-
-            .product-list {
-              list-style: none;
-              font-size: 10px;
-              line-height: 1.3;
-              overflow-wrap: anywhere;
-            }
-
-            .product-list li + li {
-              margin-top: 1mm;
-            }
-
-            .product-details h3 {
-              margin-bottom: 2mm;
-            }
-
+            .header p { margin: 4px 0; color: #000; }
             .section {
-              border: 1.5px solid #000;
-              padding: 3mm;
-              min-width: 0;
-              height: fit-content;
-              break-inside: avoid;
-              page-break-inside: avoid;
+              margin-bottom: 25px;
+              padding: 15px;
+              border: 1px solid #000;
+              border-radius: 0;
             }
-
             .section h3 {
-              font-size: 12px;
-              font-weight: bold;
-              border-bottom: 1px solid #000;
-              padding-bottom: 2mm;
-              margin-bottom: 3mm;
+              font-size: 16px;
+              margin-bottom: 10px;
               color: #000;
+              border-bottom: 1px solid #000;
+              padding-bottom: 5px;
             }
-
+            .info-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 15px;
+              margin-bottom: 15px;
+            }
             .info-item {
               display: flex;
               justify-content: space-between;
-              margin-bottom: 2mm;
-              font-size: 11px;
-              align-items: flex-start;
+              gap: 12px;
             }
-
-            .info-item strong {
-              font-weight: bold;
-              min-width: 25mm;
-              color: #000;
+            .info-item strong { color: #000; }
+            .product-list {
+              list-style: none;
+              margin-top: 10px;
             }
-
-            .info-item span {
-              text-align: left;
-              flex: 1;
-              margin-left: 3mm;
-              overflow-wrap: anywhere;
-              word-break: break-word;
-              color: #000;
-            }
-
-            .address-section {
-              width: 100%;
-              margin-bottom: 3mm;
-            }
-
-            .sender-info {
-              grid-column: 1 / -1;
-              margin-top: 3mm;
-              border-top: 1px solid #000;
-              padding-top: 3mm;
+            .product-list li + li { margin-top: 6px; }
+            .footer {
+              margin-top: 30px;
               text-align: center;
-              font-size: 10px;
-              color: #666;
-              flex: 0 0 auto;
+              font-size: 12px;
+              color: #000;
+              border-top: 1px solid #000;
+              padding-top: 15px;
             }
-
             @media print {
-              html,
-              body {
-                width: 210mm !important;
-                min-width: 210mm !important;
-                max-width: 210mm !important;
-                height: auto !important;
-                min-height: 0 !important;
-                max-height: none !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-              }
-
-              .receipt-container {
-                position: absolute;
-                top: 10mm;
-                left: 10mm;
-                width: 190mm;
-                height: 128mm;
-                max-height: 128mm;
-                margin: 0;
-                overflow: hidden;
-                break-inside: avoid;
-                page-break-inside: avoid;
-              }
-
-              .section {
-                page-break-inside: avoid;
-              }
+              body { font-size: 12px; }
+              .section { break-inside: avoid; }
+              @page { margin: 0; }
+              * { -webkit-print-color-adjust: exact; }
             }
+            @page { margin: 0; size: auto; }
           </style>
         </head>
         <body>
-          <div class="receipt-container">
-            <div class="receipt-content">
-            <div class="header">
-              <h1>PAŞA HOME</h1>
-              <h2>KARGO FİŞİ</h2>
-              <p>Sipariş No: <strong>${order.id.slice(0, 8).toUpperCase()}</strong></p>
-              <p>Tarih: <strong>${new Date(order.created_at).toLocaleDateString('tr-TR', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}</strong></p>
+          <div class="header">
+            <h1>PAŞA HOME</h1>
+            <h2>KARGO FİŞİ</h2>
+            <p>Sipariş No: <strong>${order.id.slice(0, 8).toUpperCase()}</strong></p>
+            <p>Tarih: <strong>${new Date(order.created_at).toLocaleDateString('tr-TR', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })}</strong></p>
+          </div>
+
+          <div class="section">
+            <h3>ALICI ADRESİ</h3>
+            <div class="info-item">
+              <span><strong>Adres:</strong></span>
+              <span>${order.address?.title?.trim() ? `<b>${escapeHtml(order.address.title.trim())}</b><br>` : ''}${escapeHtml(order.address ?
+                `${order.address.address}, ${order.address.district} / ${order.address.city}` :
+                order.delivery_address || 'Belirtilmemiş'
+              )}</span>
             </div>
+            ${order.address && (order.address as any).postal_code ?
+              `<div class="info-item">
+                <span><strong>Posta Kodu:</strong></span>
+                <span>${escapeHtml((order.address as any).postal_code)}</span>
+              </div>` : ''
+            }
+          </div>
 
-            <div class="content">
-              <div class="section address-section">
-                <h3>ALICI ADRESİ</h3>
-                <div class="info-item">
-                  <strong>Adres:</strong>
-                  <span>${order.address?.title?.trim() ? `<b>${escapeHtml(order.address.title.trim())}</b><br>` : ''}${escapeHtml(order.address ?
-                    `${order.address.address}, ${order.address.district} / ${order.address.city}` :
-                    order.delivery_address || 'Belirtilmemiş'
-                  )}</span>
-                </div>
-                ${order.address && (order.address as any).postal_code ?
-                  `<div class="info-item">
-                    <strong>Posta Kodu:</strong>
-                    <span>${(order.address as any).postal_code}</span>
-                  </div>` : ''
-                }
+          <div class="section">
+            <h3>ALICI BİLGİLERİ</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <span><strong>Firma:</strong></span>
+                <span>${escapeHtml(order.store_name)}</span>
               </div>
-
-              <div class="content-grid">
-                <div class="section">
-                  <h3>ALICI BİLGİLERİ</h3>
-                  <div class="info-item">
-                    <strong>Firma:</strong>
-                    <span>${order.store_name}</span>
-                  </div>
-                  <div class="info-item">
-                    <strong>Yetkili:</strong>
-                    <span>${order.user ? `${order.user.name} ${order.user.surname}` : 'Belirtilmemiş'}</span>
-                  </div>
-                  <div class="info-item">
-                    <strong>Telefon:</strong>
-                    <span>${order.store_phone || order.user?.phone || 'Belirtilmemiş'}</span>
-                  </div>
-                </div>
-
-                <div class="sender-column">
-                <div class="section">
-                  <h3>GÖNDERİCİ BİLGİLERİ</h3>
-                  <div class="info-item">
-                    <strong>Firma:</strong>
-                    <span>PAŞA HOME Tekstil San. ve Tic. Ltd. Şti.</span>
-                  </div>
-                  <div class="info-item">
-                    <strong>Telefon:</strong>
-                    <span>+90 555 234 58 91</span>
-                  </div>
-                  <div class="info-item">
-                    <strong>Adres:</strong>
-                    <span>Güneşli Mah. Mahmutbey Cad. 1296. Sok. No:3 Daire:1 Bağcılar/İstanbul</span>
-                  </div>
-                </div>
-                <div class="section product-details">
-                  <h3>Ürün Detay</h3>
-                  <ul class="product-list">${productRows || '<li>Ürün bulunamadı.</li>'}</ul>
-                </div>
-                </div>
+              <div class="info-item">
+                <span><strong>Yetkili:</strong></span>
+                <span>${escapeHtml(order.user ? `${order.user.name} ${order.user.surname}` : 'Belirtilmemiş')}</span>
+              </div>
+              <div class="info-item">
+                <span><strong>Telefon:</strong></span>
+                <span>${escapeHtml(order.store_phone || order.user?.phone || 'Belirtilmemiş')}</span>
               </div>
             </div>
+          </div>
 
-            <div class="sender-info">
-              <p><strong>PAŞA HOME</strong> - Halı ve Ev Tekstili Ürünleri</p>
-              <p>www.pasahome.com.tr | info@pasahome.com.tr</p>
+          <div class="section">
+            <h3>GÖNDERİCİ BİLGİLERİ</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <span><strong>Firma:</strong></span>
+                <span>PAŞA HOME Tekstil San. ve Tic. Ltd. Şti.</span>
+              </div>
+              <div class="info-item">
+                <span><strong>Telefon:</strong></span>
+                <span>+90 555 234 58 91</span>
+              </div>
+              <div class="info-item">
+                <span><strong>Adres:</strong></span>
+                <span>Güneşli Mah. Mahmutbey Cad. 1296. Sok. No:3 Daire:1 Bağcılar/İstanbul</span>
+              </div>
             </div>
-            </div>
+          </div>
+
+          <div class="section">
+            <h3>Ürün Detay</h3>
+            <ul class="product-list">${productRows || '<li>Ürün bulunamadı.</li>'}</ul>
+          </div>
+
+          <div class="footer">
+            <p><strong>PAŞA HOME</strong> - Halı ve Ev Tekstili Ürünleri</p>
+            <p>www.pasahome.com.tr | info@pasahome.com.tr</p>
           </div>
         </body>
         </html>
@@ -358,27 +219,9 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
 
       printWindow.onload = () => {
         setTimeout(() => {
-          try {
-            // Fit the complete receipt into one A5 sheet without cutting off product rows.
-            const container = printWindow.document.querySelector<HTMLElement>('.receipt-container');
-            const content = printWindow.document.querySelector<HTMLElement>('.receipt-content');
-            if (container && content) {
-              const scale = Math.min(1, container.clientHeight / content.scrollHeight);
-              content.style.transform = `scale(${scale})`;
-            }
-            printWindow.focus();
-            printWindow.print();
-          } catch (error) {
-            console.error('Print error:', error);
-          }
-          setTimeout(() => {
-            try {
-              printWindow.close();
-            } catch (error) {
-              console.error('Close error:', error);
-            }
-          }, 3000);
-        }, 1500);
+          printWindow.focus();
+          printWindow.print();
+        }, 500);
       };
     }
   };
@@ -454,7 +297,7 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p className="text-blue-800 text-sm">
-                Bu kargo fişi A5 boyutunda yazdırılacak ve teslimat sırasında kullanılacaktır.
+                Bu kargo fişi sipariş fişi ile aynı sayfa düzeninde yazdırılır.
               </p>
             </div>
           </div>
