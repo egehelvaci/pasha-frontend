@@ -33,7 +33,7 @@ export default function StoreUsersPage() {
     // Sipariş oluşturma yalnızca admin; kullanıcı listesi admin/editör
     const isOrderMode = !!selectedAddressId;
     
-    if (!authLoading && isOrderMode && !isAdmin) {
+    if (!authLoading && isOrderMode && !isAdminOrEditor) {
       router.push('/dashboard/magazalar');
       return;
     }
@@ -112,7 +112,7 @@ export default function StoreUsersPage() {
 
   // Yetki kontrolü
   const isOrderMode = !!selectedAddressId;
-  if (isOrderMode && !isAdmin) {
+  if (isOrderMode && !isAdminOrEditor) {
     return null;
   }
   if (!isOrderMode && !isAdminOrEditor) {
@@ -136,7 +136,7 @@ export default function StoreUsersPage() {
   }
 
   const openOrderForUser = (user: StoreUser) => {
-    if (!isAdmin) return;
+    if (!isAdminOrEditor) return;
     const userId = user.user_id || (user as any).id || (user as any).userId;
     router.push(
       `/dashboard/admin-siparis-olustur?storeId=${storeId}&userId=${userId}&userName=${encodeURIComponent(`${user.name} ${user.surname}`)}`
@@ -200,7 +200,7 @@ export default function StoreUsersPage() {
                     {filteredUsers.map((user) => (
                       <tr
                         key={user.user_id}
-                        className={`transition hover:bg-slate-50 ${isAdmin ? 'cursor-pointer' : ''}`}
+                        className={`transition hover:bg-slate-50 ${isAdminOrEditor ? 'cursor-pointer' : ''}`}
                         onClick={() => openOrderForUser(user)}
                       >
                         <td className="px-6 py-4">
@@ -214,7 +214,7 @@ export default function StoreUsersPage() {
                           )}
                         </td>
                         <td className="px-6 py-4 text-right">
-                          {isAdmin ? (
+                          {isAdminOrEditor ? (
                             <span className="inline-flex rounded-lg bg-[#00365a] px-3 py-1.5 text-xs font-medium text-white">
                               Sipariş Ver
                             </span>
@@ -233,14 +233,14 @@ export default function StoreUsersPage() {
                 {filteredUsers.map((user) => (
                   <div
                     key={user.user_id}
-                    className={`rounded-xl border border-slate-200/80 bg-white p-4 ${isAdmin ? 'cursor-pointer' : ''}`}
+                    className={`rounded-xl border border-slate-200/80 bg-white p-4 ${isAdminOrEditor ? 'cursor-pointer' : ''}`}
                     onClick={() => openOrderForUser(user)}
                   >
                     <div className="text-sm font-medium text-slate-900">{user.name} {user.surname}</div>
                     <p className="text-sm text-slate-500">@{user.username}</p>
                     <p className="mt-2 text-sm text-slate-700">{user.email}</p>
                     {user.phone_number && <p className="text-sm text-slate-500">{user.phone_number}</p>}
-                    {isAdmin && (
+                    {isAdminOrEditor && (
                       <span className="mt-3 inline-flex rounded-lg bg-[#00365a] px-3 py-1.5 text-xs font-medium text-white">
                         Sipariş Ver
                       </span>

@@ -1442,12 +1442,6 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
                   {(orderData.qr_codes?.length || 0) + (orderData.barcodes?.length || 0)} adet
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600 font-medium">Tutar:</span>
-                <span className="text-gray-900 font-bold">
-                  ₺{Number(orderData.total_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-                </span>
-              </div>
             </div>
             
             {/* QR Kod/Barcode Listesi */}

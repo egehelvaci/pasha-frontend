@@ -23,7 +23,7 @@ export default function StoreAddressesPage() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
-  const { isAdmin, isAdminOrEditor } = useAuth();
+  const { isAdminOrEditor } = useAuth();
   
   const isOrderMode = searchParams.get('mode') === 'order';
   const [addresses, setAddresses] = useState<StoreAddress[]>([]);
@@ -52,8 +52,8 @@ export default function StoreAddressesPage() {
   const storeId = params.storeId as string;
 
   useEffect(() => {
-    // Sipariş modu yalnızca admin; normal adres yönetimi admin/editör
-    if (isOrderMode && !isAdmin) {
+    // Sipariş modu admin ve editör; normal adres yönetimi admin/editör
+    if (isOrderMode && !isAdminOrEditor) {
       router.push('/dashboard/magazalar');
       return;
     }
@@ -70,7 +70,7 @@ export default function StoreAddressesPage() {
     }
     
     fetchAddresses();
-  }, [isAdmin, isAdminOrEditor, isOrderMode, router, storeId]);
+  }, [isAdminOrEditor, isOrderMode, router, storeId]);
 
   const fetchAddresses = async () => {
     try {
@@ -187,7 +187,7 @@ export default function StoreAddressesPage() {
   };
 
   // Sipariş modu yalnızca admin; normal adres yönetimi admin/editör
-  if (isOrderMode && !isAdmin) return null;
+  if (isOrderMode && !isAdminOrEditor) return null;
   if (!isOrderMode && !isAdminOrEditor) return null;
 
   return (

@@ -451,15 +451,13 @@ export default function StoresPage() {
                             >
                               Kullanıcılar
                             </button>
-                            {isAdmin && (
-                              <button
-                                type="button"
-                                onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/adresler?mode=order`)}
-                                className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-3 py-2 text-xs font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25"
-                              >
-                                Sipariş Ver
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/adresler?mode=order`)}
+                              className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-3 py-2 text-xs font-medium text-white transition hover:bg-[#004170] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00365a]/25"
+                            >
+                              Sipariş Ver
+                            </button>
                             {isAdmin && (
                               <button
                                 type="button"
@@ -576,14 +574,12 @@ export default function StoresPage() {
                       >
                         Kullanıcılar
                       </button>
-                      {isAdmin && (
-                        <button
-                          onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/adresler?mode=order`)}
-                          className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-3 py-2 text-xs font-medium text-white transition hover:bg-[#004170]"
-                        >
-                          Sipariş Ver
-                        </button>
-                      )}
+                      <button
+                        onClick={() => router.push(`/dashboard/magazalar/${store.store_id}/adresler?mode=order`)}
+                        className="inline-flex items-center justify-center rounded-lg bg-[#00365a] px-3 py-2 text-xs font-medium text-white transition hover:bg-[#004170]"
+                      >
+                        Sipariş Ver
+                      </button>
                       {isAdmin && (
                         <button
                           onClick={() => {

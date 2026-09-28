@@ -44,7 +44,7 @@ interface CartItem {
 const AdminSiparisOlustur = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isAdmin, user, token, isLoading: authLoading } = useAuth();
+  const { isAdmin, isAdminOrEditor, user, token, isLoading: authLoading } = useAuth();
   const { refreshCart } = useCart();
   
   const [orderData, setOrderData] = useState<AdminOrderCreateData | null>(null);
@@ -146,8 +146,8 @@ const AdminSiparisOlustur = () => {
   }, [showAddProductModal]);
 
   useEffect(() => {
-    // Kimlik doğrulama yüklemesi tamamlandığında yalnızca admin kontrolü
-    if (!authLoading && !isAdmin) {
+    // Sipariş oluşturma admin ve editör. Editör tutar görmez.
+    if (!authLoading && !isAdminOrEditor) {
       router.push('/dashboard');
       return;
     }
@@ -158,7 +158,7 @@ const AdminSiparisOlustur = () => {
       fetchAdminCart();
       fetchStoreAddresses();
     }
-  }, [user, authLoading, isAdmin, router, storeId, userId]);
+  }, [user, authLoading, isAdminOrEditor, router, storeId, userId]);
 
   const fetchOrderCreateInfo = async () => {
     setLoading(true);
@@ -659,8 +659,12 @@ const AdminSiparisOlustur = () => {
               <span className="text-slate-500">
                 {orderData.user.name} {orderData.user.surname}
               </span>
-              <span className="text-slate-300">·</span>
-              <span className="text-slate-500">{orderData.priceList.name}</span>
+              {isAdmin && (
+                <>
+                  <span className="text-slate-300">·</span>
+                  <span className="text-slate-500">{orderData.priceList.name}</span>
+                </>
+              )}
             </div>
           </div>
 
@@ -670,7 +674,7 @@ const AdminSiparisOlustur = () => {
                 Sepet
                 <span className="ml-1 font-medium tabular-nums text-slate-400">({adminCart?.totalItems || 0})</span>
               </span>
-              {adminCart && adminCart.items.length > 0 && (
+              {isAdmin && adminCart && adminCart.items.length > 0 && (
                 <span className="text-xs font-semibold tabular-nums text-[#00365a]">
                   {getTotalPrice().toLocaleString('tr-TR')} ₺
                 </span>
@@ -684,11 +688,11 @@ const AdminSiparisOlustur = () => {
             ) : (
               <div className="overflow-x-auto">
                 <div className="min-w-[640px]">
-                  <div className="grid grid-cols-[minmax(0,2fr)_7rem_5.5rem_6.5rem_8.5rem_2.25rem] items-center gap-x-3 border-b border-slate-100 pb-1.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                  <div className={`grid items-center gap-x-3 border-b border-slate-100 pb-1.5 text-[10px] font-medium uppercase tracking-wide text-slate-400 ${isAdmin ? 'grid-cols-[minmax(0,2fr)_7rem_5.5rem_6.5rem_8.5rem_2.25rem]' : 'grid-cols-[minmax(0,2fr)_7rem_5.5rem_8.5rem_2.25rem]'}`}>
                     <span>Ürün</span>
                     <span className="text-right">Ölçü</span>
                     <span className="text-right">m²</span>
-                    <span className="text-right">Fiyat</span>
+                    {isAdmin && <span className="text-right">Fiyat</span>}
                     <span className="text-center">Adet</span>
                     <span className="sr-only">Sil</span>
                   </div>
@@ -696,7 +700,7 @@ const AdminSiparisOlustur = () => {
                     {adminCart.items.map((item) => (
                       <li
                         key={item.id}
-                        className="grid grid-cols-[minmax(0,2fr)_7rem_5.5rem_6.5rem_8.5rem_2.25rem] items-center gap-x-3 py-2"
+                        className={`grid items-center gap-x-3 py-2 ${isAdmin ? 'grid-cols-[minmax(0,2fr)_7rem_5.5rem_6.5rem_8.5rem_2.25rem]' : 'grid-cols-[minmax(0,2fr)_7rem_5.5rem_8.5rem_2.25rem]'}`}
                       >
                         <span className="min-w-0 truncate text-xs font-medium text-slate-900">
                           {item.product?.name || 'Ürün'}
@@ -707,9 +711,11 @@ const AdminSiparisOlustur = () => {
                         <span className="text-right text-xs tabular-nums text-slate-600">
                           {item.area_m2} m²
                         </span>
-                        <span className="text-right text-xs font-medium tabular-nums text-slate-800">
-                          {item.total_price.toLocaleString('tr-TR')} ₺
-                        </span>
+                        {isAdmin && (
+                          <span className="text-right text-xs font-medium tabular-nums text-slate-800">
+                            {item.total_price.toLocaleString('tr-TR')} ₺
+                          </span>
+                        )}
                         <div className="flex justify-center">
                           <div className="flex h-8 overflow-hidden rounded-md border border-slate-300 bg-white shadow-sm">
                             <button
@@ -1290,13 +1296,16 @@ const AdminSiparisOlustur = () => {
                         <p className="text-slate-800">{selectedProduct.description}</p>
                       </div>
                       
+                      {isAdmin && (
                       <div className="flex flex-col gap-2">
                         <span className="text-sm text-slate-500">Metrekare Fiyatı</span>
                         <span className="font-medium text-slate-800">
                           {('pricing' in selectedProduct) ? `${selectedProduct.pricing.price} ${selectedProduct.pricing.currency}/m²` : 'Fiyat bilgisi yok'}
                         </span>
                       </div>
-                      
+                      )}
+
+                      {isAdmin && (
                       <div className="rounded-lg border border-slate-200/80 bg-stone-50/80 p-3.5">
                         <div className="flex justify-between items-center">
                           <span className="text-sm font-medium text-slate-700">Toplam Tutar</span>
@@ -1320,6 +1329,7 @@ const AdminSiparisOlustur = () => {
                           </div>
                         )}
                       </div>
+                      )}
                       
                       <div className="mt-5">
                         <div className="flex flex-col gap-4">
