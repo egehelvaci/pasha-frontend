@@ -9,7 +9,7 @@ const source = ts.transpileModule(fs.readFileSync('src/app/components/CargoRecei
   compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
 }).outputText;
 
-function printReceipt(items) {
+function printReceipt(items, orderOverrides = {}) {
   let html = '';
   let printed = false;
   const content = { scrollHeight: 960, style: {} };
@@ -40,7 +40,7 @@ function printReceipt(items) {
     order: {
       id: '12345678', created_at: '2026-09-28', store_name: 'Mağaza',
       store_email: 'private@example.com', store_tax_number: 'TAX-123',
-      store_tax_office: 'PRIVATE-TAX-OFFICE', items,
+      store_tax_office: 'PRIVATE-TAX-OFFICE', items, ...orderOverrides,
     },
     isVisible: true, onClose() {},
   });
@@ -73,4 +73,18 @@ test('cargo receipt omits recipient tax/email and lists every product below send
 test('cargo receipt handles missing product details and empty orders', () => {
   assert.match(printReceipt([{ quantity: 1 }]).html, /— × — cm · Ürün · <strong>1 adet/);
   assert.match(printReceipt([]).html, /Ürün bulunamadı/);
+});
+
+test('delivery address includes its title above the address and escapes HTML', () => {
+  const address = {
+    id: 'delivery-address', title: 'Egemen Halı',
+    address: 'Ayni ali mah. 8 eylül cad. no:69', district: 'YUNUSEMRE', city: 'Manisa',
+  };
+  assert.match(printReceipt([], { address }).html,
+    /<b>Egemen Halı<\/b><br>Ayni ali mah\. 8 eylül cad\. no:69, YUNUSEMRE \/ Manisa/);
+  const escaped = printReceipt([], { address: { ...address, title: '<Halı> & Ev' } }).html;
+  assert.match(escaped, /<b>&lt;Halı&gt; &amp; Ev<\/b><br>/);
+  const withoutTitle = printReceipt([], { address: { ...address, title: null } }).html;
+  assert.match(withoutTitle, /<span>Ayni ali mah\. 8 eylül cad\. no:69, YUNUSEMRE \/ Manisa<\/span>/);
+  assert.match(printReceipt([], { delivery_address: 'Alternatif adres' }).html, /<span>Alternatif adres<\/span>/);
 });

@@ -289,10 +289,10 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
                 <h3>ALICI ADRESİ</h3>
                 <div class="info-item">
                   <strong>Adres:</strong>
-                  <span>${order.address ?
-                    `${(order.address as any).address}, ${(order.address as any).district} / ${(order.address as any).city}` :
+                  <span>${order.address?.title?.trim() ? `<b>${escapeHtml(order.address.title.trim())}</b><br>` : ''}${escapeHtml(order.address ?
+                    `${order.address.address}, ${order.address.district} / ${order.address.city}` :
                     order.delivery_address || 'Belirtilmemiş'
-                  }</span>
+                  )}</span>
                 </div>
                 ${order.address && (order.address as any).postal_code ?
                   `<div class="info-item">
@@ -427,8 +427,14 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
               <div>
                 <span className="text-gray-600 font-medium">Teslimat Adresi:</span>
                 <span className="ml-2 text-gray-900">
+                  {order.address?.title?.trim() && (
+                    <>
+                      <strong>{order.address.title.trim()}</strong>
+                      <br />
+                    </>
+                  )}
                   {order.address ?
-                    `${(order.address as any).address}, ${(order.address as any).district} / ${(order.address as any).city}` :
+                    `${order.address.address}, ${order.address.district} / ${order.address.city}` :
                     order.delivery_address || 'Belirtilmemiş'
                   }
                 </span>

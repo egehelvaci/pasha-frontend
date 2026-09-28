@@ -39,6 +39,7 @@ export interface Order {
   delivery_address?: string;
   address?: {
     id: string;
+    title?: string | null;
     address: string;
     district: string;
     city: string;
