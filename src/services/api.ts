@@ -52,6 +52,9 @@ export interface Order {
   };
   items: Array<{
     quantity: number;
+    width?: number | string;
+    height?: number | string;
+    product?: { name: string };
   }>;
 }
 

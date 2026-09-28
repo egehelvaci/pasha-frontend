@@ -11,7 +11,7 @@ interface CargoReceiptProps {
 }
 
 export default function CargoReceipt({ order, isVisible, onClose }: CargoReceiptProps) {
-  const { user, isAdmin, isAdminOrEditor } = useAuth();
+  const { isAdminOrEditor } = useAuth();
 
   useEffect(() => {
     if (isVisible && !isAdminOrEditor) {
@@ -46,6 +46,12 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
   }
 
   const handlePrint = () => {
+    const escapeHtml = (value: string | number) => String(value).replace(/[&<>"']/g, (character) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[character]!);
+    const productRows = order.items.map((item) => `
+      <li>${escapeHtml(item.width ?? '—')} × ${escapeHtml(item.height ?? '—')} cm · ${escapeHtml(item.product?.name || 'Ürün')} · <strong>${escapeHtml(item.quantity)} adet</strong></li>
+    `).join('');
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     if (printWindow) {
       const htmlContent = `
@@ -89,6 +95,7 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
             }
 
             .receipt-container {
+              position: relative;
               width: 100%;
               height: 100%;
               min-height: 0;
@@ -101,8 +108,8 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
             .header {
               text-align: center;
               border-bottom: 2px solid #000;
-              padding-bottom: 5mm;
-              margin-bottom: 5mm;
+              padding-bottom: 3mm;
+              margin-bottom: 3mm;
             }
 
             .header h1 {
@@ -140,6 +147,36 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
               flex: 1;
               min-height: 0;
               align-items: start;
+            }
+
+            .receipt-content {
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 100%;
+              transform-origin: top center;
+            }
+
+            .sender-column {
+              display: flex;
+              flex-direction: column;
+              gap: 2mm;
+              min-width: 0;
+            }
+
+            .product-list {
+              list-style: none;
+              font-size: 10px;
+              line-height: 1.3;
+              overflow-wrap: anywhere;
+            }
+
+            .product-list li + li {
+              margin-top: 1mm;
+            }
+
+            .product-details h3 {
+              margin-bottom: 2mm;
             }
 
             .section {
@@ -190,7 +227,7 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
 
             .sender-info {
               grid-column: 1 / -1;
-              margin-top: auto;
+              margin-top: 3mm;
               border-top: 1px solid #000;
               padding-top: 3mm;
               text-align: center;
@@ -205,9 +242,9 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
                 width: 210mm !important;
                 min-width: 210mm !important;
                 max-width: 210mm !important;
-                height: 148mm !important;
-                min-height: 148mm !important;
-                max-height: 148mm !important;
+                height: auto !important;
+                min-height: 0 !important;
+                max-height: none !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 -webkit-print-color-adjust: exact;
@@ -215,10 +252,13 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
               }
 
               .receipt-container {
+                position: absolute;
+                top: 10mm;
+                left: 10mm;
                 width: 190mm;
                 height: 128mm;
                 max-height: 128mm;
-                margin: 10mm;
+                margin: 0;
                 overflow: hidden;
                 break-inside: avoid;
                 page-break-inside: avoid;
@@ -232,6 +272,7 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
         </head>
         <body>
           <div class="receipt-container">
+            <div class="receipt-content">
             <div class="header">
               <h1>PAŞA HOME</h1>
               <h2>KARGO FİŞİ</h2>
@@ -276,20 +317,9 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
                     <strong>Telefon:</strong>
                     <span>${order.store_phone || order.user?.phone || 'Belirtilmemiş'}</span>
                   </div>
-                  <div class="info-item">
-                    <strong>E-posta:</strong>
-                      <span>${order.store_email || order.user?.email || 'Belirtilmemiş'}</span>
-                    </div>
-                  <div class="info-item">
-                    <strong>Vergi No:</strong>
-                    <span>${order.store_tax_number || 'Belirtilmemiş'}</span>
-                  </div>
-                  <div class="info-item">
-                    <strong>Vergi Dairesi:</strong>
-                    <span>${order.store_tax_office || 'Belirtilmemiş'}</span>
-                  </div>
                 </div>
 
+                <div class="sender-column">
                 <div class="section">
                   <h3>GÖNDERİCİ BİLGİLERİ</h3>
                   <div class="info-item">
@@ -305,12 +335,18 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
                     <span>Güneşli Mah. Mahmutbey Cad. 1296. Sok. No:3 Daire:1 Bağcılar/İstanbul</span>
                   </div>
                 </div>
+                <div class="section product-details">
+                  <h3>Ürün Detay</h3>
+                  <ul class="product-list">${productRows || '<li>Ürün bulunamadı.</li>'}</ul>
+                </div>
+                </div>
               </div>
             </div>
 
             <div class="sender-info">
               <p><strong>PAŞA HOME</strong> - Halı ve Ev Tekstili Ürünleri</p>
               <p>www.pasahome.com.tr | info@pasahome.com.tr</p>
+            </div>
             </div>
           </div>
         </body>
@@ -323,6 +359,13 @@ export default function CargoReceipt({ order, isVisible, onClose }: CargoReceipt
       printWindow.onload = () => {
         setTimeout(() => {
           try {
+            // Fit the complete receipt into one A5 sheet without cutting off product rows.
+            const container = printWindow.document.querySelector<HTMLElement>('.receipt-container');
+            const content = printWindow.document.querySelector<HTMLElement>('.receipt-content');
+            if (container && content) {
+              const scale = Math.min(1, container.clientHeight / content.scrollHeight);
+              content.style.transform = `scale(${scale})`;
+            }
             printWindow.focus();
             printWindow.print();
           } catch (error) {
