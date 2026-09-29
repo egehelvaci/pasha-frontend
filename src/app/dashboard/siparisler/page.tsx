@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { useAuth } from '../../context/AuthContext';
 import { useToken } from '@/app/hooks/useToken';
 import { StoreType, storeTypeLabels } from '@/components/StoreTypeSelector';
-import { bulkConfirmOrders, BulkConfirmOrdersResponse, getStores, Store, adminCancelOrder, cancelOrder, getAdminOrdersV2, getAdminOrdersLegacy, getAdminOrderStatusCounts, AdminOrderStatusV2, advanceOrderStatus, createRequestId } from '@/services/api';
+import { bulkConfirmOrders, BulkConfirmOrdersResponse, getStores, Store, adminCancelOrder, cancelOrder, getAdminOrdersLegacy, getAdminOrderStatusCounts, AdminOrderStatusV2, advanceOrderStatus, createRequestId } from '@/services/api';
 import CargoReceipt from '@/app/components/CargoReceipt';
 import QRLabel from '@/app/components/QRLabel';
 import QRCode from 'qrcode';
@@ -553,81 +553,26 @@ const Siparisler = () => {
           receiptPrinted === 'not_printed' ? false :
           undefined;
 
-        const useV2 = Boolean(status) && ADMIN_ORDER_STATUSES.includes(status as AdminOrderStatusV2) && !storeId;
+        const data = await getAdminOrdersLegacy({
+          page,
+          limit: PAGE_LIMIT,
+          status: status && ADMIN_ORDER_STATUSES.includes(status as AdminOrderStatusV2) ? status : undefined,
+          storeId: storeId || undefined,
+          receiptPrinted: receiptPrintedBool,
+          signal: controller.signal,
+        });
 
-        if (useV2) {
-          const data = await getAdminOrdersV2({
-            status: status as AdminOrderStatusV2,
-            page,
-            limit: PAGE_LIMIT,
-            signal: controller.signal,
-          });
-
-          let filteredOrders = data.orders;
-          if (receiptPrinted === 'printed') {
-            filteredOrders = data.orders.filter((order: any) => order.receipt_printed === true);
-          } else if (receiptPrinted === 'not_printed') {
-            filteredOrders = data.orders.filter((order: any) =>
-              order.status === 'DELIVERED' &&
-              order.receipt_printed === false
-            );
-          }
-
-          setOrdersData({
-            orders: filteredOrders,
-            filters: {
-              status: data.filters?.status,
-              userId: data.filters?.userId ?? null,
-            },
-            pagination: {
-              page: data.pagination.page,
-              limit: data.pagination.limit,
-              total: data.pagination.totalCount,
-              totalPages: data.pagination.totalPages,
-              hasNext: data.pagination.hasNext,
-              hasPrev: data.pagination.hasPrev,
-            },
-          });
-        } else {
-          // Toplam, mağaza filtresi veya mağaza+statü: eski endpoint (status zorunlu değil)
-          const data = await getAdminOrdersLegacy({
-            page,
-            limit: PAGE_LIMIT,
-            status: status && ADMIN_ORDER_STATUSES.includes(status as AdminOrderStatusV2) ? status : undefined,
-            storeId: storeId || undefined,
-            receiptPrinted: receiptPrintedBool,
-            signal: controller.signal,
-          });
-
-          let filteredOrders = data.orders;
-
-          // Backend storeId desteklemiyorsa istemci tarafında daralt
-          if (storeId) {
-            filteredOrders = filteredOrders.filter((order: any) =>
-              order.user?.Store?.store_id === storeId ||
-              order.store_info?.store_id === storeId ||
-              order.store_info?.id === storeId ||
-              order.store_id === storeId
-            );
-          }
-
-          if (receiptPrinted === 'printed') {
-            filteredOrders = filteredOrders.filter((order: any) => order.receipt_printed === true);
-          } else if (receiptPrinted === 'not_printed') {
-            filteredOrders = filteredOrders.filter((order: any) =>
-              order.status === 'DELIVERED' &&
-              order.receipt_printed === false
-            );
-          }
-
-          setOrdersData({
-            orders: filteredOrders,
-            filters: {
-              status: status || undefined,
-            },
-            pagination: data.pagination,
-          });
+        if (controller.signal.aborted) return;
+        const lastPage = Math.max(1, data.pagination.totalPages);
+        if (page > lastPage) {
+          setCurrentPage(lastPage);
+          return;
         }
+        setOrdersData({
+          orders: data.orders,
+          filters: { status: status || undefined },
+          pagination: data.pagination,
+        });
       } else {
         // Admin değilse my-orders endpoint'ini kullan
         const queryParams = new URLSearchParams();
@@ -713,30 +658,6 @@ const Siparisler = () => {
     };
   }, []);
 
-  // Frontend'de mağaza filtreleme
-  const filteredOrders = useMemo(() => {
-    if (!ordersData || !ordersData.orders) {
-      return { orders: [], totalPages: 0, currentPage: 1, totalOrders: 0 };
-    }
-
-    let filtered = ordersData.orders;
-
-    // Mağaza filtresi uygula (sadece admin/editor için)
-    if (storeFilter && isAdminOrEditor) {
-      filtered = filtered.filter(order => 
-        order.user?.Store?.store_id === storeFilter ||
-        (order as any).store_info?.store_id === storeFilter ||
-        (order as any).store_info?.id === storeFilter
-      );
-    }
-
-    return {
-      ...ordersData,
-      orders: filtered,
-      totalOrders: filtered.length
-    };
-  }, [ordersData, storeFilter, isAdminOrEditor]);
-
   // Mağaza arama filtresi
   const filteredStores = useMemo(() => {
     if (!storeSearchQuery.trim()) {
@@ -772,9 +693,9 @@ const Siparisler = () => {
   };
 
   const handleSelectAll = (isChecked: boolean) => {
-    if (!filteredOrders?.orders) return;
+    if (!ordersData?.orders) return;
     
-    const pendingOrders = filteredOrders.orders.filter(order => order.status === 'PENDING');
+    const pendingOrders = ordersData.orders.filter(order => order.status === 'PENDING');
     if (isChecked) {
       setSelectedOrderIds(pendingOrders.map(order => order.id));
     } else {
@@ -787,7 +708,7 @@ const Siparisler = () => {
     
     // Sadece PENDING durumundaki siparişleri filtrele
     const pendingOrderIds = selectedOrderIds.filter(orderId => {
-      const order = filteredOrders?.orders.find(o => o.id === orderId);
+      const order = ordersData?.orders.find(o => o.id === orderId);
       return order && order.status === 'PENDING';
     });
     
@@ -2164,7 +2085,7 @@ const Siparisler = () => {
             .trim();
         } else {
           // Currency sembolünü dinamik olarak güncelle
-          const order = filteredOrders?.orders.find(o => o.id === orderId);
+          const order = ordersData?.orders.find(o => o.id === orderId);
           if (order) {
             const correctCurrency = getCurrencyDisplay(order, userCurrency);
             // TL sembollerini doğru currency ile değiştir
@@ -2216,7 +2137,7 @@ const Siparisler = () => {
         let message = response.message || 'Sipariş başarıyla iade edildi.';
         
         // Currency sembolünü dinamik olarak güncelle
-        const order = filteredOrders?.orders.find(o => o.id === orderId);
+        const order = ordersData?.orders.find(o => o.id === orderId);
         if (order) {
           const correctCurrency = getCurrencyDisplay(order, userCurrency);
           // TL sembollerini doğru currency ile değiştir
@@ -2365,7 +2286,7 @@ const Siparisler = () => {
   // Filtreleme fonksiyonları
   const handleStatusFilter = (status: string) => {
     setStatusFilter(status);
-    setShowAllOrders(!status); // '' = Tüm Durumlar → eski API ile tümü
+    setShowAllOrders(!status);
     setIsStatusDropdownOpen(false);
     setCurrentPage(1);
   };
@@ -2378,6 +2299,7 @@ const Siparisler = () => {
 
   const handleStoreFilter = (storeId: string) => {
     setStoreFilter(storeId);
+    setShowAllOrders(true);
     setIsStoreDropdownOpen(false);
     setCurrentPage(1);
     // Arama metnini temizle; aksi halde dropdown yalnızca seçili mağazayı gösterir
@@ -2683,7 +2605,7 @@ const Siparisler = () => {
                     >
                       <span className="text-slate-500">Tüm Durumlar</span>
                     </div>
-                    {Object.entries(statusLabels).filter(([status]) => status !== 'READY' && status !== 'SHIPPED').map(([status, label]) => (
+                    {Object.entries(statusLabels).map(([status, label]) => (
                       <div
                         key={status}
                         className={`flex cursor-pointer items-center justify-between px-3 py-2.5 text-sm transition-colors duration-150 hover:bg-stone-50 ${
@@ -2897,7 +2819,7 @@ const Siparisler = () => {
         )}
 
         {/* Siparişler Listesi */}
-        {!loading && (!filteredOrders || filteredOrders.orders.length === 0) ? (
+        {!loading && (!ordersData || ordersData.orders.length === 0) ? (
           <div className="rounded-xl border border-slate-200/80 bg-white px-6 py-14 text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-stone-100 text-slate-400">
               <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2931,7 +2853,7 @@ const Siparisler = () => {
           </div>
         ) : !loading ? (
           <div className="space-y-3">
-            {filteredOrders.orders.map((order) => (
+            {ordersData?.orders.map((order) => (
               <div
                 key={order.id}
                 className="rounded-xl border border-slate-200/80 bg-white p-4 transition-all duration-200 ease-out hover:border-slate-300/90 hover:bg-stone-50/40 sm:p-5"
@@ -3559,17 +3481,7 @@ const Siparisler = () => {
 
         {/* Sayfalama yalnızca birden fazla sayfa gerektiğinde */}
         {(() => {
-          if (loading || !ordersData?.pagination || !filteredOrders?.orders?.length) return null;
-          const limit = Number(ordersData.pagination.limit) || PAGE_LIMIT;
-          const total = Number(ordersData.pagination.total) || 0;
-          const page = Number(ordersData.pagination.page) || 1;
-          const reportedPages = Number(ordersData.pagination.totalPages) || 0;
-          const visibleCount = filteredOrders.orders.length;
-          const fitsOnOnePage = total > 0
-            ? total <= limit
-            : visibleCount < limit && page <= 1 && !ordersData.pagination.hasNext;
-          const hasMultiplePages = reportedPages > 1 || page > 1 || Boolean(ordersData.pagination.hasNext) || total > limit;
-          if (fitsOnOnePage || !hasMultiplePages) return null;
+          if (loading || !ordersData?.pagination || ordersData.pagination.totalPages <= 1) return null;
           return (
           <div className="mt-6 flex justify-center sm:mt-8">
             <div className="flex flex-wrap items-center justify-center gap-2">
@@ -4939,4 +4851,4 @@ const Siparisler = () => {
   );
 };
 
-export default Siparisler; 
+export default Siparisler;

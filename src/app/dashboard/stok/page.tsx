@@ -141,7 +141,7 @@ interface StockUpdateResponse {
 }
 
 export default function StokPage() {
-  const { user, isLoading, isAdmin, isAdminOrEditor } = useAuth();
+  const { user, isLoading, isAdmin } = useAuth();
   const token = useToken();
   const router = useRouter();
 
@@ -205,13 +205,12 @@ export default function StokPage() {
     }
   }, [user, isLoading, router]);
 
-  // Admin ve Editör kontrolü
+  // Yalnızca admin kullanıcılar stok sayfasına erişebilir.
   useEffect(() => {
-    // Auth loading tamamlandığında admin/editör kontrolü yap
-    if (!isLoading && user && !isAdminOrEditor) {
-      router.push('/dashboard');
+    if (!isLoading && user && !isAdmin) {
+      router.replace('/dashboard');
     }
-  }, [user, isAdminOrEditor, isLoading, router]);
+  }, [user, isAdmin, isLoading, router]);
 
   const productStockValue = (product: Product) => {
     const commonStock = (product as Product & { stock?: { enabled?: boolean; consumableAreaM2?: number } }).stock;
@@ -239,7 +238,7 @@ export default function StokPage() {
   }, [stockOverview]);
 
   const fetchStockOverview = async () => {
-    if (!token) return;
+    if (isLoading || !user || !isAdmin || !token) return;
     try {
       const response = await fetch(`${API_BASE_URL}/api/products/all`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -253,13 +252,14 @@ export default function StokPage() {
   };
 
   useEffect(() => {
-    if (!token) return;
+    if (isLoading || !user || !isAdmin || !token) return;
     fetchProducts();
     fetchStockOverview();
-  }, [token]); // fetchProducts fonksiyonu stable olmadığı için dependency'ye eklenmemiştir
+  }, [token, isLoading, user, isAdmin]); // fetchProducts fonksiyonu stable olmadığı için dependency'ye eklenmemiştir
 
   // Arama değiştiğinde debounce ile API çağrısı
   useEffect(() => {
+    if (isLoading || !user || !isAdmin || !token) return;
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
@@ -275,10 +275,11 @@ export default function StokPage() {
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [search]); // fetchProducts fonksiyonu stable olmadığı için dependency'ye eklenmemiştir
+  }, [search, token, isLoading, user, isAdmin]); // fetchProducts fonksiyonu stable olmadığı için dependency'ye eklenmemiştir
 
   // Optimizasyonlu ürün getirme fonksiyonu
   const fetchProducts = async (page: number = 1, searchQuery: string = '') => {
+    if (isLoading || !user || !isAdmin || !token) return;
     try {
       setIsLoadingProducts(true);
       const limit = getPageSize();
@@ -552,9 +553,8 @@ export default function StokPage() {
       return;
     }
 
-    // Editör kullanıcılar sadece 'add' modunu kullanabilir
-    if (!isAdmin && stockForm.updateMode === 'set') {
-      alert('Bu işlem için yetkiniz bulunmuyor! Sadece stok ekleme yapabilirsiniz.');
+    if (isLoading || !user || !isAdmin) {
+      alert('Bu işlem için yetkiniz bulunmuyor! Stok yönetimini sadece admin kullanıcılar kullanabilir.');
       return;
     }
 
@@ -753,14 +753,14 @@ export default function StokPage() {
     );
   }
 
-  // Admin veya Editör olmayan kullanıcılar için erişim engeli
-  if (!isAdminOrEditor) {
+  // Admin olmayan kullanıcılar için erişim engeli
+  if (!isAdmin) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f7f8fa] px-4">
         <div className="w-full max-w-md rounded-xl border border-slate-200/80 bg-white px-6 py-10 text-center shadow-sm">
           <h3 className="text-base font-semibold text-slate-900">Erişim Reddedildi</h3>
           <p className="mt-2 text-sm text-slate-500">
-            Bu sayfaya erişim yetkiniz bulunmamaktadır. Stok yönetimi sadece admin ve editör kullanıcılar tarafından kullanılabilir.
+            Bu sayfaya erişim yetkiniz bulunmamaktadır. Stok yönetimi sadece admin kullanıcılar tarafından kullanılabilir.
           </p>
           <button
             onClick={() => router.push('/dashboard')}
@@ -1477,4 +1477,4 @@ export default function StokPage() {
       </div>
     </div>
   );
-} 
+}

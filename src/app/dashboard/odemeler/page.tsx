@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { originalPaymentAmountLabel, paymentCurrencyLabel } from './paymentDisplay';
 import { processPayment, PaymentRequest, getMyStoreInfo } from '../../../services/api';
 
 // Currency sembollerini tanımla
@@ -29,11 +30,11 @@ interface Payment {
   octetPaymentId: string;
   createdAt: string;
   updatedAt: string;
-  store_currency?: string;        // 🆕 Mağaza para birimi
-  payment_currency?: string;      // 🆕 Ödeme para birimi
-  exchange_rate?: number;         // 🆕 Döviz kuru
-  original_amount?: number;       // 🆕 Orijinal ödeme tutarı
-  converted_amount?: number;      // 🆕 Dönüştürülmüş tutar (mağaza currency'sine)
+  store_currency?: string | null;        // 🆕 Mağaza para birimi
+  payment_currency?: string | null;      // 🆕 Ödeme para birimi
+  exchange_rate?: number | null;         // 🆕 Döviz kuru
+  original_amount?: number | null;       // 🆕 Orijinal ödeme tutarı
+  converted_amount?: number | null;      // 🆕 Dönüştürülmüş tutar (mağaza currency'sine)
   store: {
     store_id: string;
     kurum_adi: string;
@@ -567,11 +568,16 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
               </div>
               <div class="info-item">
                 <span><strong>Tutar:</strong></span>
-                <span class="amount">${payment.original_amount && payment.payment_currency 
+                <span class="amount">${isAdminOrEditor ? originalPaymentAmountLabel(payment) : (payment.original_amount && payment.payment_currency
                   ? `${payment.original_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${payment.payment_currency}` 
-                  : `${payment.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}`
+                  : `${payment.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}`)
                 }</span>
               </div>
+              ${isAdminOrEditor ? `
+              <div class="info-item">
+                <span><strong>Para Birimi:</strong></span>
+                <span>${paymentCurrencyLabel(payment)}</span>
+              </div>` : ''}
               <div class="info-item">
                 <span><strong>Octet Ödeme ID:</strong></span>
                 <span style="font-family: monospace; font-size: 12px;">${payment.octetPaymentId}</span>
@@ -713,15 +719,7 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
                   <p className="mt-1 text-xs text-slate-500">{summary.usdPayments?.count || 0} adet</p>
                 </div>
               </>
-            ) : (
-              <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Toplam Tutar</p>
-                <p className="mt-2 text-2xl font-light text-slate-900 tabular-nums">
-                  {summary.totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}{' '}
-                  {CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}
-                </p>
-              </div>
-            )}
+            ) : null}
           </div>
         )}
 
@@ -941,6 +939,11 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                       Durum
                     </th>
+                    {isAdminOrEditor && (
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                        Para Birimi
+                      </th>
+                    )}
                     <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-slate-500">
                       Tutar
                     </th>
@@ -970,10 +973,15 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
                           {statusLabels[payment.status]}
                         </span>
                       </td>
+                      {isAdminOrEditor && (
+                        <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700">
+                          {paymentCurrencyLabel(payment)}
+                        </td>
+                      )}
                       <td className="whitespace-nowrap px-4 py-3 text-right text-sm font-medium tabular-nums text-slate-900">
-                        {payment.original_amount && payment.payment_currency 
+                        {isAdminOrEditor ? originalPaymentAmountLabel(payment) : (payment.original_amount && payment.payment_currency
                           ? `${payment.original_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${payment.payment_currency}`
-                          : `${payment.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}`
+                          : `${payment.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}`)
                         }
                       </td>
                       <td className="whitespace-nowrap px-4 py-3">
@@ -1098,12 +1106,18 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
                           </span>
                         </dd>
                       </div>
+                      {isAdminOrEditor && (
+                        <div className="flex justify-between gap-4">
+                          <dt className="text-slate-500">Para Birimi</dt>
+                          <dd className="text-slate-900">{paymentCurrencyLabel(selectedPayment)}</dd>
+                        </div>
+                      )}
                       <div className="flex justify-between gap-4">
                         <dt className="text-slate-500">Tutar</dt>
                         <dd className="font-medium tabular-nums text-slate-900">
-                          {selectedPayment.original_amount && selectedPayment.payment_currency 
+                          {isAdminOrEditor ? originalPaymentAmountLabel(selectedPayment) : (selectedPayment.original_amount && selectedPayment.payment_currency
                             ? `${selectedPayment.original_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${selectedPayment.payment_currency}`
-                            : `${selectedPayment.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}`
+                            : `${selectedPayment.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${CURRENCY_SYMBOLS[userCurrency as keyof typeof CURRENCY_SYMBOLS] || userCurrency}`)
                           }
                         </dd>
                       </div>
@@ -1438,4 +1452,4 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
       </div>
     </div>
   );
-} 
+}

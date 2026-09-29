@@ -3648,11 +3648,11 @@ export async function getAdminOrdersLegacy({
   });
 
   if (status) {
-    query.set('status', status);
+    query.set('order_statu', status);
   }
 
   if (storeId) {
-    query.set('storeId', storeId);
+    query.set('store_id', storeId);
   }
 
   if (typeof receiptPrinted === 'boolean') {
@@ -3673,18 +3673,24 @@ export async function getAdminOrdersLegacy({
   }
 
   const data = result?.data ?? {};
-  const total = data.pagination?.total ?? data.pagination?.totalCount ?? 0;
-  const totalPages = data.pagination?.totalPages ?? 0;
+  const total = data.pagination?.totalCount ?? data.pagination?.total ?? 0;
+  const responsePage = Number(data.pagination?.page) || page;
+  const responseLimit = Number(data.pagination?.limit) > 0 ? Number(data.pagination.limit) : limit;
+  // Filtrelenmiş kayıt sayısı ile sayfa sayısı ve gezinme bayrakları tutarlı olmalı.
+  const hasTotal = data.pagination?.totalCount != null || data.pagination?.total != null;
+  const totalPages = hasTotal
+    ? Math.ceil(Number(total) / responseLimit)
+    : Number(data.pagination?.totalPages) || 0;
 
   return {
     orders: Array.isArray(data.orders) ? data.orders : [],
     pagination: {
-      page: data.pagination?.page ?? page,
-      limit: data.pagination?.limit ?? limit,
+      page: responsePage,
+      limit: responseLimit,
       total,
       totalPages,
-      hasNext: data.pagination?.hasNext ?? page < totalPages,
-      hasPrev: data.pagination?.hasPrev ?? page > 1,
+      hasNext: responsePage < totalPages,
+      hasPrev: responsePage > 1,
     },
   };
 }
