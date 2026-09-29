@@ -1366,8 +1366,7 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
                         />
                       </div>
                       
-                      {userCurrency !== 'TRY' && (
-                        <div className="dropdown-container relative" style={{minWidth: '120px'}}>
+                        <div className="dropdown-container relative min-w-[120px]">
                           <button
                             type="button"
                             onClick={() => setPaymentCurrencyDropdownOpen(!paymentCurrencyDropdownOpen)}
@@ -1405,13 +1404,6 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
                             </div>
                           )}
                         </div>
-                      )}
-                      
-                      {userCurrency === 'TRY' && (
-                        <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
-                          <span className="text-sm font-medium text-slate-700">₺</span>
-                        </div>
-                      )}
                     </div>
                   </div>
 
