@@ -36,6 +36,11 @@ export interface Order {
   store_email?: string;
   store_tax_number?: string;
   store_tax_office?: string;
+  sender_info?: {
+    kurum_adi?: string | null;
+    address?: string | null;
+    telefon?: string | null;
+  } | null;
   delivery_address?: string;
   address?: {
     id: string;

@@ -57,34 +57,36 @@ function printReceipt(items, orderOverrides = {}) {
   return { html, content };
 }
 
-test('cargo receipt omits recipient tax/email and lists every product below sender', () => {
-  const { html, content } = printReceipt([
-    { width: 80, height: 150, product: { name: 'Halı <Özel> & Desen' }, quantity: 2 },
-    { width: 120, height: 180, product: { name: 'İkinci Halı' }, quantity: 3 },
-  ]);
-  assert.doesNotMatch(html, /private@example.com|TAX-123|PRIVATE-TAX-OFFICE|E-posta:|Vergi No:|Vergi Dairesi:/);
-  assert.match(html, /80 × 150 cm · Halı &lt;Özel&gt; &amp; Desen · <strong>2 adet/);
-  assert.match(html, /120 × 180 cm · İkinci Halı · <strong>3 adet/);
-  assert.ok(html.indexOf('Ürün Detay') > html.indexOf('GÖNDERİCİ BİLGİLERİ'));
-  assert.match(html, /size: A5 landscape/);
-  assert.equal(content.style.transform, 'scale(0.5)');
+test('simplified receipt keeps print settings and only shipping information', () => {
+  const { html } = printReceipt([
+    { width: 80, height: 300, product: { name: 'STAR ANTRASİT' }, quantity: 1 },
+    { width: 120, height: 180, product: { name: 'Halı <Özel> & Desen' }, quantity: 3 },
+  ], {
+    store_name: 'MAHMUT TERZİ - HALICELL', store_phone: '0535 014 34 11',
+    address: { title: 'MAHMUT TERZİ - HALICELL', address: 'Hacıhalil Mh. Yeni Bağdat Cd. No:428/A', district: 'GEBZE', city: 'KOCAELİ' },
+    sender_info: { kurum_adi: 'PAŞAOĞLU HALICILIK SANAYİ VE TİCARET LİMİTED ŞİRKETİ', address: 'Güneşli, Mahmutbey Cd. No:145 D:147, 34212 Bağcılar/İstanbul', telefon: '0538 375 71 44' }
+  });
+  assert.doesNotMatch(html, /private@example.com|TAX-123|PRIVATE-TAX-OFFICE|Sipariş No:|Tarih:|Yetkili:|Posta Kodu:|Ürün Detay|www.pasahome/);
+  assert.equal((html.match(/MAHMUT TERZİ - HALICELL/g) || []).length, 1);
+  assert.ok(html.includes('STAR ANTRASİT 80 × 300</li>'));
+  assert.match(html, /Halı &lt;Özel&gt; &amp; Desen 120 × 180 · 3 adet/);
+  assert.ok(html.indexOf('<ul class="product-list">') > html.indexOf('GÖNDEREN'));
+  assert.match(html, /@page { margin: 0; size: auto; }/);
+  assert.match(html, /max-width: 800px/);
+  assert.match(html, /padding: 20px/);
+  assert.match(html, /0538 375 71 44/);
+  assert.doesNotMatch(html, /1296|555 234/);
+  if (process.env.CARGO_PREVIEW_PATH) fs.writeFileSync(process.env.CARGO_PREVIEW_PATH, html);
 });
 
-test('cargo receipt handles missing product details and empty orders', () => {
-  assert.match(printReceipt([{ quantity: 1 }]).html, /— × — cm · Ürün · <strong>1 adet/);
+test('missing values and special characters remain safe', () => {
+  const { html } = printReceipt([{ quantity: 1 }], { delivery_address: 'Alternatif <adres>', store_name: '<Halı> & Ev' });
+  assert.match(html, /Ürün — × —/);
+  assert.match(html, /Alternatif &lt;adres&gt;/);
+  assert.match(html, /&lt;Halı&gt; &amp; Ev/);
+  assert.match(html, /No:145 D:147/);
   assert.match(printReceipt([]).html, /Ürün bulunamadı/);
-});
-
-test('delivery address includes its title above the address and escapes HTML', () => {
-  const address = {
-    id: 'delivery-address', title: 'Egemen Halı',
-    address: 'Ayni ali mah. 8 eylül cad. no:69', district: 'YUNUSEMRE', city: 'Manisa',
-  };
-  assert.match(printReceipt([], { address }).html,
-    /<b>Egemen Halı<\/b><br>Ayni ali mah\. 8 eylül cad\. no:69, YUNUSEMRE \/ Manisa/);
-  const escaped = printReceipt([], { address: { ...address, title: '<Halı> & Ev' } }).html;
-  assert.match(escaped, /<b>&lt;Halı&gt; &amp; Ev<\/b><br>/);
-  const withoutTitle = printReceipt([], { address: { ...address, title: null } }).html;
-  assert.match(withoutTitle, /<span>Ayni ali mah\. 8 eylül cad\. no:69, YUNUSEMRE \/ Manisa<\/span>/);
-  assert.match(printReceipt([], { delivery_address: 'Alternatif adres' }).html, /<span>Alternatif adres<\/span>/);
+  const current = printReceipt([], { sender_info: { address: '<Güncel> adres', kurum_adi: 'Firma & Ev', telefon: '123' } }).html;
+  assert.match(current, /&lt;Güncel&gt; adres/);
+  assert.match(current, /Firma &amp; Ev/);
 });
