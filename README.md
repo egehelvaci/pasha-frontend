@@ -73,7 +73,9 @@ Proje aşağıdaki ayarlarla optimize edilmiştir:
 Node.js 22.x kullanın. `npm ci` ile kilitli bağımlılıkları yükleyin; `npm run build`
 standalone sunucuyu ve gerekli `public` / `.next/static` dosyalarını hazırlar.
 `npm run start` bu minimal sunucuyu çalıştırır. Railway üzerinde servis platformun
-verdiği `PORT` değişkenini kullanır; özel bir start override varsa yeni komutla
+verdiği `PORT` değişkenini kullanır. Başlatıcı, container tarafından verilen
+`HOSTNAME` değerini `0.0.0.0` olarak değiştirerek tüm IPv4 arayüzlerini dinler.
+Özel bir start override varsa `npm run start` komutuyla
 uyumlu olduğu ayrıca doğrulanmalıdır. Bu depoda Railway deployment yapılmamıştır.
 
 `npm test` uzak backend'e bağlanmadan regresyon ve güvenlik testlerini çalıştırır.

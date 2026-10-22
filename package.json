@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build && node scripts/prepare-standalone.cjs",
-    "start": "node .next/standalone/server.js",
+    "start": "node scripts/start-standalone.cjs",
     "lint": "eslint src",
     "deploy": "vercel --prod",
     "preview": "vercel",
