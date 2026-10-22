@@ -1,4 +1,5 @@
 'use client';
+import { writePrintDocument } from '@/app/utils/printDocument';
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -1990,7 +1991,7 @@ const Siparisler = () => {
             </html>
           `;
 
-          printWindow.document.write(htmlContent);
+          writePrintDocument(printWindow, htmlContent);
           printWindow.document.close();
           
           printWindow.onload = () => {
@@ -3044,7 +3045,7 @@ const Siparisler = () => {
                             // Detaylı fiş sayfasını yeni sekmede aç ve otomatik yazdır
                             const receiptWindow = window.open('', '_blank', 'width=800,height=600');
                             if (receiptWindow) {
-                              receiptWindow.document.write(`
+                              writePrintDocument(receiptWindow, `
                                 <!DOCTYPE html>
                                 <html>
                                   <head>
@@ -4004,7 +4005,7 @@ const Siparisler = () => {
                                         // QR kod detayını göster/indir
                                         const qrWindow = window.open('', '_blank');
                                         if (qrWindow) {
-                                          qrWindow.document.write(`
+                                          writePrintDocument(qrWindow, `
                                             <html>
                                               <head><title>QR Kodu - ${qrCode.product.name}</title></head>
                                               <body style="display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f0f0;">
@@ -4090,7 +4091,7 @@ const Siparisler = () => {
                               // Fiş sayfasını yeni sekmede aç
                               const receiptWindow = window.open('', '_blank', 'width=800,height=600');
                               if (receiptWindow) {
-                                receiptWindow.document.write(`
+                                writePrintDocument(receiptWindow, `
                                 <!DOCTYPE html>
                                 <html>
                                   <head>

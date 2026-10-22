@@ -209,6 +209,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const currency = result.data.user.store?.currency || 'TRY';
         
         // "Beni hatırla" seçeneğine göre localStorage'a kaydet
+        // A new session must also remove credentials left by the other storage mode.
+        for (const storage of [localStorage, sessionStorage]) {
+          for (const key of ['user', 'token', 'userType', 'currency', 'rememberMe']) storage.removeItem(key);
+        }
         if (rememberMe) {
           localStorage.setItem("user", JSON.stringify(userData));
           localStorage.setItem("token", result.data.token);
@@ -329,4 +333,4 @@ export function useAuth() {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-} 
+}

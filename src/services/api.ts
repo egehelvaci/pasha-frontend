@@ -28,6 +28,12 @@ function getAuthToken(): string | null {
   }
 }
 
+function requireAuthHeaders(): Record<string, string> {
+  const token = getAuthToken();
+  if (!token) throw new Error('Oturum açmanız gerekiyor');
+  return { Authorization: `Bearer ${token}` };
+}
+
 export interface Order {
   id: string;
   created_at: string;
@@ -750,7 +756,7 @@ export async function getProducts(page: number = 1, limit: number = 50, search?:
 
 export async function getProductById(id: string): Promise<Product> {
   try {
-    const response = await fetch(`${API_BASE_URL}/products/${id}`);
+    const response = await fetch(`${API_BASE_URL}/products/${id}`, { headers: requireAuthHeaders() });
     if (!response.ok) {
       throw new Error('Ürün detayı getirilemedi');
     }
@@ -763,7 +769,7 @@ export async function getProductById(id: string): Promise<Product> {
 
 export async function getProductsByCollection(collectionId: string): Promise<Product[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/collections/${collectionId}/products`);
+    const response = await fetch(`${API_BASE_URL}/collections/${collectionId}/products`, { headers: requireAuthHeaders() });
     if (!response.ok) {
       throw new Error('Koleksiyon ürünleri getirilemedi');
     }
@@ -789,6 +795,7 @@ export async function createProduct(productData: CreateProductData): Promise<Cre
     formData.append('productImage', productData.productImage);
 
     const response = await fetch(`${API_BASE_URL}/products`, {
+      headers: requireAuthHeaders(),
       method: 'POST',
       body: formData,
     });
@@ -819,6 +826,7 @@ export async function updateProduct(id: string, productData: UpdateProductData):
     if (productData.productImage) formData.append('productImage', productData.productImage);
 
     const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+      headers: requireAuthHeaders(),
       method: 'PUT',
       body: formData,
     });
@@ -837,6 +845,7 @@ export async function updateProduct(id: string, productData: UpdateProductData):
 export async function deleteProduct(id: string): Promise<DeleteProductResponse> {
   try {
     const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+      headers: requireAuthHeaders(),
       method: 'DELETE',
     });
 
@@ -853,7 +862,7 @@ export async function deleteProduct(id: string): Promise<DeleteProductResponse> 
 
 export async function getProductPrices(productId: string): Promise<Price[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/products/${productId}/prices`);
+    const response = await fetch(`${API_BASE_URL}/products/${productId}/prices`, { headers: requireAuthHeaders() });
     if (!response.ok) {
       throw new Error('Ürün fiyatları getirilemedi');
     }
@@ -869,6 +878,7 @@ export async function createPrice(priceData: CreatePriceData): Promise<Price> {
     const response = await fetch(`${API_BASE_URL}/prices`, {
       method: 'POST',
       headers: {
+        ...requireAuthHeaders(),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(priceData),
@@ -890,6 +900,7 @@ export async function updatePrice(priceId: string, priceData: UpdatePriceData): 
     const response = await fetch(`${API_BASE_URL}/prices/${priceId}`, {
       method: 'PUT',
       headers: {
+        ...requireAuthHeaders(),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(priceData),
@@ -909,6 +920,7 @@ export async function updatePrice(priceId: string, priceData: UpdatePriceData): 
 export async function deletePrice(priceId: string): Promise<void> {
   try {
     const response = await fetch(`${API_BASE_URL}/prices/${priceId}`, {
+      headers: requireAuthHeaders(),
       method: 'DELETE',
     });
 
@@ -4152,6 +4164,9 @@ export function setTokenExpiryHandler(handler: () => void) {
 // Global fetch interceptor - tüm fetch çağrılarını yakalar
 export function setupGlobalFetchInterceptor() {
   if (typeof window === 'undefined') return;
+  const fetchWindow = window as Window & { __pashaFetchInterceptorInstalled?: boolean };
+  if (fetchWindow.__pashaFetchInterceptorInstalled) return;
+  fetchWindow.__pashaFetchInterceptorInstalled = true;
   
   const originalFetch = window.fetch;
   
@@ -4160,7 +4175,10 @@ export function setupGlobalFetchInterceptor() {
     
     // API çağrısı mı kontrol et
     const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
-    const isApiCall = url.includes('/api/');
+    const parsedUrl = new URL(url, window.location.origin);
+    const apiOrigin = new URL(API_BASE_URL, window.location.origin).origin;
+    const isApiCall = parsedUrl.pathname.startsWith('/api/') &&
+      (parsedUrl.origin === apiOrigin || parsedUrl.origin === window.location.origin);
     
     // 401 hatası ve API çağrısı ise token expiry handler'ı çağır
     if (response.status === 401 && isApiCall && tokenExpiryHandler) {
@@ -5169,11 +5187,12 @@ export interface CreateBannerData {
 export type UpdateBannerData = Partial<CreateBannerData>;
 
 // Token gerektirmez. Ayarlar arayüz görünürlüğü içindir, veri erişim yetkisi değildir.
-export async function getSiteSettings(): Promise<PublicSiteSettings> {
+export async function getSiteSettings(signal?: AbortSignal): Promise<PublicSiteSettings> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/site-settings`, {
       method: 'GET',
       cache: 'no-store',
+      signal,
     });
 
     if (!response.ok) {

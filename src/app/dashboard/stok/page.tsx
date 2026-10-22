@@ -253,7 +253,6 @@ export default function StokPage() {
 
   useEffect(() => {
     if (isLoading || !user || !isAdmin || !token) return;
-    fetchProducts();
     fetchStockOverview();
   }, [token, isLoading, user, isAdmin]); // fetchProducts fonksiyonu stable olmadığı için dependency'ye eklenmemiştir
 

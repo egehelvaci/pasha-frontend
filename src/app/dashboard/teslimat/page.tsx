@@ -18,7 +18,6 @@ export default function TeslimatPage() {
   const [lastScanResults, setLastScanResults] = useState<any>(null);
   const [showResults, setShowResults] = useState(false);
   const [currentScanResult, setCurrentScanResult] = useState<any>(null);
-  const [scannedBarcodes, setScannedBarcodes] = useState<{[key: string]: any}>({});
   const [activeOrders, setActiveOrders] = useState<{[orderId: string]: any}>({});
   const [showAlreadyScannedPopup, setShowAlreadyScannedPopup] = useState(false);
   const [alreadyScannedBarcodeInfo, setAlreadyScannedBarcodeInfo] = useState<any>(null);
@@ -41,6 +40,7 @@ export default function TeslimatPage() {
     
     oscillator.start(audioContext.currentTime);
     oscillator.stop(audioContext.currentTime + 0.3);
+    oscillator.onended = () => { oscillator.disconnect(); gainNode.disconnect(); void audioContext.close(); };
   };
   
   const playErrorSound = () => {
@@ -60,6 +60,7 @@ export default function TeslimatPage() {
     
     oscillator.start(audioContext.currentTime);
     oscillator.stop(audioContext.currentTime + 0.6);
+    oscillator.onended = () => { oscillator.disconnect(); gainNode.disconnect(); void audioContext.close(); };
   };
   
   // Sayfa yüklendiğinde input'a focus
@@ -132,10 +133,6 @@ export default function TeslimatPage() {
       
       if (data.success) {
         setCurrentScanResult(data);
-        setScannedBarcodes(prev => ({
-          ...prev,
-          [barcode]: data
-        }));
         
         // Sipariş bilgilerini activeOrders'a ekle/güncelle
         if (data.order && data.order.id) {

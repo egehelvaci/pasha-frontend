@@ -214,11 +214,19 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     if (!user?.userId || authLoading) return;
 
     const interval = setInterval(() => {
-      fetchUnreadCount();
+      if (document.visibilityState === 'visible' && navigator.onLine) fetchUnreadCount();
     }, 60 * 1000); // 60 saniye
+
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible' && navigator.onLine) fetchUnreadCount();
+    };
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    window.addEventListener('online', refreshWhenVisible);
 
     return () => {
       clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+      window.removeEventListener('online', refreshWhenVisible);
     };
   }, [user?.userId, authLoading, fetchUnreadCount]);
 

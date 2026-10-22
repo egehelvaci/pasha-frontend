@@ -1,4 +1,5 @@
 "use client";
+import { writePrintDocument } from '@/app/utils/printDocument';
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
@@ -189,8 +190,11 @@ export default function PaymentsPage() {
       return;
     }
     fetchPayments();
-    initializeStores();
   }, [user, router, isAdminOrEditor, currentPage, statusFilter, selectedStoreFilter, startDate, endDate]);
+
+  useEffect(() => {
+    if (user && token) initializeStores();
+  }, [user?.userId, token, isAdminOrEditor]);
 
   // Dropdown'ların dışına tıklandığında kapanması
   useEffect(() => {
@@ -457,7 +461,7 @@ Döviz Kuru: ${response.data.exchangeRate.toLocaleString('tr-TR', { minimumFract
   const handlePrintPayment = (payment: Payment) => {
     const printWindow = window.open('', '_blank');
     if (printWindow) {
-      printWindow.document.write(`
+      writePrintDocument(printWindow, `
         <!DOCTYPE html>
         <html>
           <head>

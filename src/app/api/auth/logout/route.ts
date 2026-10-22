@@ -1,28 +1,11 @@
 import { NextResponse } from 'next/server';
+import { proxyAuthRequest } from '../proxy';
 
 export async function POST(request: Request) {
-  try {
-    // Token kontrolü
-    const authHeader = request.headers.get('Authorization');
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, message: 'Geçersiz yetkilendirme' }, 
-        { status: 401 }
-      );
-    }
-
-    // Gerçek bir API'de bu token blacklist'e eklenebilir
-    
-    return NextResponse.json(
-      { success: true, message: 'Başarıyla çıkış yapıldı' }, 
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error('Logout error:', error);
-    return NextResponse.json(
-      { success: false, message: 'Çıkış yapılırken bir hata oluştu' }, 
-      { status: 500 }
-    );
+  const authHeader = request.headers.get('Authorization');
+  if (!authHeader || !/^Bearer\s+\S+$/i.test(authHeader)) {
+    return NextResponse.json({ success: false, message: 'Geçersiz yetkilendirme' }, { status: 401 });
   }
-} 
+  // The issuing backend verifies and revokes tokens; never acknowledge a fake logout.
+  return proxyAuthRequest(request, 'logout');
+}

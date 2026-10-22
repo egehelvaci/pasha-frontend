@@ -44,12 +44,22 @@ export const SiteSettingsProvider: React.FC<SiteSettingsProviderProps> = ({ chil
   const [error, setError] = useState<string | null>(null);
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMountedRef = useRef(true);
+  const requestRef = useRef<AbortController | null>(null);
+  const lastSuccessRef = useRef(0);
+  const failuresRef = useRef(0);
 
-  const fetchSettings = useCallback(async () => {
+  const fetchSettings = useCallback(async (force = true) => {
+    if (requestRef.current || (!force && Date.now() - lastSuccessRef.current < 30000)) return;
+    if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
+    const controller = new AbortController();
+    requestRef.current = controller;
+    const timeout = setTimeout(() => controller.abort(), 15000);
     setIsLoading(true);
     try {
-      const data = await getSiteSettings();
-      if (!isMountedRef.current) return;
+      const data = await getSiteSettings(controller.signal);
+      if (!isMountedRef.current || requestRef.current !== controller) return;
+      lastSuccessRef.current = Date.now();
+      failuresRef.current = 0;
       setSettings({
         hideBalance: Boolean(data?.hideBalance),
         hideStock: Boolean(data?.hideStock),
@@ -58,7 +68,7 @@ export const SiteSettingsProvider: React.FC<SiteSettingsProviderProps> = ({ chil
       setIsLoaded(true);
       setError(null);
     } catch (err) {
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current || requestRef.current !== controller) return;
       // Hata durumunda son başarılı ayar korunur, kısa süre sonra tekrar denenir.
       // Hiç başarılı yanıt alınmadıysa varsayılanlarla devam edilir: bu bayraklar
       // erişim yetkisi değil görünürlük tercihidir, servis erişilemezken alanların
@@ -67,10 +77,14 @@ export const SiteSettingsProvider: React.FC<SiteSettingsProviderProps> = ({ chil
       setError(err instanceof Error ? err.message : 'Site ayarları alınamadı');
       if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
       retryTimeoutRef.current = setTimeout(() => {
-        fetchSettings();
-      }, RETRY_DELAY_MS);
+        if (document.visibilityState === 'visible' && navigator.onLine) fetchSettings();
+      }, Math.min(RETRY_DELAY_MS * 2 ** Math.min(failuresRef.current++, 3), 120000));
     } finally {
-      if (isMountedRef.current) setIsLoading(false);
+      clearTimeout(timeout);
+      if (requestRef.current === controller) {
+        requestRef.current = null;
+        if (isMountedRef.current) setIsLoading(false);
+      }
     }
   }, []);
 
@@ -80,6 +94,8 @@ export const SiteSettingsProvider: React.FC<SiteSettingsProviderProps> = ({ chil
 
     return () => {
       isMountedRef.current = false;
+      requestRef.current?.abort();
+      requestRef.current = null;
       if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
     };
   }, [fetchSettings]);
@@ -90,17 +106,19 @@ export const SiteSettingsProvider: React.FC<SiteSettingsProviderProps> = ({ chil
     if (typeof window === 'undefined') return;
 
     const handleFocus = () => {
-      fetchSettings();
+      if (document.visibilityState === 'visible' && navigator.onLine) fetchSettings(false);
     };
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') fetchSettings();
+      if (document.visibilityState === 'visible' && navigator.onLine) fetchSettings(false);
     };
 
     window.addEventListener('focus', handleFocus);
+    window.addEventListener('online', handleFocus);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('online', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [fetchSettings]);

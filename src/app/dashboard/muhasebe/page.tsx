@@ -202,7 +202,7 @@ const MuhasebePage = () => {
       fetchAccountingData(forceRefresh);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCurrency, selectedStoreFilter]);
+  }, [selectedCurrency, selectedStoreFilter, startDate, endDate, token]);
 
   // Currency'ye göre income/expense types getir
   const fetchTypesByCurrency = useCallback(() => {
@@ -253,11 +253,7 @@ const MuhasebePage = () => {
     // Sadece bir kez çalışması için kontrol
     if (!hasFetchedRef.current) {
       hasFetchedRef.current = true;
-      fetchDataByCurrency(false);
-      fetchStores();
-      fetchTypesByCurrency();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin]);
 
   // Filtre değişimlerinde verileri yeniden getir
@@ -266,7 +262,7 @@ const MuhasebePage = () => {
     if (hasFetchedRef.current && isAdmin) {
       fetchDataByCurrency(true);
     }
-  }, [selectedStoreFilter, startDate, endDate, selectedCurrency, fetchDataByCurrency]);
+  }, [isAdmin, selectedStoreFilter, startDate, endDate, selectedCurrency, fetchDataByCurrency]);
 
   // Currency değiştiğinde income/expense types'ı ve mağazaları yeniden getir
   useEffect(() => {
@@ -2296,4 +2292,4 @@ const MuhasebePage = () => {
   );
 };
 
-export default MuhasebePage; 
+export default MuhasebePage;

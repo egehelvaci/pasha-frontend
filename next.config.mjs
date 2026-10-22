@@ -1,12 +1,11 @@
+import { fileURLToPath } from 'node:url';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  outputFileTracingRoot: fileURLToPath(new URL('.', import.meta.url)),
   output: 'standalone',
   images: {
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'localhost',
-      },
       {
         protocol: 'https',
         hostname: 's3.tebi.io',
@@ -33,6 +32,8 @@ const nextConfig = {
       },
     ],
     unoptimized: false,
+    maximumDiskCacheSize: 256 * 1024 * 1024,
+    maximumResponseBody: 12 * 1024 * 1024,
   },
   eslint: {
     ignoreDuringBuilds: false,
@@ -43,6 +44,18 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   trailingSlash: false,
+  async headers() {
+    return [{
+      source: '/(.*)',
+      headers: [
+        { key: 'X-Content-Type-Options', value: 'nosniff' },
+        { key: 'X-Frame-Options', value: 'DENY' },
+        { key: 'Referrer-Policy', value: 'no-referrer' },
+        { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+        { key: 'Content-Security-Policy', value: "object-src 'none'; base-uri 'self'; frame-ancestors 'none'" },
+      ],
+    }];
+  },
   webpack: (config, { dev, isServer }) => {
     // Ant Design React uyumsuzluk uyarısını bastır
     if (dev && !isServer) {
@@ -77,4 +90,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig; 
+export default nextConfig;

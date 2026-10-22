@@ -68,6 +68,18 @@ Proje aşağıdaki ayarlarla optimize edilmiştir:
 - ✅ Heroicons
 - ✅ Vercel için optimize edilmiş
 
+## Production çalışma ortamı
+
+Node.js 22.x kullanın. `npm ci` ile kilitli bağımlılıkları yükleyin; `npm run build`
+standalone sunucuyu ve gerekli `public` / `.next/static` dosyalarını hazırlar.
+`npm run start` bu minimal sunucuyu çalıştırır. Railway üzerinde servis platformun
+verdiği `PORT` değişkenini kullanır; özel bir start override varsa yeni komutla
+uyumlu olduğu ayrıca doğrulanmalıdır. Bu depoda Railway deployment yapılmamıştır.
+
+`npm test` uzak backend'e bağlanmadan regresyon ve güvenlik testlerini çalıştırır.
+Denetim, kalan riskler ve deployment öncesi kontroller için
+[güvenlik ve kaynak raporunu](SECURITY_RESOURCE_AUDIT.md) okuyun.
+
 ## Daha Fazla Bilgi
 
 Next.js hakkında daha fazla bilgi için:

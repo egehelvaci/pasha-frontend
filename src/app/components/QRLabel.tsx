@@ -1,4 +1,5 @@
 'use client';
+import { sanitizePrintHtml, writePrintDocument } from '@/app/utils/printDocument';
 
 import { useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
@@ -1313,7 +1314,7 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
       // Popup blocker kontrolü
       const printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
       if (printWindow) {
-        printWindow.document.write(htmlContent);
+        writePrintDocument(printWindow, htmlContent);
         printWindow.document.close();
         
         printWindow.onload = () => {
@@ -1342,7 +1343,7 @@ export default function QRLabel({ orderData, isVisible, onClose }: QRLabelProps)
         // Popup bloklandı - kullanıcıya bilgi ver ve alternatif çözüm sun
         
         // Alternatif: Blob URL kullanarak dosya indirme
-        const htmlBlob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+        const htmlBlob = new Blob([sanitizePrintHtml(window, htmlContent)], { type: 'text/html;charset=utf-8' });
         const url = URL.createObjectURL(htmlBlob);
         const link = document.createElement('a');
         link.href = url;

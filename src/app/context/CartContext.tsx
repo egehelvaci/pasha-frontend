@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 
 interface CartContextType {
@@ -27,24 +27,33 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [cartItems, setCartItems] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const { token, user } = useAuth();
+  const userId = user?.userId;
+  const requestRef = useRef<AbortController | null>(null);
 
-  const fetchCartData = async () => {
-    if (!token || !user) {
+  const fetchCartData = useCallback(async () => {
+    requestRef.current?.abort();
+    const controller = new AbortController();
+    requestRef.current = controller;
+    if (!token || !userId) {
       setCartItems(0);
+      setIsLoading(false);
       return;
     }
 
     try {
       setIsLoading(true);
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pashahomeapps.up.railway.app'}/api/cart`, {
+        signal: controller.signal,
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
 
+      if (controller.signal.aborted) return;
       if (response.ok) {
         const data = await response.json();
+        if (controller.signal.aborted) return;
         if (data.success && data.data) {
           // Ürün çeşidi sayısını göster (toplam adet değil)
           setCartItems(data.data.items?.length || 0);
@@ -55,30 +64,26 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         setCartItems(0);
       }
     } catch (error) {
+      if (controller.signal.aborted) return;
       console.error('Sepet verisi alınamadı:', error);
       setCartItems(0);
     } finally {
-      setIsLoading(false);
+      if (requestRef.current === controller) setIsLoading(false);
     }
-  };
+  }, [token, userId]);
 
-  const refreshCart = async () => {
-    await fetchCartData();
-  };
+  const refreshCart = fetchCartData;
 
   // Kullanıcı değiştiğinde sepeti yenile
   useEffect(() => {
-    if (user && token) {
-      fetchCartData();
-    } else {
-      setCartItems(0);
-    }
-  }, [user, token]);
+    fetchCartData();
+    return () => requestRef.current?.abort();
+  }, [fetchCartData]);
 
   // Sayfa görünürlüğü değiştiğinde sepeti yenile (kullanıcı başka sekmeden döndüğünde)
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden && user && token) {
+      if (!document.hidden && navigator.onLine && userId && token) {
         fetchCartData();
       }
     };
@@ -87,7 +92,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [user, token]);
+  }, [userId, token, fetchCartData]);
 
   const value: CartContextType = {
     cartItems,

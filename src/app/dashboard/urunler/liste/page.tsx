@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -140,7 +140,7 @@ export default function ProductList() {
   const { hideStock, isLoaded: siteSettingsLoaded } = useSiteSettings();
   
   // URL'den parametreleri al
-  const urlPage = parseInt(searchParams.get('page') || '1');
+  const urlPage = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
   const urlSearch = searchParams.get('search') || '';
   const urlCollection = searchParams.get('collection') || '';
   
@@ -154,8 +154,7 @@ export default function ProductList() {
   const [collections, setCollections] = useState<{collectionId: string, name: string}[]>([]);
   const [selectedCollection, setSelectedCollection] = useState(urlCollection);
   const [stockFilter, setStockFilter] = useState("all");
-  const productsFetchedRef = useRef(false);
-  const collectionsFetchedRef = useRef(false);
+  const productRequestRef = useRef<AbortController | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -225,21 +224,13 @@ export default function ProductList() {
   }, [urlPage, urlSearch, urlCollection]);
 
   useEffect(() => {
-    if (!productsFetchedRef.current) {
-      productsFetchedRef.current = true;
-      // URL'den gelen parametrelerle ilk yükleme
-      fetchProducts(urlPage, urlSearch, urlCollection);
-    }
-    
-    if (!collectionsFetchedRef.current) {
-      collectionsFetchedRef.current = true;
-      fetchCollections();
-    }
-    
+    if (!token) return;
+    fetchCollections();
     fetchProductRules();
-  }, [urlPage, urlSearch, urlCollection]);
+    // Reference data follows the session, not pagination.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
-  // Dropdown'ların dışına tıklandığında kapanması
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
@@ -267,7 +258,6 @@ export default function ProductList() {
       // Sadece kullanıcı arama yaptığında sayfa 1'e dön
       if (search !== urlSearch) {
         setCurrentPage(1);
-        fetchProducts(1, search, selectedCollection);
       }
     }, 300);
 
@@ -276,30 +266,14 @@ export default function ProductList() {
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [search, urlSearch, selectedCollection]);
-
-  // Koleksiyon filtresi değiştiğinde
-  useEffect(() => {
-    // Sadece kullanıcı koleksiyon değiştirdiğinde sayfa 1'e dön
-    if (selectedCollection !== urlCollection) {
-      setCurrentPage(1);
-      fetchProducts(1, searchTerm, selectedCollection);
-    }
-  }, [selectedCollection, urlCollection, searchTerm]);
+  }, [search, urlSearch]);
 
   // Stok filtresi değiştiğinde
-  useEffect(() => {
-    if (stockFilter === "all") {
-      // Stok filtresi "all" ise mevcut sayfa ve parametrelerle çalış
-      fetchProducts(currentPage, searchTerm, selectedCollection);
-    } else {
-      // Stok filtresi aktifse tüm ürünleri getir
-      fetchAllProducts(searchTerm, selectedCollection);
-    }
-  }, [stockFilter, currentPage, searchTerm, selectedCollection]);
-
-  // Tüm ürünleri getiren fonksiyon (stok filtresi için)
-  const fetchAllProducts = async (searchQuery: string = '', collectionId: string = '') => {
+  const fetchAllProducts = useCallback(async (searchQuery: string = '', collectionId: string = '') => {
+    if (!token) return;
+    productRequestRef.current?.abort();
+    const controller = new AbortController();
+    productRequestRef.current = controller;
     try {
       setLoading(true);
       const authToken = token;
@@ -312,6 +286,7 @@ export default function ProductList() {
       });
       
       const response = await fetch(`${API_BASE_URL}/api/products?${params}`, {
+        signal: controller.signal,
         headers: {
           'Authorization': `Bearer ${authToken}`
         }
@@ -319,6 +294,7 @@ export default function ProductList() {
       
       const result = await response.json();
       
+      if (controller.signal.aborted) return;
       if (result.success) {
         setProducts(result.data);
         setPagination(null); // Sayfalama bilgisini temizle
@@ -329,16 +305,21 @@ export default function ProductList() {
         setPagination(null);
       }
     } catch (error) {
+      if (controller.signal.aborted) return;
       console.error('API hatası:', error);
       setProducts([]);
       setPagination(null);
     } finally {
-      setLoading(false);
+      if (productRequestRef.current === controller) setLoading(false);
     }
-  };
+  }, [token]);
 
   // Optimizasyonlu ürün getirme fonksiyonu
-  const fetchProducts = async (page: number = 1, searchQuery: string = '', collectionId: string = '') => {
+  const fetchProducts = useCallback(async (page: number = 1, searchQuery: string = '', collectionId: string = '') => {
+    if (!token) return;
+    productRequestRef.current?.abort();
+    const controller = new AbortController();
+    productRequestRef.current = controller;
     try {
       setLoading(true);
       const authToken = token;
@@ -352,6 +333,7 @@ export default function ProductList() {
       });
       
       const response = await fetch(`${API_BASE_URL}/api/products?${params}`, {
+        signal: controller.signal,
         headers: {
           'Authorization': `Bearer ${authToken}`
         }
@@ -359,6 +341,7 @@ export default function ProductList() {
       
       const result = await response.json();
       
+      if (controller.signal.aborted) return;
       if (result.success) {
         setProducts(result.data);
         setPagination(result.pagination); // Yeni pagination bilgisi
@@ -369,13 +352,21 @@ export default function ProductList() {
         setPagination(null);
       }
     } catch (error) {
+      if (controller.signal.aborted) return;
       console.error('API hatası:', error);
       setProducts([]);
       setPagination(null);
     } finally {
-      setLoading(false);
+      if (productRequestRef.current === controller) setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    if (stockFilter === 'all') fetchProducts(currentPage, searchTerm, selectedCollection);
+    else fetchAllProducts(searchTerm, selectedCollection);
+    return () => productRequestRef.current?.abort();
+  }, [token, stockFilter, currentPage, searchTerm, selectedCollection, fetchProducts, fetchAllProducts]);
 
   const fetchCollections = async () => {
     try {
@@ -412,7 +403,8 @@ export default function ProductList() {
   // Sayfa değişikliği handler'ı
   const handlePageChange = (newPage: number, search: string = searchTerm, collectionId: string = selectedCollection) => {
     setCurrentPage(newPage);
-    fetchProducts(newPage, search, collectionId);
+    setSearchTerm(search);
+    setSelectedCollection(collectionId);
   };
 
   const handleDelete = async () => {
@@ -430,7 +422,8 @@ export default function ProductList() {
       if (!res.ok) throw new Error("Ürün silinemedi");
       
       // Silme başarılıysa mevcut sayfayı yenile
-      fetchProducts(currentPage, searchTerm, selectedCollection);
+      if (stockFilter === 'all') fetchProducts(currentPage, searchTerm, selectedCollection);
+      else fetchAllProducts(searchTerm, selectedCollection);
       setConfirmOpen(false);
       setDeleteId(null);
     } catch (err: any) {
@@ -2429,6 +2422,7 @@ export default function ProductList() {
                       }`}
                       onClick={() => {
                         setSelectedCollection("");
+                        setCurrentPage(1);
                         setCollectionFilterDropdownOpen(false);
                       }}
                     >
@@ -2442,6 +2436,7 @@ export default function ProductList() {
                         }`}
                         onClick={() => {
                           setSelectedCollection(col.collectionId);
+                          setCurrentPage(1);
                           setCollectionFilterDropdownOpen(false);
                         }}
                       >
@@ -2563,6 +2558,8 @@ export default function ProductList() {
                   onClick={() => {
                     setSearch("");
                     setSelectedCollection("");
+                    setCurrentPage(1);
+                    setSearchTerm("");
                     setStockFilter("all");
                   }}
                 >
@@ -2772,7 +2769,9 @@ export default function ProductList() {
           onClose={() => setModalOpen(false)} 
           onSuccess={(newProduct) => {
             // Yeni ürün eklendikten sonra ilk sayfayı yenile
-            fetchProducts(1, searchTerm, selectedCollection);
+            if (stockFilter !== 'all') fetchAllProducts(searchTerm, selectedCollection);
+            else if (currentPage === 1) fetchProducts(1, searchTerm, selectedCollection);
+            else setCurrentPage(1);
             setModalOpen(false);
           }} 
           collections={collections}
@@ -2791,7 +2790,8 @@ export default function ProductList() {
           productRules={productRules}
           onSuccess={(updatedProduct) => {
             // Ürün güncellendiğinde mevcut sayfayı yenile
-            fetchProducts(currentPage, searchTerm, selectedCollection);
+            if (stockFilter === 'all') fetchProducts(currentPage, searchTerm, selectedCollection);
+            else fetchAllProducts(searchTerm, selectedCollection);
             setUpdateModalOpen(false);
           }}
         />
