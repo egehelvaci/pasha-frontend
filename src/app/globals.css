@@ -638,14 +638,6 @@ button {
 .design-shell header { background: #faf9f6e8; backdrop-filter: blur(16px); }
 .design-shell footer { background: #f0eee8; }
 .design-shell main :where(h2, h3) { text-wrap: balance; }
-.banner-carousel { overflow: hidden; }
-.banner-visual { position: relative; display: grid; place-items: center; aspect-ratio: 21 / 8; background: #efede6; }
-.banner-visual picture { position: absolute; inset: 0; display: block; width: 100%; height: 100%; min-height: 0; }
-.banner-visual img { display: block; width: 100%; height: 100%; object-fit: contain; }
-.banner-carousel .swiper-pagination { position: relative; inset: auto; display: flex; align-items: center; justify-content: center; padding: 8px; background: #faf9f6; }
-.banner-carousel .swiper-pagination-bullet { position: relative; width: 36px; height: 32px; margin: 0 2px !important; border-radius: 12px; background: transparent; opacity: 1; }
-.banner-carousel .swiper-pagination-bullet::after { content: ''; position: absolute; inset: 14px 8px; border-radius: 4px; background: #bac2c3; transition: background 200ms; }
-.banner-carousel .swiper-pagination-bullet-active::after { background: #00365a; }
 .product-card { transition: transform 300ms, box-shadow 300ms, border-color 300ms; }
 .skeleton { background: linear-gradient(100deg, #eeede7 20%, #f9f8f4 45%, #eeede7 70%); background-size: 200% 100%; animation: shimmer 1.8s ease-in-out infinite; }
 .reveal-in { animation: reveal 650ms cubic-bezier(.2,.7,.3,1) both; }
@@ -653,9 +645,6 @@ button {
 @keyframes reveal { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .product-card:hover { transform: translateY(-4px); border-color: #b4c0bf; box-shadow: 0 18px 38px -24px #18334245; }
-}
-@media (max-width: 639px) {
-  .banner-visual { aspect-ratio: 4 / 3; }
 }
 @media (prefers-reduced-motion: reduce) {
   .reveal-in, .skeleton { animation: none; }

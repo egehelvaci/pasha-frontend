@@ -1,49 +1,25 @@
 'use client';
 
-import { useState } from 'react';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { A11y, Pagination, Keyboard } from 'swiper/modules';
+import MorphGallery from '@/components/ui/morph-gallery';
 import type { SiteBanner } from '@/services/api';
-import 'swiper/css';
-import 'swiper/css/pagination';
 
-function BannerVisual({ banner, priority }: { banner: SiteBanner; priority: boolean }) {
-  const [failed, setFailed] = useState(false);
-
-  return (
-    <div className="banner-visual">
-      {failed ? <p className="p-8 text-center text-slate-600">{banner.altText || banner.title}</p> : (
-        <picture>
-          {banner.mobileImageUrl && <source media="(max-width: 639px)" srcSet={banner.mobileImageUrl} />}
-          {/* Native picture preserves backend-provided mobile art direction and arbitrary image hosts. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={banner.imageUrl} alt={banner.altText || banner.title}
-            loading={priority ? 'eager' : 'lazy'} fetchPriority={priority ? 'high' : 'auto'}
-            decoding="async" onError={() => setFailed(true)} />
-        </picture>
-      )}
-    </div>
-  );
+export function safeBannerHref(value: string | null): string | undefined {
+  const href = value?.trim();
+  if (!href) return undefined;
+  try {
+    const parsed = new URL(href, 'https://pasahome.com.tr');
+    return ['http:', 'https:'].includes(parsed.protocol) ? href : undefined;
+  } catch { return undefined; }
 }
 
 export default function BannerCarousel({ banners }: { banners: SiteBanner[] }) {
-  if (!banners.length) return null;
-
-  return (
-    <section aria-label="Paşa Home duyuruları" className="banner-carousel surface reveal-in">
-      <Swiper modules={[A11y, Pagination, Keyboard]} slidesPerView={1}
-        keyboard={{ enabled: true, onlyInViewport: true }}
-        pagination={banners.length > 1 ? { clickable: true } : false}
-        a11y={{ paginationBulletMessage: '{{index}}. duyuruya git' }}>
-        {banners.map((banner, index) => {
-          const visual = <BannerVisual banner={banner} priority={index === 0} />;
-          return (
-            <SwiperSlide key={banner.id}>
-              {visual}
-            </SwiperSlide>
-          );
-        })}
-      </Swiper>
-    </section>
-  );
+  const items = banners.filter(banner => banner.imageUrl).map(banner => ({
+    id: banner.id,
+    src: banner.imageUrl,
+    mobileSrc: banner.mobileImageUrl,
+    alt: banner.altText || banner.title || 'Paşa Home koleksiyonu',
+    href: safeBannerHref(banner.linkUrl),
+  }));
+  if (!items.length) return null;
+  return <MorphGallery key={JSON.stringify(items.map(item => [item.id, item.src, item.mobileSrc]))} items={items} autoplay={6000} />;
 }
