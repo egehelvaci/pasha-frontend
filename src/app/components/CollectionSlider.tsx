@@ -1,217 +1,81 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Image from "next/image";
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, Autoplay } from 'swiper/modules';
-import { getPublicCollections, PublicCollection } from "../../services/api";
+import { useEffect, useState } from "react";
+import { ArrowUpRightIcon } from "@heroicons/react/24/outline";
+import Link from "next/link";
+import ProductRailGallery from "@/components/ui/product-rail-gallery";
+import { getPublicCollections, type PublicCollection } from "@/services/api";
 
-// Swiper CSS'lerini import et
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
+type CatalogResult =
+  | { status: "loading" }
+  | { status: "error" }
+  | { status: "ready"; collections: PublicCollection[] };
 
 export default function CollectionSlider() {
-  const [collections, setCollections] = useState<PublicCollection[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<CatalogResult>({ status: "loading" });
+  const [selectedId, setSelectedId] = useState("");
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    const fetchCollections = async () => {
-      try {
-        setLoading(true);
-        const data = await getPublicCollections();
-        setCollections(data.collections);
-      } catch (err) {
-        setError("Koleksiyonlar yüklenirken bir hata oluştu");
-        console.error("Koleksiyon yükleme hatası:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const controller = new AbortController();
+    let active = true;
+    const timeout = setTimeout(() => controller.abort(), 20000);
+    setResult({ status: "loading" });
+    getPublicCollections(controller.signal)
+      .then(({ collections }) => {
+        if (active) setResult({ status: "ready", collections: collections.filter(collection => collection.products?.length > 0) });
+      })
+      .catch(() => { if (active) setResult({ status: "error" }); })
+      .finally(() => clearTimeout(timeout));
+    return () => { active = false; clearTimeout(timeout); controller.abort(); };
+  }, [attempt]);
 
-    fetchCollections();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-[#00365a]" />
-            <p className="mt-3 text-sm text-slate-500">Koleksiyonlar yükleniyor...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <p className="text-sm text-rose-700">{error}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (collections.length === 0) {
-    return (
-      <div className="py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <p className="text-sm text-slate-500">Henüz koleksiyon bulunmuyor.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Ürünü olan koleksiyonları filtrele
-  const collectionsWithProducts = collections.filter(
-    (collection) => collection.products && collection.products.length > 0
-  );
-
-  if (collectionsWithProducts.length === 0) {
-    return (
-      <div className="py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <p className="text-sm text-slate-500">Henüz ürün bulunan koleksiyon yok.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const collections = result.status === "ready" ? result.collections : [];
+  const selected = collections.find(collection => collection.id === selectedId) ?? collections[0];
 
   return (
-    <section className="py-12 sm:py-16">
-      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
-        {collectionsWithProducts.map((collection, index) => (
-          <div key={collection.id} className="mb-12">
-            <div className="mb-6 flex flex-col items-center text-center">
-              <h3 className="display-heading text-2xl text-[#183342] sm:text-3xl">
-                {collection.name}
-              </h3>
-              <div className="mt-3 h-px w-[min(100%,16rem)] bg-neutral-300" />
-            </div>
-
-            {/* Swiper Slider */}
-            <div className="relative">
-              <Swiper
-                modules={[Navigation, Pagination, Autoplay]}
-                spaceBetween={30}
-                slidesPerView={2}
-                navigation={{
-                  nextEl: `.public-products-next-${index}`,
-                  prevEl: `.public-products-prev-${index}`,
-                }}
-                pagination={{
-                  clickable: true,
-                  el: `.public-products-pagination-${index}`,
-                }}
-                autoplay={{
-                  delay: 4000,
-                  disableOnInteraction: false,
-                }}
-                breakpoints={{
-                  640: {
-                    slidesPerView: 2,
-                    spaceBetween: 30,
-                  },
-                  768: {
-                    slidesPerView: 3,
-                    spaceBetween: 30,
-                  },
-                  1024: {
-                    slidesPerView: 4,
-                    spaceBetween: 30,
-                  },
-                }}
-                className="product-swiper"
-              >
-                {collection.products.map((product) => (
-                  <SwiperSlide key={product.id}>
-                    <div className="product-card group surface overflow-hidden">
-                      <div className="flex aspect-square items-center justify-center bg-slate-50">
-                        {product.image ? (
-                          <Image
-                            src={product.image}
-                            alt={product.name}
-                            width={300}
-                            height={300}
-                            className="h-full w-full object-contain p-4"
-                          />
-                        ) : (
-                          <Image
-                            src="/black-logo.svg"
-                            alt="Paşa Home Logo"
-                            width={80}
-                            height={80}
-                            className="h-16 w-16 opacity-80"
-                          />
-                        )}
-                      </div>
-                      <div className="border-t border-slate-100 p-4">
-                        <h4 className="line-clamp-2 text-sm font-medium text-slate-900">
-                          {product.name}
-                        </h4>
-                        {product.description && (
-                          <p className="mt-1.5 line-clamp-3 text-sm leading-relaxed text-slate-500">
-                            {product.description}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-
-              {/* Navigation Buttons - Temiz */}
-              <div className="mt-4 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  className={`public-products-prev-${index} inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:text-[#00365a]`}
-                  aria-label="Önceki ürünler"
-                >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  className={`public-products-next-${index} inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:text-[#00365a]`}
-                  aria-label="Sonraki ürünler"
-                >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-              <div className={`public-products-pagination-${index} mt-3 flex justify-center gap-1.5`} />
-            </div>
-          </div>
-        ))}
+    <div className="page-container py-12 sm:py-16">
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-6 sm:mb-10">
+        <div>
+          <p className="eyebrow">PAŞA HOME · HALI KOLEKSİYONLARI</p>
+          <h2 className="display-heading mt-3 max-w-xl text-3xl sm:text-[2.75rem]">Her deseni yakından keşfedin.</h2>
+          <p className="mt-4 max-w-xl text-sm leading-7 text-slate-500">Koleksiyonunuzu seçin, halılar arasında gezinin. Evinize yakışan desene bir adım daha yaklaşın.</p>
+        </div>
+        <Link href="/bayi-talebi" className="text-link">Bayi olmak istiyorum <ArrowUpRightIcon className="h-4 w-4" aria-hidden="true" /></Link>
       </div>
 
-      <style jsx global>{`
-        .product-swiper .swiper-pagination-bullet {
-          width: 7px;
-          height: 7px;
-          background: #94a3b8;
-          opacity: 0.55;
-          border-radius: 9999px;
-          margin: 0 3px !important;
-        }
-        .product-swiper .swiper-pagination-bullet-active {
-          width: 18px;
-          opacity: 1;
-          background: #00365a;
-        }
-      `}</style>
-    </section>
+      <div aria-busy={result.status === "loading"}>
+        {result.status === "loading" ? (
+          <div className="surface flex min-h-[540px] flex-col items-center justify-center gap-6 p-8" role="status">
+            <div className="flex items-center gap-4" aria-hidden="true">
+              {[0, 1, 2].map(index => <div key={index} className={`skeleton w-16 rounded-sm sm:w-24 ${index === 1 ? "h-64" : "h-48"}`} />)}
+            </div>
+            <p className="text-sm text-slate-500">Koleksiyonlar yükleniyor…</p>
+          </div>
+        ) : result.status === "error" ? (
+          <div className="surface px-6 py-20 text-center" role="alert">
+            <h3 className="text-lg font-medium">Koleksiyonlara şu an ulaşılamıyor.</h3>
+            <p className="mt-2 text-sm text-slate-500">Lütfen bağlantınızı kontrol edip tekrar deneyin.</p>
+            <button type="button" className="primary-action mt-6" onClick={() => setAttempt(value => value + 1)}>Tekrar dene</button>
+          </div>
+        ) : !selected ? (
+          <div className="surface px-6 py-20 text-center text-sm text-slate-500" role="status">Henüz ürün bulunan koleksiyon yok.</div>
+        ) : (
+          <>
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-4 border-y border-[#deddd5] py-4">
+              <p className="text-xs text-slate-500"><span className="font-medium text-[#183342]">{collections.length} koleksiyon</span><span className="mx-3 text-slate-300">/</span>Size ait bir dokunuş</p>
+              <div className="flex w-full items-center gap-3 sm:w-auto">
+                <label htmlFor="rail-collection" className="shrink-0 text-xs font-medium text-slate-500">Koleksiyon</label>
+                <select id="rail-collection" value={selected.id} onChange={event => setSelectedId(event.target.value)}
+                  className="min-h-11 min-w-0 flex-1 rounded-lg border border-[#d8d9d1] bg-white py-2 pl-3 pr-8 text-sm font-medium text-[#183342] sm:w-64">
+                  {collections.map(collection => <option key={collection.id} value={collection.id}>{collection.name.trim()} ({collection.products.length})</option>)}
+                </select>
+              </div>
+            </div>
+            <ProductRailGallery key={selected.id} items={selected.products} heading={selected.name.trim()} description={selected.description} />
+          </>
+        )}
+      </div>
+    </div>
   );
 }
